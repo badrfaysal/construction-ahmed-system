@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>شركة الضبع للتجارة والتوريدات — نظام الإدارة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f6fa;--surface:#fff;--surface-2:#fafbfd;
+  --sidebar:#0f1c2e;--sidebar-2:#16263b;--sidebar-hover:#1d3047;
+  --ink:#1a2433;--ink-2:#5a6b80;--ink-3:#8a99ad;
+  --line:#e4e9f0;--line-2:#eef1f6;
+  --accent:#1f5fd6;--accent-soft:#eaf1fd;--accent-ink:#1c4fb0;
+  --pos:#0f8a5f;--pos-soft:#e7f5ef;--neg:#c0392b;--neg-soft:#fbecea;
+  --warn:#b7791f;--warn-soft:#fbf3e3;
+  --radius:8px;--shadow-sm:0 1px 2px rgba(16,30,54,.06);
+  --shadow:0 4px 16px rgba(16,30,54,.08);--shadow-lg:0 12px 40px rgba(16,30,54,.16);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;background:var(--bg);color:var(--ink);
+  display:flex;min-height:100vh;font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}svg{display:block}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:#c9d2de;border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:#b3bdcc}::-webkit-scrollbar-track{background:transparent}
+.tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+.sidebar{width:252px;background:var(--sidebar);color:#cdd6e2;position:fixed;inset-block:0;inset-inline-end:0;
+  display:flex;flex-direction:column;z-index:40;border-inline-start:1px solid #0a1422}
+.brand{display:flex;align-items:center;gap:12px;padding:18px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
+.brand .logo{width:42px;height:42px;border-radius:9px;flex-shrink:0;background:linear-gradient(145deg,#c9962f,#a8761c);
+  display:grid;place-items:center;color:#fff;box-shadow:0 4px 12px rgba(168,118,28,.35)}
+.brand h1{font-size:14px;font-weight:700;color:#fff;line-height:1.35}
+.brand p{font-size:11px;color:#7d8ca3;font-weight:500;margin-top:1px}
+.nav{flex:1;overflow-y:auto;padding:14px 12px}
+.nav-label{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:#5e6f87;padding:14px 12px 7px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:12px;padding:9.5px 12px;border-radius:7px;cursor:pointer;
+  color:#aeb9c9;font-weight:500;font-size:13.5px;transition:background .14s,color .14s;margin-bottom:1px}
+.nav-item:hover{background:var(--sidebar-hover);color:#fff}
+.nav-item.active{background:var(--accent);color:#fff;font-weight:600;box-shadow:0 4px 12px rgba(31,95,214,.3)}
+.nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.92}
+.nav-item .lock-ic{margin-inline-start:auto;opacity:.5}.nav-item.active .lock-ic{opacity:.85}
+.sb-foot{padding:14px 16px;border-top:1px solid rgba(255,255,255,.07);font-size:11px;color:#6c7c93}
+
+.main{margin-inline-end:252px;flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(10px);
+  border-bottom:1px solid var(--line);padding:0 28px;height:64px;display:flex;align-items:center;gap:16px}
+.crumb{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-3);font-weight:500}
+.topbar h2{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.topbar .right{margin-inline-start:auto;display:flex;align-items:center;gap:12px}
+.role-select{appearance:none;background:var(--surface);border:1px solid var(--line);color:var(--ink);border-radius:7px;
+  padding:8px 32px 8px 12px;font-family:inherit;font-weight:600;font-size:12.5px;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235a6b80' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:left 11px center}
+.user{display:flex;align-items:center;gap:10px;padding-inline-start:12px;border-inline-start:1px solid var(--line)}
+.user .av{width:34px;height:34px;border-radius:8px;background:linear-gradient(145deg,#334a63,#1f2f43);color:#fff;
+  display:grid;place-items:center;font-weight:700;font-size:13px}
+.user .nm{font-size:13px;font-weight:700;line-height:1.2}.user .rl{font-size:11px;color:var(--ink-3)}
+
+.page{padding:26px 28px 60px;display:none}
+.page.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:14px}
+.page-head h3{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.page-head p{font-size:13px;color:var(--ink-2);margin-top:3px}
+
+.btn{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;border:1px solid var(--accent);
+  border-radius:7px;padding:9px 16px;font-family:inherit;font-weight:600;font-size:13px;cursor:pointer;transition:.14s;box-shadow:var(--shadow-sm)}
+.btn:hover{background:var(--accent-ink);border-color:var(--accent-ink)}.btn svg{width:16px;height:16px}
+.btn.ghost{background:var(--surface);color:var(--ink);border-color:var(--line)}.btn.ghost:hover{background:var(--surface-2);border-color:#cfd8e3}
+.btn.pos{background:var(--pos);border-color:var(--pos)}.btn.pos:hover{filter:brightness(.94)}
+.btn.warn{background:var(--warn);border-color:var(--warn)}.btn.warn:hover{filter:brightness(.94)}
+.btn.sm{padding:6px 11px;font-size:12px}.btn-row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+
+.grid{display:grid;gap:16px}
+.cols-4{grid-template-columns:repeat(4,1fr)}.cols-3{grid-template-columns:repeat(3,1fr)}.cols-2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:1080px){.cols-4{grid-template-columns:repeat(2,1fr)}.cols-3{grid-template-columns:repeat(2,1fr)}.cols-2{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm)}
+.card-pad{padding:20px}
+.stat{padding:18px 20px;display:flex;flex-direction:column;gap:3px;position:relative}
+.stat .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.stat .label{font-size:12.5px;color:var(--ink-2);font-weight:600}
+.stat .ic{width:36px;height:36px;border-radius:9px;display:grid;place-items:center}.stat .ic svg{width:19px;height:19px}
+.stat .val{font-size:24px;font-weight:700;letter-spacing:-.02em}.stat .val small{font-size:12.5px;font-weight:600;color:var(--ink-3)}
+.stat .note{font-size:11.5px;color:var(--ink-3);font-weight:500;margin-top:2px}
+.ic-blue{background:var(--accent-soft);color:var(--accent)}.ic-green{background:var(--pos-soft);color:var(--pos)}
+.ic-amber{background:var(--warn-soft);color:var(--warn)}.ic-red{background:var(--neg-soft);color:var(--neg)}
+.section-label{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--ink-2);text-transform:uppercase;margin:26px 0 13px;display:flex;align-items:center;gap:8px}
+.section-label svg{width:15px;height:15px;flex-shrink:0}
+
+.table-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden}
+.table-top{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:8px}
+.table-top h4{font-size:14.5px;font-weight:700}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--surface-2);color:var(--ink-2);font-weight:600;font-size:11.5px;text-align:right;padding:11px 16px;
+  letter-spacing:.02em;white-space:nowrap;border-bottom:1px solid var(--line);text-transform:uppercase}
+tbody td{padding:12px 16px;font-size:13.5px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}tbody tr:hover{background:var(--surface-2)}
+td.num{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);background:var(--surface-2);font-weight:700}
+.muted{color:var(--ink-3);font-size:12px}.row-click{cursor:pointer}
+
+.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:5px;font-size:11.5px;font-weight:600;white-space:nowrap;border:1px solid transparent}
+.tag.green{background:var(--pos-soft);color:var(--pos);border-color:#cbe9da}
+.tag.amber{background:var(--warn-soft);color:var(--warn);border-color:#f0e2c2}
+.tag.red{background:var(--neg-soft);color:var(--neg);border-color:#f3d4cf}
+.tag.blue{background:var(--accent-soft);color:var(--accent-ink);border-color:#cfe0fa}
+.tag.gray{background:#eef1f6;color:var(--ink-2);border-color:#e0e6ee}
+.tag .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+.bar-track{height:6px;border-radius:6px;background:#eef1f6;overflow:hidden;min-width:80px;flex:1}
+.bar-fill{height:100%;border-radius:6px;background:var(--accent)}.bar-fill.full{background:var(--pos)}
+
+.stages{display:flex;flex-direction:column}
+.stage{display:flex;align-items:center;gap:14px;padding:11px 2px;position:relative}
+.stage .dot{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex-shrink:0;font-size:12.5px;font-weight:700;background:#fff;border:2px solid var(--line);color:var(--ink-3);z-index:2}
+.stage .dot svg{width:14px;height:14px}
+.stage.done .dot{background:var(--pos);border-color:var(--pos);color:#fff}
+.stage.active .dot{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 0 4px var(--accent-soft)}
+.stage:not(:last-child)::before{content:'';position:absolute;inset-inline-start:18px;top:34px;bottom:-2px;width:2px;background:var(--line)}
+.stage.done:not(:last-child)::before{background:var(--pos)}
+.stage .t{font-weight:600;font-size:13.5px}.stage .d{font-size:11.5px;color:var(--ink-3)}
+
+.kv{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line-2);font-size:13.5px}
+.kv:last-child{border-bottom:none}
+.kv .k{color:var(--ink-2);flex:1;min-width:0}
+.kv .v{font-weight:600;white-space:nowrap;flex-shrink:0;direction:ltr;text-align:left}
+
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.photo{aspect-ratio:4/3;border-radius:7px;background:var(--surface-2);border:1px solid var(--line);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;color:var(--ink-3);position:relative;overflow:hidden}
+.photo svg{width:22px;height:22px;opacity:.5}.photo .lbl{font-size:10.5px;font-weight:600}
+.photo.add{border-style:dashed;color:var(--accent);cursor:pointer}.photo.add:hover{background:var(--accent-soft)}
+
+.modal-bg{position:fixed;inset:0;background:rgba(15,28,46,.45);backdrop-filter:blur(3px);display:none;place-items:center;z-index:100;padding:20px}
+.modal-bg.show{display:grid}
+.modal{background:var(--surface);border-radius:12px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:pop .2s ease}
+@keyframes pop{from{transform:translateY(10px) scale(.98);opacity:0}to{transform:none;opacity:1}}
+.modal .mh{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
+.modal .mh h3{font-size:16px;font-weight:700}
+.modal .x{cursor:pointer;background:none;border:none;color:var(--ink-3);width:30px;height:30px;border-radius:6px;display:grid;place-items:center}
+.modal .x:hover{background:var(--surface-2);color:var(--ink)}.modal .mb{padding:22px}
+.field{margin-bottom:15px}.field label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;color:var(--ink-2)}
+.field input,.field select,.field textarea{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:10px 13px;color:var(--ink);font-family:inherit;font-size:13.5px;transition:.14s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.field input::placeholder{color:var(--ink-3)}.row2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+
+.lock-card{position:relative;min-height:320px;display:grid;place-items:center;text-align:center;padding:40px}
+.lock-card .ring{width:64px;height:64px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;margin:0 auto 16px;color:var(--ink-3)}
+.lock-card .ring svg{width:28px;height:28px}.lock-card h3{font-size:17px;font-weight:700;margin-bottom:6px}
+.lock-card p{color:var(--ink-2);font-size:13px;max-width:340px;margin:0 auto}
+
+/* STATEMENT */
+.statement{background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;max-width:900px;margin:0 auto;box-shadow:var(--shadow)}
+.st-head{padding:26px 34px;border-bottom:3px solid var(--sidebar);display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+.st-head .logo{width:48px;height:48px;border-radius:9px;background:linear-gradient(145deg,#c9962f,#a8761c);display:grid;place-items:center;color:#fff;margin-bottom:12px}
+.st-head .co h2{font-size:18px;font-weight:700;color:var(--sidebar)}.st-head .co p{font-size:12px;color:var(--ink-2);margin-top:3px}
+.st-head .meta{text-align:left;font-size:12.5px;color:var(--ink-2);line-height:1.9}.st-head .meta b{color:var(--ink);font-size:15px}
+.st-body{padding:24px 34px}
+.st-client{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:20px}
+.st-client .l{font-size:11px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.st-client .b{font-size:14.5px;font-weight:700;color:var(--ink);margin-top:2px}
+.st-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+.st-box{border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.st-box .l{font-size:11.5px;color:var(--ink-2);font-weight:600;margin-bottom:5px}
+.st-box .v{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.st-box.tot{background:var(--surface-2)}.st-box.paid .v{color:var(--pos)}
+.st-box.due{background:var(--neg-soft);border-color:#f3d4cf}.st-box.due .v{color:var(--neg)}
+.st-sec{font-size:12.5px;font-weight:700;color:var(--ink-2);text-transform:uppercase;letter-spacing:.04em;margin:22px 0 10px}
+.st-table{width:100%;border-collapse:collapse;margin-bottom:8px}
+.st-table th{background:var(--sidebar);color:#fff;padding:9px 13px;font-size:11.5px;text-align:right;font-weight:600}
+.st-table td{padding:8px 13px;border-bottom:1px solid var(--line-2);font-size:12.5px;font-variant-numeric:tabular-nums}
+.st-table .grp td{background:var(--accent-soft);font-weight:700;color:var(--accent-ink);font-size:12.5px}
+.st-table .grp td .bt{float:left;font-weight:700}
+.st-table .sub td{font-weight:700;background:var(--surface-2)}
+.st-plan td{padding:9px 13px;border-bottom:1px solid var(--line-2);font-size:12.5px;font-variant-numeric:tabular-nums}
+.st-plan th{background:var(--surface-2);color:var(--ink-2);padding:9px 13px;font-size:11px;text-align:right;font-weight:600;border-bottom:1px solid var(--line)}
+.st-final{display:flex;justify-content:flex-end;margin-top:20px}
+.st-final table{border-collapse:collapse;min-width:340px}
+.st-final td{padding:9px 16px;font-size:13.5px;font-variant-numeric:tabular-nums}
+.st-final tr.big td{background:var(--sidebar);color:#fff;font-weight:700;font-size:15px}
+.st-foot{padding:16px 34px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-3)}
+
+/* TRANSACTIONS FEED */
+.feed{display:flex;flex-direction:column}
+.tx{display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid var(--line-2)}
+.tx:last-child{border-bottom:none}.tx:hover{background:var(--surface-2)}
+.tx-ic{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;flex-shrink:0;position:relative}
+.tx-ic>svg{width:19px;height:19px}
+.tx-ic .arr{position:absolute;bottom:-4px;inset-inline-start:-4px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--surface)}
+.tx-ic .arr svg{width:10px;height:10px;stroke-width:3.2}
+.tx-main{flex:1;min-width:0}.tx-main .t{font-weight:600;font-size:13.5px}
+.tx-main .s{font-size:11.5px;color:var(--ink-3);margin-top:3px;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.tx-amt{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;font-size:14.5px}
+.tx.in .tx-ic{background:var(--pos-soft);color:var(--pos)}.tx.in .tx-ic .arr{background:var(--pos);color:#fff}.tx.in .tx-amt{color:var(--pos)}
+.tx.out .tx-ic{background:var(--neg-soft);color:var(--neg)}.tx.out .tx-ic .arr{background:var(--neg);color:#fff}.tx.out .tx-amt{color:var(--neg)}
+/* SUPPLIERS */
+.sup-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.sup{padding:18px 20px}
+.sup .h{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line-2)}
+.sup .av{width:44px;height:44px;border-radius:11px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:17px;flex-shrink:0}
+.sup .nm{font-weight:700;font-size:15px}.sup .ph{font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+/* ALERTS */
+.alert-sec{margin-bottom:18px}
+.alert-item{display:flex;align-items:center;gap:13px;padding:13px 18px;border-bottom:1px solid var(--line-2)}
+.alert-item:last-child{border-bottom:none}
+.alert-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.alert-item .t{font-weight:600;font-size:13.5px}.alert-item .s{font-size:11.5px;color:var(--ink-3);margin-top:1px}
+.alert-item .right{margin-inline-start:auto;text-align:left}
+/* DISTINCTIVE FILTERS */
+.filterbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow-sm)}
+.filterbar .fb-lead{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--ink-2);padding-inline-end:6px;border-inline-end:1px solid var(--line);white-space:nowrap}
+.filterbar .fb-lead svg{width:16px;height:16px;color:var(--accent)}
+.f-select{appearance:none;background:var(--surface-2);border:1.5px solid var(--line);color:var(--ink);border-radius:8px;
+  padding:9px 34px 9px 13px;font-family:inherit;font-weight:600;font-size:12.5px;cursor:pointer;transition:.14s;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%231f5fd6' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:left 11px center}
+.f-select:hover{border-color:#c2cfe0}
+.f-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.f-select.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+.filterbar .search{position:relative;flex:1;min-width:220px}
+.filterbar .search input{width:100%;background:var(--surface-2);border:1.5px solid var(--line);border-radius:8px;padding:9px 38px 9px 13px;font-family:inherit;font-size:13px;color:var(--ink)}
+.filterbar .search input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:var(--surface)}
+.filterbar .search svg{position:absolute;inset-inline-end:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--ink-3)}
+
+/* TREASURY CARD */
+.treasury{background:linear-gradient(135deg,#13233a,#0f1c2e);color:#fff;border-radius:12px;padding:22px 24px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.treasury::after{content:'';position:absolute;inset-inline-start:-30px;top:-30px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(201,150,47,.22),transparent 70%)}
+.treasury .tz-top{display:flex;align-items:center;gap:11px;margin-bottom:14px;position:relative;z-index:1}
+.treasury .tz-ic{width:42px;height:42px;border-radius:11px;background:linear-gradient(145deg,#c9962f,#a8761c);display:grid;place-items:center;box-shadow:0 4px 12px rgba(168,118,28,.4)}
+.treasury .tz-ic svg{width:21px;height:21px;color:#fff}
+.treasury .tz-ttl{font-size:13px;font-weight:600;color:#aebacb}
+.treasury .tz-sub{font-size:11px;color:#7d8ca3;margin-top:1px}
+.treasury .tz-bal{font-size:32px;font-weight:700;letter-spacing:-.02em;position:relative;z-index:1;font-variant-numeric:tabular-nums}
+.treasury .tz-bal small{font-size:15px;font-weight:600;color:#aebacb}
+.treasury .tz-row{display:flex;gap:22px;margin-top:16px;padding-top:15px;border-top:1px solid rgba(255,255,255,.1);position:relative;z-index:1;flex-wrap:wrap}
+.treasury .tz-row .l{font-size:11px;color:#7d8ca3}
+.treasury .tz-row .v{font-size:15px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.treasury .tz-row .v.in{color:#4ade80}.treasury .tz-row .v.out{color:#fb9b8f}
+
+/* TABS */
+.tabs{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:4px;gap:3px;margin-bottom:20px}
+.tab{padding:8px 18px;border-radius:6px;font-size:13px;font-weight:600;color:var(--ink-2);cursor:pointer;transition:.14s;border:none;background:none;font-family:inherit;display:flex;align-items:center;gap:7px}
+.tab:hover{color:var(--ink)}
+.tab.active{background:var(--surface);color:var(--accent);box-shadow:var(--shadow-sm)}
+.tab .cnt{font-size:11px;font-weight:700;background:var(--line);color:var(--ink-2);border-radius:20px;padding:1px 7px;min-width:18px;text-align:center}
+.tab.active .cnt{background:var(--accent-soft);color:var(--accent)}
+
+/* PROJECT CARDS */
+.pcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+.pcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;transition:.16s;box-shadow:var(--shadow-sm)}
+.pcard:hover{box-shadow:var(--shadow);transform:translateY(-2px);border-color:#d4ddea}
+.pcard .pc-band{height:5px;background:var(--accent)}
+.pcard.is-done .pc-band{background:var(--pos)}
+.pcard .pc-body{padding:18px 20px}
+.pcard .pc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:15px}
+.pcard .pc-name{font-size:16px;font-weight:700;letter-spacing:-.01em}
+.pcard .pc-client{font-size:12.5px;color:var(--ink-3);margin-top:2px}
+.pcard .pc-addr{font-size:11.5px;color:var(--ink-3);margin-top:7px;display:flex;align-items:center;gap:5px}
+.pcard .pc-addr svg{width:13px;height:13px;flex-shrink:0;opacity:.7}
+.pcard .pc-prog{display:flex;align-items:center;gap:10px;margin:15px 0}
+.pcard .pc-prog .pct{font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;min-width:38px;text-align:left}
+.pcard .pc-fin{display:flex;gap:10px;padding-top:15px;border-top:1px solid var(--line-2)}
+.pcard .pc-fin>div{flex:1}
+.pcard .pc-fin .l{font-size:10.5px;color:var(--ink-3);font-weight:500}
+.pcard .pc-fin .v{font-size:14px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.empty-state{text-align:center;padding:50px 20px;color:var(--ink-3)}
+.empty-state svg{width:40px;height:40px;opacity:.4;margin-bottom:12px}
+
+@media print{.sidebar,.topbar,.no-print{display:none!important}.main{margin:0}body{background:#fff;font-size:12px}.page{padding:0}.statement{box-shadow:none;border:none;max-width:100%}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <g id="i-grid"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></g>
+  <g id="i-building"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9h.01M9 13h.01M9 17h.01"/></g>
+  <g id="i-users"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></g>
+  <g id="i-cash"><path d="M2 7h20v10H2zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6M6 10v.01M18 14v.01"/></g>
+  <g id="i-box"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16M3.27 6.96 12 12l8.73-5.04M12 22V12"/></g>
+  <g id="i-hard"><path d="M2 18h20M4 18v-3a8 8 0 0 1 16 0v3M12 4v3M9 7V5.5M15 7V5.5"/></g>
+  <g id="i-receipt"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1V2l-2 1-2-1-2 1-2-1-2 1-2-1zM8 7h8M8 11h8M8 15h5"/></g>
+  <g id="i-chart"><path d="M3 3v18h18M7 14l4-4 3 3 5-6"/></g>
+  <g id="i-lock"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></g>
+  <g id="i-plus"><path d="M12 5v14M5 12h14"/></g>
+  <g id="i-export"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></g>
+  <g id="i-print"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></g>
+  <g id="i-check"><path d="M20 6 9 17l-5-5"/></g>
+  <g id="i-chevron"><path d="M15 18l-6-6 6-6"/></g>
+  <g id="i-image"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></g>
+  <g id="i-x"><path d="M18 6 6 18M6 6l12 12"/></g>
+  <g id="i-arrow"><path d="M19 12H5M12 19l7-7-7-7"/></g>
+  <g id="i-return"><path d="M9 14 4 9l5-5M4 9h11a6 6 0 0 1 0 12h-3"/></g>
+  <g id="i-layers"><path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></g>
+  <g id="i-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></g>
+  <g id="i-down"><path d="M12 5v14M19 12l-7 7-7-7"/></g>
+  <g id="i-up"><path d="M12 19V5M5 12l7-7 7 7"/></g>
+  <g id="i-truck"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8M5.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM18.5 18.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></g>
+  <g id="i-bell"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></g>
+  <g id="i-activity"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></g>
+  <g id="i-filter"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></g>
+  <g id="i-wallet"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4M3 5v14a2 2 0 0 0 2 2h16v-5M18 12a2 2 0 0 0 0 4h4v-4h-4z"/></g>
+  <g id="i-pin"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></g>
+  <g id="i-award"><circle cx="12" cy="8" r="6"/><path d="M15.5 13.5 17 22l-5-3-5 3 1.5-8.5"/></g>
+</defs></svg>
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg></div>
+    <div><h1>شركة الضبع للتجارة والتوريدات</h1><p>نظام إدارة المشاريع</p></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" data-page="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-grid"/></svg> لوحة التحكم</div>
+    <div class="nav-label">المشاريع</div>
+    <div class="nav-item" data-page="projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg> الشقق والمشاريع</div>
+    <div class="nav-item" data-page="clients"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg> العملاء</div>
+    <div class="nav-label">الحسابات</div>
+    <div class="nav-item" data-page="transactions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg> سجل الحركات</div>
+    <div class="nav-item" data-page="payments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg> المدفوعات والأقساط</div>
+    <div class="nav-item" data-page="materials"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg> الخامات والمرتجعات</div>
+    <div class="nav-item" data-page="labor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hard"/></svg> الفنيين والعمال</div>
+    <div class="nav-label">التقارير</div>
+    <div class="nav-item" data-page="statement"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg> كشف حساب العميل</div>
+    <div class="nav-item" data-page="profit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg> ربحية الشقق
+      <svg class="lock-ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-lock"/></svg></div>
+    <div class="nav-label">المتابعة</div>
+    <div class="nav-item" data-page="suppliers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg> الموردون</div>
+    <div class="nav-item" data-page="alerts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bell"/></svg> المتابعة والتنبيهات</div>
+  </nav>
+  <div class="sb-foot">الإصدار التجريبي · 2026</div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="crumb"><span>نظام الإدارة</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevron"/></svg></div>
+    <h2 id="pageTitle">لوحة التحكم</h2>
+    <div class="right">
+      <select class="role-select" id="roleSwitch" title="تبديل المستخدم">
+        <option value="owner">أحمد — صاحب الشركة</option>
+        <option value="staff">محمد — مشرف موقع</option>
+      </select>
+      <div class="user"><div class="av" id="userAv">أ</div><div><div class="nm" id="userNm">أحمد</div><div class="rl" id="userRl">صاحب الشركة</div></div></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <section class="page active" id="dashboard">
+    <div class="page-head"><div><h3>لوحة التحكم</h3><p>نظرة عامة على أداء المشاريع والتدفق المالي</p></div></div>
+    <div class="grid cols-4" id="dashStats"></div>
+    <div class="section-label owner-only">الخزنة</div>
+    <div id="dashTreasury" class="owner-only"></div>
+    <div class="section-label" style="display:flex;justify-content:space-between"><span>المشاريع النشطة</span><span class="muted" style="text-transform:none;cursor:pointer" onclick="go('projects')">عرض الكل ←</span></div>
+    <div class="grid cols-2" id="dashProjects"></div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section class="page" id="projects">
+    <div class="page-head"><div><h3>الشقق والمشاريع</h3><p>إدارة جميع المشاريع الجارية والمكتملة</p></div>
+      <button class="btn" onclick="openModal('addProject')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg> مشروع جديد</button></div>
+    <div class="tabs" id="projTabs">
+      <button class="tab active" data-tab="active" onclick="projTab('active')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><use href="#i-building"/></svg> قيد التنفيذ <span class="cnt" id="cntActive">0</span></button>
+      <button class="tab" data-tab="done" onclick="projTab('done')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><use href="#i-award"/></svg> مكتملة ومسلّمة <span class="cnt" id="cntDone">0</span></button>
+    </div>
+    <div class="pcards" id="projectsBody"></div>
+  </section>
+
+  <!-- PROJECT DETAIL -->
+  <section class="page" id="projectDetail">
+    <button class="btn ghost sm" onclick="go('projects')" style="margin-bottom:18px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg> رجوع للمشاريع</button>
+    <div id="projectDetailBody"></div>
+  </section>
+
+  <!-- CLIENTS -->
+  <section class="page" id="clients">
+    <div class="page-head"><div><h3>العملاء</h3><p>بيانات العملاء وتعاملاتهم المالية</p></div>
+      <button class="btn" onclick="openModal('addClient')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg> عميل جديد</button></div>
+    <div class="table-card"><div class="table-scroll"><table>
+      <thead><tr><th>الاسم</th><th>الهاتف</th><th>عنوان الشقة</th><th>المشاريع</th><th>المدفوع</th><th>المتبقي</th><th></th></tr></thead>
+      <tbody id="clientsBody"></tbody></table></div></div>
+  </section>
+
+  <!-- PAYMENTS -->
+  <section class="page" id="payments">
+    <div class="page-head"><div><h3>المدفوعات والأقساط</h3><p>المقدم (نسبة من التعاقد) + جدول الأقساط لكل مشروع</p></div>
+      <button class="btn pos" onclick="openModal('addPayment')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg> تسجيل دفعة</button></div>
+    <div class="grid cols-3" id="paymentsStats" style="margin-bottom:18px"></div>
+    <div id="paymentsBody"></div>
+  </section>
+
+  <!-- MATERIALS -->
+  <section class="page" id="materials">
+    <div class="page-head"><div><h3>الخامات والمرتجعات</h3><p>تسجيل كل خامة بالكمية والمورد + إدارة المرتجعات</p></div>
+      <div class="btn-row">
+        <select class="role-select" id="matFilter" onchange="renderMaterials()"><option value="all">كل الشقق</option><option value="الزمالك">شقة الزمالك</option><option value="المعادي">شقة المعادي</option><option value="مدينة نصر">شقة مدينة نصر</option></select>
+        <button class="btn warn" onclick="openModal('addReturn')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-return"/></svg> تسجيل مرتجع</button>
+        <button class="btn" onclick="openModal('addMaterial')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg> تسجيل خامة</button>
+      </div></div>
+    <div class="table-card"><div class="table-top"><h4>سجل المشتريات</h4><div class="btn-row"><span class="tag amber" id="matRet">مرتجعات: 0 ج.م</span><span class="tag blue" id="matTotal">صافي المشتريات: 0 ج.م</span></div></div><div class="table-scroll"><table>
+      <thead><tr><th>التاريخ</th><th>الشقة</th><th>البند</th><th>الصنف</th><th>الكمية</th><th>مرتجع</th><th>الصافي</th><th>سعر الوحدة</th><th>الإجمالي</th><th>المورد</th></tr></thead>
+      <tbody id="materialsBody"></tbody></table></div></div>
+  </section>
+
+  <!-- LABOR -->
+  <section class="page" id="labor">
+    <div class="page-head"><div><h3>الفنيين والعمال</h3><p>أجور ومستحقات العمالة لكل بند ومشروع</p></div>
+      <button class="btn" onclick="openModal('addLabor')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg> تسجيل عمل</button></div>
+    <div class="table-card"><div class="table-top"><h4>سجل الأعمال والأجور</h4></div><div class="table-scroll"><table>
+      <thead><tr><th>التاريخ</th><th>الفني / الفريق</th><th>البند</th><th>الشقة</th><th>نوع التعاقد</th><th>الحالة</th><th>المستحق</th></tr></thead>
+      <tbody id="laborBody"></tbody></table></div></div>
+  </section>
+
+  <!-- STATEMENT -->
+  <section class="page" id="statement">
+    <div class="page-head no-print"><div><h3>كشف حساب العميل</h3><p>كشف تفصيلي بكل بند ومصروفاته وكمياته — قابل للطباعة</p></div>
+      <div class="btn-row">
+        <select class="role-select" id="stProject" onchange="renderStatement()"><option value="0">شقة الزمالك — م. خالد</option><option value="1">شقة المعادي — د. سارة</option><option value="2">شقة مدينة نصر — أ. محمود</option></select>
+        <button class="btn" onclick="window.print()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-print"/></svg> طباعة / حفظ PDF</button>
+      </div></div>
+    <div id="statementBody"></div>
+  </section>
+
+  <!-- PROFIT -->
+  <section class="page" id="profit">
+    <div class="page-head no-print"><div><h3>ربحية الشقق</h3><p>لكل شقة: الدخل من العميل · المصروف بالتفصيل · صافي الربح — لصاحب الشركة فقط</p></div>
+      <select class="role-select" id="profitProject" onchange="renderProfit()"><option value="0">شقة الزمالك</option><option value="1">شقة المعادي</option><option value="2">شقة مدينة نصر (مكتملة)</option></select></div>
+    <div id="profitBody"></div>
+  </section>
+
+  <!-- TRANSACTIONS -->
+  <section class="page" id="transactions">
+    <div class="page-head"><div><h3>سجل الحركات المالية</h3><p>كل العمليات: مشتريات · مرتجعات · تحصيلات · أجور فنيين — وارد وصادر</p></div></div>
+    <div class="grid cols-3" id="txStats" style="margin-bottom:18px"></div>
+    <div class="filterbar">
+      <span class="fb-lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-filter"/></svg> فلترة</span>
+      <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-search"/></svg><input id="txSearch" oninput="renderTransactions()" placeholder="بحث بالصنف أو المورد أو العميل..."></div>
+      <select class="f-select" id="txType" onchange="renderTransactions()"><option value="all">كل العمليات</option><option value="purchase">مشتريات</option><option value="return">مرتجعات</option><option value="collect">تحصيلات</option><option value="labor">أجور فنيين</option></select>
+      <select class="f-select" id="txBand" onchange="renderTransactions()"><option value="all">كل البنود</option></select>
+      <select class="f-select" id="txProj" onchange="renderTransactions()"><option value="all">كل الشقق</option><option value="الزمالك">شقة الزمالك</option><option value="المعادي">شقة المعادي</option><option value="مدينة نصر">شقة مدينة نصر</option></select>
+    </div>
+    <div class="table-card"><div class="feed" id="txFeed"></div></div>
+  </section>
+
+  <!-- SUPPLIERS -->
+  <section class="page" id="suppliers">
+    <div class="page-head"><div><h3>الموردون</h3><p>إجمالي التعامل والمرتجعات والأصناف لكل مورد</p></div>
+      <button class="btn" onclick="openModal('addSupplier')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg> مورد جديد</button></div>
+    <div class="grid cols-3" id="supStats" style="margin-bottom:18px"></div>
+    <div class="sup-grid" id="supBody"></div>
+  </section>
+
+  <!-- ALERTS -->
+  <section class="page" id="alerts">
+    <div class="page-head"><div><h3>المتابعة والتنبيهات</h3><p>مستحقات للتحصيل · مرتجعات · بنود لم تبدأ · هوامش منخفضة</p></div></div>
+    <div class="grid cols-4" id="alertStats" style="margin-bottom:20px"></div>
+    <div id="alertBody"></div>
+  </section>
+</div>
+
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal"><div class="mh"><h3 id="modalTitle">إضافة</h3><button class="x" onclick="closeModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-x"/></svg></button></div><div class="mb" id="modalBody"></div></div>
+</div>
+
+<script>
+const ic=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-${n}"/></svg>`;
+const EGP=n=>Math.round(n).toLocaleString('en-US');
+const STAGES=["تأسيس","محارة","سيراميك","كهرباء تشطيب","سباكة تشطيب","دهانات","رخام","لمسات نهائية"];
+
+const projects=[
+ {id:0,key:"الزمالك",name:"شقة الزمالك",client:"م. خالد عبد الله",phone:"0100 123 4567",address:"الزمالك — شارع 26 يوليو — الدور الخامس",area:180,start:"2025-05-01",deliver:"2025-08-15",currentStage:3,downPct:25,done:false},
+ {id:1,key:"المعادي",name:"شقة المعادي",client:"د. سارة منصور",phone:"0122 987 6543",address:"المعادي — شارع 9 — الدور الثالث",area:170,start:"2025-06-10",deliver:"2025-09-30",currentStage:2,downPct:25,done:false},
+ {id:2,key:"مدينة نصر",name:"شقة مدينة نصر",client:"أ. محمود السيد",phone:"0111 222 3344",address:"مدينة نصر — شارع عباس العقاد — الدور السابع",area:155,start:"2025-01-12",deliver:"2025-04-25",delivered:"2025-04-22",currentStage:8,downPct:25,done:true}
+];
+/* رأس مال الخزنة الافتتاحي — يُضاف إليه التحصيلات ويُخصم منه المصروفات */
+const treasuryOpening=250000;
+
+/* البنود — قلب النظام: كل بند بمصروفاته وسعره للعميل */
+const items={
+ 0:[
+  {name:"تأسيس سباكة وكهرباء",client:60000,labor:30000,status:"done",ctype:"بالمتر",team:"فريق التأسيس",ldate:"2025-05-08",mats:[
+    {item:"مواسير PPR سباكة",qty:40,unit:"ماسورة",price:180,date:"2025-05-03",supplier:"الموردون المتحدون",ret:0},
+    {item:"أسلاك وعلب كهرباء",qty:1,unit:"طقم",price:9500,date:"2025-05-04",supplier:"النور للكهرباء",ret:0},
+    {item:"أسمنت تأسيس",qty:30,unit:"شيكارة",price:95,date:"2025-05-05",supplier:"مصنع السويس",ret:0}]},
+  {name:"محارة",client:95000,labor:52000,status:"done",ctype:"بالمتر",team:"معلم محارة رجب",ldate:"2025-05-22",mats:[
+    {item:"أسمنت",qty:120,unit:"شيكارة",price:95,date:"2025-05-12",supplier:"مصنع السويس",ret:0},
+    {item:"رمل",qty:8,unit:"نقلة",price:1200,date:"2025-05-13",supplier:"محجر العين",ret:0},
+    {item:"مونة محارة جاهزة",qty:60,unit:"شيكارة",price:75,date:"2025-05-20",supplier:"سيكا",ret:5}]},
+  {name:"سيراميك وأرضيات",client:120000,labor:56000,status:"done",ctype:"مقاولة مقطوعة",team:"معلم بلاط سمير",ldate:"2025-06-08",mats:[
+    {item:"سيراميك أرضيات",qty:185,unit:"م²",price:140,date:"2025-06-01",supplier:"كليوباترا",ret:0},
+    {item:"سيراميك حوائط",qty:90,unit:"م²",price:120,date:"2025-06-02",supplier:"كليوباترا",ret:10},
+    {item:"لاصق ومونة",qty:40,unit:"شيكارة",price:110,date:"2025-06-05",supplier:"سيكا",ret:0}]},
+  {name:"كهرباء تشطيب",client:55000,labor:22000,status:"active",ctype:"بالمتر",team:"أسطى كهرباء حسن",ldate:"2025-06-22",mats:[
+    {item:"مفاتيح وبرايز",qty:1,unit:"طقم",price:12000,date:"2025-06-20",supplier:"شنايدر",ret:0},
+    {item:"أسلاك نحاس",qty:8,unit:"لفة",price:1400,date:"2025-06-20",supplier:"النور للكهرباء",ret:0}]},
+  {name:"سباكة تشطيب",client:45000,labor:0,status:"pending",mats:[]},
+  {name:"دهانات",client:85000,labor:0,status:"pending",mats:[]},
+  {name:"رخام",client:50000,labor:0,status:"pending",mats:[]},
+  {name:"لمسات نهائية",client:30000,labor:0,status:"pending",mats:[]}
+ ],
+ 1:[
+  {name:"تأسيس سباكة وكهرباء",client:55000,labor:30000,status:"done",ctype:"بالمتر",team:"فريق التأسيس",ldate:"2025-06-14",mats:[
+    {item:"مواسير PPR سباكة",qty:35,unit:"ماسورة",price:180,date:"2025-06-12",supplier:"الموردون المتحدون",ret:0},
+    {item:"أسلاك وعلب كهرباء",qty:1,unit:"طقم",price:8800,date:"2025-06-13",supplier:"النور للكهرباء",ret:0}]},
+  {name:"مباني وطوب",client:48000,labor:18000,status:"done",ctype:"مقاولة مقطوعة",team:"معلم مباني فتحي",ldate:"2025-06-20",mats:[
+    {item:"طوب أحمر",qty:6000,unit:"طوبة",price:2.2,date:"2025-06-18",supplier:"مصنع الطوب",ret:0},
+    {item:"أسمنت",qty:90,unit:"شيكارة",price:95,date:"2025-06-19",supplier:"مصنع السويس",ret:0}]},
+  {name:"محارة",client:80000,labor:16000,status:"active",ctype:"بالمتر",team:"معلم محارة رجب",ldate:"2025-06-28",mats:[
+    {item:"أسمنت",qty:50,unit:"شيكارة",price:95,date:"2025-06-25",supplier:"مصنع السويس",ret:0},
+    {item:"رمل",qty:4,unit:"نقلة",price:1200,date:"2025-06-26",supplier:"محجر العين",ret:0},
+    {item:"مونة محارة جاهزة",qty:30,unit:"شيكارة",price:75,date:"2025-06-27",supplier:"سيكا",ret:6}]},
+  {name:"سيراميك وأرضيات",client:95000,labor:0,status:"pending",mats:[]},
+  {name:"كهرباء وسباكة تشطيب",client:75000,labor:0,status:"pending",mats:[]},
+  {name:"دهانات ولمسات",client:67000,labor:0,status:"pending",mats:[]}
+ ],
+ 2:[
+  {name:"تأسيس سباكة وكهرباء",client:52000,labor:28000,status:"done",ctype:"بالمتر",team:"فريق التأسيس",ldate:"2025-01-18",mats:[
+    {item:"مواسير PPR سباكة",qty:32,unit:"ماسورة",price:175,date:"2025-01-14",supplier:"الموردون المتحدون",ret:0},
+    {item:"أسلاك وعلب كهرباء",qty:1,unit:"طقم",price:8200,date:"2025-01-15",supplier:"النور للكهرباء",ret:0}]},
+  {name:"محارة",client:82000,labor:44000,status:"done",ctype:"بالمتر",team:"معلم محارة رجب",ldate:"2025-02-05",mats:[
+    {item:"أسمنت",qty:100,unit:"شيكارة",price:92,date:"2025-01-28",supplier:"مصنع السويس",ret:0},
+    {item:"رمل",qty:7,unit:"نقلة",price:1150,date:"2025-01-29",supplier:"محجر العين",ret:0}]},
+  {name:"سيراميك وأرضيات",client:105000,labor:50000,status:"done",ctype:"مقاولة مقطوعة",team:"معلم بلاط سمير",ldate:"2025-03-01",mats:[
+    {item:"سيراميك أرضيات",qty:160,unit:"م²",price:135,date:"2025-02-20",supplier:"كليوباترا",ret:0},
+    {item:"سيراميك حوائط",qty:80,unit:"م²",price:115,date:"2025-02-21",supplier:"كليوباترا",ret:0}]},
+  {name:"كهرباء تشطيب",client:48000,labor:20000,status:"done",ctype:"بالمتر",team:"أسطى كهرباء حسن",ldate:"2025-03-18",mats:[
+    {item:"مفاتيح وبرايز",qty:1,unit:"طقم",price:11000,date:"2025-03-12",supplier:"شنايدر",ret:0}]},
+  {name:"دهانات",client:74000,labor:30000,status:"done",ctype:"مقاولة مقطوعة",team:"معلم دهانات عادل",ldate:"2025-04-10",mats:[
+    {item:"دهانات بلاستيك",qty:20,unit:"بستلة",price:850,date:"2025-04-01",supplier:"جوتن",ret:2},
+    {item:"معجون وأساس",qty:15,unit:"شيكارة",price:180,date:"2025-04-02",supplier:"جوتن",ret:0}]},
+  {name:"لمسات نهائية",client:35000,labor:14000,status:"done",ctype:"مقاولة مقطوعة",team:"فريق التشطيب",ldate:"2025-04-20",mats:[
+    {item:"إكسسوارات وتركيبات",qty:1,unit:"طقم",price:9000,date:"2025-04-15",supplier:"الموردون المتحدون",ret:0}]}
+ ]
+};
+
+/* الأقساط — مقدم 25% + باقي تقسيط */
+const installments={
+ 0:[
+  {label:"دفعة مقدم (25%)",due:"2025-05-01",amount:135000,status:"مدفوع",method:"تحويل بنكي"},
+  {label:"القسط الأول — عند المحارة",due:"2025-06-10",amount:135000,status:"مدفوع",method:"كاش"},
+  {label:"القسط الثاني — عند السيراميك",due:"2025-07-15",amount:135000,status:"مستحق",method:"—"},
+  {label:"القسط الأخير — عند التسليم",due:"2025-08-15",amount:135000,status:"قادم",method:"—"}
+ ],
+ 1:[
+  {label:"دفعة مقدم (25%)",due:"2025-06-10",amount:105000,status:"مدفوع",method:"تحويل بنكي"},
+  {label:"القسط الأول — عند المحارة",due:"2025-07-20",amount:105000,status:"مستحق",method:"—"},
+  {label:"القسط الثاني — عند السيراميك",due:"2025-08-25",amount:105000,status:"قادم",method:"—"},
+  {label:"القسط الأخير — عند التسليم",due:"2025-09-30",amount:105000,status:"قادم",method:"—"}
+ ],
+ 2:[
+  {label:"دفعة مقدم (25%)",due:"2025-01-12",amount:99000,status:"مدفوع",method:"تحويل بنكي"},
+  {label:"القسط الأول — عند المحارة",due:"2025-02-10",amount:99000,status:"مدفوع",method:"كاش"},
+  {label:"القسط الثاني — عند السيراميك",due:"2025-03-10",amount:99000,status:"مدفوع",method:"تحويل بنكي"},
+  {label:"القسط الأخير — عند التسليم",due:"2025-04-22",amount:99000,status:"مدفوع",method:"كاش"}
+ ]
+};
+
+/* ===== Helpers ===== */
+const matNet=m=>(m.qty-(m.ret||0))*m.price;
+const matRet=m=>(m.ret||0)*m.price;
+const bandMat=b=>b.mats.reduce((s,m)=>s+matNet(m),0);
+const bandCost=b=>bandMat(b)+(b.labor||0);
+const bandProfit=b=>b.client-bandCost(b);
+const pAgreement=id=>items[id].reduce((s,b)=>s+b.client,0);
+const pSpent=id=>items[id].reduce((s,b)=>s+(b.status!=='pending'?bandCost(b):0),0);
+const pProfitDone=id=>items[id].reduce((s,b)=>s+(b.status==='done'?bandProfit(b):0),0);
+const pRevDone=id=>items[id].reduce((s,b)=>s+(b.status==='done'?b.client:0),0);
+const pPaid=id=>installments[id].filter(i=>i.status==='مدفوع').reduce((s,i)=>s+i.amount,0);
+const ids=[0,1,2];
+const activeIds=projects.filter(p=>!p.done).map(p=>p.id);
+const doneIds=projects.filter(p=>p.done).map(p=>p.id);
+/* الخزنة: رأس المال + كل المحصّل − كل المصروف الفعلي */
+const treasuryBalance=()=>treasuryOpening+ids.reduce((s,i)=>s+pPaid(i),0)-ids.reduce((s,i)=>s+pSpent(i),0);
+const instTag=s=>s==='مدفوع'?'green':s==='مستحق'?'amber':'gray';
+const bandTag=s=>s==='done'?['green','منفذ']:s==='active'?['blue','جاري']:['gray','لم يبدأ'];
+
+let currentRole="owner";
+const pageMeta={dashboard:"لوحة التحكم",projects:"الشقق والمشاريع",projectDetail:"تفاصيل المشروع",clients:"العملاء",payments:"المدفوعات والأقساط",materials:"الخامات والمرتجعات",labor:"الفنيين والعمال",statement:"كشف حساب العميل",profit:"ربحية الشقق",transactions:"سجل الحركات المالية",suppliers:"الموردون",alerts:"المتابعة والتنبيهات"};
+
+function go(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.page===page));
+  document.getElementById('pageTitle').textContent=pageMeta[page]||"";
+  window.scrollTo(0,0);
+  if(page==='statement')renderStatement();
+  if(page==='profit')renderProfit();
+  if(page==='transactions')renderTransactions();
+  if(page==='suppliers')renderSuppliers();
+  if(page==='alerts')renderAlerts();
+}
+document.querySelectorAll('.nav-item').forEach(n=>n.onclick=()=>go(n.dataset.page));
+
+document.getElementById('roleSwitch').onchange=function(){
+  currentRole=this.value;const owner=currentRole==='owner';
+  document.getElementById('userNm').textContent=owner?'أحمد':'محمد';
+  document.getElementById('userRl').textContent=owner?'صاحب الشركة':'مشرف موقع';
+  document.getElementById('userAv').textContent=owner?'أ':'م';
+  document.querySelectorAll('.owner-only').forEach(e=>e.style.display=owner?'':'none');
+  renderDashboard();renderProfit();renderAlerts();
+};
+
+/* ===== Dashboard ===== */
+function renderDashboard(){
+  const tAgree=ids.reduce((s,i)=>s+pAgreement(i),0);
+  const tPaid=ids.reduce((s,i)=>s+pPaid(i),0);
+  const tDue=tAgree-tPaid;
+  const tProfit=ids.reduce((s,i)=>s+pProfitDone(i),0);
+  const tSpent=ids.reduce((s,i)=>s+pSpent(i),0);
+  document.getElementById('dashStats').innerHTML=`
+    <div class="card stat row-click" onclick="go('projects')"><div class="top"><span class="label">المشاريع الجارية</span><span class="ic ic-blue">${ic('building')}</span></div><div class="val">${activeIds.length}</div><div class="note">${activeIds.map(i=>projects[i].key).join(' · ')}</div></div>
+    <div class="card stat"><div class="top"><span class="label">إجمالي المحصّل</span><span class="ic ic-green">${ic('cash')}</span></div><div class="val tnum">${EGP(tPaid)} <small>ج.م</small></div><div class="note">من إجمالي ${EGP(tAgree)}</div></div>
+    <div class="card stat row-click" onclick="go('alerts')"><div class="top"><span class="label">مستحقات على العملاء</span><span class="ic ic-amber">${ic('receipt')}</span></div><div class="val tnum">${EGP(tDue)} <small>ج.م</small></div><div class="note">أقساط متبقية للتحصيل</div></div>
+    ${currentRole==='owner'?`<div class="card stat owner-only"><div class="top"><span class="label">صافي الربح المحقق</span><span class="ic ic-green">${ic('chart')}</span></div><div class="val tnum" style="color:var(--pos)">${EGP(tProfit)} <small>ج.م</small></div><div class="note">من البنود المنفذة</div></div>`:''}`;
+  // الخزنة
+  document.getElementById('dashTreasury').innerHTML=`
+    <div class="treasury">
+      <div class="tz-top"><div class="tz-ic">${ic('wallet')}</div>
+        <div><div class="tz-ttl">رصيد الخزنة الحالي</div><div class="tz-sub">رأس مال افتتاحي ${EGP(treasuryOpening)} + تحصيلات − مصروفات</div></div></div>
+      <div class="tz-bal">${EGP(treasuryBalance())} <small>ج.م</small></div>
+      <div class="tz-row">
+        <div><div class="l">↓ داخل (تحصيلات)</div><div class="v in">${EGP(tPaid)} ج.م</div></div>
+        <div><div class="l">↑ خارج (مشتريات + أجور)</div><div class="v out">${EGP(tSpent)} ج.م</div></div>
+        <div><div class="l">رأس المال الافتتاحي</div><div class="v">${EGP(treasuryOpening)} ج.م</div></div>
+      </div>
+    </div>`;
+  document.getElementById('dashProjects').innerHTML=activeIds.map(id=>pcard(projects[id])).join('');
+}
+/* كارت مشروع موحّد */
+function pcard(p){
+  const prog=Math.round(p.currentStage/STAGES.length*100),paid=pPaid(p.id),due=pAgreement(p.id)-paid;
+  const curBand=items[p.id].find(b=>b.status==='active');
+  const tag=p.done?`<span class="tag green"><span class="dot"></span>مكتمل ومسلّم</span>`:`<span class="tag blue"><span class="dot"></span>${curBand?curBand.name:'قيد الإنهاء'}</span>`;
+  return `<div class="pcard ${p.done?'is-done':''}" onclick="openProject(${p.id})">
+    <div class="pc-band"></div>
+    <div class="pc-body">
+      <div class="pc-head"><div><div class="pc-name">${p.name}</div><div class="pc-client">${p.client}</div></div>${tag}</div>
+      <div class="pc-addr">${ic('pin')} ${p.address}</div>
+      <div class="pc-prog"><span class="muted" style="font-size:11px">الإنجاز</span><div class="bar-track"><div class="bar-fill ${prog>=100?'full':''}" style="width:${prog}%"></div></div><span class="pct">${prog}%</span></div>
+      <div class="pc-fin">
+        <div><div class="l">قيمة التعاقد</div><div class="v">${EGP(pAgreement(p.id))}</div></div>
+        <div><div class="l">محصّل</div><div class="v" style="color:var(--pos)">${EGP(paid)}</div></div>
+        <div><div class="l">${p.done?'تاريخ التسليم':'متبقي'}</div><div class="v" style="color:${p.done?'var(--ink)':'var(--warn)'}">${p.done?p.delivered:EGP(due)}</div></div>
+      </div>
+    </div></div>`;
+}
+
+/* ===== Projects ===== */
+let projTabState='active';
+function projTab(t){projTabState=t;
+  document.querySelectorAll('#projTabs .tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  renderProjects();}
+function renderProjects(){
+  document.getElementById('cntActive').textContent=activeIds.length;
+  document.getElementById('cntDone').textContent=doneIds.length;
+  const list=projTabState==='active'?activeIds:doneIds;
+  const body=document.getElementById('projectsBody');
+  if(!list.length){body.innerHTML=`<div class="empty-state" style="grid-column:1/-1">${ic('award')}<div>لا توجد مشاريع ${projTabState==='active'?'قيد التنفيذ':'مكتملة'} حالياً</div></div>`;return;}
+  body.innerHTML=list.map(id=>pcard(projects[id])).join('');
+}
+
+function openProject(id){
+  const p=projects[id],paid=pPaid(id),agreement=pAgreement(id),due=agreement-paid,prog=Math.round(p.currentStage/STAGES.length*100);
+  const spent=pSpent(id);
+  document.getElementById('projectDetailBody').innerHTML=`
+    <div class="card card-pad" style="margin-bottom:16px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px">
+      <div><h3 style="font-size:20px;font-weight:700">${p.name}</h3><p class="muted" style="margin-top:3px">${p.address}</p>
+        <div style="display:flex;gap:26px;margin-top:16px;flex-wrap:wrap">
+          <div><div class="muted" style="font-size:11px">العميل</div><div style="font-weight:600">${p.client}</div></div>
+          <div><div class="muted" style="font-size:11px">المساحة</div><div style="font-weight:600">${p.area} م²</div></div>
+          <div><div class="muted" style="font-size:11px">البدء</div><div style="font-weight:600" class="tnum">${p.start}</div></div>
+          <div><div class="muted" style="font-size:11px">التسليم</div><div style="font-weight:600" class="tnum">${p.deliver}</div></div>
+        </div></div>
+      <div style="text-align:center;padding:0 10px"><div style="font-size:34px;font-weight:700;color:var(--accent)" class="tnum">${prog}%</div><div class="muted" style="font-size:12px">نسبة الإنجاز</div></div></div>
+    <div class="grid cols-3" style="margin-bottom:18px">
+      <div class="card stat"><div class="top"><span class="label">قيمة التعاقد</span></div><div class="val tnum">${EGP(agreement)} <small>ج.م</small></div></div>
+      <div class="card stat"><div class="top"><span class="label">المحصّل</span></div><div class="val tnum" style="color:var(--pos)">${EGP(paid)} <small>ج.م</small></div></div>
+      <div class="card stat"><div class="top"><span class="label">المتبقي</span></div><div class="val tnum" style="color:var(--warn)">${EGP(due)} <small>ج.م</small></div></div>
+    </div>
+    <div class="grid cols-2">
+      <div><div class="section-label">بنود التنفيذ</div><div class="card card-pad"><div class="stages">
+        ${items[id].map(b=>{const c=b.status==='done'?'done':b.status==='active'?'active':'';const d=b.status==='done'?ic('check'):'';const lbl=b.status==='done'?'مكتمل':b.status==='active'?'جاري الآن':'في الانتظار';
+          return `<div class="stage ${c}"><div class="dot">${d||''}</div><div><div class="t">${b.name}</div><div class="d">${lbl}</div></div></div>`}).join('')}
+      </div></div></div>
+      <div><div class="section-label">توثيق المراحل (قبل / بعد)</div><div class="card card-pad"><div class="gallery">
+        <div class="photo">${ic('image')}<span class="lbl">تأسيس — بعد</span></div>
+        <div class="photo">${ic('image')}<span class="lbl">محارة — قبل</span></div>
+        <div class="photo">${ic('image')}<span class="lbl">محارة — بعد</span></div>
+        <div class="photo add">${ic('plus')}<span class="lbl">رفع صورة</span></div>
+      </div></div>
+      <div class="section-label">ملخص مالي</div><div class="card card-pad">
+        <div class="kv"><span class="k">إجمالي المصروف حتى الآن</span><span class="v tnum" style="color:var(--neg)">${EGP(spent)} ج.م</span></div>
+        <div class="kv"><span class="k">المحصّل من العميل</span><span class="v tnum" style="color:var(--pos)">${EGP(paid)} ج.م</span></div>
+      </div></div>
+    </div>
+    <div class="btn-row" style="margin-top:20px">
+      <button class="btn" onclick="go('statement');document.getElementById('stProject').value='${id}';renderStatement()">${ic('receipt')} كشف حساب هذه الشقة</button>
+      <button class="btn ghost" onclick="go('profit');document.getElementById('profitProject').value='${id}';renderProfit()">${ic('chart')} ربحية هذه الشقة</button>
+    </div>`;
+  go('projectDetail');document.getElementById('pageTitle').textContent=p.name;
+}
+
+/* ===== Clients ===== */
+function renderClients(){
+  document.getElementById('clientsBody').innerHTML=projects.map(p=>{
+    const paid=pPaid(p.id),due=pAgreement(p.id)-paid;
+    return `<tr><td style="font-weight:700">${p.client}</td><td dir="ltr" style="text-align:right" class="tnum">${p.phone}</td>
+      <td>${p.key} — ${p.address.split('—').pop().trim()}</td><td class="num">1</td>
+      <td class="num" style="color:var(--pos)">${EGP(paid)} ج.م</td><td class="num" style="color:var(--warn)">${EGP(due)} ج.م</td>
+      <td><button class="btn ghost sm" onclick="go('statement');document.getElementById('stProject').value='${p.id}';renderStatement()">كشف الحساب</button></td></tr>`;
+  }).join('');
+}
+
+/* ===== Payments / Installments ===== */
+function renderPayments(){
+  const tAgree=ids.reduce((s,i)=>s+pAgreement(i),0),tPaid=ids.reduce((s,i)=>s+pPaid(i),0);
+  document.getElementById('paymentsStats').innerHTML=`
+    <div class="card stat"><div class="top"><span class="label">إجمالي التعاقدات</span></div><div class="val tnum">${EGP(tAgree)} <small>ج.م</small></div></div>
+    <div class="card stat"><div class="top"><span class="label">المحصّل</span></div><div class="val tnum" style="color:var(--pos)">${EGP(tPaid)} <small>ج.م</small></div></div>
+    <div class="card stat"><div class="top"><span class="label">المتبقي (أقساط)</span></div><div class="val tnum" style="color:var(--warn)">${EGP(tAgree-tPaid)} <small>ج.م</small></div></div>`;
+  document.getElementById('paymentsBody').innerHTML=projects.map(p=>{
+    const plan=installments[p.id],paid=pPaid(p.id),agree=pAgreement(p.id);
+    return `<div class="table-card" style="margin-bottom:18px"><div class="table-top">
+        <h4>${p.name} — ${p.client}</h4>
+        <div class="btn-row"><span class="tag gray">مقدم ${p.downPct}%</span><span class="tag green">مدفوع ${EGP(paid)}</span><span class="tag amber">متبقي ${EGP(agree-paid)}</span></div></div>
+      <div class="table-scroll"><table><thead><tr><th>الدفعة</th><th>تاريخ الاستحقاق</th><th>المبلغ</th><th>طريقة الدفع</th><th>الحالة</th></tr></thead>
+      <tbody>${plan.map(it=>`<tr><td style="font-weight:600">${it.label}</td><td class="tnum muted">${it.due}</td>
+        <td class="num">${EGP(it.amount)} ج.م</td><td class="muted">${it.method}</td><td><span class="tag ${instTag(it.status)}"><span class="dot"></span>${it.status}</span></td></tr>`).join('')}</tbody>
+      <tfoot><tr><td>الإجمالي</td><td></td><td class="num">${EGP(agree)} ج.م</td><td colspan="2" class="muted">قيمة التعاقد الكاملة</td></tr></tfoot></table></div></div>`;
+  }).join('');
+}
+
+/* ===== Materials + Returns ===== */
+function allMaterials(){
+  const out=[];ids.forEach(id=>items[id].forEach(b=>b.mats.forEach(m=>out.push({...m,proj:projects[id].key,band:b.name}))));
+  return out;
+}
+function renderMaterials(){
+  const f=document.getElementById('matFilter').value;
+  let list=allMaterials();if(f!=='all')list=list.filter(m=>m.proj===f);
+  list.sort((a,b)=>a.date<b.date?-1:1);
+  const net=list.reduce((s,m)=>s+matNet(m),0),ret=list.reduce((s,m)=>s+matRet(m),0);
+  document.getElementById('matTotal').textContent=`صافي المشتريات: ${EGP(net)} ج.م`;
+  document.getElementById('matRet').textContent=`مرتجعات: ${EGP(ret)} ج.م`;
+  document.getElementById('materialsBody').innerHTML=list.map(m=>`<tr>
+    <td class="tnum muted">${m.date}</td><td><span class="tag gray">${m.proj}</span></td><td class="muted">${m.band}</td>
+    <td style="font-weight:600">${m.item}</td><td class="num">${EGP(m.qty)} <span class="muted">${m.unit}</span></td>
+    <td class="num">${m.ret?`<span style="color:var(--neg)">${EGP(m.ret)}</span>`:'<span class="muted">—</span>'}</td>
+    <td class="num">${EGP(m.qty-(m.ret||0))}</td><td class="num">${EGP(m.price)} ج.م</td>
+    <td class="num" style="color:var(--neg)">${EGP(matNet(m))} ج.م</td><td class="muted">${m.supplier}</td></tr>`).join('');
+}
+
+/* ===== Labor ===== */
+function renderLabor(){
+  const rows=[];ids.forEach(id=>items[id].forEach(b=>{if(b.labor>0)rows.push({date:b.ldate,team:b.team,band:b.name,proj:projects[id].key,type:b.ctype,amount:b.labor,status:b.status});}));
+  rows.sort((a,b)=>a.date<b.date?-1:1);
+  document.getElementById('laborBody').innerHTML=rows.map(l=>{const t=bandTag(l.status);
+    return `<tr><td class="tnum muted">${l.date}</td><td style="font-weight:600">${l.team}</td><td><span class="tag blue">${l.band}</span></td>
+    <td>${l.proj}</td><td><span class="tag ${l.type.includes('مقطوعة')?'amber':'gray'}">${l.type}</span></td>
+    <td><span class="tag ${t[0]}">${t[1]}</span></td><td class="num" style="color:var(--neg)">${EGP(l.amount)} ج.م</td></tr>`;}).join('');
+}
+
+/* ===== Client Statement ===== */
+function renderStatement(){
+  const id=+document.getElementById('stProject').value,p=projects[id];
+  const spentBands=items[id].filter(b=>b.status!=='pending');
+  const totalSpent=spentBands.reduce((s,b)=>s+bandCost(b),0);
+  const agreement=pAgreement(id),paid=pPaid(id),due=agreement-paid;
+  const today=new Date().toLocaleDateString('en-GB');
+  let bandsHtml='';
+  spentBands.forEach(b=>{
+    bandsHtml+=`<tr class="grp"><td colspan="6">بند: ${b.name} <span class="bt">إجمالي مصروفات البند: ${EGP(bandCost(b))} ج.م</span></td></tr>`;
+    b.mats.forEach(m=>{const n=m.qty-(m.ret||0);
+      bandsHtml+=`<tr><td>${m.date}</td><td>${m.item}${m.ret?` <span style="color:var(--neg);font-size:10.5px">(مرتجع ${m.ret})</span>`:''}</td><td>${EGP(n)}</td><td>${m.unit}</td><td>${EGP(m.price)}</td><td><b>${EGP(n*m.price)}</b></td></tr>`;});
+    if(b.labor)bandsHtml+=`<tr><td>${b.ldate}</td><td>مصنعية وتنفيذ — ${b.team} (${b.ctype})</td><td>—</td><td>—</td><td>—</td><td><b>${EGP(b.labor)}</b></td></tr>`;
+    bandsHtml+=`<tr class="sub"><td colspan="5" style="text-align:left">إجمالي بند ${b.name}</td><td>${EGP(bandCost(b))} ج.م</td></tr>`;
+  });
+  const planHtml=installments[id].map(it=>`<tr><td style="font-weight:600">${it.label}</td><td>${it.due}</td><td><b>${EGP(it.amount)} ج.م</b></td>
+    <td><span class="tag ${instTag(it.status)}">${it.status}</span></td></tr>`).join('');
+  document.getElementById('statementBody').innerHTML=`<div class="statement">
+    <div class="st-head">
+      <div class="co"><div class="logo">${ic('building')}</div><h2>شركة الضبع للتجارة والتوريدات</h2><p>مقاولات وتشطيبات · القاهرة · هاتف 0100 000 0000 · سجل تجاري 12345</p></div>
+      <div class="meta"><b>كشف حساب</b><br>رقم: INV-${1000+id}<br>التاريخ: ${today}</div></div>
+    <div class="st-body">
+      <div class="st-client">
+        <div><div class="l">العميل</div><div class="b">${p.client}</div></div>
+        <div><div class="l">المشروع</div><div class="b">${p.name} · ${p.area} م²</div></div>
+        <div><div class="l">العنوان</div><div class="b" style="font-size:13px;font-weight:600">${p.address}</div></div></div>
+      <div class="st-summary">
+        <div class="st-box tot"><div class="l">قيمة التعاقد</div><div class="v">${EGP(agreement)} ج.م</div></div>
+        <div class="st-box paid"><div class="l">المدفوع</div><div class="v">${EGP(paid)} ج.م</div></div>
+        <div class="st-box due"><div class="l">المتبقي</div><div class="v">${EGP(due)} ج.م</div></div></div>
+
+      <div class="st-sec">تفاصيل المصروفات لكل بند</div>
+      <table class="st-table"><thead><tr><th>التاريخ</th><th>البيان</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead>
+        <tbody>${bandsHtml}
+          <tr class="sub" style="background:var(--accent-soft)"><td colspan="5" style="text-align:left;color:var(--accent-ink)">إجمالي المصروفات المنفذة حتى الآن</td><td style="color:var(--accent-ink)">${EGP(totalSpent)} ج.م</td></tr>
+        </tbody></table>
+
+      <div class="st-sec">خطة السداد (مقدم ${p.downPct}% + أقساط)</div>
+      <table class="st-table st-plan"><thead><tr><th>الدفعة</th><th>تاريخ الاستحقاق</th><th>المبلغ</th><th>الحالة</th></tr></thead><tbody>${planHtml}</tbody></table>
+
+      <div class="st-final"><table>
+        <tr><td class="muted">قيمة التعاقد الإجمالية</td><td style="text-align:left;font-weight:700">${EGP(agreement)} ج.م</td></tr>
+        <tr><td class="muted">إجمالي المدفوع</td><td style="text-align:left;font-weight:700;color:var(--pos)">${EGP(paid)} ج.م</td></tr>
+        <tr class="big"><td>المتبقي المطلوب</td><td style="text-align:left">${EGP(due)} ج.م</td></tr>
+      </table></div>
+    </div>
+    <div class="st-foot"><span>كشف تفصيلي معتمد بكل بند ومصروفاته وكمياته وتواريخه.</span><span>توقيع الشركة: ____________</span></div>
+  </div>`;
+}
+
+/* ===== Profit per apartment (owner only) ===== */
+function renderProfit(){
+  const body=document.getElementById('profitBody');
+  if(currentRole!=='owner'){
+    body.innerHTML=`<div class="card lock-card"><div><div class="ring">${ic('lock')}</div><h3>صلاحية مقيّدة</h3><p>بيانات الأرباح والمصاريف متاحة لصاحب الشركة فقط ولا تظهر للموظفين. برجاء الدخول بحساب المالك للاطلاع.</p></div></div>`;return;}
+  const id=+document.getElementById('profitProject').value,p=projects[id],bands=items[id];
+  const agreement=pAgreement(id),paid=pPaid(id),spent=pSpent(id),profitDone=pProfitDone(id),revDone=pRevDone(id);
+  const rows=bands.map(b=>{const t=bandTag(b.status);const counted=b.status==='done';
+    return `<tr>
+      <td style="font-weight:700">${b.name}</td>
+      <td class="num">${EGP(b.client)} ج.م</td>
+      <td class="num" style="color:var(--neg)">${b.status==='pending'?'<span class="muted">—</span>':EGP(bandCost(b))+' ج.م'}</td>
+      <td class="num" style="color:${counted?'var(--pos)':'var(--ink-3)'}">${b.status==='pending'?'<span class="muted">—</span>':EGP(bandProfit(b))+' ج.م'}</td>
+      <td>${b.status==='pending'?'<span class="muted">—</span>':`<span class="tag ${bandProfit(b)/b.client>.15?'green':'amber'}">${Math.round(bandProfit(b)/b.client*100)}%</span>`}</td>
+      <td><span class="tag ${t[0]}"><span class="dot"></span>${t[1]}</span></td></tr>`;}).join('');
+  // material detail grouped by band
+  let matHtml='';
+  bands.filter(b=>b.mats.length).forEach(b=>{
+    matHtml+=`<tr class="sub" style="background:var(--accent-soft)"><td colspan="7" style="color:var(--accent-ink);font-weight:700">${b.name} — مصنعية: ${EGP(b.labor)} ج.م</td></tr>`;
+    b.mats.forEach(m=>{matHtml+=`<tr><td class="muted tnum">${m.date}</td><td style="font-weight:600">${m.item}</td><td class="num">${EGP(m.qty)} ${m.unit}</td>
+      <td class="num">${m.ret?`<span style="color:var(--neg)">${EGP(m.ret)}</span>`:'<span class="muted">—</span>'}</td>
+      <td class="num">${EGP(m.qty-(m.ret||0))}</td><td class="num">${EGP(m.price)} ج.م</td><td class="num" style="color:var(--neg)">${EGP(matNet(m))} ج.م</td></tr>`;});
+  });
+  body.innerHTML=`
+    <div class="grid cols-4" style="margin-bottom:20px">
+      <div class="card stat"><div class="top"><span class="label">قيمة التعاقد</span><span class="ic ic-blue">${ic('receipt')}</span></div><div class="val tnum">${EGP(agreement)} <small>ج.م</small></div><div class="note">إجمالي سعر العميل</div></div>
+      <div class="card stat"><div class="top"><span class="label">المحصّل من العميل</span><span class="ic ic-green">${ic('cash')}</span></div><div class="val tnum" style="color:var(--pos)">${EGP(paid)} <small>ج.م</small></div><div class="note">مقدم + أقساط</div></div>
+      <div class="card stat"><div class="top"><span class="label">المصروف حتى الآن</span><span class="ic ic-red">${ic('box')}</span></div><div class="val tnum" style="color:var(--neg)">${EGP(spent)} <small>ج.م</small></div><div class="note">خامات + مصنعية</div></div>
+      <div class="card stat"><div class="top"><span class="label">صافي الربح المحقق</span><span class="ic ic-green">${ic('chart')}</span></div><div class="val tnum" style="color:var(--pos)">${EGP(profitDone)} <small>ج.م</small></div><div class="note">من البنود المنفذة</div></div>
+    </div>
+    <div class="table-card" style="margin-bottom:20px"><div class="table-top"><h4>ربحية كل بند — ${p.name}</h4><button class="btn ghost sm">${ic('export')} تصدير PDF</button></div><div class="table-scroll"><table>
+      <thead><tr><th>البند</th><th>سعر العميل</th><th>المصروف (خامات+مصنعية)</th><th>صافي الربح</th><th>الهامش</th><th>الحالة</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr><td>إجمالي البنود المنفذة</td><td class="num">${EGP(revDone)} ج.م</td><td class="num" style="color:var(--neg)">${EGP(revDone-profitDone)} ج.م</td>
+        <td class="num" style="color:var(--pos)">${EGP(profitDone)} ج.م</td><td><span class="tag green">${revDone?Math.round(profitDone/revDone*100):0}%</span></td><td></td></tr></tfoot>
+    </table></div></div>
+    <div class="section-label">${ic('layers')} تفاصيل الخامات لكل بند</div>
+    <div class="table-card"><div class="table-scroll"><table>
+      <thead><tr><th>التاريخ</th><th>الصنف</th><th>الكمية</th><th>مرتجع</th><th>الصافي</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead>
+      <tbody>${matHtml||'<tr><td colspan="7" class="muted" style="text-align:center;padding:30px">لا توجد خامات مسجلة بعد لهذه الشقة</td></tr>'}</tbody></table></div></div>
+    <p class="muted" style="margin-top:14px">الربح المحقق يُحتسب من البنود المنفذة فقط. البنود الجارية أو التي لم تبدأ لا تُحتسب ضمن صافي الربح حتى تكتمل مصروفاتها.</p>`;
+}
+
+/* ===== Modals ===== */
+const modalForms={
+ addSupplier:{title:"إضافة مورد",body:`
+  <div class="field"><label>اسم المورد</label><input placeholder="مثال: مصنع السويس للأسمنت"></div>
+  <div class="field"><label>رقم الهاتف</label><input dir="ltr" placeholder="01xxxxxxxxx"></div>
+  <div class="field"><label>نوع التوريد</label><input placeholder="مثال: أسمنت ومواد بناء"></div>`},
+ addProject:{title:"إضافة مشروع جديد",body:`
+  <div class="field"><label>اسم المشروع / الشقة</label><input placeholder="مثال: شقة مدينة نصر"></div>
+  <div class="row2"><div class="field"><label>العميل</label><select><option>م. خالد عبد الله</option><option>د. سارة منصور</option><option>+ عميل جديد</option></select></div><div class="field"><label>المساحة (م²)</label><input type="number" placeholder="180"></div></div>
+  <div class="field"><label>العنوان والدور</label><input placeholder="الحي — الشارع — الدور"></div>
+  <div class="row2"><div class="field"><label>نسبة المقدم %</label><input type="number" value="25"></div><div class="field"><label>عدد الأقساط</label><input type="number" value="3"></div></div>
+  <div class="row2"><div class="field"><label>تاريخ البدء</label><input type="date"></div><div class="field"><label>تاريخ التسليم</label><input type="date"></div></div>`},
+ addClient:{title:"إضافة عميل",body:`
+  <div class="field"><label>اسم العميل</label><input placeholder="الاسم بالكامل"></div>
+  <div class="field"><label>رقم الهاتف</label><input dir="ltr" placeholder="01xxxxxxxxx"></div>
+  <div class="field"><label>عنوان الشقة</label><input placeholder="الحي — الشارع — الدور"></div>`},
+ addPayment:{title:"تسجيل دفعة / قسط",body:`
+  <div class="field"><label>المشروع</label><select><option>شقة الزمالك — م. خالد</option><option>شقة المعادي — د. سارة</option></select></div>
+  <div class="field"><label>القسط</label><select><option>القسط الثاني — عند السيراميك</option><option>القسط الأخير — عند التسليم</option><option>دفعة إضافية</option></select></div>
+  <div class="row2"><div class="field"><label>المبلغ</label><input type="number" placeholder="135000"></div><div class="field"><label>طريقة الدفع</label><select><option>كاش</option><option>تحويل بنكي</option><option>شيك</option></select></div></div>
+  <div class="field"><label>التاريخ</label><input type="date"></div>`},
+ addMaterial:{title:"تسجيل خامة / مشترى",body:`
+  <div class="row2"><div class="field"><label>الشقة</label><select><option>شقة الزمالك</option><option>شقة المعادي</option></select></div><div class="field"><label>البند</label><select><option>تأسيس سباكة وكهرباء</option><option>محارة</option><option>سيراميك وأرضيات</option><option>كهرباء تشطيب</option><option>دهانات</option></select></div></div>
+  <div class="field"><label>الصنف</label><input placeholder="مثال: سيراميك، أسمنت، دهانات"></div>
+  <div class="row2"><div class="field"><label>الكمية</label><input type="number" placeholder="100"></div><div class="field"><label>الوحدة</label><input placeholder="شيكارة / م² / نقلة"></div></div>
+  <div class="row2"><div class="field"><label>سعر الوحدة</label><input type="number" placeholder="95"></div><div class="field"><label>التاريخ</label><input type="date"></div></div>
+  <div class="field"><label>المورد</label><input placeholder="اسم المورد"></div>`},
+ addReturn:{title:"تسجيل مرتجع خامة",body:`
+  <div class="field"><label>الشقة</label><select><option>شقة الزمالك</option><option>شقة المعادي</option></select></div>
+  <div class="field"><label>الصنف المراد إرجاعه</label><select><option>سيراميك حوائط — كليوباترا</option><option>مونة محارة جاهزة — سيكا</option><option>أسمنت — مصنع السويس</option></select></div>
+  <div class="row2"><div class="field"><label>الكمية المرتجعة</label><input type="number" placeholder="10"></div><div class="field"><label>تاريخ المرتجع</label><input type="date"></div></div>
+  <div class="field"><label>سبب الإرجاع</label><input placeholder="مثال: زيادة عن الحاجة / تالف / مقاس خطأ"></div>
+  <div class="field"><label>القيمة المستردة (تلقائي)</label><input type="number" placeholder="تُحسب: الكمية × سعر الوحدة" disabled></div>`},
+ addLabor:{title:"تسجيل عمل / أجر",body:`
+  <div class="field"><label>اسم الفني / الفريق</label><input placeholder="مثال: معلم محارة رجب"></div>
+  <div class="row2"><div class="field"><label>البند</label><select><option>تأسيس سباكة وكهرباء</option><option>محارة</option><option>سيراميك وأرضيات</option><option>كهرباء تشطيب</option><option>دهانات</option></select></div><div class="field"><label>المشروع</label><select><option>شقة الزمالك</option><option>شقة المعادي</option></select></div></div>
+  <div class="row2"><div class="field"><label>نوع التعاقد</label><select><option>بالمتر</option><option>مقاولة مقطوعة</option><option>باليومية</option></select></div><div class="field"><label>المستحق</label><input type="number" placeholder="9000"></div></div>`}
+};
+function openModal(k){const f=modalForms[k];
+  document.getElementById('modalTitle').textContent=f.title;
+  document.getElementById('modalBody').innerHTML=f.body+`<div class="btn-row" style="margin-top:6px"><button class="btn" onclick="closeModal();toast()">حفظ</button><button class="btn ghost" onclick="closeModal()">إلغاء</button></div>`;
+  document.getElementById('modalBg').classList.add('show');}
+function closeModal(){document.getElementById('modalBg').classList.remove('show')}
+function toast(){const t=document.createElement('div');t.textContent='✓ تم الحفظ (نموذج تجريبي)';
+  t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--pos);color:#fff;padding:11px 22px;border-radius:8px;font-weight:600;font-size:13px;z-index:200;box-shadow:var(--shadow-lg)';
+  document.body.appendChild(t);setTimeout(()=>t.remove(),2000);}
+
+/* ===== Transactions feed ===== */
+const txMeta={purchase:{label:'شراء خامة',icon:'box'},return:{label:'مرتجع خامة',icon:'return'},collect:{label:'تحصيل دفعة',icon:'cash'},labor:{label:'دفع أجر فني',icon:'hard'}};
+function buildTx(){
+  const tx=[];
+  ids.forEach(id=>{const proj=projects[id].key;
+    items[id].forEach(b=>{
+      b.mats.forEach(m=>{
+        tx.push({date:m.date,type:'purchase',dir:'out',title:`شراء ${m.item}`,party:m.supplier,proj,band:b.name,qty:`${EGP(m.qty)} ${m.unit}`,amount:m.qty*m.price});
+        if(m.ret>0)tx.push({date:m.date,type:'return',dir:'in',title:`مرتجع ${m.item}`,party:m.supplier,proj,band:b.name,qty:`${EGP(m.ret)} ${m.unit}`,amount:m.ret*m.price});
+      });
+      if(b.labor>0&&b.status!=='pending')tx.push({date:b.ldate,type:'labor',dir:'out',title:`دفع أجر — ${b.team}`,party:b.team,proj,band:b.name,qty:b.ctype,amount:b.labor});
+    });
+    installments[id].filter(i=>i.status==='مدفوع').forEach(it=>tx.push({date:it.due,type:'collect',dir:'in',title:`تحصيل ${it.label}`,party:projects[id].client,proj,band:'—',qty:it.method,amount:it.amount}));
+  });
+  return tx.sort((a,b)=>a.date<b.date?1:-1);
+}
+function renderTransactions(){
+  const fT=document.getElementById('txType').value,fB=document.getElementById('txBand').value,fP=document.getElementById('txProj').value,q=document.getElementById('txSearch').value.trim();
+  ['txType','txBand','txProj'].forEach(idd=>document.getElementById(idd).classList.toggle('on',document.getElementById(idd).value!=='all'));
+  let list=buildTx();
+  if(fT!=='all')list=list.filter(t=>t.type===fT);
+  if(fB!=='all')list=list.filter(t=>t.band===fB);
+  if(fP!=='all')list=list.filter(t=>t.proj===fP);
+  if(q)list=list.filter(t=>(t.title+t.party+t.band).includes(q));
+  const inSum=list.filter(t=>t.dir==='in').reduce((s,t)=>s+t.amount,0),outSum=list.filter(t=>t.dir==='out').reduce((s,t)=>s+t.amount,0);
+  document.getElementById('txStats').innerHTML=`
+    <div class="card stat"><div class="top"><span class="label">إجمالي الوارد</span><span class="ic ic-green">${ic('down')}</span></div><div class="val tnum" style="color:var(--pos)">+ ${EGP(inSum)} <small>ج.م</small></div><div class="note">تحصيلات + مرتجعات</div></div>
+    <div class="card stat"><div class="top"><span class="label">إجمالي الصادر</span><span class="ic ic-red">${ic('up')}</span></div><div class="val tnum" style="color:var(--neg)">− ${EGP(outSum)} <small>ج.م</small></div><div class="note">مشتريات + أجور</div></div>
+    <div class="card stat"><div class="top"><span class="label">الصافي</span><span class="ic ic-blue">${ic('activity')}</span></div><div class="val tnum">${EGP(inSum-outSum)} <small>ج.م</small></div><div class="note">${list.length} حركة</div></div>`;
+  document.getElementById('txFeed').innerHTML=list.map(t=>{const m=txMeta[t.type],inn=t.dir==='in';
+    return `<div class="tx ${t.dir}">
+      <div class="tx-ic">${ic(m.icon)}<span class="arr">${ic(inn?'down':'up')}</span></div>
+      <div class="tx-main"><div class="t">${t.title}</div>
+        <div class="s"><span class="tnum">${t.date}</span><span>·</span><span>${t.party}</span><span class="tag gray" style="padding:1px 7px">${t.proj}</span>${t.band!=='—'?`<span class="tag blue" style="padding:1px 7px">${t.band}</span>`:''}<span>${t.qty}</span></div></div>
+      <div class="tx-amt">${inn?'+':'−'} ${EGP(t.amount)} ج.م</div></div>`;
+  }).join('')||'<div class="muted" style="text-align:center;padding:44px">لا توجد حركات مطابقة للفلتر</div>';
+}
+
+/* ===== Suppliers ===== */
+const supPhones=['0100 111 2233','0122 444 5566','0101 777 8899','0128 333 1100','0106 555 9988','0109 222 6677','0114 888 3344'];
+function buildSuppliers(){
+  const map={};
+  ids.forEach(id=>items[id].forEach(b=>b.mats.forEach(m=>{
+    if(!map[m.supplier])map[m.supplier]={name:m.supplier,gross:0,ret:0,count:0,projs:new Set(),its:new Set()};
+    const s=map[m.supplier];s.gross+=m.qty*m.price;s.ret+=(m.ret||0)*m.price;s.count++;s.projs.add(projects[id].key);s.its.add(m.item);
+  })));
+  return Object.values(map).sort((a,b)=>b.gross-a.gross);
+}
+function renderSuppliers(){
+  const sups=buildSuppliers(),tot=sups.reduce((s,x)=>s+x.gross,0),totRet=sups.reduce((s,x)=>s+x.ret,0);
+  document.getElementById('supStats').innerHTML=`
+    <div class="card stat"><div class="top"><span class="label">عدد الموردين</span><span class="ic ic-blue">${ic('truck')}</span></div><div class="val">${sups.length}</div></div>
+    <div class="card stat"><div class="top"><span class="label">إجمالي المشتريات</span><span class="ic ic-amber">${ic('box')}</span></div><div class="val tnum">${EGP(tot)} <small>ج.م</small></div></div>
+    <div class="card stat"><div class="top"><span class="label">إجمالي المرتجعات</span><span class="ic ic-green">${ic('return')}</span></div><div class="val tnum" style="color:var(--pos)">${EGP(totRet)} <small>ج.م</small></div></div>`;
+  document.getElementById('supBody').innerHTML=sups.map((s,i)=>`<div class="card sup">
+    <div class="h"><div class="av">${s.name.charAt(0)}</div><div><div class="nm">${s.name}</div><div class="ph">${supPhones[i%supPhones.length]}</div></div></div>
+    <div class="kv"><span class="k">إجمالي التعامل</span><span class="v tnum">${EGP(s.gross)} ج.م</span></div>
+    <div class="kv"><span class="k">المرتجعات</span><span class="v tnum" style="color:var(--pos)">${s.ret?EGP(s.ret)+' ج.م':'—'}</span></div>
+    <div class="kv"><span class="k">صافي المشتريات</span><span class="v tnum">${EGP(s.gross-s.ret)} ج.م</span></div>
+    <div class="kv"><span class="k">عدد العمليات</span><span class="v">${s.count}</span></div>
+    <div class="kv"><span class="k">الأصناف</span><span class="v" style="font-size:12px;font-weight:500;max-width:160px;text-align:left">${[...s.its].join('، ')}</span></div>
+    <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">${[...s.projs].map(p=>`<span class="tag gray">${p}</span>`).join('')}</div>
+  </div>`).join('');
+}
+
+/* ===== Alerts ===== */
+function renderAlerts(){
+  const dues=[],rets=[],pend=[],lowm=[];
+  ids.forEach(id=>{const p=projects[id];
+    installments[id].forEach(it=>{if(it.status==='مستحق')dues.push({proj:p.name,label:it.label,amount:it.amount,due:it.due});});
+    items[id].forEach(b=>{
+      b.mats.forEach(m=>{if(m.ret>0)rets.push({proj:p.key,item:m.item,supplier:m.supplier,val:m.ret*m.price,qty:m.ret,unit:m.unit});});
+      if(b.status==='pending')pend.push({proj:p.name,band:b.name,val:b.client});
+      if(b.status==='done'){const mg=Math.round(bandProfit(b)/b.client*100);if(mg<17)lowm.push({proj:p.name,band:b.name,margin:mg});}
+    });
+  });
+  const owner=currentRole==='owner';
+  document.getElementById('alertStats').innerHTML=`
+    <div class="card stat"><div class="top"><span class="label">مستحقات للتحصيل</span><span class="ic ic-amber">${ic('cash')}</span></div><div class="val">${dues.length}</div><div class="note tnum">${EGP(dues.reduce((s,d)=>s+d.amount,0))} ج.م</div></div>
+    <div class="card stat"><div class="top"><span class="label">مرتجعات للمتابعة</span><span class="ic ic-blue">${ic('return')}</span></div><div class="val">${rets.length}</div><div class="note tnum">${EGP(rets.reduce((s,r)=>s+r.val,0))} ج.م</div></div>
+    <div class="card stat"><div class="top"><span class="label">بنود لم تبدأ</span><span class="ic ic-red">${ic('box')}</span></div><div class="val">${pend.length}</div><div class="note">بانتظار التنفيذ</div></div>
+    ${owner?`<div class="card stat owner-only"><div class="top"><span class="label">هوامش منخفضة</span><span class="ic ic-red">${ic('chart')}</span></div><div class="val">${lowm.length}</div><div class="note">أقل من 17%</div></div>`:''}`;
+  const sec=(title,color,rows)=>`<div class="table-card alert-sec"><div class="table-top"><h4>${title}</h4><span class="tag ${color}">${rows.length}</span></div><div>${rows.join('')||'<div class="muted" style="text-align:center;padding:24px">لا يوجد</div>'}</div></div>`;
+  const item=(dot,t,s,right)=>`<div class="alert-item"><span class="alert-dot" style="background:${dot}"></span><div><div class="t">${t}</div><div class="s">${s}</div></div><div class="right">${right}</div></div>`;
+  let html='';
+  html+=sec('أقساط مستحقة للتحصيل','amber',dues.map(d=>item('var(--warn)',d.label,`${d.proj} · استحقاق ${d.due}`,`<b class="tnum" style="color:var(--warn)">${EGP(d.amount)} ج.م</b> <button class="btn pos sm" onclick="go('payments')">تحصيل</button>`)));
+  html+=sec('مرتجعات تحتاج متابعة استرداد','blue',rets.map(r=>item('var(--accent)',`مرتجع ${r.item}`,`${r.proj} · ${r.supplier} · ${EGP(r.qty)} ${r.unit}`,`<b class="tnum">${EGP(r.val)} ج.م</b>`)));
+  html+=sec('بنود لم تبدأ بعد','gray',pend.map(x=>item('var(--ink-3)',x.band,x.proj,`<span class="tnum muted">قيمة ${EGP(x.val)} ج.م</span>`)));
+  if(owner)html+=sec('تنبيه: هامش ربح منخفض','red',lowm.map(l=>item('var(--neg)',l.band,l.proj,`<span class="tag red">${l.margin}%</span>`)));
+  document.getElementById('alertBody').innerHTML=html;
+}
+
+/* ===== Init ===== */
+const allBands=[...new Set(ids.flatMap(id=>items[id].map(b=>b.name)))];
+document.getElementById('txBand').innerHTML='<option value="all">كل البنود</option>'+allBands.map(b=>`<option value="${b}">${b}</option>`).join('');
+renderDashboard();renderProjects();renderClients();renderPayments();renderMaterials();renderLabor();renderProfit();renderTransactions();renderSuppliers();renderAlerts();
+</script>
+</body>
+</html>
