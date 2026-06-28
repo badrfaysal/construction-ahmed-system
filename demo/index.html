@@ -270,6 +270,51 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
 .empty-state{text-align:center;padding:50px 20px;color:var(--ink-3)}
 .empty-state svg{width:40px;height:40px;opacity:.4;margin-bottom:12px}
 
+/* QUOTES */
+.qcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:var(--shadow-sm);transition:.16s}
+.qcard:hover{box-shadow:var(--shadow)}
+.qcard .qh{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.qcard .qref{font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.05em;margin-bottom:3px}
+.qcard .qname{font-size:16px;font-weight:700}
+.qcard .qaddr{font-size:11.5px;color:var(--ink-3);margin-top:5px;display:flex;align-items:center;gap:5px}
+.qcard .qaddr svg{width:12px;height:12px;flex-shrink:0}
+.qcard .qbands{background:var(--surface-2);border-radius:8px;padding:12px 14px;margin:14px 0;border:1px solid var(--line-2)}
+.qcard .qband{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0}
+.qcard .qband .n{color:var(--ink-2)}.qcard .qband .v{font-weight:600;font-variant-numeric:tabular-nums}
+.qcard .qtot{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--line-2)}
+.qcard .qtot .l{font-size:12.5px;color:var(--ink-2);font-weight:600}
+.qcard .qtot .v{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent)}
+.qcard .qfooter{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--line-2);flex-wrap:wrap;gap:8px}
+.qcard.approved{border-color:#cbe9da}
+
+/* ANALYTICS CHART */
+.chart-wrap{display:flex;align-items:flex-end;gap:8px;height:150px;padding-bottom:26px;position:relative;border-bottom:2px solid var(--line);margin-bottom:24px}
+.chart-col{display:flex;gap:3px;align-items:flex-end;flex:1;position:relative}
+.chart-col .lbl{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:9.5px;color:var(--ink-3);white-space:nowrap}
+.cbar{flex:1;border-radius:4px 4px 0 0;position:relative;min-width:18px;transition:height .4s}
+.cbar.in{background:var(--pos-soft);border:1px solid #b5dfc8}
+.cbar.out{background:var(--neg-soft);border:1px solid #f3c8c2}
+.cbar .tip{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--ink);white-space:nowrap}
+.chart-legend{display:flex;gap:16px}
+.chart-legend .l{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.chart-legend .dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* PRICE TRACKER */
+.price-row{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line-2)}
+.price-row:last-child{border-bottom:none}
+.price-spark{display:flex;align-items:flex-end;gap:2px;height:34px;padding:2px 0}
+.price-spark .sp{width:9px;border-radius:2px 2px 0 0}
+.price-change.up{color:var(--neg)}.price-change.dn{color:var(--pos)}
+
+/* WARRANTY */
+.warranty-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:16px}
+.warranty-card .wh{padding:18px 22px;border-bottom:1px solid var(--line-2);display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.warranty-card .wp{padding:16px 22px}
+.complaint-item{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:1px solid var(--line-2)}
+.complaint-item:last-child{border-bottom:none}
+.complaint-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+
 @media print{.sidebar,.topbar,.no-print{display:none!important}.main{margin:0}body{background:#fff;font-size:12px}.page{padding:0}.statement{box-shadow:none;border:none;max-width:100%}}
 </style>
 </head>
@@ -305,6 +350,13 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
   <g id="i-wallet"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4M3 5v14a2 2 0 0 0 2 2h16v-5M18 12a2 2 0 0 0 0 4h4v-4h-4z"/></g>
   <g id="i-pin"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></g>
   <g id="i-award"><circle cx="12" cy="8" r="6"/><path d="M15.5 13.5 17 22l-5-3-5 3 1.5-8.5"/></g>
+  <g id="i-doc"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></g>
+  <g id="i-bar-chart"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></g>
+  <g id="i-shield"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></g>
+  <g id="i-trending-up"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></g>
+  <g id="i-user-check"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></g>
+  <g id="i-send"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></g>
+  <g id="i-check-circle"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></g>
 </defs></svg>
 
 <aside class="sidebar">
@@ -329,6 +381,14 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
     <div class="nav-label">المتابعة</div>
     <div class="nav-item" data-page="suppliers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg> الموردون</div>
     <div class="nav-item" data-page="alerts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bell"/></svg> المتابعة والتنبيهات</div>
+    <div class="nav-label">عروض الأسعار</div>
+    <div class="nav-item" data-page="quotes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg> عروض الأسعار</div>
+    <div class="nav-item" data-page="approvedQuotes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check-circle"/></svg> العروض المعتمدة</div>
+    <div class="nav-label">تحليلات</div>
+    <div class="nav-item" data-page="analytics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bar-chart"/></svg> لوحة التحليلات</div>
+    <div class="nav-item" data-page="technicians"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-user-check"/></svg> تقرير الفنيين</div>
+    <div class="nav-item" data-page="warranty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-shield"/></svg> متابعة الضمانات</div>
+    <div class="nav-item" data-page="priceTracker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg> متابعة الأسعار</div>
   </nav>
   <div class="sb-foot">الإصدار التجريبي · 2026</div>
 </aside>
@@ -457,6 +517,56 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
     <div class="grid cols-4" id="alertStats" style="margin-bottom:20px"></div>
     <div id="alertBody"></div>
   </section>
+
+  <!-- QUOTES -->
+  <section class="page" id="quotes">
+    <div class="page-head"><div><h3>عروض الأسعار</h3><p>إنشاء العروض ومتابعة حالتها من المراجعة حتى الموافقة</p></div>
+      <button class="btn" onclick="openModal('addQuote')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg> عرض سعر جديد</button></div>
+    <div class="tabs" id="qtabs">
+      <button class="tab active" data-tab="all" onclick="qtabSwitch('all')">الكل <span class="cnt" id="qCntAll">0</span></button>
+      <button class="tab" data-tab="draft" onclick="qtabSwitch('draft')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><use href="#i-doc"/></svg> قيد المراجعة <span class="cnt" id="qCntDraft">0</span></button>
+      <button class="tab" data-tab="sent" onclick="qtabSwitch('sent')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><use href="#i-send"/></svg> تم الإرسال <span class="cnt" id="qCntSent">0</span></button>
+      <button class="tab" data-tab="approved" onclick="qtabSwitch('approved')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><use href="#i-check-circle"/></svg> تم الموافقة <span class="cnt" id="qCntApproved">0</span></button>
+    </div>
+    <div class="qcards" id="quotesBody"></div>
+  </section>
+
+  <!-- APPROVED QUOTES -->
+  <section class="page" id="approvedQuotes">
+    <div class="page-head"><div><h3>العروض المعتمدة</h3><p>عروض الأسعار التي وافق عليها العميل — جاهزة للتحويل لمشروع وعقد</p></div></div>
+    <div class="grid cols-3" id="approvedStats" style="margin-bottom:20px"></div>
+    <div class="qcards" id="approvedBody"></div>
+  </section>
+
+  <!-- ANALYTICS -->
+  <section class="page" id="analytics">
+    <div class="page-head"><div><h3>لوحة التحليلات</h3><p>تدفق مالي شهري · أكبر الموردين · تكلفة البنود · تكلفة م² لكل مشروع</p></div></div>
+    <div id="analyticsBody"></div>
+  </section>
+
+  <!-- TECHNICIANS -->
+  <section class="page" id="technicians">
+    <div class="page-head"><div><h3>تقرير الفنيين والعمال</h3><p>سجل كامل لكل فني: المشاريع والأجور والبنود المنفذة</p></div>
+      <button class="btn" onclick="openModal('addLabor')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg> تسجيل عمل</button></div>
+    <div class="grid cols-3" id="techStats" style="margin-bottom:18px"></div>
+    <div id="techBody"></div>
+  </section>
+
+  <!-- WARRANTY -->
+  <section class="page" id="warranty">
+    <div class="page-head"><div><h3>متابعة الضمانات</h3><p>فترات الضمان للمشاريع المكتملة · الشكاوى والبلاغات</p></div>
+      <button class="btn ghost" onclick="toast()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg> إضافة ضمان</button></div>
+    <div class="grid cols-3" id="warrantyStats" style="margin-bottom:18px"></div>
+    <div id="warrantyBody"></div>
+  </section>
+
+  <!-- PRICE TRACKER -->
+  <section class="page" id="priceTracker">
+    <div class="page-head"><div><h3>متابعة أسعار الخامات</h3><p>تتبع تغير أسعار المواد الرئيسية عبر الزمن</p></div>
+      <button class="btn ghost" onclick="toast()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg> إضافة خامة</button></div>
+    <div class="grid cols-3" id="priceStats" style="margin-bottom:18px"></div>
+    <div id="priceBody"></div>
+  </section>
 </div>
 
 <div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
@@ -473,8 +583,38 @@ const projects=[
  {id:1,key:"المعادي",name:"شقة المعادي",client:"د. سارة منصور",phone:"0122 987 6543",address:"المعادي — شارع 9 — الدور الثالث",area:170,start:"2025-06-10",deliver:"2025-09-30",currentStage:2,downPct:25,done:false},
  {id:2,key:"مدينة نصر",name:"شقة مدينة نصر",client:"أ. محمود السيد",phone:"0111 222 3344",address:"مدينة نصر — شارع عباس العقاد — الدور السابع",area:155,start:"2025-01-12",deliver:"2025-04-25",delivered:"2025-04-22",currentStage:8,downPct:25,done:true}
 ];
-/* رأس مال الخزنة الافتتاحي — يُضاف إليه التحصيلات ويُخصم منه المصروفات */
+/* رأس مال الخزنة الافتتاحي */
 const treasuryOpening=250000;
+
+/* عروض الأسعار */
+const quotes=[
+ {id:0,ref:'QT-2026-001',client:'م. وليد رمضان',phone:'0100 555 7788',address:'مصر الجديدة — شارع الثورة — الدور الرابع',area:200,date:'2026-05-15',status:'approved',note:'عميل طلب سيراميك إيطالي وأبواب MDF',
+  bands:[{name:'تأسيس سباكة وكهرباء',price:65000},{name:'محارة',price:110000},{name:'سيراميك وأرضيات',price:140000},{name:'كهرباء تشطيب',price:60000},{name:'دهانات',price:90000},{name:'لمسات نهائية',price:40000}]},
+ {id:1,ref:'QT-2026-002',client:'أ. هند الشامي',phone:'0122 333 9900',address:'التجمع الخامس — كمبوند ميفيدا — الدور الأول',area:280,date:'2026-06-01',status:'sent',note:'دوبلكس — احتمال إضافة رخام للأرضيات',
+  bands:[{name:'تأسيس سباكة وكهرباء',price:85000},{name:'محارة',price:140000},{name:'سيراميك وأرضيات',price:180000},{name:'كهرباء تشطيب',price:75000},{name:'دهانات',price:120000},{name:'رخام',price:90000},{name:'لمسات نهائية',price:55000}]},
+ {id:2,ref:'QT-2026-003',client:'م. كريم ناصر',phone:'0111 444 6622',address:'المهندسين — شارع السودان — الدور العاشر',area:160,date:'2026-06-20',status:'draft',note:'طالب تخفيض السعر — في الانتظار',
+  bands:[{name:'تأسيس سباكة وكهرباء',price:52000},{name:'محارة',price:88000},{name:'سيراميك وأرضيات',price:115000},{name:'كهرباء تشطيب',price:50000},{name:'دهانات',price:72000}]},
+ {id:3,ref:'QT-2026-004',client:'د. نرمين خليل',phone:'0128 777 1133',address:'الدقي — شارع الدكتور نجيب — الدور السادس',area:190,date:'2026-06-25',status:'sent',note:'',
+  bands:[{name:'تأسيس سباكة وكهرباء',price:60000},{name:'محارة',price:100000},{name:'سيراميك وأرضيات',price:130000},{name:'كهرباء تشطيب',price:55000},{name:'دهانات',price:85000},{name:'لمسات نهائية',price:38000}]}
+];
+
+/* ضمانات المشاريع المكتملة */
+const warranties=[
+ {projId:2,name:'شقة مدينة نصر',client:'أ. محمود السيد',phone:'0111 222 3344',startDate:'2025-04-22',months:12,
+  complaints:[
+   {date:'2025-06-15',desc:'ظهور تشقق في محارة غرفة النوم الرئيسية',status:'تم الإصلاح'},
+   {date:'2025-08-03',desc:'تسريب بسيط في سباكة الحمام الثاني',status:'قيد الإصلاح'}
+  ]}
+];
+
+/* تاريخ أسعار الخامات */
+const priceHistory={
+ 'أسمنت (شيكارة)':[{d:'01/25',p:85},{d:'03/25',p:90},{d:'05/25',p:95},{d:'07/25',p:92},{d:'09/25',p:98},{d:'01/26',p:105},{d:'06/26',p:110}],
+ 'رمل (نقلة)':[{d:'01/25',p:950},{d:'03/25',p:1000},{d:'05/25',p:1100},{d:'07/25',p:1150},{d:'09/25',p:1200},{d:'01/26',p:1200},{d:'06/26',p:1250}],
+ 'سيراميك أرضيات (م²)':[{d:'01/25',p:125},{d:'03/25',p:130},{d:'06/25',p:135},{d:'09/25',p:138},{d:'01/26',p:140},{d:'06/26',p:145}],
+ 'مواسير PPR':[{d:'01/25',p:160},{d:'04/25',p:170},{d:'06/25',p:175},{d:'09/25',p:178},{d:'01/26',p:180},{d:'06/26',p:185}],
+ 'دهانات بلاستيك (بستلة)':[{d:'01/25',p:780},{d:'04/25',p:800},{d:'07/25',p:830},{d:'10/25',p:850},{d:'01/26',p:850},{d:'06/26',p:870}]
+};
 
 /* البنود — قلب النظام: كل بند بمصروفاته وسعره للعميل */
 const items={
@@ -576,7 +716,7 @@ const instTag=s=>s==='مدفوع'?'green':s==='مستحق'?'amber':'gray';
 const bandTag=s=>s==='done'?['green','منفذ']:s==='active'?['blue','جاري']:['gray','لم يبدأ'];
 
 let currentRole="owner";
-const pageMeta={dashboard:"لوحة التحكم",projects:"الشقق والمشاريع",projectDetail:"تفاصيل المشروع",clients:"العملاء",payments:"المدفوعات والأقساط",materials:"الخامات والمرتجعات",labor:"الفنيين والعمال",statement:"كشف حساب العميل",profit:"ربحية الشقق",transactions:"سجل الحركات المالية",suppliers:"الموردون",alerts:"المتابعة والتنبيهات"};
+const pageMeta={dashboard:"لوحة التحكم",projects:"الشقق والمشاريع",projectDetail:"تفاصيل المشروع",clients:"العملاء",payments:"المدفوعات والأقساط",materials:"الخامات والمرتجعات",labor:"الفنيين والعمال",statement:"كشف حساب العميل",profit:"ربحية الشقق",transactions:"سجل الحركات المالية",suppliers:"الموردون",alerts:"المتابعة والتنبيهات",quotes:"عروض الأسعار",approvedQuotes:"العروض المعتمدة",analytics:"لوحة التحليلات",technicians:"تقرير الفنيين",warranty:"متابعة الضمانات",priceTracker:"متابعة أسعار الخامات"};
 
 function go(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -589,6 +729,12 @@ function go(page){
   if(page==='transactions')renderTransactions();
   if(page==='suppliers')renderSuppliers();
   if(page==='alerts')renderAlerts();
+  if(page==='quotes')renderQuotes();
+  if(page==='approvedQuotes')renderApprovedQuotes();
+  if(page==='analytics')renderAnalytics();
+  if(page==='technicians')renderTechnicians();
+  if(page==='warranty')renderWarranty();
+  if(page==='priceTracker')renderPriceTracker();
 }
 document.querySelectorAll('.nav-item').forEach(n=>n.onclick=()=>go(n.dataset.page));
 
@@ -991,6 +1137,229 @@ function renderAlerts(){
   html+=sec('بنود لم تبدأ بعد','gray',pend.map(x=>item('var(--ink-3)',x.band,x.proj,`<span class="tnum muted">قيمة ${EGP(x.val)} ج.م</span>`)));
   if(owner)html+=sec('تنبيه: هامش ربح منخفض','red',lowm.map(l=>item('var(--neg)',l.band,l.proj,`<span class="tag red">${l.margin}%</span>`)));
   document.getElementById('alertBody').innerHTML=html;
+}
+
+/* ===== Quotes ===== */
+const qstatMeta={draft:{label:'قيد المراجعة',cls:'gray'},sent:{label:'تم الإرسال للعميل',cls:'amber'},approved:{label:'تم الموافقة',cls:'green'}};
+let qtab='all';
+function qtabSwitch(t){
+  qtab=t;
+  document.querySelectorAll('#qtabs .tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
+  renderQuotes();
+}
+function qcard(q){
+  const tot=q.bands.reduce((s,b)=>s+b.price,0);
+  const sm=qstatMeta[q.status];
+  return `<div class="qcard ${q.status==='approved'?'approved':''}">
+    <div class="qh">
+      <div><div class="qref">${q.ref} · ${q.date} · ${q.area} م²</div>
+        <div class="qname">${q.client}</div>
+        <div class="qaddr">${ic('pin')} ${q.address}</div>
+        ${q.note?`<div class="qaddr" style="color:var(--warn);margin-top:4px">${ic('bell')} ${q.note}</div>`:''}
+      </div>
+      <span class="tag ${sm.cls}"><span class="dot"></span>${sm.label}</span>
+    </div>
+    <div class="qbands">${q.bands.map(b=>`<div class="qband"><span class="n">${b.name}</span><span class="v">${EGP(b.price)} ج.م</span></div>`).join('')}</div>
+    <div class="qtot"><span class="l">إجمالي عرض السعر</span><span class="v">${EGP(tot)} ج.م</span></div>
+    <div class="qfooter">
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn ghost sm" onclick="toast()">${ic('print')} طباعة العرض</button>
+        ${q.status==='draft'?`<button class="btn warn sm" onclick="toast()">${ic('send')} إرسال للعميل</button>`:''}
+        ${q.status==='approved'?`<button class="btn pos sm" onclick="go('approvedQuotes')">${ic('check-circle')} عرض المعتمدة</button>`:''}
+      </div>
+      ${q.status==='sent'?`<div style="display:flex;gap:7px">
+        <button class="btn pos sm" onclick="toast()">موافقة</button>
+        <button class="btn sm" style="background:var(--neg-soft);color:var(--neg);border-color:var(--neg)">رفض</button>
+      </div>`:''}
+    </div>
+  </div>`;
+}
+function renderQuotes(){
+  const cnt={all:quotes.length,draft:0,sent:0,approved:0};
+  quotes.forEach(q=>cnt[q.status]++);
+  document.getElementById('qCntAll').textContent=cnt.all;
+  document.getElementById('qCntDraft').textContent=cnt.draft;
+  document.getElementById('qCntSent').textContent=cnt.sent;
+  document.getElementById('qCntApproved').textContent=cnt.approved;
+  const list=qtab==='all'?quotes:quotes.filter(q=>q.status===qtab);
+  document.getElementById('quotesBody').innerHTML=list.map(q=>qcard(q)).join('')||`<div class="empty-state" style="grid-column:1/-1">${ic('doc')}<div>لا توجد عروض في هذه الحالة</div></div>`;
+}
+
+/* ===== Approved Quotes ===== */
+function renderApprovedQuotes(){
+  const list=quotes.filter(q=>q.status==='approved');
+  const totAll=list.reduce((s,q)=>s+q.bands.reduce((ss,b)=>ss+b.price,0),0);
+  document.getElementById('approvedStats').innerHTML=`
+    <div class="card stat"><div class="top"><span class="label">عدد العروض المعتمدة</span><span class="ic ic-green">${ic('check-circle')}</span></div><div class="val">${list.length}</div><div class="note">جاهزة للتحويل لمشاريع</div></div>
+    <div class="card stat"><div class="top"><span class="label">إجمالي قيمة العقود</span><span class="ic ic-blue">${ic('receipt')}</span></div><div class="val tnum">${EGP(totAll)} <small>ج.م</small></div></div>
+    <div class="card stat"><div class="top"><span class="label">إجمالي المقدم (25%)</span><span class="ic ic-amber">${ic('cash')}</span></div><div class="val tnum">${EGP(totAll*0.25)} <small>ج.م</small></div><div class="note">مستحق عند بدء التنفيذ</div></div>`;
+  document.getElementById('approvedBody').innerHTML=list.map(q=>{
+    const tot=q.bands.reduce((s,b)=>s+b.price,0);
+    return `<div class="qcard approved">
+      <div class="qh">
+        <div><div class="qref">${q.ref} · ${q.date} · ${q.area} م²</div>
+          <div class="qname">${q.client}</div>
+          <div class="qaddr">${ic('pin')} ${q.address}</div>
+        </div>
+        <span class="tag green"><span class="dot"></span>موافقة العميل</span>
+      </div>
+      <div class="qbands">${q.bands.map(b=>`<div class="qband"><span class="n">${b.name}</span><span class="v">${EGP(b.price)} ج.م</span></div>`).join('')}</div>
+      <div class="qtot"><span class="l">إجمالي التعاقد</span><span class="v">${EGP(tot)} ج.م</span></div>
+      <div class="qfooter">
+        <div><div class="muted" style="font-size:11px">المقدم 25%</div><div style="font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;font-size:15px">${EGP(tot*0.25)} ج.م</div></div>
+        <div style="display:flex;gap:7px">
+          <button class="btn ghost sm" onclick="toast()">${ic('print')} طباعة العقد</button>
+          <button class="btn pos sm" onclick="toast()">${ic('plus')} إنشاء مشروع</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('')||`<div class="empty-state" style="grid-column:1/-1">${ic('check-circle')}<div>لا توجد عروض معتمدة حالياً</div></div>`;
+}
+
+/* ===== Analytics ===== */
+function renderAnalytics(){
+  const tx=buildTx();
+  const months={};
+  tx.forEach(t=>{const m=t.date.substring(0,7);if(!months[m])months[m]={in:0,out:0};months[m][t.dir]+=t.amount;});
+  const mkeys=Object.keys(months).sort().slice(-7);
+  const maxV=Math.max(...mkeys.flatMap(m=>[months[m].in,months[m].out]),1);
+  const bars=mkeys.map(m=>{
+    const inH=Math.max(4,Math.round(months[m].in/maxV*100));
+    const outH=Math.max(4,Math.round(months[m].out/maxV*100));
+    const lbl=m.slice(5)+'/'+m.slice(2,4);
+    return `<div class="chart-col"><div class="cbar in" style="height:${inH}%"><span class="tip">${Math.round(months[m].in/1000)}k</span></div>
+      <div class="cbar out" style="height:${outH}%"></div>
+      <span class="lbl">${lbl}</span></div>`;
+  }).join('');
+  const sups=buildSuppliers().slice(0,5);
+  const maxSup=sups[0]?.gross||1;
+  const bandTotals={};
+  ids.forEach(id=>items[id].forEach(b=>{if(!bandTotals[b.name])bandTotals[b.name]={mat:0,labor:0};bandTotals[b.name].mat+=bandMat(b);bandTotals[b.name].labor+=b.labor||0;}));
+  const bandE=Object.entries(bandTotals).filter(([,v])=>v.mat+v.labor>0).sort((a,b)=>(b[1].mat+b[1].labor)-(a[1].mat+a[1].labor));
+  const maxB=bandE[0]?bandE[0][1].mat+bandE[0][1].labor:1;
+  const projM2=ids.filter(id=>pSpent(id)>0).map(id=>({name:projects[id].key,cost:Math.round(pSpent(id)/projects[id].area),area:projects[id].area}));
+  const avgM2=Math.round(ids.filter(id=>pSpent(id)>0).reduce((s,id)=>s+pSpent(id),0)/Math.max(ids.filter(id=>pSpent(id)>0).reduce((s,id)=>s+projects[id].area,0),1));
+  const tIn=tx.filter(t=>t.dir==='in').reduce((s,t)=>s+t.amount,0);
+  const tOut=tx.filter(t=>t.dir==='out').reduce((s,t)=>s+t.amount,0);
+  document.getElementById('analyticsBody').innerHTML=`
+    <div class="grid cols-4" style="margin-bottom:20px">
+      <div class="card stat"><div class="top"><span class="label">إجمالي الوارد</span><span class="ic ic-green">${ic('down')}</span></div><div class="val tnum" style="color:var(--pos)">${EGP(tIn)} <small>ج.م</small></div></div>
+      <div class="card stat"><div class="top"><span class="label">إجمالي الصادر</span><span class="ic ic-red">${ic('up')}</span></div><div class="val tnum" style="color:var(--neg)">${EGP(tOut)} <small>ج.م</small></div></div>
+      <div class="card stat"><div class="top"><span class="label">الصافي</span><span class="ic ic-blue">${ic('activity')}</span></div><div class="val tnum">${EGP(tIn-tOut)} <small>ج.م</small></div></div>
+      <div class="card stat owner-only"><div class="top"><span class="label">متوسط تكلفة م²</span><span class="ic ic-amber">${ic('building')}</span></div><div class="val tnum">${EGP(avgM2)} <small>ج.م</small></div></div>
+    </div>
+    <div class="grid cols-2" style="margin-bottom:20px">
+      <div class="card card-pad">
+        <div class="section-label" style="margin-top:0">${ic('bar-chart')} التدفق المالي الشهري</div>
+        <div class="chart-wrap">${bars}</div>
+        <div class="chart-legend">
+          <div class="l"><div class="dot" style="background:var(--pos-soft);border:1px solid #b5dfc8"></div>وارد (تحصيلات + مرتجعات)</div>
+          <div class="l"><div class="dot" style="background:var(--neg-soft);border:1px solid #f3c8c2"></div>صادر (مشتريات + أجور)</div>
+        </div>
+      </div>
+      <div class="card card-pad">
+        <div class="section-label" style="margin-top:0">${ic('truck')} أكبر الموردين بالحجم</div>
+        ${sups.map(s=>`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:12.5px"><span style="font-weight:600">${s.name}</span><span class="tnum" style="color:var(--ink-2)">${EGP(s.gross)} ج.م</span></div><div class="bar-track" style="min-width:0"><div class="bar-fill" style="width:${Math.round(s.gross/maxSup*100)}%"></div></div></div>`).join('')}
+      </div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card card-pad">
+        <div class="section-label" style="margin-top:0">${ic('layers')} تكلفة البنود (خامات + أجور)</div>
+        ${bandE.map(([name,v])=>{const tot=v.mat+v.labor;return`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:12.5px"><span style="font-weight:600">${name}</span><span class="tnum" style="color:var(--neg)">${EGP(tot)} ج.م</span></div><div class="bar-track" style="min-width:0"><div class="bar-fill" style="width:${Math.round(tot/maxB*100)}%;background:var(--neg)"></div></div></div>`;}).join('')}
+      </div>
+      <div class="card card-pad">
+        <div class="section-label" style="margin-top:0">${ic('building')} تكلفة المشروع / م²</div>
+        ${projM2.map(p=>`<div class="kv"><span class="k">${p.name} — ${p.area} م²</span><span class="v tnum" style="color:var(--accent)">${EGP(p.cost)} ج.م/م²</span></div>`).join('')}
+        <div class="muted" style="margin-top:14px;font-size:12px;padding-top:12px;border-top:1px solid var(--line-2)">متوسط تكلفة م² لجميع المشاريع: <b style="color:var(--ink)">${EGP(avgM2)} ج.م</b></div>
+      </div>
+    </div>`;
+}
+
+/* ===== Technicians ===== */
+function renderTechnicians(){
+  const map={};
+  ids.forEach(id=>items[id].filter(b=>b.labor>0&&b.status!=='pending').forEach(b=>{
+    if(!map[b.team])map[b.team]={name:b.team,total:0,count:0,projs:[],bands:[]};
+    const t=map[b.team];t.total+=b.labor;t.count++;
+    if(!t.projs.includes(projects[id].name))t.projs.push(projects[id].name);
+    t.bands.push({band:b.name,proj:projects[id].key,amount:b.labor,ctype:b.ctype,date:b.ldate});
+  }));
+  const techs=Object.values(map).sort((a,b)=>b.total-a.total);
+  const totAll=techs.reduce((s,t)=>s+t.total,0);
+  const totOps=techs.reduce((s,t)=>s+t.count,0);
+  document.getElementById('techStats').innerHTML=`
+    <div class="card stat"><div class="top"><span class="label">عدد الفنيين والفرق</span><span class="ic ic-blue">${ic('hard')}</span></div><div class="val">${techs.length}</div></div>
+    <div class="card stat"><div class="top"><span class="label">إجمالي الأجور المدفوعة</span><span class="ic ic-amber">${ic('cash')}</span></div><div class="val tnum">${EGP(totAll)} <small>ج.م</small></div></div>
+    <div class="card stat"><div class="top"><span class="label">متوسط الأجر / عملية</span><span class="ic ic-blue">${ic('chart')}</span></div><div class="val tnum">${EGP(Math.round(totAll/(totOps||1)))} <small>ج.م</small></div></div>`;
+  document.getElementById('techBody').innerHTML=`<div class="table-card"><div class="table-scroll"><table>
+    <thead><tr><th>الفني / الفريق</th><th>المشاريع</th><th>عدد الأعمال</th><th>إجمالي الأجور</th><th>آخر عمل</th><th>الأعمال</th></tr></thead>
+    <tbody>${techs.map(t=>`<tr>
+      <td style="font-weight:700">${t.name}</td>
+      <td>${t.projs.map(p=>`<span class="tag gray" style="margin-left:4px;margin-bottom:2px">${p}</span>`).join('')}</td>
+      <td class="num">${t.count}</td>
+      <td class="num" style="color:var(--warn);font-weight:700">${EGP(t.total)} ج.م</td>
+      <td class="muted tnum">${t.bands[t.bands.length-1]?.date||'—'}</td>
+      <td><div style="font-size:11.5px;color:var(--ink-2);line-height:1.7">${t.bands.map(b=>`${b.band} — ${b.proj} — <b class="tnum">${EGP(b.amount)} ج.م</b>`).join('<br>')}</div></td>
+    </tr>`).join('')}</tbody>
+  </table></div></div>`;
+}
+
+/* ===== Warranty ===== */
+function renderWarranty(){
+  const today=new Date('2026-06-28');
+  const active=warranties.filter(w=>{const e=new Date(w.startDate);e.setMonth(e.getMonth()+w.months);return e>today;});
+  const expired=warranties.filter(w=>{const e=new Date(w.startDate);e.setMonth(e.getMonth()+w.months);return e<=today;});
+  const totalComplaints=warranties.reduce((s,w)=>s+w.complaints.length,0);
+  document.getElementById('warrantyStats').innerHTML=`
+    <div class="card stat"><div class="top"><span class="label">ضمانات سارية</span><span class="ic ic-green">${ic('shield')}</span></div><div class="val">${active.length}</div></div>
+    <div class="card stat"><div class="top"><span class="label">ضمانات منتهية</span><span class="ic ic-red">${ic('shield')}</span></div><div class="val">${expired.length}</div></div>
+    <div class="card stat"><div class="top"><span class="label">إجمالي البلاغات</span><span class="ic ic-amber">${ic('bell')}</span></div><div class="val">${totalComplaints}</div></div>`;
+  document.getElementById('warrantyBody').innerHTML=warranties.map(w=>{
+    const expiry=new Date(w.startDate);expiry.setMonth(expiry.getMonth()+w.months);
+    const daysLeft=Math.round((expiry-today)/(1000*60*60*24));
+    const exp=daysLeft<0;
+    const tag=exp?`<span class="tag red">منتهي الضمان</span>`:daysLeft<60?`<span class="tag amber">ينتهي خلال ${daysLeft} يوم</span>`:`<span class="tag green">ساري — ${daysLeft} يوم متبقي</span>`;
+    return `<div class="warranty-card">
+      <div class="wh">
+        <div><div style="font-size:17px;font-weight:700">${w.name}</div>
+          <div class="muted" style="margin-top:3px">${w.client} · ${w.phone}</div>
+          <div class="muted" style="margin-top:4px">بدء: ${w.startDate} · انتهاء: ${expiry.toISOString().slice(0,10)} · ${w.months} شهر</div>
+        </div>${tag}
+      </div>
+      <div class="wp">
+        <div class="section-label" style="margin-top:0">${ic('bell')} الشكاوى والبلاغات (${w.complaints.length})</div>
+        ${w.complaints.length?w.complaints.map(c=>`<div class="complaint-item">
+          <div class="complaint-dot" style="background:${c.status==='تم الإصلاح'?'var(--pos)':'var(--warn)'}"></div>
+          <div style="flex:1"><div style="font-weight:600;font-size:13.5px">${c.desc}</div><div class="muted">${c.date}</div></div>
+          <span class="tag ${c.status==='تم الإصلاح'?'green':'amber'}">${c.status}</span>
+        </div>`).join(''):`<div class="muted" style="text-align:center;padding:18px">لا توجد شكاوى مسجلة ✓</div>`}
+        <button class="btn ghost sm" style="margin-top:10px" onclick="toast()">${ic('plus')} إضافة بلاغ</button>
+      </div>
+    </div>`;
+  }).join('')||`<div class="empty-state">${ic('shield')}<div>لا توجد مشاريع مكتملة بضمان مسجل بعد</div></div>`;
+}
+
+/* ===== Price Tracker ===== */
+function renderPriceTracker(){
+  const entries=Object.entries(priceHistory);
+  const rising=entries.filter(([,h])=>h[h.length-1].p>h[0].p).length;
+  document.getElementById('priceStats').innerHTML=`
+    <div class="card stat"><div class="top"><span class="label">خامات متتبّعة</span><span class="ic ic-blue">${ic('box')}</span></div><div class="val">${entries.length}</div></div>
+    <div class="card stat"><div class="top"><span class="label">أسعار في ارتفاع</span><span class="ic ic-red">${ic('trending-up')}</span></div><div class="val" style="color:var(--neg)">${rising}</div></div>
+    <div class="card stat"><div class="top"><span class="label">أسعار مستقرة / نازلة</span><span class="ic ic-green">${ic('activity')}</span></div><div class="val" style="color:var(--pos)">${entries.length-rising}</div></div>`;
+  document.getElementById('priceBody').innerHTML=`<div class="table-card"><div>${entries.map(([name,hist])=>{
+    const first=hist[0].p,last=hist[hist.length-1].p;
+    const chg=Math.round((last-first)/first*100);
+    const maxP=Math.max(...hist.map(h=>h.p));
+    const spark=hist.map(h=>`<div class="sp" style="height:${Math.max(15,Math.round(h.p/maxP*100))}%;background:${h===hist[hist.length-1]?'var(--accent)':'var(--accent-soft)'};border:1px solid var(--accent)"></div>`).join('');
+    return `<div class="price-row">
+      <div style="flex:1;min-width:140px"><div style="font-weight:700;font-size:13.5px">${name}</div><div class="muted" style="font-size:11px">آخر تحديث: ${hist[hist.length-1].d}</div></div>
+      <div class="price-spark">${spark}</div>
+      <div style="min-width:110px;text-align:start"><div style="font-size:17px;font-weight:700;font-variant-numeric:tabular-nums">${EGP(last)} ج.م</div>
+        <div class="price-change ${chg>0?'up':'dn'}" style="font-size:12px;font-weight:600">${chg>0?'↑':'↓'} ${Math.abs(chg)}% منذ البداية</div></div>
+      <div style="min-width:110px;font-size:11.5px;color:var(--ink-3)">${hist.slice(-3).map(h=>`<div>${h.d}: <b class="tnum" style="color:var(--ink)">${EGP(h.p)}</b></div>`).join('')}</div>
+    </div>`;
+  }).join('')}</div></div>`;
 }
 
 /* ===== Init ===== */
