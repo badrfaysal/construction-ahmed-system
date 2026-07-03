@@ -104,7 +104,8 @@ return [
 
     'batching' => [
         'database' => env('DB_CONNECTION', 'sqlite'),
-        'table' => 'job_batches',
+        // sy2_ prefix: this DB is shared across multiple projects.
+        'table' => 'sy2_job_batches',
     ],
 
     /*
@@ -123,7 +124,8 @@ return [
     'failed' => [
         'driver' => env('QUEUE_FAILED_DRIVER', 'database-uuids'),
         'database' => env('DB_CONNECTION', 'sqlite'),
-        'table' => 'failed_jobs',
+        // sy2_ prefix: this DB is shared across multiple projects.
+        'table' => 'sy2_failed_jobs',
     ],
 
 ];

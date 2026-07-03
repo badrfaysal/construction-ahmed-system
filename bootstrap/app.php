@@ -11,7 +11,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Register the 'role' alias so routes can use ->middleware('role:admin'),
+        // and 'no.viewer' to block read-only accounts from any write request.
+        $middleware->alias([
+            'role' => \App\Http\Middleware\CheckRole::class,
+            'no.viewer' => \App\Http\Middleware\BlockViewerWrites::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -6,6 +6,13 @@
       "runtimeExecutable": "php",
       "runtimeArgs": ["-S", "127.0.0.1:8123", "-t", "demo"],
       "port": 8123
+    },
+    {
+      "name": "app",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["artisan", "serve", "--port=${PORT}"],
+      "port": 8000,
+      "autoPort": true
     }
   ]
 }

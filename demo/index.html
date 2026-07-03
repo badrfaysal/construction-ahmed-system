@@ -27,8 +27,8 @@ a{color:inherit;text-decoration:none}svg{display:block}
 ::-webkit-scrollbar-thumb:hover{background:#b3bdcc}::-webkit-scrollbar-track{background:transparent}
 .tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
 
-.sidebar{width:252px;background:var(--sidebar);color:#cdd6e2;position:fixed;inset-block:0;inset-inline-end:0;
-  display:flex;flex-direction:column;z-index:40;border-inline-start:1px solid #0a1422}
+.sidebar{width:252px;background:var(--sidebar);color:#cdd6e2;position:fixed;inset-block:0;inset-inline-start:0;
+  display:flex;flex-direction:column;z-index:40;border-inline-end:1px solid #0a1422}
 .brand{display:flex;align-items:center;gap:12px;padding:18px 18px;border-bottom:1px solid rgba(255,255,255,.07)}
 .brand .logo{width:42px;height:42px;border-radius:9px;flex-shrink:0;background:linear-gradient(145deg,#c9962f,#a8761c);
   display:grid;place-items:center;color:#fff;box-shadow:0 4px 12px rgba(168,118,28,.35)}
@@ -44,7 +44,7 @@ a{color:inherit;text-decoration:none}svg{display:block}
 .nav-item .lock-ic{margin-inline-start:auto;opacity:.5}.nav-item.active .lock-ic{opacity:.85}
 .sb-foot{padding:14px 16px;border-top:1px solid rgba(255,255,255,.07);font-size:11px;color:#6c7c93}
 
-.main{margin-inline-end:252px;flex:1;min-width:0;display:flex;flex-direction:column}
+.main{margin-inline-start:252px;flex:1;min-width:0;display:flex;flex-direction:column}
 .topbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.9);backdrop-filter:saturate(180%) blur(10px);
   border-bottom:1px solid var(--line);padding:0 28px;height:64px;display:flex;align-items:center;gap:16px}
 .crumb{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-3);font-weight:500}
@@ -270,6 +270,35 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
 .empty-state{text-align:center;padding:50px 20px;color:var(--ink-3)}
 .empty-state svg{width:40px;height:40px;opacity:.4;margin-bottom:12px}
 
+/* SUPPLIER COMPARISON CARDS */
+.scomp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.scomp-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow-sm);transition:.16s;cursor:default}
+.scomp-card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+.scomp-band{height:4px;background:var(--accent)}
+.scomp-head{padding:16px 18px 12px;border-bottom:1px solid var(--line-2)}
+.scomp-item{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.scomp-meta{font-size:11.5px;color:var(--ink-3);margin-top:3px;display:flex;gap:10px;align-items:center}
+.scomp-body{padding:12px 18px}
+.scomp-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-2)}
+.scomp-row:last-child{border-bottom:none}
+.scomp-row.best{margin:0 -18px;padding:10px 18px;background:var(--pos-soft)}
+.scomp-sup{font-weight:600;font-size:13px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scomp-bar-wrap{flex:1;max-width:90px}
+.scomp-bar{height:5px;border-radius:3px;background:var(--accent);transition:.3s}
+.scomp-row.best .scomp-bar{background:var(--pos)}
+.scomp-price{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:90px;text-align:start}
+.scomp-row.best .scomp-price{color:var(--pos)}
+.scomp-saving{padding:10px 18px;background:var(--pos-soft);border-top:1px solid #cbe9da;display:flex;align-items:center;justify-content:space-between;font-size:12px}
+.scomp-saving .sv{font-weight:700;color:var(--pos);font-variant-numeric:tabular-nums}
+
+/* DETAIL MODAL */
+.detail-kv{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--line-2);font-size:13.5px}
+.detail-kv:last-of-type{border-bottom:none}
+.detail-kv .dk{color:var(--ink-2);font-weight:500;flex-shrink:0;min-width:110px}
+.detail-kv .dv{font-weight:600;text-align:start;direction:ltr}
+.detail-amount{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;padding:14px 0 4px;letter-spacing:-.02em}
+.detail-section{font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--ink-3);text-transform:uppercase;padding:14px 0 6px;border-top:1px solid var(--line)}
+
 /* QUOTES */
 .qcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}
 .qcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:var(--shadow-sm);transition:.16s}
@@ -389,6 +418,7 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
     <div class="nav-item" data-page="technicians"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-user-check"/></svg> تقرير الفنيين</div>
     <div class="nav-item" data-page="warranty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-shield"/></svg> متابعة الضمانات</div>
     <div class="nav-item" data-page="priceTracker"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg> متابعة الأسعار</div>
+    <div class="nav-item" data-page="supplierComparison"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg> مقارنة الموردين</div>
   </nav>
   <div class="sb-foot">الإصدار التجريبي · 2026</div>
 </aside>
@@ -567,6 +597,13 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
     <div class="grid cols-3" id="priceStats" style="margin-bottom:18px"></div>
     <div id="priceBody"></div>
   </section>
+
+  <!-- SUPPLIER COMPARISON -->
+  <section class="page" id="supplierComparison">
+    <div class="page-head"><div><h3>مقارنة الموردين</h3><p>نفس الصنف من موردين مختلفين جنب لجنب — يحدد الأرخص تلقائيًا لمساعدتك في قرارات الشراء</p></div></div>
+    <div class="grid cols-3" id="scStats" style="margin-bottom:20px"></div>
+    <div id="scBody"></div>
+  </section>
 </div>
 
 <div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
@@ -716,7 +753,7 @@ const instTag=s=>s==='مدفوع'?'green':s==='مستحق'?'amber':'gray';
 const bandTag=s=>s==='done'?['green','منفذ']:s==='active'?['blue','جاري']:['gray','لم يبدأ'];
 
 let currentRole="owner";
-const pageMeta={dashboard:"لوحة التحكم",projects:"الشقق والمشاريع",projectDetail:"تفاصيل المشروع",clients:"العملاء",payments:"المدفوعات والأقساط",materials:"الخامات والمرتجعات",labor:"الفنيين والعمال",statement:"كشف حساب العميل",profit:"ربحية الشقق",transactions:"سجل الحركات المالية",suppliers:"الموردون",alerts:"المتابعة والتنبيهات",quotes:"عروض الأسعار",approvedQuotes:"العروض المعتمدة",analytics:"لوحة التحليلات",technicians:"تقرير الفنيين",warranty:"متابعة الضمانات",priceTracker:"متابعة أسعار الخامات"};
+const pageMeta={dashboard:"لوحة التحكم",projects:"الشقق والمشاريع",projectDetail:"تفاصيل المشروع",clients:"العملاء",payments:"المدفوعات والأقساط",materials:"الخامات والمرتجعات",labor:"الفنيين والعمال",statement:"كشف حساب العميل",profit:"ربحية الشقق",transactions:"سجل الحركات المالية",suppliers:"الموردون",alerts:"المتابعة والتنبيهات",quotes:"عروض الأسعار",approvedQuotes:"العروض المعتمدة",analytics:"لوحة التحليلات",technicians:"تقرير الفنيين",warranty:"متابعة الضمانات",priceTracker:"متابعة أسعار الخامات",supplierComparison:"مقارنة الموردين"};
 
 function go(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -735,6 +772,7 @@ function go(page){
   if(page==='technicians')renderTechnicians();
   if(page==='warranty')renderWarranty();
   if(page==='priceTracker')renderPriceTracker();
+  if(page==='supplierComparison')renderSupplierComparison();
 }
 document.querySelectorAll('.nav-item').forEach(n=>n.onclick=()=>go(n.dataset.page));
 
@@ -851,10 +889,10 @@ function openProject(id){
 function renderClients(){
   document.getElementById('clientsBody').innerHTML=projects.map(p=>{
     const paid=pPaid(p.id),due=pAgreement(p.id)-paid;
-    return `<tr><td style="font-weight:700">${p.client}</td><td dir="ltr" style="text-align:right" class="tnum">${p.phone}</td>
+    return `<tr class="row-click" onclick="clientDetail(${p.id})" style="cursor:pointer"><td style="font-weight:700">${p.client}</td><td dir="ltr" style="text-align:right" class="tnum">${p.phone}</td>
       <td>${p.key} — ${p.address.split('—').pop().trim()}</td><td class="num">1</td>
       <td class="num" style="color:var(--pos)">${EGP(paid)} ج.م</td><td class="num" style="color:var(--warn)">${EGP(due)} ج.م</td>
-      <td><button class="btn ghost sm" onclick="go('statement');document.getElementById('stProject').value='${p.id}';renderStatement()">كشف الحساب</button></td></tr>`;
+      <td><button class="btn ghost sm" onclick="event.stopPropagation();go('statement');document.getElementById('stProject').value='${p.id}';renderStatement()">كشف الحساب</button></td></tr>`;
   }).join('');
 }
 
@@ -871,7 +909,7 @@ function renderPayments(){
         <h4>${p.name} — ${p.client}</h4>
         <div class="btn-row"><span class="tag gray">مقدم ${p.downPct}%</span><span class="tag green">مدفوع ${EGP(paid)}</span><span class="tag amber">متبقي ${EGP(agree-paid)}</span></div></div>
       <div class="table-scroll"><table><thead><tr><th>الدفعة</th><th>تاريخ الاستحقاق</th><th>المبلغ</th><th>طريقة الدفع</th><th>الحالة</th></tr></thead>
-      <tbody>${plan.map(it=>`<tr><td style="font-weight:600">${it.label}</td><td class="tnum muted">${it.due}</td>
+      <tbody>${plan.map((it,idx)=>`<tr class="row-click" onclick="instDetail(${p.id},${idx})" style="cursor:pointer"><td style="font-weight:600">${it.label}</td><td class="tnum muted">${it.due}</td>
         <td class="num">${EGP(it.amount)} ج.م</td><td class="muted">${it.method}</td><td><span class="tag ${instTag(it.status)}"><span class="dot"></span>${it.status}</span></td></tr>`).join('')}</tbody>
       <tfoot><tr><td>الإجمالي</td><td></td><td class="num">${EGP(agree)} ج.م</td><td colspan="2" class="muted">قيمة التعاقد الكاملة</td></tr></tfoot></table></div></div>`;
   }).join('');
@@ -889,7 +927,8 @@ function renderMaterials(){
   const net=list.reduce((s,m)=>s+matNet(m),0),ret=list.reduce((s,m)=>s+matRet(m),0);
   document.getElementById('matTotal').textContent=`صافي المشتريات: ${EGP(net)} ج.م`;
   document.getElementById('matRet').textContent=`مرتجعات: ${EGP(ret)} ج.م`;
-  document.getElementById('materialsBody').innerHTML=list.map(m=>`<tr>
+  _matCache=list;
+  document.getElementById('materialsBody').innerHTML=list.map((m,i)=>`<tr class="row-click" onclick="matDetail(${i})" style="cursor:pointer">
     <td class="tnum muted">${m.date}</td><td><span class="tag gray">${m.proj}</span></td><td class="muted">${m.band}</td>
     <td style="font-weight:600">${m.item}</td><td class="num">${EGP(m.qty)} <span class="muted">${m.unit}</span></td>
     <td class="num">${m.ret?`<span style="color:var(--neg)">${EGP(m.ret)}</span>`:'<span class="muted">—</span>'}</td>
@@ -901,8 +940,9 @@ function renderMaterials(){
 function renderLabor(){
   const rows=[];ids.forEach(id=>items[id].forEach(b=>{if(b.labor>0)rows.push({date:b.ldate,team:b.team,band:b.name,proj:projects[id].key,type:b.ctype,amount:b.labor,status:b.status});}));
   rows.sort((a,b)=>a.date<b.date?-1:1);
-  document.getElementById('laborBody').innerHTML=rows.map(l=>{const t=bandTag(l.status);
-    return `<tr><td class="tnum muted">${l.date}</td><td style="font-weight:600">${l.team}</td><td><span class="tag blue">${l.band}</span></td>
+  _laborCache=rows;
+  document.getElementById('laborBody').innerHTML=rows.map((l,i)=>{const t=bandTag(l.status);
+    return `<tr class="row-click" onclick="laborDetail(${i})" style="cursor:pointer"><td class="tnum muted">${l.date}</td><td style="font-weight:600">${l.team}</td><td><span class="tag blue">${l.band}</span></td>
     <td>${l.proj}</td><td><span class="tag ${l.type.includes('مقطوعة')?'amber':'gray'}">${l.type}</span></td>
     <td><span class="tag ${t[0]}">${t[1]}</span></td><td class="num" style="color:var(--neg)">${EGP(l.amount)} ج.م</td></tr>`;}).join('');
 }
@@ -1038,6 +1078,99 @@ const modalForms={
   <div class="row2"><div class="field"><label>البند</label><select><option>تأسيس سباكة وكهرباء</option><option>محارة</option><option>سيراميك وأرضيات</option><option>كهرباء تشطيب</option><option>دهانات</option></select></div><div class="field"><label>المشروع</label><select><option>شقة الزمالك</option><option>شقة المعادي</option></select></div></div>
   <div class="row2"><div class="field"><label>نوع التعاقد</label><select><option>بالمتر</option><option>مقاولة مقطوعة</option><option>باليومية</option></select></div><div class="field"><label>المستحق</label><input type="number" placeholder="9000"></div></div>`}
 };
+function openDetail(title,body){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalBody').innerHTML=body+`<div class="btn-row" style="margin-top:18px"><button class="btn ghost" onclick="closeModal()">${ic('x')} إغلاق</button></div>`;
+  document.getElementById('modalBg').classList.add('show');
+}
+function kv(k,v,color){return`<div class="detail-kv"><span class="dk">${k}</span><span class="dv"${color?` style="color:${color}"`:''}>${v}</span></div>`;}
+function dsec(t){return`<div class="detail-section">${t}</div>`;}
+
+let _txCache=[],_matCache=[],_laborCache=[];
+function txDetail(i){const t=_txCache[i];const inn=t.dir==='in';
+  openDetail(t.title,`
+    <div class="detail-amount" style="color:${inn?'var(--pos)':'var(--neg)'}">${inn?'+ ':'− '}${EGP(t.amount)} ج.م</div>
+    ${kv('النوع',`<span class="tag ${inn?'green':'red'}">${inn?'وارد':'صادر'} — ${t.type==='purchase'?'مشتريات':t.type==='return'?'مرتجع':t.type==='collect'?'تحصيل':'أجور فنيين'}</span>`)}
+    ${kv('التاريخ',t.date)}
+    ${kv('الطرف',t.party)}
+    ${kv('المشروع',`<span class="tag gray">${t.proj}</span>`)}
+    ${kv('البند',t.band!=='—'?`<span class="tag blue">${t.band}</span>`:t.band)}
+    ${kv('التفاصيل',t.qty)}
+  `);
+}
+function matDetail(i){const m=_matCache[i];const net=m.qty-(m.ret||0);
+  openDetail(m.item,`
+    <div class="detail-amount" style="color:var(--neg)">− ${EGP(net*m.price)} ج.م</div>
+    ${kv('الصنف',m.item)}
+    ${kv('الكمية',`${EGP(m.qty)} ${m.unit}`)}
+    ${m.ret?kv('المرتجع',`<span style="color:var(--neg)">${EGP(m.ret)} ${m.unit}</span>`):''}
+    ${kv('الصافي',`${EGP(net)} ${m.unit}`,net<m.qty?'var(--warn)':'')}
+    ${kv('سعر الوحدة',`${EGP(m.price)} ج.م`)}
+    ${kv('الإجمالي',`${EGP(net*m.price)} ج.م`,'var(--neg)')}
+    ${dsec('التصنيف')}
+    ${kv('المورد',m.supplier)}
+    ${kv('المشروع',`<span class="tag gray">${m.proj}</span>`)}
+    ${kv('البند',`<span class="tag blue">${m.band}</span>`)}
+    ${kv('التاريخ',m.date)}
+  `);
+}
+function laborDetail(i){const l=_laborCache[i];const t=bandTag(l.status);
+  openDetail(`أجر — ${l.team}`,`
+    <div class="detail-amount" style="color:var(--warn)">− ${EGP(l.amount)} ج.م</div>
+    ${kv('الفني / الفريق',`<b>${l.team}</b>`)}
+    ${kv('التاريخ',l.date)}
+    ${kv('نوع التعاقد',`<span class="tag ${l.type.includes('مقطوعة')?'amber':'gray'}">${l.type}</span>`)}
+    ${dsec('التصنيف')}
+    ${kv('البند',`<span class="tag blue">${l.band}</span>`)}
+    ${kv('المشروع',`<span class="tag gray">${l.proj}</span>`)}
+    ${kv('حالة البند',`<span class="tag ${t[0]}">${t[1]}</span>`)}
+  `);
+}
+function clientDetail(id){const p=projects[id];const paid=pPaid(id),agree=pAgreement(id),due=agree-paid;
+  const plan=installments[id];
+  const planHtml=plan.map(it=>`<div class="detail-kv"><span class="dk" style="font-size:12px">${it.label}</span><span class="dv"><span class="tag ${instTag(it.status)}" style="margin-left:6px">${it.status}</span><b class="tnum"> ${EGP(it.amount)} ج.م</b></span></div>`).join('');
+  openDetail(p.client,`
+    ${kv('الاسم',`<b>${p.client}</b>`)}
+    ${kv('الهاتف',p.phone)}
+    ${kv('العنوان',p.address)}
+    ${kv('المشروع',p.name)}
+    ${kv('المساحة',`${p.area} م²`)}
+    ${dsec('ملخص مالي')}
+    ${kv('قيمة التعاقد',`${EGP(agree)} ج.م`)}
+    ${kv('المحصّل',`${EGP(paid)} ج.م`,'var(--pos)')}
+    ${kv('المتبقي',`${EGP(due)} ج.م`,due>0?'var(--warn)':'')}
+    ${dsec('خطة السداد')}
+    ${planHtml}
+  `);
+}
+function instDetail(pid,idx){const it=installments[pid][idx];const p=projects[pid];
+  openDetail(it.label,`
+    <div class="detail-amount" style="color:var(--pos)">+ ${EGP(it.amount)} ج.م</div>
+    ${kv('القسط',it.label)}
+    ${kv('المشروع',p.name)}
+    ${kv('العميل',p.client)}
+    ${kv('تاريخ الاستحقاق',it.due)}
+    ${kv('طريقة الدفع',it.method)}
+    ${kv('الحالة',`<span class="tag ${instTag(it.status)}">${it.status}</span>`)}
+  `);
+}
+function supDetail(supName){
+  const mats=[];ids.forEach(id=>items[id].forEach(b=>b.mats.filter(m=>m.supplier===supName).forEach(m=>mats.push({...m,proj:projects[id].key,band:b.name}))));
+  const gross=mats.reduce((s,m)=>s+m.qty*m.price,0);
+  const ret=mats.reduce((s,m)=>s+(m.ret||0)*m.price,0);
+  const rows=mats.map(m=>`<div class="detail-kv"><span class="dk" style="font-size:12px">${m.item} — ${m.proj}</span><span class="dv tnum">${EGP(m.qty-(m.ret||0))} ${m.unit} × ${EGP(m.price)} = <b>${EGP((m.qty-(m.ret||0))*m.price)}</b></span></div>`).join('');
+  openDetail(supName,`
+    ${kv('المورد',`<b>${supName}</b>`)}
+    ${kv('عدد العمليات',mats.length)}
+    ${kv('إجمالي التعامل',`${EGP(gross)} ج.م`,'var(--warn)')}
+    ${kv('المرتجعات',ret?`${EGP(ret)} ج.م`:'—',ret?'var(--pos)':'')}
+    ${kv('الصافي',`${EGP(gross-ret)} ج.م`,'var(--neg)')}
+    ${dsec('تفاصيل العمليات')}
+    ${rows}
+  `);
+}
+function alertDetail(t,s,right){openDetail('تفاصيل التنبيه',`${kv('التنبيه',t)}${kv('التفاصيل',s)}${kv('القيمة',right)}`)}
+
 function openModal(k){const f=modalForms[k];
   document.getElementById('modalTitle').textContent=f.title;
   document.getElementById('modalBody').innerHTML=f.body+`<div class="btn-row" style="margin-top:6px"><button class="btn" onclick="closeModal();toast()">حفظ</button><button class="btn ghost" onclick="closeModal()">إلغاء</button></div>`;
@@ -1076,8 +1209,9 @@ function renderTransactions(){
     <div class="card stat"><div class="top"><span class="label">إجمالي الوارد</span><span class="ic ic-green">${ic('down')}</span></div><div class="val tnum" style="color:var(--pos)">+ ${EGP(inSum)} <small>ج.م</small></div><div class="note">تحصيلات + مرتجعات</div></div>
     <div class="card stat"><div class="top"><span class="label">إجمالي الصادر</span><span class="ic ic-red">${ic('up')}</span></div><div class="val tnum" style="color:var(--neg)">− ${EGP(outSum)} <small>ج.م</small></div><div class="note">مشتريات + أجور</div></div>
     <div class="card stat"><div class="top"><span class="label">الصافي</span><span class="ic ic-blue">${ic('activity')}</span></div><div class="val tnum">${EGP(inSum-outSum)} <small>ج.م</small></div><div class="note">${list.length} حركة</div></div>`;
-  document.getElementById('txFeed').innerHTML=list.map(t=>{const m=txMeta[t.type],inn=t.dir==='in';
-    return `<div class="tx ${t.dir}">
+  _txCache=list;
+  document.getElementById('txFeed').innerHTML=list.map((t,i)=>{const m=txMeta[t.type],inn=t.dir==='in';
+    return `<div class="tx ${t.dir} row-click" onclick="txDetail(${i})" style="cursor:pointer">
       <div class="tx-ic">${ic(m.icon)}<span class="arr">${ic(inn?'down':'up')}</span></div>
       <div class="tx-main"><div class="t">${t.title}</div>
         <div class="s"><span class="tnum">${t.date}</span><span>·</span><span>${t.party}</span><span class="tag gray" style="padding:1px 7px">${t.proj}</span>${t.band!=='—'?`<span class="tag blue" style="padding:1px 7px">${t.band}</span>`:''}<span>${t.qty}</span></div></div>
@@ -1101,12 +1235,11 @@ function renderSuppliers(){
     <div class="card stat"><div class="top"><span class="label">عدد الموردين</span><span class="ic ic-blue">${ic('truck')}</span></div><div class="val">${sups.length}</div></div>
     <div class="card stat"><div class="top"><span class="label">إجمالي المشتريات</span><span class="ic ic-amber">${ic('box')}</span></div><div class="val tnum">${EGP(tot)} <small>ج.م</small></div></div>
     <div class="card stat"><div class="top"><span class="label">إجمالي المرتجعات</span><span class="ic ic-green">${ic('return')}</span></div><div class="val tnum" style="color:var(--pos)">${EGP(totRet)} <small>ج.م</small></div></div>`;
-  document.getElementById('supBody').innerHTML=sups.map((s,i)=>`<div class="card sup">
-    <div class="h"><div class="av">${s.name.charAt(0)}</div><div><div class="nm">${s.name}</div><div class="ph">${supPhones[i%supPhones.length]}</div></div></div>
-    <div class="kv"><span class="k">إجمالي التعامل</span><span class="v tnum">${EGP(s.gross)} ج.م</span></div>
+  document.getElementById('supBody').innerHTML=sups.map((s,i)=>`<div class="card sup" onclick="supDetail('${s.name.replace(/'/g,"\\'")}'" style="cursor:pointer;transition:.16s" onmouseover="this.style.boxShadow='var(--shadow)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+    <div class="h"><div class="av">${s.name.charAt(0)}</div><div><div class="nm">${s.name}</div><div class="ph">${supPhones[i%supPhones.length]}</div></div><span class="tag blue" style="margin-inline-start:auto">${s.count} عملية</span></div>
+    <div class="kv"><span class="k">إجمالي التعامل</span><span class="v tnum" style="color:var(--warn)">${EGP(s.gross)} ج.م</span></div>
     <div class="kv"><span class="k">المرتجعات</span><span class="v tnum" style="color:var(--pos)">${s.ret?EGP(s.ret)+' ج.م':'—'}</span></div>
-    <div class="kv"><span class="k">صافي المشتريات</span><span class="v tnum">${EGP(s.gross-s.ret)} ج.م</span></div>
-    <div class="kv"><span class="k">عدد العمليات</span><span class="v">${s.count}</span></div>
+    <div class="kv"><span class="k">صافي المشتريات</span><span class="v tnum" style="color:var(--neg)">${EGP(s.gross-s.ret)} ج.م</span></div>
     <div class="kv"><span class="k">الأصناف</span><span class="v" style="font-size:12px;font-weight:500;max-width:160px;text-align:left">${[...s.its].join('، ')}</span></div>
     <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">${[...s.projs].map(p=>`<span class="tag gray">${p}</span>`).join('')}</div>
   </div>`).join('');
@@ -1360,6 +1493,45 @@ function renderPriceTracker(){
       <div style="min-width:110px;font-size:11.5px;color:var(--ink-3)">${hist.slice(-3).map(h=>`<div>${h.d}: <b class="tnum" style="color:var(--ink)">${EGP(h.p)}</b></div>`).join('')}</div>
     </div>`;
   }).join('')}</div></div>`;
+}
+
+/* ===== Supplier Comparison ===== */
+function renderSupplierComparison(){
+  const map={};
+  ids.forEach(id=>items[id].forEach(b=>b.mats.forEach(m=>{
+    if(!map[m.item])map[m.item]={unit:m.unit,entries:[]};
+    map[m.item].entries.push({supplier:m.supplier,price:m.price,date:m.date,proj:projects[id].key});
+  })));
+  const entries=Object.entries(map).sort((a,b)=>a[0].localeCompare(b[0],'ar'));
+  const allSuppliers=new Set(entries.flatMap(([,v])=>v.entries.map(e=>e.supplier)));
+  const multiSup=entries.filter(([,v])=>new Set(v.entries.map(e=>e.supplier)).size>1).length;
+  document.getElementById('scStats').innerHTML=`
+    <div class="card stat"><div class="top"><span class="label">أصناف الخامات</span><span class="ic ic-blue">${ic('box')}</span></div><div class="val">${entries.length}</div><div class="note">في سجل المشتريات</div></div>
+    <div class="card stat"><div class="top"><span class="label">أصناف قابلة للمقارنة</span><span class="ic ic-amber">${ic('activity')}</span></div><div class="val" style="color:var(--warn)">${multiSup}</div><div class="note">أكثر من مورد واحد</div></div>
+    <div class="card stat"><div class="top"><span class="label">عدد الموردين المميّزين</span><span class="ic ic-green">${ic('truck')}</span></div><div class="val">${allSuppliers.size}</div></div>`;
+  document.getElementById('scBody').innerHTML=`<div class="scomp-grid">${entries.map(([item,{unit,entries:ents}])=>{
+    const supMap={};
+    ents.forEach(e=>{if(!supMap[e.supplier])supMap[e.supplier]={prices:[],projs:new Set()};supMap[e.supplier].prices.push(e.price);supMap[e.supplier].projs.add(e.proj);});
+    const rows=Object.entries(supMap).map(([sup,d])=>({supplier:sup,price:Math.round(d.prices.reduce((s,p)=>s+p,0)/d.prices.length),count:d.prices.length,projs:[...d.projs]})).sort((a,b)=>a.price-b.price);
+    const minP=rows[0].price,maxP=rows[rows.length-1].price,saving=maxP-minP;
+    const multi=rows.length>1;
+    return `<div class="scomp-card">
+      <div class="scomp-band" style="background:${multi?'var(--accent)':'var(--line)'}"></div>
+      <div class="scomp-head">
+        <div class="scomp-item">${item}</div>
+        <div class="scomp-meta"><span>${unit}</span><span>·</span><span>${rows.length} ${multi?'موردين':'مورد'}</span>${multi?`<span class="tag green" style="padding:2px 8px;font-size:11px">وفّر ${EGP(saving)} ج.م/وحدة</span>`:''}</div>
+      </div>
+      <div class="scomp-body">
+        ${rows.map((r,i)=>`<div class="scomp-row ${i===0?'best':''}">
+          <div style="flex-shrink:0;width:52px">${i===0?`<span class="tag green" style="padding:2px 7px;font-size:10.5px">الأرخص</span>`:`<span class="tag amber" style="padding:2px 7px;font-size:10.5px">+${EGP(r.price-minP)}</span>`}</div>
+          <span class="scomp-sup">${r.supplier}</span>
+          <div class="scomp-bar-wrap"><div class="scomp-bar" style="width:${Math.round(r.price/maxP*100)}%"></div></div>
+          <div style="flex-shrink:0;text-align:start"><div class="scomp-price">${EGP(r.price)}<small style="font-size:11px;font-weight:500;color:var(--ink-3)"> ج.م</small></div><div style="font-size:10.5px;color:var(--ink-3)">${r.count>1?`متوسط ${r.count}`:'مرة واحدة'}</div></div>
+        </div>`).join('')}
+      </div>
+      ${multi?`<div class="scomp-saving"><span>توفير بالاختيار الأمثل</span><span class="sv">${EGP(saving)} ج.م / وحدة</span></div>`:''}
+    </div>`;
+  }).join('')}</div>`;
 }
 
 /* ===== Init ===== */
