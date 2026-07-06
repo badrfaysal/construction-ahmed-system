@@ -78,6 +78,14 @@ class ProjectBandController extends Controller
     public function destroy(ProjectBand $band)
     {
         $project = $band->project;
+
+        // Deleting a band DB-cascades its workers AND their recorded دفعات —
+        // real paid cash would vanish from the books while its wallet debits
+        // stay behind. Block until those payments are removed explicitly.
+        if ($band->workers()->whereHas('payments')->exists()) {
+            return back()->with('error', 'البند فيه صنايعية ليهم دفعات مسجلة — احذف دفعاتهم الأول (من صفحة دفعات كل صنايعي) قبل حذف البند.');
+        }
+
         DB::transaction(fn () => $band->delete());
 
         return redirect()->route('projects.show', $project)
@@ -116,10 +124,13 @@ class ProjectBandController extends Controller
             'client_price'  => ['required', 'numeric', 'min:0'],
             'status'        => ['required', 'in:pending,active,done'],
             'workers'                      => ['nullable', 'array'],
+            // id present = update that worker in place (keeps his دفعات) —
+            // syncLabor() scopes the lookup to the band's own workers
+            'workers.*.id'                 => ['nullable', 'integer'],
             'workers.*.name'               => ['required', 'string', 'max:255'],
             'workers.*.phone'              => ['nullable', 'string', 'max:30'],
             'workers.*.specialty'          => ['nullable', 'string', 'max:255'],
-            'workers.*.contract_type'      => ['nullable', 'in:lump_sum,daily,per_meter'],
+            'workers.*.contract_type'      => ['nullable', 'in:lump_sum,daily,per_meter,per_piece'],
             'workers.*.contract_qty'       => ['nullable', 'numeric', 'min:0'],
             'workers.*.contract_unit_rate' => ['nullable', 'numeric', 'min:0'],
             'workers.*.sell_rate'          => ['nullable', 'numeric', 'min:0'],

@@ -43,14 +43,38 @@ class Project extends Model
         return $this->hasMany(Material::class, 'project_id');
     }
 
+    // النظام القديم للأقساط — متسايب للتوافق فقط (بيرجّع فاضي بعد الاستبدال).
+    // الجداول والموديل لسه موجودين عشان أي كود قديم بيعمل with('installments')
+    // ما يكسرش، لكن كل التحصيل الفعلي بقى عبر contracts().
     public function installments(): HasMany
     {
         return $this->hasMany(Installment::class, 'project_id')->orderBy('sort_order');
     }
 
+    // عقود التقسيط الخاصة بالمشروع (النظام الجديد) — عادةً عقد واحد لكل مشروع
+    public function contracts(): HasMany
+    {
+        return $this->hasMany(InstallmentContract::class, 'project_id')->latest('id');
+    }
+
+    // العقد النشط الحالي للمشروع (آخر عقد اتعمل)
+    public function contract(): ?InstallmentContract
+    {
+        return $this->contracts->first();
+    }
+
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class, 'project_id')->orderByDesc('date');
+    }
+
+    // تحصيلات مباشرة من العميل (من صفحة المستحقات) — مش مربوطة بعقد تقسيط.
+    // كل واحدة حركة "in" في sy2_transactions (بتغذّي المحفظة عبر الـ observer).
+    public function clientPayments(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'project_id')
+            ->where('ref_type', 'client_payment')
+            ->orderByDesc('date');
     }
 
     public function warranty(): HasOne
@@ -119,10 +143,41 @@ class Project extends Model
         return $this->actualClientTotal() - $this->totalCollected();
     }
 
-    // Total collected from client (paid installments only)
+    // Total collected from client = مقدمات + دفعات عقود التقسيط + التحصيلات
+    // المباشرة المسجّلة من صفحة المستحقات (للمشاريع اللي مش معمولها عقد تقسيط)
     public function totalCollected(): float
     {
-        return (float) $this->installments->where('status', 'paid')->sum('amount');
+        $fromContracts = (float) $this->contracts->sum(
+            fn ($c) => (float) $c->down_payment + (float) $c->payments->sum('amount_paid')
+        );
+
+        $fromDirect = (float) $this->clientPayments->sum('amount');
+
+        return $fromContracts + $fromDirect;
+    }
+
+    // المشروع معموله عقد تقسيط؟ (عقد للمشروع كامل أو لأي بند)
+    public function hasInstallmentContract(): bool
+    {
+        return $this->contracts->isNotEmpty();
+    }
+
+    // النطاق (قيمة الفوترة) اللي اتغطى بعقود التقسيط وقت إنشائها — مجموع
+    // cash_price لكل عقود المشروع. أي فوترة تحصل بعد كده (خامة جديدة أو بند
+    // جديد) بتزوّد actualClientTotal() من غير ما تزوّد النطاق ده، فتبقى مستحق
+    // منفصل عن العقد (مش بيتلخبط مع خطة السداد بتاعته).
+    public function contractedScope(): float
+    {
+        return (float) $this->contracts->sum(fn ($c) => (float) $c->cash_price);
+    }
+
+    // مستحق زيادة عن نطاق عقد/عقود التقسيط — فوترة جديدة اتسجّلت بعد العقد
+    // (خامات/بند إضافي) لسه ما اتحصّلتش. بيتحصّل مباشرة من صفحة المستحقات، منفصل
+    // تمامًا عن جدول سداد العقد.
+    public function receivableExcess(): float
+    {
+        $gross = max(0, $this->actualClientTotal() - $this->contractedScope());
+        return max(0, $gross - (float) $this->clientPayments->sum('amount'));
     }
 
     // Execution progress = share of bands marked "منفذ" (done) — replaces the

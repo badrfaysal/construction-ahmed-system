@@ -60,7 +60,7 @@ class ProjectController extends Controller
             'client',
             'bands.materials.supplier',
             'bands.materials.returns',
-            'bands.workers',
+            'bands.workers.payments',
             'materials.returns',
             'installments',
             'transactions',

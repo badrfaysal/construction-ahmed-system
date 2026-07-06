@@ -50,9 +50,14 @@
         <input type="number" name="supervision_pct" value="{{ old('supervision_pct', $defaultSup) }}" min="0" max="100" step="0.1">
       </div>
     </div>
-    <div class="field">
-      <label>التاريخ *</label>
-      <input type="date" name="date" value="{{ old('date', today()->format('Y-m-d')) }}" required>
+    <div class="row2">
+      <div class="field">
+        <label>التاريخ *</label>
+        <input type="date" name="date" value="{{ old('date', today()->format('Y-m-d')) }}" required>
+      </div>
+      <div class="field">
+        @include('partials._wallet-select', ['wallets' => $wallets, 'label' => 'المحفظة (الصرف منها) *', 'required' => true, 'selectStyle' => 'width:100%'])
+      </div>
     </div>
     <div class="btn-row" style="margin-top:8px">
       <button type="submit" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check"/></svg>حفظ المصروف</button>

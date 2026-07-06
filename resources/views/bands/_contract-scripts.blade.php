@@ -6,17 +6,20 @@
 const CONTRACT_DESC = {
   lump_sum: 'مبلغ إجمالي ثابت مقابل تنفيذ الشغل بالكامل.',
   per_meter: 'بيتحدد بعدد الأمتار المنفذة × سعر المتر.',
+  per_piece: 'بيتحدد بعدد القطع (أبواب/شبابيك...) × سعر القطعة.',
   daily: 'بيتحدد بعدد أيام الشغل × أجر اليوم.',
 };
 
-// Field labels differ between "بالمتر" (متر/سعر متر) and "يومية" (أيام/أجر يوم)
+// Field labels differ between "بالمتر" (متر/سعر متر)، "بالقطعة" (قطع/سعر قطعة)
+// and "يومية" (أيام/أجر يوم)
 const QTY_LABELS = {
   per_meter: { qty: 'الكمية (متر)', cost: 'سعر المتر (تكلفة)', sell: 'سعر المتر للعميل' },
+  per_piece: { qty: 'عدد القطع',    cost: 'سعر القطعة (تكلفة)', sell: 'سعر القطعة للعميل' },
   daily:     { qty: 'عدد الأيام',    cost: 'أجر اليوم (تكلفة)', sell: 'أجر اليوم للعميل' },
 };
 
 // Shows/hides the qty+rate fields based on the worker's contract type.
-// Both per_meter and daily use the qty×rate fields (only the labels differ).
+// per_meter, per_piece and daily all use the qty×rate fields (labels differ).
 function updateWorkerUI(row) {
   if (! row) return;
   const type = row.querySelector('.contract-type-select').value;
@@ -25,7 +28,7 @@ function updateWorkerUI(row) {
 
   if (descEl) descEl.textContent = CONTRACT_DESC[type] || '';
 
-  if (type === 'per_meter' || type === 'daily') {
+  if (type === 'per_meter' || type === 'per_piece' || type === 'daily') {
     qtyWrap.style.display = '';
     const lbl = QTY_LABELS[type];
     row.querySelector('.qty-label').textContent = lbl.qty;
@@ -83,6 +86,8 @@ function updateClientPrice() {
 function workerRowHtml(g) {
   return `
     <div class="worker-row" data-worker="${g}" style="border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px">
+      {{-- Existing worker's id — keeps his دفعات attached when the band is re-saved --}}
+      <input type="hidden" name="workers[${g}][id]" class="worker-id">
       <div class="row2">
         <div class="field" style="margin:0"><input type="text" name="workers[${g}][name]" placeholder="اسم الفني" required></div>
         <div class="field" style="margin:0"><input type="text" name="workers[${g}][phone]" placeholder="رقم الموبايل"></div>
@@ -94,6 +99,7 @@ function workerRowHtml(g) {
             <option value="">— نوع التعاقد —</option>
             <option value="lump_sum">مقاولة مقطوعة</option>
             <option value="per_meter">بالمتر</option>
+            <option value="per_piece">بالقطعة</option>
             <option value="daily">يومية</option>
           </select>
           <p class="muted contract-desc" style="margin-top:6px"></p>
@@ -145,6 +151,7 @@ function workerRowHtml(g) {
 
 function fillWorker(g, w) {
   const row = document.querySelector(`.worker-row[data-worker="${g}"]`);
+  row.querySelector('.worker-id').value = w.id || '';
   row.querySelector('[name*="[name]"]').value = w.name || '';
   row.querySelector('[name*="[phone]"]').value = w.phone || '';
   row.querySelector('[name*="[specialty]"]').value = w.specialty || '';

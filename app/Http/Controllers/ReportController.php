@@ -240,4 +240,67 @@ class ReportController extends Controller
 
         return view('reports.band-statement', compact('band'));
     }
+
+    // تقدير تكلفة مشروع جديد بالاعتماد على مشروع سابق كمرجع: اختار مشروع
+    // (مثلاً شقة 100م) وشوف بالظبط كل بند اشتغلت فيه، وكل خامة اشتريتها له
+    // بكميتها وتكلفتها، عشان لو جالك مشروع تاني بنفس المساحة يبقى عندك تقدير
+    // جاهز لكل حاجة هتحتاجها (خامات + مصنعية) بالتفصيل.
+    public function estimationIndex()
+    {
+        abort_unless(auth()->user()->canSeeFinancials(), 403);
+
+        $projects = Project::withCount('bands')
+            ->orderByDesc('created_at')
+            ->get(['id', 'name', 'area', 'status', 'client_id'])
+            ->load('client');
+
+        return view('reports.estimation-index', compact('projects'));
+    }
+
+    public function estimationShow(Project $project)
+    {
+        abort_unless(auth()->user()->canSeeFinancials(), 403);
+
+        $project->load(['client', 'bands.materials.returns', 'bands.workers']);
+
+        $area = (float) $project->area;
+
+        $bands = $project->bands->map(function ($band) use ($area) {
+            $materials = $band->materials
+                ->groupBy('item')
+                ->map(function ($group) {
+                    return (object) [
+                        'item' => $group->first()->item,
+                        'unit' => $group->first()->unit,
+                        'qty'  => $group->sum(fn ($m) => $m->netQty()),
+                        'cost' => $group->sum(fn ($m) => $m->netCost()),
+                    ];
+                })
+                ->sortByDesc('cost')
+                ->values();
+
+            $materialCost = $materials->sum('cost');
+            $laborCost    = (float) $band->labor_amount;
+            $totalCost    = $materialCost + $laborCost;
+
+            return (object) [
+                'band'          => $band,
+                'materials'     => $materials,
+                'material_cost' => $materialCost,
+                'labor_cost'    => $laborCost,
+                'total_cost'    => $totalCost,
+                'per_sqm'       => $area > 0 ? $totalCost / $area : null,
+            ];
+        });
+
+        $totalMaterialCost = $bands->sum('material_cost');
+        $totalLaborCost    = $bands->sum('labor_cost');
+        $grandTotal        = $totalMaterialCost + $totalLaborCost;
+        $grandPerSqm       = $area > 0 ? $grandTotal / $area : null;
+
+        return view('reports.estimation-show', compact(
+            'project', 'bands', 'area',
+            'totalMaterialCost', 'totalLaborCost', 'grandTotal', 'grandPerSqm'
+        ));
+    }
 }

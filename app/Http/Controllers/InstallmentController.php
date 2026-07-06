@@ -2,242 +2,326 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Installment;
+use App\Models\Account;
+use App\Models\Installment;              // النظام القديم — للمستحقات/التنبيهات فقط
+use App\Models\InstallmentContract;
+use App\Models\InstallmentPayment;
 use App\Models\Project;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
+// منظومة العقود والأقساط (بروح السيستم الأول) — العقد هنا مربوط بمشروع/عميل.
+// كل عقد = خطة سداد (إجمالي/مقدم/شهور/قسط)، والدفعات بتتحصّل عليه بمرور الوقت
+// وبتغذّي محفظة المقاولات تلقائيًا عبر InstallmentPaymentObserver.
 class InstallmentController extends Controller
 {
-    // List installments grouped by project (card-per-project style)
+    // الشاشة الرئيسية: عقود نشطة (مجمّعة بالعميل في الواجهة) + منتهية + إحصائيات
     public function index(Request $request)
     {
-        // Load every project that has at least one installment, with full context
-        $projectsQuery = Project::with([
-            'client',
-            'installments' => fn ($q) => $q->orderBy('sort_order')->orderBy('due_date'),
-            'installments.band',
-            'bands.materials.returns',
-            'bands.workers',
-        ])->has('installments');
+        $contracts = InstallmentContract::with(['project.client', 'payments'])
+            ->orderByDesc('id')
+            ->get();
 
-        if ($pid = $request->get('project_id')) {
-            $projectsQuery->where('id', $pid);
-        }
+        $active    = $contracts->filter(fn ($c) => (float) $c->remaining_balance > 0.009);
+        $completed = $contracts->filter(fn ($c) => (float) $c->remaining_balance <= 0.009);
 
-        $statusFilter = $request->get('status'); // 'paid','due','upcoming', or null
+        $totalOut       = $active->sum(fn ($c) => (float) $c->remaining_balance);
+        $totalCollected = $contracts->sum(fn ($c) => (float) $c->down_payment + (float) $c->payments->sum('amount_paid'));
 
-        $projects = $projectsQuery->orderByDesc('created_at')->get();
+        $todayDay          = (int) date('d');
+        $todayContracts    = $active->where('due_day', $todayDay);
 
-        // Enrich each project with installment KPIs used by the view
-        $projects = $projects->map(function ($project) use ($statusFilter) {
-            $insts  = $statusFilter
-                ? $project->installments->where('status', $statusFilter)
-                : $project->installments;
+        // كل المشاريع متاحة لعمل عقد جديد (يُسمح بعقد للمشروع كامل أو لبند محدد،
+        // وبأكثر من عقد للمشروع الواحد) + قيمة فاتورة كل مشروع/بند للعميل
+        $projectsForContract = Project::with(['client', 'bands.materials.returns', 'bands.workers', 'materials.returns'])
+            ->orderByDesc('id')
+            ->get()
+            ->map(function ($p) {
+                $billed = $p->actualClientTotal();
+                return (object) [
+                    'id'            => $p->id,
+                    'name'          => $p->name,
+                    'client_name'   => $p->client->name ?? '',
+                    'client_phone'  => $p->client->phone ?? '',
+                    'billed'        => round($billed, 2),
+                    // بنود المشروع مع قيمة كل بند للعميل — لتقسيط بند محدد
+                    'bands'         => $p->bands->map(fn ($b) => (object) [
+                        'id'     => $b->id,
+                        'name'   => $b->name,
+                        'billed' => round($b->actualClientTotal(), 2),
+                    ])->values(),
+                ];
+            });
 
-            $paid   = $project->installments->where('status', 'paid');
-            $due    = $project->installments->where('status', 'due');
-            $upcoming = $project->installments->where('status', 'upcoming');
+        $wallets = Account::selectable();
 
-            $project->inst_total    = $project->installments->sum('amount');
-            $project->inst_paid     = $paid->sum('amount');
-            $project->inst_remaining = $project->installments->whereIn('status', ['due','upcoming'])->sum('amount');
-            $project->inst_due_cnt  = $due->count();
-            $project->inst_paid_cnt = $paid->count();
-            $project->inst_total_cnt = $project->installments->count();
-            $project->inst_progress = $project->inst_total > 0
-                ? round($project->inst_paid / $project->inst_total * 100)
-                : 0;
-            $project->billed_total  = $project->actualClientTotal();
-            // How much of what we billed is already collected
-            $project->collect_pct   = $project->billed_total > 0
-                ? round($project->inst_paid / $project->billed_total * 100)
-                : 0;
-            $project->filtered_insts = $insts->values();
-
-            return $project;
-        });
-
-        // Summary KPIs across all projects
-        $totals = [
-            'projects'  => $projects->count(),
-            'total'     => $projects->sum('inst_total'),
-            'paid'      => $projects->sum('inst_paid'),
-            'remaining' => $projects->sum('inst_remaining'),
-            'overdue'   => $projects->sum('inst_due_cnt'),
-        ];
-
-        $allProjects = Project::orderBy('name')->get(['id', 'name']);
-
-        return view('installments.index', compact('projects', 'totals', 'allProjects', 'statusFilter'));
-    }
-
-    // Show form to add a single installment to a project
-    public function create(Request $request)
-    {
-        $projects          = Project::orderBy('name')->get(['id', 'name']);
-        $selectedProjectId = $request->get('project_id');
-        $bands             = $selectedProjectId
-            ? Project::find($selectedProjectId)?->bands()->get(['id', 'name']) ?? collect()
-            : collect();
-
-        return view('installments.create', compact('projects', 'selectedProjectId', 'bands'));
-    }
-
-    // Save a new installment
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'project_id'     => ['required', 'exists:sy2_projects,id'],
-            'band_id'        => ['nullable', 'exists:sy2_project_bands,id'],
-            'label'          => ['required', 'string', 'max:255'],
-            'due_date'       => ['required', 'date'],
-            'amount'         => ['required', 'numeric', 'min:0'],
-            'status'         => ['required', 'in:paid,due,upcoming'],
-            'payment_method' => ['nullable', 'string', 'max:100'],
-            'paid_date'      => ['nullable', 'date'],
-        ]);
-
-        DB::transaction(fn () => Installment::create($data));
-
-        return redirect()->route('projects.show', $data['project_id'])
-            ->with('success', 'تم إضافة القسط.');
-    }
-
-    // Show the installment plan generator form
-    public function planForm(Request $request)
-    {
-        $projects          = Project::orderBy('name')->get(['id', 'name']);
-        $selectedProjectId = $request->get('project_id');
-        $bands             = $selectedProjectId
-            ? Project::find($selectedProjectId)?->bands()->get(['id', 'name']) ?? collect()
-            : collect();
-        $project = $selectedProjectId ? Project::find($selectedProjectId) : null;
-
-        return view('installments.plan', compact('projects', 'selectedProjectId', 'bands', 'project'));
-    }
-
-    // Generate a series of installments from a plan (down payment + monthly installments)
-    public function storePlan(Request $request)
-    {
-        $data = $request->validate([
-            'project_id'     => ['required', 'exists:sy2_projects,id'],
-            'band_id'        => ['nullable', 'exists:sy2_project_bands,id'],
-            'total_amount'   => ['required', 'numeric', 'min:1'],
-            'down_payment'   => ['required', 'numeric', 'min:0'],
-            'months'         => ['required', 'integer', 'min:1', 'max:120'],
-            'interest_rate'  => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'start_date'     => ['required', 'date'],
-            'payment_method' => ['nullable', 'string', 'max:100'],
-        ]);
-
-        $total        = (float) $data['total_amount'];
-        $down         = (float) $data['down_payment'];
-        $months       = (int)   $data['months'];
-        $interestRate = (float) ($data['interest_rate'] ?? 0);
-        $remaining    = $total - $down;
-
-        // Apply flat interest on remaining balance
-        $totalWithInterest = $remaining * (1 + $interestRate / 100);
-        $monthly = $months > 0 ? $totalWithInterest / $months : 0;
-
-        DB::transaction(function () use ($data, $down, $monthly, $months, $totalWithInterest) {
-            $startDate = \Carbon\Carbon::parse($data['start_date']);
-            $sort = 0;
-
-            // Down payment row
-            if ($down > 0) {
-                Installment::create([
-                    'project_id'     => $data['project_id'],
-                    'band_id'        => $data['band_id'] ?? null,
-                    'label'          => 'دفعة مقدم',
-                    'amount'         => $down,
-                    'due_date'       => $startDate->toDateString(),
-                    'status'         => 'upcoming',
-                    'payment_method' => $data['payment_method'] ?? null,
-                    'sort_order'     => $sort++,
-                ]);
-            }
-
-            // Monthly installments
-            for ($i = 1; $i <= $months; $i++) {
-                Installment::create([
-                    'project_id'     => $data['project_id'],
-                    'band_id'        => $data['band_id'] ?? null,
-                    'label'          => 'القسط ' . $i . ' من ' . $months,
-                    'amount'         => round($monthly, 2),
-                    'due_date'       => $startDate->copy()->addMonths($i)->toDateString(),
-                    'status'         => 'upcoming',
-                    'payment_method' => $data['payment_method'] ?? null,
-                    'sort_order'     => $sort++,
-                ]);
-            }
-        });
-
-        return redirect()->route('installments.index', ['project_id' => $data['project_id']])
-            ->with('success', 'تم إنشاء خطة التقسيط بنجاح.');
-    }
-
-    // Printable / WhatsApp-shareable installment statement for one project
-    public function statement(Project $project)
-    {
-        $project->load([
-            'client',
-            'installments' => fn ($q) => $q->orderBy('sort_order')->orderBy('due_date'),
-            'installments.band',
-        ]);
-
-        $installments = $project->installments;
-        $downPaymentRow = $installments->firstWhere('label', 'دفعة مقدم');
-        $downPaid       = $installments->where('status', 'paid')->sum('amount');
-        $monthlyInsts   = $installments->where('label', '!=', 'دفعة مقدم');
-        $monthCount     = $monthlyInsts->count();
-        $totalWithInst  = $installments->sum('amount');
-        $remaining      = $totalWithInst - $downPaid;
-        $avgMonthly     = $monthCount > 0 ? $monthlyInsts->avg('amount') : 0;
-
-        // Preferred payment day (day-of-month of first monthly installment)
-        $firstMonthly = $monthlyInsts->first();
-        $payDay       = $firstMonthly ? $firstMonthly->due_date->day : null;
-
-        $settings = \App\Models\Settings::current();
-
-        return view('installments.statement', compact(
-            'project', 'installments', 'downPaid', 'monthCount',
-            'totalWithInst', 'remaining', 'avgMonthly', 'payDay', 'settings'
+        return view('installments.index', compact(
+            'contracts', 'active', 'completed',
+            'totalOut', 'totalCollected', 'todayContracts', 'projectsForContract', 'wallets'
         ));
     }
 
-    // JSON endpoint: returns billed amount + paid installments for plan auto-fill
-    // GET /api/projects/{project}/plan-data?band_id=X
-    public function planData(Project $project)
+    // إنشاء عقد جديد لمشروع — الإجمالي بييجي من فاتورة العميل (قابل للتعديل)
+    public function store(Request $request)
     {
-        $bandId = request('band_id');
+        $data = $request->validate([
+            'project_id'         => ['required', 'exists:sy2_projects,id'],
+            'band_id'            => ['nullable', 'exists:sy2_project_bands,id'],
+            'account_id'         => ['nullable', 'integer', 'exists:accounts,id'],
+            'product_name'       => ['nullable', 'string', 'max:255'],
+            'cash_price'         => ['required', 'numeric', 'min:0'],
+            'discount'           => ['nullable', 'numeric', 'min:0'],
+            'down_payment'       => ['nullable', 'numeric', 'min:0'],
+            'interest_rate'      => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'installment_months' => ['required', 'integer', 'min:1', 'max:240'],
+            'due_day'            => ['required', 'integer', 'min:1', 'max:31'],
+            'start_date'         => ['required', 'date'],
+            'notes'              => ['nullable', 'string'],
+        ]);
 
-        $project->load(['bands.materials.returns', 'bands.workers', 'installments']);
+        $project = Project::with('client')->findOrFail($data['project_id']);
 
-        if ($bandId) {
-            $band   = $project->bands->firstWhere('id', $bandId);
-            $billed = $band ? $band->actualClientTotal() : 0;
-            $paid   = $project->installments
-                ->where('status', 'paid')
-                ->where('band_id', $bandId)
-                ->sum('amount');
-            $name = $band?->name ?? '';
-        } else {
-            $billed = $project->actualClientTotal();
-            $paid   = $project->installments->where('status', 'paid')->sum('amount');
-            $name   = $project->name;
+        // اسم المتعاقد عليه: المشروع كامل، أو "المشروع — البند" لو اتقسّط بند محدد
+        $productName = trim((string) ($data['product_name'] ?? '')) ?: $project->name;
+        if (empty($data['product_name']) && ! empty($data['band_id'])) {
+            $band = $project->bands()->whereKey($data['band_id'])->first();
+            if ($band) {
+                $productName = $project->name . ' — ' . $band->name;
+            }
         }
 
-        return response()->json([
-            'billed' => round($billed, 2),
-            'paid'   => round($paid, 2),
-            'name'   => $name,
-        ]);
+        $cash     = (float) $data['cash_price'];
+        $disc     = (float) ($data['discount'] ?? 0);
+        $down     = (float) ($data['down_payment'] ?? 0);
+        $rate     = (float) ($data['interest_rate'] ?? 0);
+        $months   = (int) $data['installment_months'];
+
+        // نفس معادلة السيستم الأول
+        $afterDisc      = max(0, $cash - $disc);
+        $baseForInt     = max(0, $afterDisc - $down);
+        $interestVal    = $baseForInt * ($rate / 100);
+        $totalAfterInt  = $afterDisc + $interestVal;      // شامل المقدم
+        $remaining      = max(0, $totalAfterInt - $down);
+        $monthly        = $months > 0 ? $remaining / $months : 0;
+
+        if ($down > $afterDisc + 0.01) {
+            throw ValidationException::withMessages([
+                'down_payment' => 'المقدم أكبر من قيمة العقد بعد الخصم.',
+            ]);
+        }
+
+        DB::transaction(fn () => InstallmentContract::create([
+            'project_id'           => $project->id,
+            'band_id'              => $data['band_id'] ?? null,
+            'account_id'           => $data['account_id'] ?? null,
+            'customer_name'        => $project->client->name ?? 'عميل',
+            'customer_phone'       => $project->client->phone,
+            'product_name'         => $productName,
+            'cash_price'           => $cash,
+            'discount'             => $disc,
+            'down_payment'         => $down,
+            'interest_rate'        => $rate,
+            'installment_months'   => $months,
+            'total_after_interest' => round($totalAfterInt, 2),
+            'monthly_installment'  => round($monthly, 2),
+            'due_day'              => (int) $data['due_day'],
+            'remaining_balance'    => round($remaining, 2),
+            'start_date'           => $data['start_date'],
+            'status'               => 'active',
+            'notes'                => $data['notes'] ?? null,
+        ]));
+
+        return redirect()->route('installments.index')
+            ->with('success', 'تم إنشاء عقد التقسيط بنجاح.');
     }
 
-    // Mark an installment as paid (quick action from the list)
+    // تسجيل دفعة تحصيل على عقد (تحصيل كامل / قسط شهري / جزئي + خصم اختياري)
+    public function pay(Request $request, InstallmentContract $contract)
+    {
+        $data = $request->validate([
+            'amount_paid'      => ['required', 'numeric', 'min:0'],
+            'discount_applied' => ['nullable', 'numeric', 'min:0'],
+            'account_id'       => ['required', 'integer', 'exists:accounts,id'],
+            'payment_date'     => ['required', 'date'],
+            'method'           => ['nullable', 'string', 'max:50'],
+            'notes'            => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $amount   = (float) $data['amount_paid'];
+        $discount = (float) ($data['discount_applied'] ?? 0);
+
+        if ($amount <= 0 && $discount <= 0) {
+            throw ValidationException::withMessages(['amount_paid' => 'أدخل مبلغ تحصيل أو خصم.']);
+        }
+        if ($amount + $discount > (float) $contract->remaining_balance + 0.01) {
+            throw ValidationException::withMessages([
+                'amount_paid' => 'المجموع (تحصيل + خصم) أكبر من المتبقي على العقد (' . number_format($contract->remaining_balance, 2) . ' ج.م).',
+            ]);
+        }
+
+        DB::transaction(fn () => InstallmentPayment::create([
+            'contract_id'      => $contract->id,
+            'project_id'       => $contract->project_id,
+            'account_id'       => $data['account_id'] ?? $contract->account_id,
+            'amount_paid'      => $amount,
+            'discount_applied' => $discount,
+            'payment_date'     => $data['payment_date'],
+            'method'           => $data['method'] ?? null,
+            'notes'            => $data['notes'] ?? null,
+        ]));
+
+        return back()
+            ->with('success', 'تم تسجيل الدفعة.')
+            ->with('reopen_phone', $contract->customer_phone)
+            ->with('reopen_name', $contract->customer_name);
+    }
+
+    // دفع جماعي: يسدّد القسط الشهري لكل عقد من العقود المحددة دفعة واحدة
+    public function payBulk(Request $request)
+    {
+        $data = $request->validate([
+            'contract_ids'   => ['required', 'array', 'min:1'],
+            'contract_ids.*' => ['integer', 'exists:sy2_installment_contracts,id'],
+            'account_id'     => ['nullable', 'integer', 'exists:accounts,id'],
+            'payment_date'   => ['required', 'date'],
+            'method'         => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $count = 0;
+        DB::transaction(function () use ($data, &$count) {
+            $contracts = InstallmentContract::whereIn('id', $data['contract_ids'])->get();
+            foreach ($contracts as $contract) {
+                $remaining = (float) $contract->remaining_balance;
+                if ($remaining <= 0.009) {
+                    continue;
+                }
+                $pay = min((float) $contract->monthly_installment, $remaining);
+                if ($pay <= 0) {
+                    continue;
+                }
+                InstallmentPayment::create([
+                    'contract_id'  => $contract->id,
+                    'project_id'   => $contract->project_id,
+                    'account_id'   => $data['account_id'] ?? $contract->account_id,
+                    'amount_paid'  => $pay,
+                    'payment_date' => $data['payment_date'],
+                    'method'       => $data['method'] ?? null,
+                    'notes'        => 'دفع جماعي — قسط شهري',
+                ]);
+                $count++;
+            }
+        });
+
+        return back()->with('success', "تم تسجيل $count دفعة (سداد جماعي للأقساط الشهرية).");
+    }
+
+    // عكس دفعة اتسجلت بالغلط — يرجّع المتبقي على العقد ويعكس المحفظة
+    public function reversePayment(InstallmentPayment $payment)
+    {
+        $contract = $payment->contract;
+        DB::transaction(fn () => $payment->delete());
+
+        return back()
+            ->with('success', 'تم إلغاء الدفعة وإرجاع المبلغ.')
+            ->with('reopen_phone', $contract?->customer_phone)
+            ->with('reopen_name', $contract?->customer_name);
+    }
+
+    // حذف عقد بالكامل (يعكس المقدم وكل دفعاته من المحفظة عبر الـ observer)
+    public function destroy(InstallmentContract $contract)
+    {
+        DB::transaction(fn () => $contract->delete());
+
+        return redirect()->route('installments.index')->with('success', 'تم حذف العقد.');
+    }
+
+    // تعديل عقد قائم — يعيد حساب الخطة ويزامن المقدم في المحفظة لو اتغيّر
+    public function update(Request $request, InstallmentContract $contract)
+    {
+        $data = $request->validate([
+            'customer_name'      => ['required', 'string', 'max:255'],
+            'customer_phone'     => ['nullable', 'string', 'max:30'],
+            'product_name'       => ['nullable', 'string', 'max:255'],
+            'cash_price'         => ['required', 'numeric', 'min:0'],
+            'discount'           => ['nullable', 'numeric', 'min:0'],
+            'down_payment'       => ['nullable', 'numeric', 'min:0'],
+            'interest_rate'      => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'installment_months' => ['required', 'integer', 'min:1', 'max:240'],
+            'due_day'            => ['required', 'integer', 'min:1', 'max:31'],
+            'start_date'         => ['required', 'date'],
+            'notes'              => ['nullable', 'string'],
+        ]);
+
+        $cash   = (float) $data['cash_price'];
+        $disc   = (float) ($data['discount'] ?? 0);
+        $down   = (float) ($data['down_payment'] ?? 0);
+        $rate   = (float) ($data['interest_rate'] ?? 0);
+        $months = (int) $data['installment_months'];
+
+        $afterDisc     = max(0, $cash - $disc);
+        $baseForInt    = max(0, $afterDisc - $down);
+        $totalAfterInt = $afterDisc + $baseForInt * ($rate / 100);
+        $monthly       = $months > 0 ? ($totalAfterInt - $down) / $months : 0;
+
+        if ($down > $afterDisc + 0.01) {
+            throw ValidationException::withMessages(['down_payment' => 'المقدم أكبر من قيمة العقد بعد الخصم.']);
+        }
+
+        // المتبقي بعد التعديل = (الإجمالي − المقدم) − اللي اتحصّل فعلاً على العقد
+        $paid      = (float) $contract->payments()->sum('amount_paid') + (float) $contract->payments()->sum('discount_applied');
+        $remaining = max(0, $totalAfterInt - $down - $paid);
+
+        DB::transaction(function () use ($contract, $data, $down, $totalAfterInt, $monthly, $remaining) {
+            $oldDown = (float) $contract->down_payment;
+
+            $contract->update([
+                'customer_name'        => $data['customer_name'],
+                'customer_phone'       => $data['customer_phone'] ?? null,
+                'product_name'         => $data['product_name'] ?: $contract->product_name,
+                'cash_price'           => $data['cash_price'],
+                'discount'             => $data['discount'] ?? 0,
+                'down_payment'         => $down,
+                'interest_rate'        => $data['interest_rate'] ?? 0,
+                'installment_months'   => $data['installment_months'],
+                'total_after_interest' => round($totalAfterInt, 2),
+                'monthly_installment'  => round($monthly, 2),
+                'due_day'              => (int) $data['due_day'],
+                'remaining_balance'    => round($remaining, 2),
+                'start_date'           => $data['start_date'],
+                'notes'                => $data['notes'] ?? null,
+            ]);
+
+            // زامن حركة المقدم في المحفظة لو المقدم اتغيّر (Model instance عشان
+            // TransactionObserver يعدّل المحفظة)
+            if (abs($down - $oldDown) > 0.001) {
+                $tx = Transaction::where('ref_type', 'inst_down')->where('ref_id', $contract->id)->first();
+                if ($down > 0) {
+                    if ($tx) {
+                        $tx->update(['amount' => $down, 'date' => $data['start_date'], 'party' => $data['customer_name'], 'account_id' => $contract->account_id]);
+                    } else {
+                        Transaction::create([
+                            'project_id' => $contract->project_id, 'account_id' => $contract->account_id, 'direction' => 'in',
+                            'type' => 'تحصيل مقدم', 'party' => $data['customer_name'],
+                            'amount' => $down, 'date' => $data['start_date'],
+                            'description' => 'مقدم عقد تقسيط — ' . $contract->product_name,
+                            'ref_type' => 'inst_down', 'ref_id' => $contract->id,
+                        ]);
+                    }
+                } elseif ($tx) {
+                    $tx->delete();
+                }
+            }
+        });
+
+        return redirect()->route('installments.index')
+            ->with('success', 'تم تعديل العقد.')
+            ->with('reopen_phone', $contract->customer_phone)
+            ->with('reopen_name', $contract->customer_name);
+    }
+
+    // (النظام القديم) تحديد قسط مشروع كمدفوع — تستخدمه شاشتا المستحقات والتنبيهات
     public function markPaid(Installment $installment)
     {
         DB::transaction(fn () => $installment->update([
@@ -248,10 +332,24 @@ class InstallmentController extends Controller
         return back()->with('success', 'تم تسجيل الدفع.');
     }
 
-    // Delete
-    public function destroy(Installment $installment)
+    // كشف حساب عميل (يُحمّل عند الطلب AJAX) — كل عقوده + جداولها + دفعاتها + أزرار السداد
+    public function customerStatement(Request $request)
     {
-        DB::transaction(fn () => $installment->delete());
-        return back()->with('success', 'تم حذف القسط.');
+        $phone = trim((string) $request->get('phone', ''));
+        $name  = trim((string) $request->get('name', ''));
+
+        $query = InstallmentContract::with(['payments', 'project.client']);
+        if ($phone !== '' && $phone !== '—') {
+            $query->where('customer_phone', $phone);
+        } else {
+            $query->where('customer_name', $name);
+        }
+        $contracts = $query->orderByDesc('id')->get();
+
+        $customerName  = $contracts->first()->customer_name ?? $name;
+        $customerPhone = $contracts->first()->customer_phone ?? $phone;
+        $wallets       = Account::selectable();
+
+        return view('installments._statement', compact('contracts', 'customerName', 'customerPhone', 'wallets'));
     }
 }

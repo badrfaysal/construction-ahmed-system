@@ -68,6 +68,7 @@
   // Pre-computed in PHP so Blade's @json() directive doesn't have to parse
   // a nested-closure expression (see quotes/edit.blade.php for the same fix).
   $existingWorkers = $band->workers->map(fn ($w) => [
+      'id'                 => $w->id,
       'name'               => $w->name,
       'phone'              => $w->phone,
       'specialty'          => $w->specialty,

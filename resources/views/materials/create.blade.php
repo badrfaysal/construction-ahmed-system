@@ -19,7 +19,25 @@
   </div>
 @endif
 
-<form method="POST" action="{{ route('materials.store') }}" style="max-width:900px">
+<style>
+  /* تخطيط شاشة الخامات: الفورم + كروت الإجماليات جنبه في عمود ثابت (sticky) */
+  .mat-layout{display:flex;gap:20px;align-items:flex-start}
+  .mat-layout .mat-form{flex:1;min-width:0}
+  .mat-totals{position:sticky;top:20px;width:250px;flex-shrink:0;
+    background:var(--surface,#fff);border:1px solid var(--line,#e6ebf3);
+    border-radius:14px;padding:16px;box-shadow:0 4px 20px rgba(15,23,42,.05)}
+  .mat-totals .section-label{margin:0 0 12px}
+  .mat-totals .card.stat{margin:0 0 10px;background:var(--bg,#f4f7fb)}
+  .mat-totals .card.stat:last-child{margin-bottom:0}
+  /* على الشاشات الصغيرة الكروت تنزل تحت الفورم بعرض كامل */
+  @media (max-width:900px){
+    .mat-layout{flex-direction:column}
+    .mat-totals{position:static;width:100%}
+  }
+</style>
+
+<div class="mat-layout">
+<form method="POST" action="{{ route('materials.store') }}" class="mat-form">
   @csrf
 
   <div class="form-card" style="max-width:none;margin-bottom:16px">
@@ -47,6 +65,29 @@
   </div>
 </form>
 
+{{-- Live totals across every item — updates as you type (عمود جانبي شيك) --}}
+<aside class="mat-totals">
+  <div class="section-label">الإجماليات</div>
+  <div class="card stat">
+    <div class="top"><span class="label">إجمالي الشراء (تكلفة)</span></div>
+    <div class="val tnum"><span id="tot-purchase">0</span> <small>ج.م</small></div>
+  </div>
+  <div class="card stat">
+    <div class="top"><span class="label">إجمالي البيع</span></div>
+    <div class="val tnum"><span id="tot-sell">0</span> <small>ج.م</small></div>
+  </div>
+  <div class="card stat">
+    <div class="top"><span class="label">الإجمالي للعميل (بعد الإشراف)</span></div>
+    <div class="val tnum"><span id="tot-client">0</span> <small>ج.م</small></div>
+  </div>
+  <div class="card stat">
+    <div class="top"><span class="label">إجمالي الربح</span></div>
+    <div class="val tnum" style="color:var(--pos)"><span id="tot-profit">0</span> <small>ج.م</small></div>
+    <div class="note">فرق السعر: <span id="tot-pricediff">0</span> · إشراف: <span id="tot-sup">0</span></div>
+  </div>
+</aside>
+</div>{{-- /mat-layout --}}
+
 {{-- Shared item/unit suggestions used inside every item row --}}
 <datalist id="items-list">
   <option value="أسمنت"><option value="رمل"><option value="سيراميك أرضيات">
@@ -55,6 +96,7 @@
 <datalist id="units-list">
   <option value="شيكارة"><option value="م²"><option value="نقلة">
   <option value="ماسورة"><option value="لفة"><option value="طقم"><option value="طوبة">
+  <option value="بستلة"><option value="وحدة">
 </datalist>
 
 @push('scripts')
@@ -69,6 +111,13 @@ let defaultSupervisionPct = {{ $selectedProject ? ($selectedProject->default_sup
 function updateSupervisionDefault(select) {
   const opt = select.options[select.selectedIndex];
   if (opt && opt.dataset.sup !== undefined) defaultSupervisionPct = parseFloat(opt.dataset.sup) || 0;
+  // Push the project's rate into every supervision field the user hasn't
+  // manually overridden — so picking the project fills them all in, instead of
+  // leaving the first row stuck on whatever default existed at page load.
+  document.querySelectorAll('.mat-sup').forEach(inp => {
+    if (inp.dataset.touched !== '1') inp.value = defaultSupervisionPct;
+  });
+  recalcTotals();
 }
 
 // Supplier <option> list is static (suppliers aren't tied to a project), built once
@@ -76,6 +125,18 @@ const supplierOptionsHtml = `
   <option value="">— بدون مورد —</option>
   @foreach($suppliers as $s)
     <option value="{{ $s->id }}">{{ $s->name }}</option>
+  @endforeach
+`;
+
+// Wallet <option> list — أي محفظة بعد دمج السيستمين (إجباري الاختيار)
+const walletOptionsHtml = `
+  <option value="" disabled selected>— اختر المحفظة —</option>
+  @foreach($wallets->groupBy(fn($w) => $w->categoryAr()) as $cat => $grp)
+    <optgroup label="{{ $cat }}">
+      @foreach($grp as $w)
+        <option value="{{ $w->id }}">{{ $w->account_name }}@if($w->id == \App\Models\Account::WALLET_ID) ★@endif — {{ number_format((float) $w->balance) }} ج</option>
+      @endforeach
+    </optgroup>
   @endforeach
 `;
 
@@ -112,7 +173,7 @@ function itemRowHtml(g, i) {
           <label>اسم الصنف</label>
           <input type="text" name="groups[${g}][items][${i}][item]" placeholder="مثل: أسمنت" required list="items-list">
         </div>
-        <button type="button" class="btn ghost sm" onclick="this.closest('.item-row').remove()" title="حذف الصنف">
+        <button type="button" class="btn ghost sm" onclick="this.closest('.item-row').remove(); recalcTotals()" title="حذف الصنف">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-x"/></svg>
         </button>
       </div>
@@ -123,21 +184,21 @@ function itemRowHtml(g, i) {
         </div>
         <div class="field" style="margin:0">
           <label>الكمية</label>
-          <input type="number" name="groups[${g}][items][${i}][qty]" placeholder="0" min="0" step="0.1" required>
+          <input type="number" name="groups[${g}][items][${i}][qty]" class="mat-qty" placeholder="0" min="0" step="0.1" required oninput="recalcTotals()">
         </div>
         <div class="field" style="margin:0">
           <label>سعر الشراء (تكلفة)</label>
-          <input type="number" name="groups[${g}][items][${i}][unit_price]" placeholder="0" min="0" step="0.01" required>
+          <input type="number" name="groups[${g}][items][${i}][unit_price]" class="mat-cost" placeholder="0" min="0" step="0.01" required oninput="recalcTotals()">
         </div>
       </div>
       <div class="row3">
         <div class="field" style="margin:0">
           <label>سعر البيع للعميل</label>
-          <input type="number" name="groups[${g}][items][${i}][sell_price]" placeholder="0" min="0" step="0.01" required>
+          <input type="number" name="groups[${g}][items][${i}][sell_price]" class="mat-sell" placeholder="0" min="0" step="0.01" required oninput="recalcTotals()">
         </div>
         <div class="field" style="margin:0">
           <label>نسبة الإشراف % (اختياري)</label>
-          <input type="number" name="groups[${g}][items][${i}][supervision_pct]" placeholder="0" min="0" max="100" step="0.1" value="${defaultSupervisionPct}">
+          <input type="number" name="groups[${g}][items][${i}][supervision_pct]" class="mat-sup" placeholder="0" min="0" max="100" step="0.1" value="${defaultSupervisionPct}" oninput="this.dataset.touched='1'; recalcTotals()">
         </div>
       </div>
     </div>`;
@@ -148,7 +209,38 @@ function addItem(g) {
   const container = document.getElementById('items-' + g);
   const i = container.children.length;
   container.insertAdjacentHTML('beforeend', itemRowHtml(g, i));
+  recalcTotals();
 }
+
+// Live running totals across every item in every band group. Shows what we pay
+// (شراء), what the client pays before markup (بيع), the full client total
+// after the supervision markup (الكل), and the profit split into its two
+// sources: فرق السعر (بيع − شراء) and الإشراف (نسبة الإشراف فوق البيع).
+function recalcTotals() {
+  let purchase = 0, sell = 0, client = 0;
+  document.querySelectorAll('.item-row').forEach(row => {
+    const qty  = parseFloat(row.querySelector('.mat-qty')?.value)  || 0;
+    const cost = parseFloat(row.querySelector('.mat-cost')?.value) || 0;
+    const sp   = parseFloat(row.querySelector('.mat-sell')?.value) || 0;
+    const pct  = parseFloat(row.querySelector('.mat-sup')?.value)  || 0;
+    purchase += qty * cost;
+    sell     += qty * sp;
+    client   += qty * sp * (1 + pct / 100);
+  });
+
+  const priceDiff = sell - purchase;   // فرق السعر
+  const supMarkup = client - sell;     // ربح الإشراف
+  const profit    = client - purchase; // إجمالي الربح
+
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  setTxt('tot-purchase', fmt(purchase));
+  setTxt('tot-sell',     fmt(sell));
+  setTxt('tot-client',   fmt(client));
+  setTxt('tot-profit',   fmt(profit));
+  setTxt('tot-pricediff', fmt(priceDiff));
+  setTxt('tot-sup',       fmt(supMarkup));
+}
+function setTxt(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
 
 // Add a new band group, pre-filled with one item row
 function addGroup() {
@@ -180,6 +272,10 @@ function addGroup() {
       {{-- Payment type for this purchase group --}}
       <div style="background:var(--bg);border-radius:8px;padding:14px 16px;margin-bottom:14px">
         <div style="margin-bottom:10px;font-size:.85rem;font-weight:600;color:var(--text-muted)">طريقة دفع هذا الشراء</div>
+        <div class="field" style="max-width:320px;margin-bottom:12px">
+          <label style="display:flex;align-items:center;gap:5px;font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg> المحفظة (الصرف منها) *</label>
+          <select name="groups[${g}][account_id]" required>${walletOptionsHtml}</select>
+        </div>
         <div style="display:flex;gap:16px;flex-wrap:wrap">
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
             <input type="radio" name="groups[${g}][payment_status]" value="paid" checked onchange="togglePaidAmt(${g}, this.value)">

@@ -141,8 +141,9 @@ class QuoteController extends Controller
 
         $quote->load('bands.items');
         $suppliers = Supplier::orderBy('name')->get(['id', 'name']);
+        $wallets   = \App\Models\Account::selectable();
 
-        return view('quotes.convert', compact('quote', 'suppliers'));
+        return view('quotes.convert', compact('quote', 'suppliers', 'wallets'));
     }
 
     // Step 2: turn an approved quote into a real project — locks the quote's
@@ -156,6 +157,8 @@ class QuoteController extends Controller
         abort_if($quote->project_id, 400, 'تم تحويل هذا العرض لمشروع بالفعل.');
 
         $data = $request->validate([
+            'default_supervision_pct'  => ['required', 'numeric', 'min:0', 'max:100'],
+            'account_id'               => ['nullable', 'integer', 'exists:accounts,id'],
             'items'                    => ['nullable', 'array'],
             'items.*.purchased'        => ['nullable', 'boolean'],
             'items.*.name'             => ['required', 'string', 'max:255'],
@@ -182,11 +185,17 @@ class QuoteController extends Controller
                 );
 
             $project = Project::create([
-                'client_id'              => $client->id,
-                'name'                   => $quote->client_name,
-                'address'                => $quote->address,
-                'area'                   => $quote->area,
-                'initial_contract_value' => $quote->total(),
+                'client_id'               => $client->id,
+                'name'                    => $quote->client_name,
+                'address'                 => $quote->address,
+                'area'                    => $quote->area,
+                'initial_contract_value'  => $quote->total(),
+                'default_supervision_pct' => $data['default_supervision_pct'],
+            ]);
+
+            // تبقى دي النسبة الافتراضية للنظام كله بعد كده (زي ما طلب المستخدم)
+            \App\Models\Settings::current()->update([
+                'default_supervision_pct' => $data['default_supervision_pct'],
             ]);
 
             // Create bands and remember which project band each quote band maps to
@@ -222,6 +231,7 @@ class QuoteController extends Controller
                 Material::create([
                     'project_id'      => $project->id,
                     'band_id'         => $bandMap[$item['quote_band_id']] ?? null,
+                    'account_id'      => $data['account_id'] ?? null,
                     'supplier_id'     => $item['supplier_id'] ?? null,
                     'category'        => 'material',
                     'item'            => $item['name'],

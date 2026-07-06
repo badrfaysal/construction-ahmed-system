@@ -51,14 +51,11 @@
   </div>
   <div class="f-field">
     <label>الحالة</label>
-    <div class="f-select-wrap">
-      <select name="status" class="f-select" onchange="this.form.submit()">
-        <option value="">غير مسدد فقط</option>
-        <option value="pending"  {{ request('status') === 'pending'  ? 'selected' : '' }}>معلق</option>
-        <option value="partial"  {{ request('status') === 'partial'  ? 'selected' : '' }}>جزئي</option>
-        <option value="paid"     {{ request('status') === 'paid'     ? 'selected' : '' }}>مسدد</option>
-      </select>
-      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-down"/></svg>
+    <div class="tabs" style="margin-bottom:0">
+      <a href="{{ request()->fullUrlWithQuery(['status' => null]) }}" class="tab {{ !request('status') ? 'active' : '' }}">غير مسدد فقط</a>
+      <a href="{{ request()->fullUrlWithQuery(['status' => 'pending']) }}" class="tab {{ request('status') === 'pending' ? 'active' : '' }}">معلق</a>
+      <a href="{{ request()->fullUrlWithQuery(['status' => 'partial']) }}" class="tab {{ request('status') === 'partial' ? 'active' : '' }}">جزئي</a>
+      <a href="{{ request()->fullUrlWithQuery(['status' => 'paid']) }}" class="tab {{ request('status') === 'paid' ? 'active' : '' }}">مسدد</a>
     </div>
   </div>
   @if(request()->hasAny(['project_id','supplier_id','status']))

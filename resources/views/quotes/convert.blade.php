@@ -24,6 +24,28 @@
 
 <form method="POST" action="{{ route('quotes.convert.store', $quote) }}">
   @csrf
+
+  {{-- نسبة الإشراف الافتراضية — تتطبّق على كل أصناف العرض دلوقتي، وتبقى القيمة
+       الافتراضية للمشروع ولأي خامة/مصنعية تتسجّل بعد كده --}}
+  <div class="form-card" style="max-width:none;margin-bottom:16px;background:#fffbeb;border:1px solid #fcd34d">
+    <div class="section-label" style="margin-top:0">نسبة الإشراف الافتراضية</div>
+    <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">
+      <div class="field" style="margin:0;max-width:220px">
+        <label style="font-weight:700">النسبة % <span style="color:#dc2626">*</span></label>
+        <input type="number" name="default_supervision_pct" id="conv_sup" min="0" max="100" step="0.1"
+               value="{{ old('default_supervision_pct', $settings->default_supervision_pct) }}"
+               oninput="applyConvSupervision(this.value)" required>
+      </div>
+      <button type="button" class="btn ghost sm" onclick="applyConvSupervision(document.getElementById('conv_sup').value)">
+        طبّق على كل الأصناف
+      </button>
+      <div class="field" style="margin:0;min-width:240px">
+        @include('partials._wallet-select', ['wallets' => $wallets, 'label' => 'محفظة الصرف للمشتريات', 'selectStyle' => 'width:100%'])
+      </div>
+    </div>
+    <p class="muted" style="margin:8px 0 0;font-size:12px">هتتطبّق على كل أصناف العرض دلوقتي، وتبقى النسبة الافتراضية للمشروع ولأي خامة/مصنعية جديدة بعد كده. الأصناف المشتراة هتتخصم من المحفظة المختارة.</p>
+  </div>
+
   @php $idx = 0; @endphp
 
   @foreach($quote->bands as $band)
@@ -115,6 +137,10 @@
 function toggleConvPaid(idx, val) {
   const el = document.getElementById('conv-paid-' + idx);
   el.style.display = (val === 'partial') ? 'block' : 'none';
+}
+// تطبيق نسبة الإشراف الافتراضية على كل خانات إشراف الأصناف
+function applyConvSupervision(v) {
+  document.querySelectorAll('input[name^="items"][name$="[supervision_pct]"]').forEach(i => { i.value = v; });
 }
 </script>
 @endpush

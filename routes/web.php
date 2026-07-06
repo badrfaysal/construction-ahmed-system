@@ -4,10 +4,12 @@ use App\Http\Controllers\AlertController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\CraftsmanController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DebtController;
 use App\Http\Controllers\InstallmentController;
 use App\Http\Controllers\LaborController;
+use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MaterialReturnController;
 use App\Http\Controllers\PriceHistoryController;
@@ -20,7 +22,9 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WarrantyController;
+use App\Http\Controllers\WorkerPaymentController;
 use Illuminate\Support\Facades\Route;
 
 // ---- Auth routes (no login required) ----
@@ -73,22 +77,29 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::post('/projects/{project}/returns', [MaterialReturnController::class, 'store'])->name('returns.store');
     Route::delete('/returns/{return}', [MaterialReturnController::class, 'destroy'])->name('returns.destroy');
 
-    // Installments (الأقساط)
+    // Installments — منظومة العقود والأقساط (عقود مربوطة بالمشاريع)
     Route::get('/installments', [InstallmentController::class, 'index'])->name('installments.index');
-    Route::get('/installments/create', [InstallmentController::class, 'create'])->name('installments.create');
     Route::post('/installments', [InstallmentController::class, 'store'])->name('installments.store');
-    Route::post('/installments/{installment}/paid', [InstallmentController::class, 'markPaid'])->name('installments.markPaid');
-    Route::delete('/installments/{installment}', [InstallmentController::class, 'destroy'])->name('installments.destroy');
-    // Installment plan generator (مولد خطة التقسيط)
-    Route::get('/installments/plan', [InstallmentController::class, 'planForm'])->name('installments.plan.form');
-    Route::post('/installments/plan', [InstallmentController::class, 'storePlan'])->name('installments.plan.store');
-    // Printable installment statement per project (static /statement suffix — no conflict with /{installment})
-    Route::get('/installments/{project}/statement', [InstallmentController::class, 'statement'])->name('installments.statement');
-    // JSON: billed amount + paid installments for plan auto-fill
-    Route::get('/api/projects/{project}/plan-data', [InstallmentController::class, 'planData'])->name('api.projects.plan-data');
+    // كشف حساب عميل (يُحمّل عند الطلب AJAX) — literal قبل أي {contract}
+    Route::get('/installments/customer-statement', [InstallmentController::class, 'customerStatement'])->name('installments.customer_statement');
+    // سداد دفعة (كامل/شهري/جزئي + خصم اختياري)
+    Route::post('/installments/{contract}/pay', [InstallmentController::class, 'pay'])->name('installments.pay');
+    // دفع جماعي للأقساط الشهرية لعدة عقود
+    Route::post('/installments/pay-bulk', [InstallmentController::class, 'payBulk'])->name('installments.pay_bulk');
+    // عكس/إلغاء دفعة
+    Route::post('/installment-payments/{payment}/reverse', [InstallmentController::class, 'reversePayment'])->name('installments.reverse_pay');
+    // تعديل عقد
+    Route::put('/installments/{contract}', [InstallmentController::class, 'update'])->name('installments.update');
+    // حذف عقد بالكامل
+    Route::delete('/installments/{contract}', [InstallmentController::class, 'destroy'])->name('installments.destroy');
+    // (النظام القديم) تحديد قسط مشروع كمدفوع — يستخدمه المستحقات والتنبيهات
+    Route::post('/installments/{installment}/mark-paid', [InstallmentController::class, 'markPaid'])->name('installments.markPaid');
 
     // Receivables — what clients owe us (المستحقات)
     Route::get('/receivables', [ReceivablesController::class, 'index'])->name('receivables.index');
+    // تسجيل تحصيل مباشر من العميل (جزئي/كامل) + حذف تحصيل
+    Route::post('/receivables/{project}/pay', [ReceivablesController::class, 'pay'])->name('receivables.pay');
+    Route::delete('/receivables/payments/{transaction}', [ReceivablesController::class, 'deletePayment'])->name('receivables.payment.delete');
 
     // Supplier debts — what we owe suppliers (الديون)
     Route::get('/debts', [DebtController::class, 'index'])->name('debts.index');
@@ -111,6 +122,18 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::get('/labor', [LaborController::class, 'index'])->name('labor.index');
     Route::get('/labor/create', [LaborController::class, 'create'])->name('labor.create');
     Route::post('/labor', [LaborController::class, 'store'])->name('labor.store');
+
+    // Craftsman payments (دفعات الصنايعية) — each installment is paid as the
+    // work progresses and hits the wallet the moment it's recorded
+    Route::get('/workers/{worker}/payments', [WorkerPaymentController::class, 'show'])->name('workers.payments');
+    Route::post('/workers/{worker}/payments', [WorkerPaymentController::class, 'store'])->name('workers.payments.store');
+    // تبديل الفني — يثبّت الأول على المدفوع ويضيف فني جديد يكمّل الباقي
+    Route::post('/workers/{worker}/swap', [WorkerPaymentController::class, 'swap'])->name('workers.swap');
+    Route::delete('/worker-payments/{payment}', [WorkerPaymentController::class, 'destroy'])->name('worker-payments.destroy');
+
+    // Unified craftsmen directory (الصنايعية ومستحقاتهم) — one person across all
+    // their bands/projects, with what they're still owed
+    Route::get('/craftsmen', [CraftsmanController::class, 'index'])->name('craftsmen.index');
 
     // Alerts / monitoring (التنبيهات)
     Route::get('/alerts', [AlertController::class, 'index'])->name('alerts.index');
@@ -142,10 +165,24 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+
+        // محفظة المقاولات — balance + hand-entered money moves (capital in,
+        // owner withdrawals, general overhead). Owner-level, hence admin-only.
+        Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
+        Route::post('/wallet/transactions', [WalletController::class, 'store'])->name('wallet.store');
+        Route::delete('/wallet/transactions/{transaction}', [WalletController::class, 'destroy'])->name('wallet.destroy');
         // Band statement (كشف حساب البند) — shows real cost & profit
         Route::get('/bands/{band}/statement', [ReportController::class, 'bandStatement'])->name('bands.statement');
         // Company cost statement (كشف حساب الشركة) — per-project real cost breakdown
         Route::get('/projects/{project}/company-statement', [ReportController::class, 'companyStatement'])->name('reports.company');
+
+        // تقدير تكلفة مشروع جديد بالاعتماد على مشروع سابق كمرجع (خامات + مصنعية
+        // بالتفصيل لكل بند) — "index" قبل الـ {project} الديناميكي
+        Route::get('/reports/estimation', [ReportController::class, 'estimationIndex'])->name('reports.estimation.index');
+        Route::get('/reports/estimation/{project}', [ReportController::class, 'estimationShow'])->name('reports.estimation.show');
+
+        // تصفير قاعدة البيانات (للتجارب فقط) — يمسح كل بيانات المقاولات ويصفّر المحفظة
+        Route::post('/maintenance/reset', [MaintenanceController::class, 'resetDatabase'])->name('maintenance.reset');
     });
 
     // Global search (بحث) — available from the topbar on every screen

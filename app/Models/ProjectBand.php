@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Validation\ValidationException;
 
 // A "band" (بند) is one phase of construction work within a project
 // e.g. "محارة", "سيراميك وأرضيات", "دهانات"
@@ -52,26 +53,31 @@ class ProjectBand extends Model
             'lump_sum'  => 'مقاولة مقطوعة',
             'daily'     => 'يومية',
             'per_meter' => 'بالمتر',
+            'per_piece' => 'بالقطعة',
             default     => '—',
         };
     }
 
-    // Replaces this band's workers with the given list — every band's labor
+    // Syncs this band's workers with the submitted list — every band's labor
     // is always a list of technicians now (one entry minimum in practice).
     // Each worker's cost (amount) and client billing (sell_amount) are
-    // computed server-side from qty×rate (per_meter) or entered directly
-    // (lump_sum), then the band's totals are the sum of all of them — called
-    // after every create/update so re-editing always recalculates from
-    // scratch and never compounds.
+    // computed server-side from qty×rate (per_meter/per_piece/daily) or
+    // entered directly (lump_sum), then the band's totals are the sum of all
+    // of them — called after every create/update so re-editing always
+    // recalculates from scratch and never compounds.
+    //
+    // Rows carrying an id are UPDATED in place (never delete+recreate): each
+    // worker's دفعات hang off his row with a cascading FK, so recreating him
+    // would silently wipe his whole payment history on every band edit.
     public function syncLabor(array $workersInput): void
     {
-        $this->workers()->delete();
+        $keptIds = [];
 
         foreach (array_values($workersInput) as $i => $w) {
             $type = $w['contract_type'] ?? null;
             $qty  = $w['contract_qty'] ?? null;
 
-            $this->workers()->create([
+            $attrs = [
                 'name'               => $w['name'],
                 'phone'              => $w['phone'] ?? null,
                 'specialty'          => $w['specialty'] ?? null,
@@ -85,7 +91,31 @@ class ProjectBand extends Model
                 'start_date'         => $w['start_date'] ?? null,
                 'notes'              => $w['notes'] ?? null,
                 'sort_order'         => $i,
-            ]);
+            ];
+
+            // Lookup scoped to this band's own workers, so a forged foreign id
+            // can never hijack another band's row — it just creates a new one.
+            $existing = ! empty($w['id']) ? $this->workers()->whereKey($w['id'])->first() : null;
+
+            if ($existing) {
+                $existing->update($attrs);
+                $keptIds[] = $existing->id;
+            } else {
+                $keptIds[] = $this->workers()->create($attrs)->id;
+            }
+        }
+
+        // Workers dropped from the form. A craftsman with recorded دفعات can't
+        // be silently removed — his payment history (and the wallet debits
+        // behind it) must stay traceable. The user flow for "صنايعي مشي" is to
+        // keep him with his actual executed qty and add a new worker instead.
+        foreach ($this->workers()->whereNotIn('id', $keptIds)->get() as $removed) {
+            if ($removed->payments()->exists()) {
+                throw ValidationException::withMessages([
+                    'workers' => 'الصنايعي "' . $removed->name . '" له دفعات مسجلة فلا يمكن حذفه من البند — لو مشي بدري، قلّل كميته/أجره وسيبه في القائمة وضيف صنايعي جديد يكمّل. (أو احذف دفعاته الأول من صفحة الدفعات.)',
+                ]);
+            }
+            $removed->delete();
         }
 
         $this->load('workers');
@@ -112,6 +142,22 @@ class ProjectBand extends Model
         ]);
     }
 
+    // Recomputes the band's labor totals straight from its current workers —
+    // used when workers are changed outside the band edit form (e.g. تبديل الفني
+    // on the payments screen). Mirrors the tail of syncLabor(): the client
+    // markup is already baked into each worker's clientPrice(), so the
+    // band-level supervision % is zeroed to avoid double-counting it.
+    public function recomputeLaborTotals(): void
+    {
+        $this->load('workers');
+
+        $this->update([
+            'labor_amount'          => $this->workersTotal(),
+            'labor_sell_price'      => $this->workers->sum(fn ($w) => $w->clientPrice()),
+            'labor_supervision_pct' => 0,
+        ]);
+    }
+
     // For bands created before the "workers list" model existed — builds a
     // synthetic single-worker seed from the old team_name/labor_amount fields
     // so opening the edit form shows a smooth starting point instead of a
@@ -134,15 +180,27 @@ class ProjectBand extends Model
         ];
     }
 
-    // amount = qty × rate for daily/per_meter contracts, or the manually
-    // entered fallback amount otherwise (lump_sum, or no contract type set)
+    // amount = qty × rate for daily/per_meter/per_piece contracts, or the
+    // manually entered fallback amount otherwise (lump_sum, or no type set)
     public static function computeContractAmount(?string $type, $qty, $rate, $fallback): float
     {
-        if (in_array($type, ['daily', 'per_meter'], true) && $qty !== null && $rate !== null) {
+        if (in_array($type, ['daily', 'per_meter', 'per_piece'], true) && $qty !== null && $rate !== null) {
             return (float) $qty * (float) $rate;
         }
 
         return (float) ($fallback ?? 0);
+    }
+
+    // Total دفعات paid across all this band's craftsmen so far
+    public function laborPaid(): float
+    {
+        return (float) $this->workers->sum(fn ($w) => $w->paidTotal());
+    }
+
+    // What's still owed to this band's craftsmen (contracted labor minus paid)
+    public function laborRemaining(): float
+    {
+        return (float) $this->workers->sum(fn ($w) => $w->remaining());
     }
 
     // Net material cost for this band (purchased - returned) — our real cost

@@ -12,6 +12,49 @@
   </a>
 </div>
 
+{{-- أكتر خامة/بند — بتحترم فلتر المشروع الحالي --}}
+<div class="grid cols-3" style="margin-bottom:20px">
+  <div class="vstat vstat-blue">
+    <div class="top">
+      <span class="label">أكتر خامة اشتريتها</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg></span>
+    </div>
+    @if($insights['topMaterial'])
+      <div class="val">{{ $insights['topMaterial']->item }}</div>
+      <div class="note">{{ number_format($insights['topMaterial']->total_qty, 1) }} {{ $insights['topMaterial']->unit }} — بتكلفة {{ number_format($insights['topMaterial']->total_cost) }} ج.م ({{ $insights['topMaterial']->purchase_count }} عملية شراء)</div>
+    @else
+      <div class="val">—</div>
+      <div class="note">لا توجد بيانات كافية بعد</div>
+    @endif
+  </div>
+  <div class="vstat vstat-red">
+    <div class="top">
+      <span class="label">أكتر خامة عملت لها مرتجع</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-x"/></svg></span>
+    </div>
+    @if($insights['topReturned'])
+      <div class="val">{{ $insights['topReturned']->item }}</div>
+      <div class="note">{{ number_format($insights['topReturned']->total_qty, 1) }} {{ $insights['topReturned']->unit }} مرتجعة — بقيمة {{ number_format($insights['topReturned']->total_value) }} ج.م ({{ $insights['topReturned']->return_count }} مرتجع)</div>
+    @else
+      <div class="val">—</div>
+      <div class="note">لا توجد مرتجعات مسجّلة بعد</div>
+    @endif
+  </div>
+  <div class="vstat vstat-teal">
+    <div class="top">
+      <span class="label">أكتر بند اشتريت له خامات</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg></span>
+    </div>
+    @if($insights['topBand'])
+      <div class="val">{{ $insights['topBand']->band_name }}</div>
+      <div class="note">{{ $insights['topBand']->project_name }} — بتكلفة {{ number_format($insights['topBand']->total_cost) }} ج.م</div>
+    @else
+      <div class="val">—</div>
+      <div class="note">لا توجد بيانات كافية بعد</div>
+    @endif
+  </div>
+</div>
+
 <form method="GET" class="filter-bar">
   <div class="f-field">
     <label>

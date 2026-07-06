@@ -2,19 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Project;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 
-// Read-only — transactions are generated automatically by MaterialObserver,
-// InstallmentObserver, and ProjectBandObserver whenever real activity happens
-// in the system. No manual entry, no manual delete.
+// سجل الحركات: القائمة نفسها بتتقرا من sy2_audit_logs (سجل تدقيق ثابت لا
+// يُعدَّل ولا يُحذف) عشان تعرض كل حاجة حصلت فعلاً — إنشاء/تعديل/حذف — مش بس
+// الحالة الحية النهائية اللي في sy2_transactions. الإجماليات (وارد/صادر) لسه
+// بتتحسب من الحركات الحية (Transaction) عشان تفضل تعكس الرصيد الفعلي دلوقتي.
 class TransactionController extends Controller
 {
-    // List all transactions, newest first, with optional project/direction filters
     public function index(Request $request)
     {
-        $query = Transaction::with('project')->orderByDesc('date')->orderByDesc('id');
+        $query = AuditLog::with(['project', 'band'])
+            ->orderByDesc('happened_at')
+            ->orderByDesc('id');
 
         if ($pid = $request->get('project_id')) {
             $query->where('project_id', $pid);
@@ -24,12 +27,22 @@ class TransactionController extends Controller
             $query->where('direction', $dir);
         }
 
-        $transactions = $query->paginate(50);
-        $projects     = Project::orderBy('name')->get(['id', 'name']);
+        if ($action = $request->get('action')) {
+            $query->where('action', $action);
+        }
 
-        $totalIn  = (clone $query->getQuery())->where('direction', 'in')->sum('amount');
-        $totalOut = (clone $query->getQuery())->where('direction', 'out')->sum('amount');
+        $logs     = $query->paginate(50);
+        $projects = Project::orderBy('name')->get(['id', 'name']);
 
-        return view('transactions.index', compact('transactions', 'projects', 'totalIn', 'totalOut'));
+        // الإجماليات من الحركات الحيّة فقط (مش من كل أحداث السجل) عشان تعكس
+        // الرصيد الفعلي، مع تطبيق نفس فلتر المشروع لو موجود
+        $liveQuery = Transaction::query();
+        if ($pid) {
+            $liveQuery->where('project_id', $pid);
+        }
+        $totalIn  = (clone $liveQuery)->where('direction', 'in')->sum('amount');
+        $totalOut = (clone $liveQuery)->where('direction', 'out')->sum('amount');
+
+        return view('transactions.index', compact('logs', 'projects', 'totalIn', 'totalOut'));
     }
 }

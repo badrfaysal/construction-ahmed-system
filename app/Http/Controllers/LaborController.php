@@ -52,10 +52,11 @@ class LaborController extends Controller
             'status'        => ['required', 'in:pending,active,done'],
             // Every band's labor is a list of technicians (no more band-level simple path)
             'workers'                      => ['nullable', 'array'],
+            'workers.*.id'                 => ['nullable', 'integer'],
             'workers.*.name'               => ['required', 'string', 'max:255'],
             'workers.*.phone'              => ['nullable', 'string', 'max:30'],
             'workers.*.specialty'          => ['nullable', 'string', 'max:255'],
-            'workers.*.contract_type'      => ['nullable', 'in:lump_sum,daily,per_meter'],
+            'workers.*.contract_type'      => ['nullable', 'in:lump_sum,daily,per_meter,per_piece'],
             'workers.*.contract_qty'       => ['nullable', 'numeric', 'min:0'],
             'workers.*.contract_unit_rate' => ['nullable', 'numeric', 'min:0'],
             'workers.*.sell_rate'          => ['nullable', 'numeric', 'min:0'],

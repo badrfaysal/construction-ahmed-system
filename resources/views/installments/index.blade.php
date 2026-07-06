@@ -1,459 +1,615 @@
 @extends('layouts.app')
-@section('title', 'الأقساط والمدفوعات')
-@section('page-title', 'الأقساط والمدفوعات')
+@section('title', 'العقود والأقساط')
+@section('page-title', 'منظومة العقود والأقساط')
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
-:root{
-  --bg:#f4f7fb;--surface:#fff;--surface2:#fafbfd;
-  --text:#0f172a;--muted:#64748b;--soft:#94a3b8;
-  --border:#e6ebf3;--border2:#d4dbe6;--hover:#f1f4f9;
-  --accent:#4f46e5;--acbg:#eef2ff;
-  --success:#059669;--sucbg:#ecfdf5;
-  --danger:#dc2626;--danbg:#fef2f2;
-  --warn:#d97706;--warnbg:#fffbeb;
-  --rsm:8px;--rmd:12px;--rlg:16px;
-  --sh-xs:0 1px 2px rgba(15,23,42,.05);
-  --sh-sm:0 2px 6px rgba(15,23,42,.07);
-  --sh-md:0 4px 14px rgba(15,23,42,.08);
-  --sh-lg:0 12px 32px rgba(15,23,42,.1);
-}
-body{font-family:'IBM Plex Sans Arabic','Cairo',sans-serif;background:var(--bg);color:var(--text);}
+  /* ── منقول بروح صفحة الأقساط في السيستم الأول (مكوّنات مستقلة، prefixed) ── */
+  :root{
+    --i-accent:#4f46e5; --i-accent2:#393984; --i-accent-bg:#eef2ff;
+    --i-success:#059669; --i-success-bg:#ecfdf5; --i-danger:#dc2626; --i-danger-bg:#fef2f2;
+    --i-warning:#d97706; --i-warning-bg:#fffbeb; --i-violet:#7c3aed; --i-violet-bg:#f5f3ff;
+    --i-surface:#fff; --i-surface2:#fafbfd; --i-text:#0f172a; --i-muted:#5a6478; --i-soft:#8b95a9;
+    --i-border:#e6ebf3; --i-border2:#d4dbe6; --i-hover:#f1f4f9;
+  }
+  .inst-wrap{font-feature-settings:'tnum' 1;}
+  .inst-wrap .stat-card{background:var(--i-surface);border:1px solid var(--i-border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;transition:.2s;}
+  .inst-wrap .stat-card::before{content:'';position:absolute;top:0;right:0;bottom:0;width:3px;background:var(--i-soft);}
+  .inst-wrap .stat-card.blue::before{background:var(--i-accent);} .inst-wrap .stat-card.green::before{background:var(--i-success);}
+  .inst-wrap .stat-card.orange::before{background:var(--i-warning);} .inst-wrap .stat-card.red::before{background:var(--i-danger);}
+  .inst-wrap .stat-card.purple::before{background:var(--i-violet);}
+  .inst-wrap .stat-card:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(15,23,42,.06);}
+  .inst-wrap .sc-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.95rem;margin-bottom:9px;}
+  .inst-wrap .stat-card.blue .sc-icon{background:var(--i-accent-bg);color:var(--i-accent);} .inst-wrap .stat-card.green .sc-icon{background:var(--i-success-bg);color:var(--i-success);}
+  .inst-wrap .stat-card.orange .sc-icon{background:var(--i-warning-bg);color:var(--i-warning);} .inst-wrap .stat-card.red .sc-icon{background:var(--i-danger-bg);color:var(--i-danger);}
+  .inst-wrap .stat-card.purple .sc-icon{background:var(--i-violet-bg);color:var(--i-violet);}
+  .inst-wrap .stat-card p{font-size:.78rem;font-weight:500;color:var(--i-muted);margin:0 0 4px;}
+  .inst-wrap .stat-card h3{font-weight:700;margin:0;font-size:1.5rem;color:var(--i-text);letter-spacing:-.02em;}
+  .inst-wrap .stat-card h3 small{font-size:.76rem;font-weight:400;color:var(--i-soft);}
 
-/* ── Stat Cards ── */
-.sy-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--rlg);
-  padding:20px 22px;box-shadow:var(--sh-xs);position:relative;overflow:hidden;transition:.2s;}
-.sy-stat::before{content:'';position:absolute;top:0;right:0;bottom:0;width:4px;}
-.sy-stat.blue::before{background:var(--accent);}
-.sy-stat.green::before{background:var(--success);}
-.sy-stat.orange::before{background:var(--warn);}
-.sy-stat.red::before{background:var(--danger);}
-.sy-stat:hover{transform:translateY(-2px);box-shadow:var(--sh-md);}
-.sy-stat .ic{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:12px;}
-.sy-stat.blue .ic{background:var(--acbg);color:var(--accent);}
-.sy-stat.green .ic{background:var(--sucbg);color:var(--success);}
-.sy-stat.orange .ic{background:var(--warnbg);color:var(--warn);}
-.sy-stat.red .ic{background:var(--danbg);color:var(--danger);}
-.sy-stat h3{font-size:1.6rem;font-weight:700;margin:0;letter-spacing:-.02em;}
-.sy-stat p{font-size:.78rem;font-weight:500;color:var(--muted);margin:0 0 4px;}
+  .inst-wrap .table-box{background:var(--i-surface);border:1px solid var(--i-border);border-radius:12px;padding:18px;}
+  .inst-wrap .nav-pills{background:var(--i-surface2);border:1px solid var(--i-border);border-radius:12px;padding:4px;display:inline-flex;}
+  .inst-wrap .nav-pills .nav-link{font-weight:600;border-radius:8px;padding:8px 16px;color:var(--i-muted);font-size:.86rem;background:transparent;border:none;}
+  .inst-wrap .nav-pills .nav-link.active{background:var(--i-text);color:#fff;}
 
-/* ── Table Box ── */
-.tbox{background:var(--surface);border:1px solid var(--border);border-radius:var(--rmd);overflow:hidden;box-shadow:var(--sh-xs);}
-.tbox-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
-.tbox-head h2{font-size:1.05rem;font-weight:600;margin:0;}
+  .inst-wrap .filters-card{background:var(--i-surface);border:1px solid var(--i-border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:12px;}
+  .inst-wrap .filters-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .inst-wrap .filter-search{position:relative;flex:1 1 260px;min-width:200px;}
+  .inst-wrap .filter-search i{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--i-soft);font-size:.85rem;}
+  .inst-wrap .filter-search input{width:100%;padding:10px 40px 10px 14px;border:1px solid var(--i-border);border-radius:10px;background:var(--i-hover);font-weight:600;font-size:.88rem;color:var(--i-text);outline:none;}
+  .inst-wrap .status-pills{display:inline-flex;background:var(--i-hover);border:1px solid var(--i-border);border-radius:11px;padding:3px;gap:2px;}
+  .inst-wrap .status-pill{border:none;background:transparent;color:var(--i-muted);font-weight:700;font-size:.82rem;padding:7px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}
+  .inst-wrap .status-pill.active{background:var(--i-surface);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+  .inst-wrap .status-pill.active.p-full{color:#15803d;background:#f0fdf4;} .inst-wrap .status-pill.active.p-part{color:#1d4ed8;background:#eff6ff;} .inst-wrap .status-pill.active.p-none{color:#dc2626;background:#fef2f2;}
+  .inst-wrap .filter-group{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .inst-wrap .filter-group>label{font-size:.8rem;font-weight:700;color:var(--i-muted);margin:0;white-space:nowrap;}
+  .inst-wrap .filter-select{padding:8px 12px;border:1px solid var(--i-border);border-radius:9px;background:var(--i-surface);font-weight:600;font-size:.82rem;color:var(--i-text);outline:none;cursor:pointer;}
+  .inst-wrap .filter-chip{padding:8px 14px;border:1px solid var(--i-accent);border-radius:9px;background:transparent;color:var(--i-accent);font-weight:700;font-size:.82rem;cursor:pointer;}
+  .inst-wrap .filter-chip:hover{background:var(--i-accent);color:#fff;}
+  .inst-wrap .filter-actions{display:inline-flex;gap:8px;margin-right:auto;}
+  .inst-wrap .btn-filter-print{border:1px solid #16a34a;background:#16a34a;color:#fff;padding:8px 16px;border-radius:9px;font-weight:700;font-size:.82rem;cursor:pointer;}
+  .inst-wrap .btn-filter-reset{border:1px solid var(--i-border);background:var(--i-surface);color:var(--i-muted);padding:8px 16px;border-radius:9px;font-weight:700;font-size:.82rem;cursor:pointer;}
 
-/* ── Filter Bar ── */
-.fbar{background:var(--surface);border:1px solid var(--border);border-radius:var(--rmd);padding:12px 16px;margin-bottom:18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;box-shadow:var(--sh-xs);}
-.fsearch{position:relative;flex:1 1 240px;}
-.fsearch i{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--soft);font-size:.85rem;}
-.fsearch input{width:100%;padding:9px 36px 9px 12px;border:1px solid var(--border);border-radius:9px;background:var(--hover);font-size:.86rem;color:var(--text);outline:none;transition:.15s;}
-.fsearch input:focus{border-color:var(--accent);background:var(--surface);box-shadow:0 0 0 3px var(--acbg);}
-.spills{display:inline-flex;background:var(--hover);border:1px solid var(--border);border-radius:11px;padding:3px;gap:2px;}
-.spill{border:none;background:transparent;color:var(--muted);font-weight:600;font-size:.8rem;padding:6px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;transition:.15s;display:inline-flex;align-items:center;gap:5px;}
-.spill:hover{color:var(--text);}
-.spill.active{background:var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.1);}
-.spill.active.sp-all{color:var(--accent);}
-.spill.active.sp-paid{color:var(--success);}
-.spill.active.sp-due{color:var(--danger);}
-.spill.active.sp-up{color:var(--muted);}
+  .inst-wrap .kpi-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;}
+  .inst-wrap .kpi-item{background:var(--i-surface);border:1px solid var(--i-border);border-radius:10px;padding:10px 8px;text-align:center;}
+  .inst-wrap .kpi-label{font-size:.72rem;font-weight:700;color:var(--i-soft);margin-bottom:3px;}
+  .inst-wrap .kpi-val{font-size:1.2rem;font-weight:900;line-height:1.1;}
+  @media(max-width:992px){.inst-wrap .kpi-strip{grid-template-columns:repeat(4,1fr);}}
+  @media(max-width:576px){.inst-wrap .kpi-strip{grid-template-columns:repeat(2,1fr);}}
 
-/* ── Main Table ── */
-.ctable{width:100%;border-collapse:separate;border-spacing:0;}
-.ctable th{padding:11px 14px;font-size:.72rem;font-weight:600;color:var(--muted);border-bottom:1px solid var(--border);background:var(--surface2);white-space:nowrap;text-align:center;}
-.ctable td{padding:13px 14px;font-size:.88rem;border-bottom:1px solid var(--border);vertical-align:middle;text-align:center;}
-.ctable tbody tr:last-child td{border-bottom:none;}
-.ctable tbody tr{transition:background .15s;cursor:pointer;}
-.ctable tbody tr:hover td{background:var(--hover);}
-.av{width:38px;height:38px;border-radius:9px;background:var(--acbg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.95rem;flex-shrink:0;border:1px solid rgba(79,70,229,.2);}
+  .inst-wrap .custom-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--i-surface);border-radius:12px;overflow:hidden;border:1px solid var(--i-border);}
+  .inst-wrap .custom-table thead{background:var(--i-surface2);}
+  .inst-wrap .custom-table th{padding:12px 14px;font-size:.74rem;font-weight:600;color:var(--i-muted);border-bottom:1px solid var(--i-border);white-space:nowrap;text-align:center;}
+  .inst-wrap .custom-table td{padding:13px 14px;font-size:.88rem;font-weight:500;border-bottom:1px solid var(--i-border);vertical-align:middle;text-align:center;color:var(--i-text);}
+  .inst-wrap .custom-table tbody tr:hover{background:var(--i-hover);}
+  .inst-wrap .clickable-row{cursor:pointer;}
+  .inst-wrap .client-avatar{width:36px;height:36px;border-radius:9px;background:var(--i-accent-bg);color:var(--i-accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.95rem;flex-shrink:0;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+  .inst-wrap .whatsapp-link{color:#25d366;font-size:1.1rem;}
+  .inst-wrap .text-start{text-align:right !important;}
 
-/* Progress */
-.prog-bg{height:5px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:4px;}
-.prog-fill{height:100%;background:var(--success);border-radius:99px;transition:width .5s;}
+  /* ── كشف الحساب: paper-xls + tabs (بروح السيستم الأول) ── */
+  .paper-xls{width:100%;border-collapse:collapse;background:#fff;}
+  .paper-xls td{border:1px solid #e6ebf3;padding:10px 14px;font-size:.86rem;font-weight:500;color:#0f172a;}
+  .pxls-label{background:#fafbfd;color:#5a6478!important;text-align:right;width:52%;font-weight:600!important;}
+  .pxls-value{background:#fff;text-align:center;font-weight:600;font-size:.92rem;color:#0f172a!important;}
+  .paper-xls tr:not([class]) td{background:rgba(59,130,246,.10)!important;}
+  .pxls-title-row .pxls-label{background:#4f46e5;color:#fff!important;font-size:.92rem;border-color:#4f46e5;}
+  .pxls-title-row .pxls-value.name-val{background:#eef2ff;color:#4f46e5!important;font-size:1rem;font-weight:700;}
+  .pxls-pay-row td{background:#fff;}
+  .pxls-pay-row:nth-child(even) td{background:#fafbfd;}
+  .pxls-pay-date{text-align:center;font-size:.82rem;color:#5a6478!important;font-weight:500!important;width:52%;}
+  .pxls-pay-num{text-align:center;position:relative;width:48%;}
+  .pxls-pay-amount{font-size:.92rem;font-weight:700;color:#059669!important;}
+  .pxls-row-badge{position:absolute;left:8px;top:50%;transform:translateY(-50%);background:#4f46e5;color:#fff!important;border-radius:50%;width:22px;height:22px;font-size:.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  .pxls-empty-row td{background:#fafbfd!important;color:#8b95a9!important;}
+  .pxls-summary-row td{border-top:2px solid #d4dbe6;}
+  .pxls-sum-label{background:#0f172a;color:#fff!important;text-align:right;padding:12px 14px;font-weight:600;font-size:.88rem;}
+  .pxls-sum-value{text-align:center;font-size:1rem;font-weight:700;padding:12px 14px;}
+  .remaining-label,.remaining-val{background:#fef2f2!important;color:#dc2626!important;}
+  .paid-summary .pxls-sum-label{background:#4f46e5!important;color:#fff!important;} .paid-val{background:#eef2ff!important;color:#4f46e5!important;}
+  .cst-tabs-strip{display:flex;flex-wrap:wrap;gap:5px;padding:10px 12px;background:#fafbfd;border-bottom:1px solid #e6ebf3;}
+  .cst-tab{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid #d4dbe6;background:#fff;color:#5a6478;white-space:nowrap;user-select:none;}
+  .cst-tab:hover{border-color:#4f46e5;color:#4f46e5;background:#eef2ff;}
+  .cst-tab.active-tab{background:#4f46e5;color:#fff;border-color:#4f46e5;}
+  .cst-tab-summary{border-color:#4f46e5;color:#4f46e5;}
+  .cst-num{background:rgba(0,0,0,.12);border-radius:10px;padding:0 5px;font-size:10px;font-weight:800;}
+  .cst-tab.active-tab .cst-num{background:rgba(255,255,255,.25);}
 
-/* Badges */
-.sbadge{padding:4px 12px;border-radius:99px;font-size:.74rem;font-weight:700;display:inline-block;white-space:nowrap;}
-.sb-paid{background:var(--sucbg);color:var(--success);}
-.sb-due{background:var(--danbg);color:var(--danger);}
-.sb-up{background:var(--warnbg);color:var(--warn);}
-.sb-mix{background:var(--acbg);color:var(--accent);}
+  @media print{
+    @page{size:A4;margin:8mm;}
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{position:absolute;inset:0;width:100%;}
+    .no-print{display:none !important;}
+  }
 
-/* ── Modal style ── */
-.modal-content{border-radius:var(--rlg);border:1px solid var(--border);overflow:hidden;box-shadow:var(--sh-lg);}
-.modal-header{padding:18px 22px;border-bottom:1px solid var(--border);}
-.modal-body{padding:22px;background:var(--surface2);max-height:75vh;overflow-y:auto;}
-/* Paper install rows */
-.inst-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--border);margin-bottom:8px;transition:.15s;}
-.inst-row:hover{border-color:var(--border2);box-shadow:var(--sh-sm);}
-.inst-num{width:32px;height:32px;border-radius:8px;background:var(--acbg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;flex-shrink:0;}
-.inst-row.paid-row{background:var(--sucbg);border-color:rgba(5,150,105,.25);}
-.inst-row.paid-row .inst-num{background:var(--success);color:#fff;}
-.inst-row.due-row{background:var(--danbg);border-color:rgba(220,38,38,.25);}
-.inst-row.due-row .inst-num{background:var(--danger);color:#fff;}
-
-/* Summary row in modal */
-.modal-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px;}
-.ms-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
-.ms-label{font-size:.7rem;font-weight:600;color:var(--muted);margin-bottom:4px;}
-.ms-val{font-size:1.1rem;font-weight:700;}
-
-@media(max-width:768px){
-  .modal-summary{grid-template-columns:repeat(2,1fr);}
-  .sy-stat h3{font-size:1.2rem;}
-}
+  /* ── حماية السايدبار من Bootstrap (اللي بيعرّف .nav كـ flex-wrap) ── */
+  .sidebar .nav { display:block !important; flex:1 1 auto; overflow-y:auto; padding:14px 12px; margin:0; list-style:none; }
+  .sidebar .nav-item { display:flex !important; width:auto; float:none; }
+  .sidebar .nav-label { display:block; }
 </style>
 @endpush
 
 @section('content')
+<div class="inst-wrap">
 
-{{-- ── Page Head ── --}}
-<div class="page-head">
-  <div>
-    <h3>الأقساط والمدفوعات</h3>
-    <p>خطط السداد لكل مشروع — اضغط على أي صف لعرض تفاصيل الأقساط</p>
-  </div>
-  <div style="display:flex;gap:8px">
-    <a href="{{ route('installments.plan.form') }}" class="btn ghost">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><use href="#i-chart"/></svg>
-      مولد خطة تقسيط
-    </a>
-    <a href="{{ route('installments.create') }}" class="btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><use href="#i-plus"/></svg>
-      قسط جديد
-    </a>
-  </div>
-</div>
-
-{{-- ── Stat Cards ── --}}
-<div class="row g-3 mb-4">
-  <div class="col-6 col-md-3">
-    <div class="sy-stat blue">
-      <div class="ic"><i class="fa fa-building"></i></div>
-      <p>مشاريع فيها أقساط</p>
-      <h3>{{ $totals['projects'] }}</h3>
+  {{-- ═══ Header actions ═══ --}}
+  <div class="page-head" style="align-items:flex-start">
+    <div>
+      <h3>منظومة العقود والأقساط</h3>
+      <p style="color:var(--muted);font-size:.86rem;margin:4px 0 0">إدارة عقود التقسيط — تحصيل الدفعات — كشوف الحسابات</p>
+    </div>
+    <div class="d-flex gap-2 align-items-center no-print">
+      <button class="btn ghost" onclick="window.print()"><i class="fa fa-print"></i> طباعة</button>
+      <button class="btn" data-bs-toggle="modal" data-bs-target="#newContractModal"><i class="fa fa-plus"></i> عقد جديد</button>
     </div>
   </div>
-  <div class="col-6 col-md-3">
-    <div class="sy-stat green">
-      <div class="ic"><i class="fa fa-circle-check"></i></div>
-      <p>إجمالي المحصول</p>
-      <h3>{{ number_format($totals['paid']) }} <small style="font-size:.85rem;font-weight:400;color:var(--soft)">ج.م</small></h3>
-    </div>
-  </div>
-  <div class="col-6 col-md-3">
-    <div class="sy-stat orange">
-      <div class="ic"><i class="fa fa-clock"></i></div>
-      <p>المتبقي المرتقب</p>
-      <h3>{{ number_format($totals['remaining']) }} <small style="font-size:.85rem;font-weight:400;color:var(--soft)">ج.م</small></h3>
-    </div>
-  </div>
-  <div class="col-6 col-md-3">
-    <div class="sy-stat red">
-      <div class="ic"><i class="fa fa-triangle-exclamation"></i></div>
-      <p>أقساط متأخرة</p>
-      <h3>{{ $totals['overdue'] }} <small style="font-size:.85rem;font-weight:400;color:var(--soft)">قسط</small></h3>
-    </div>
-  </div>
-</div>
 
-{{-- ── Filter Bar ── --}}
-<div class="fbar">
-  <div class="fsearch">
-    <i class="fa fa-search"></i>
-    <input type="text" id="searchInput" placeholder="ابحث بالمشروع أو العميل..." oninput="filterRows(this.value)">
+  {{-- ═══ Stat cards ═══ --}}
+  <div class="row g-3 mb-4">
+    <div class="col-md col-6"><div class="stat-card blue"><div class="sc-icon"><i class="fa fa-money-bill-wave"></i></div><p>إجمالي المتبقي بالخارج</p><h3>{{ number_format($totalOut) }} <small>ج</small></h3></div></div>
+    <div class="col-md col-6"><div class="stat-card green"><div class="sc-icon"><i class="fa fa-circle-check"></i></div><p>إجمالي المحصّل</p><h3>{{ number_format($totalCollected) }} <small>ج</small></h3></div></div>
+    <div class="col-md col-6"><div class="stat-card orange"><div class="sc-icon"><i class="fa fa-file-contract"></i></div><p>العقود النشطة</p><h3>{{ $active->count() }} <small>عقد</small></h3></div></div>
+    <div class="col-md col-6"><div class="stat-card red"><div class="sc-icon"><i class="fa fa-flag-checkered"></i></div><p>العقود المنتهية</p><h3>{{ $completed->count() }} <small>عقد</small></h3></div></div>
+    <div class="col-md col-6"><div class="stat-card purple"><div class="sc-icon"><i class="fa fa-calendar-day"></i></div><p>أقساط اليوم ({{ date('d') }})</p><h3>{{ $todayContracts->count() }} <small>قسط</small></h3></div></div>
   </div>
 
-  <div class="spills">
-    <button class="spill sp-all {{ !$statusFilter ? 'active' : '' }}" onclick="location.href='{{ route('installments.index') }}'">
-      <i class="fa fa-layer-group"></i> الكل
-    </button>
-    <button class="spill sp-paid {{ $statusFilter === 'paid' ? 'active' : '' }}" onclick="location.href='{{ route('installments.index', ['status'=>'paid']) }}'">
-      <i class="fa fa-check-circle"></i> مدفوع
-    </button>
-    <button class="spill sp-due {{ $statusFilter === 'due' ? 'active' : '' }}" onclick="location.href='{{ route('installments.index', ['status'=>'due']) }}'">
-      <i class="fa fa-circle-xmark"></i> متأخر
-    </button>
-    <button class="spill sp-up {{ $statusFilter === 'upcoming' ? 'active' : '' }}" onclick="location.href='{{ route('installments.index', ['status'=>'upcoming']) }}'">
-      <i class="fa fa-calendar"></i> قادم
-    </button>
-  </div>
+  <div class="table-box">
+    <ul class="nav nav-pills mb-3" role="tablist">
+      <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#activeTab"><i class="fa fa-list-check me-1"></i> نشطة ({{ $active->count() }})</button></li>
+      <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#completedTab"><i class="fa fa-check-double me-1"></i> منتهية ({{ $completed->count() }})</button></li>
+    </ul>
 
-  @if($allProjects->count() > 1)
-  <select onchange="location.href='{{ route('installments.index') }}?project_id='+this.value+({{ $statusFilter ? "'&status=$statusFilter'" : "''" }})" style="padding:8px 12px;border:1px solid var(--border);border-radius:9px;font-size:.84rem;color:var(--text);background:var(--surface);outline:none;">
-    <option value="">كل المشاريع</option>
-    @foreach($allProjects as $p)
-      <option value="{{ $p->id }}" {{ request('project_id') == $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
-    @endforeach
-  </select>
-  @endif
-</div>
-
-{{-- ── Main Table ── --}}
-<div class="tbox">
-  <div class="tbox-head">
-    <h2>قائمة المشاريع</h2>
-    <span style="font-size:.8rem;color:var(--muted)">{{ $projects->count() }} مشروع</span>
-  </div>
-
-  @if($projects->count())
-  <div class="table-responsive">
-    <table class="ctable">
-      <thead>
-        <tr>
-          <th class="text-start">المشروع / العميل</th>
-          <th>إجمالي الأقساط</th>
-          <th>المقدم المحصول</th>
-          <th>المتبقي</th>
-          <th>نسبة التحصيل</th>
-          <th>متأخرة</th>
-          <th>الحالة</th>
-        </tr>
-      </thead>
-      <tbody id="projectsTableBody">
-        @foreach($projects as $idx => $project)
-          @php
-            $colors = ['#4f46e5','#ea580c','#059669','#7c3aed','#0284c7'];
-            $color  = $colors[$idx % count($colors)];
-            $isPaid = $project->inst_remaining <= 0;
-          @endphp
-          <tr data-name="{{ strtolower($project->name) }} {{ strtolower($project->client->name) }}"
-              onclick="openProjectModal({{ $project->id }})">
-            <td class="text-start">
-              <div style="display:flex;align-items:center;gap:11px">
-                <div class="av" style="background:{{ $color }}22;color:{{ $color }};border-color:{{ $color }}33">
-                  {{ mb_substr($project->name, 0, 1, 'UTF-8') }}
-                </div>
-                <div>
-                  <strong style="display:block;color:var(--text)">{{ $project->name }}</strong>
-                  <small style="color:var(--muted)">{{ $project->client->name }}</small>
-                </div>
-              </div>
-            </td>
-            <td class="fw-bold">{{ number_format($project->inst_total) }} ج.م</td>
-            <td style="color:var(--success);font-weight:700">{{ number_format($project->inst_paid) }} ج.م</td>
-            <td style="color:{{ $isPaid ? 'var(--success)' : 'var(--danger)' }};font-weight:700">
-              {{ number_format($project->inst_remaining) }} ج.م
-            </td>
-            <td style="min-width:100px">
-              <div style="font-size:.8rem;font-weight:700;color:var(--success);margin-bottom:3px">{{ $project->inst_progress }}%</div>
-              <div class="prog-bg"><div class="prog-fill" style="width:{{ $project->inst_progress }}%"></div></div>
-            </td>
-            <td>
-              @if($project->inst_due_cnt > 0)
-                <span class="sbadge sb-due"><i class="fa fa-exclamation-circle me-1"></i>{{ $project->inst_due_cnt }}</span>
-              @else
-                <span style="color:var(--soft)">—</span>
-              @endif
-            </td>
-            <td>
-              @if($isPaid)
-                <span class="sbadge sb-paid">مكتمل</span>
-              @elseif($project->inst_due_cnt > 0)
-                <span class="sbadge sb-due">متأخر</span>
-              @else
-                <span class="sbadge sb-mix">جاري</span>
-              @endif
-            </td>
-          </tr>
-        @endforeach
-      </tbody>
-    </table>
-  </div>
-  @else
-    <div class="empty-state" style="padding:60px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="40" height="40"><use href="#i-receipt"/></svg>
-      <h4>لا توجد أقساط</h4>
-      <p>لم يتم تسجيل أي أقساط بعد</p>
-      <a href="{{ route('installments.create') }}" class="btn">إضافة قسط</a>
-    </div>
-  @endif
-</div>
-
-{{-- ══════════════════════════════════════════════
-     PROJECT DETAIL MODALS
-══════════════════════════════════════════════ --}}
-@foreach($projects as $idx => $project)
-<div class="modal fade" id="projModal{{ $project->id }}" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
-    <div class="modal-content">
-
-      {{-- Header --}}
-      <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#4f46e5)">
-        <div>
-          <h5 class="modal-title text-white fw-bold" style="margin:0 0 4px">
-            <i class="fa fa-building me-2"></i>{{ $project->name }}
-          </h5>
-          <div style="display:flex;gap:10px;align-items:center">
-            <span class="badge bg-danger fs-6 fw-bold">متبقي: {{ number_format($project->inst_remaining) }} ج.م</span>
-            <span class="badge bg-success fs-6 fw-bold">محصول: {{ number_format($project->inst_paid) }} ج.م</span>
-            @if($project->inst_due_cnt > 0)
-              <span class="badge bg-warning text-dark fs-6 fw-bold">{{ $project->inst_due_cnt }} قسط متأخر</span>
-            @endif
+    <div class="tab-content">
+      {{-- ═══════ نشطة ═══════ --}}
+      <div class="tab-pane fade show active" id="activeTab">
+        <div class="filters-card mb-3 no-print">
+          <div class="filters-row">
+            <div class="filter-search">
+              <i class="fa fa-search"></i>
+              <input type="text" id="activeSearch" placeholder="ابحث باسم العميل أو رقم الهاتف..." oninput="applyActiveFilters()" autocomplete="off">
+            </div>
+            <div class="status-pills" id="statusPills">
+              <button type="button" class="status-pill active" data-status="all" onclick="setStatusFilter('all', this)"><i class="fa fa-layer-group"></i> الكل</button>
+              <button type="button" class="status-pill p-full" data-status="full" onclick="setStatusFilter('full', this)"><i class="fa fa-check-circle"></i> دفع كامل</button>
+              <button type="button" class="status-pill p-part" data-status="partial" onclick="setStatusFilter('partial', this)"><i class="fa fa-adjust"></i> جزئي</button>
+              <button type="button" class="status-pill p-none" data-status="unpaid" onclick="setStatusFilter('unpaid', this)"><i class="fa fa-circle-xmark"></i> لم يسدد</button>
+            </div>
+          </div>
+          <div class="filters-row">
+            <div class="filter-group">
+              <label><i class="fa fa-calendar-day"></i> يوم الاستحقاق</label>
+              <select id="dueRangeFrom" class="filter-select" onchange="applyActiveFilters()">
+                <option value="0">من: الكل</option>
+                @for($dy=1;$dy<=31;$dy++)<option value="{{ $dy }}">من يوم {{ $dy }}</option>@endfor
+              </select>
+              <select id="dueRangeTo" class="filter-select" onchange="applyActiveFilters()">
+                <option value="0">إلى: الكل</option>
+                @for($dy=1;$dy<=31;$dy++)<option value="{{ $dy }}">إلى يوم {{ $dy }}</option>@endfor
+              </select>
+              <button type="button" class="filter-chip" onclick="setTodayDueFilter()"><i class="fa fa-bolt"></i> اليوم</button>
+            </div>
+            <div class="filter-actions">
+              <button type="button" class="btn-filter-print" onclick="window.print()"><i class="fa fa-print"></i> طباعة</button>
+              <button type="button" class="btn-filter-reset" onclick="resetActiveFilters()"><i class="fa fa-rotate-left"></i> مسح</button>
+            </div>
           </div>
         </div>
-        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-          <a href="{{ route('installments.statement', $project->id) }}" class="btn btn-sm fw-bold" style="background:#25d366;color:#fff" onclick="event.stopPropagation()">
-            <i class="fa fa-file-contract me-1"></i> كشف حساب
-          </a>
-          <a href="{{ route('installments.create') }}?project_id={{ $project->id }}" class="btn btn-sm btn-light fw-bold" onclick="event.stopPropagation()">
-            <i class="fa fa-plus me-1"></i> قسط جديد
-          </a>
-          <a href="{{ route('installments.plan.form') }}?project_id={{ $project->id }}" class="btn btn-sm btn-outline-light fw-bold" onclick="event.stopPropagation()">
-            <i class="fa fa-calendar-plus me-1"></i> خطة تقسيط
-          </a>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+
+        <div id="dueStatsBar" class="kpi-strip mb-3">
+          <div class="kpi-item"><div class="kpi-label">العملاء</div><div class="kpi-val" style="color:#0369a1" id="statTotal">0</div></div>
+          <div class="kpi-item"><div class="kpi-label">إجمالي القسط الشهري</div><div class="kpi-val" style="color:#b45309" id="statDue">0 ج</div></div>
+          <div class="kpi-item"><div class="kpi-label">دفع كامل</div><div class="kpi-val" style="color:#15803d" id="statFullPaid">0</div></div>
+          <div class="kpi-item"><div class="kpi-label">جزئي</div><div class="kpi-val" style="color:#1d4ed8" id="statPartialPaid">0</div></div>
+          <div class="kpi-item"><div class="kpi-label">لم يسدد</div><div class="kpi-val" style="color:#dc2626" id="statUnpaid">0</div></div>
+          <div class="kpi-item"><div class="kpi-label">محصّل الشهر</div><div class="kpi-val" style="color:#16a34a" id="statCollected">0 ج</div></div>
+          <div class="kpi-item"><div class="kpi-label">متبقي الشهر</div><div class="kpi-val" style="color:#dc2626" id="statRemaining">0 ج</div></div>
         </div>
+
+        <div id="printArea">
+        <div class="table-responsive">
+          <table class="custom-table" id="dueByDayTable">
+            <thead>
+              <tr>
+                <th class="text-start">العميل</th><th>عدد العقود</th><th>إجمالي القسط الشهري</th>
+                <th>إجمالي المتبقي</th><th>نسبة الإنجاز</th><th>حالة السداد</th><th class="no-print">إجراء</th>
+              </tr>
+            </thead>
+            <tbody id="dueByDayBody"></tbody>
+          </table>
+        </div>
+        </div>
+        <div id="duePager" class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 no-print" style="display:none">
+          <small class="text-muted fw-bold" id="duePagerInfo"></small>
+          <div class="d-flex gap-1" id="duePagerBtns"></div>
+        </div>
+
+        <script id="allInstallmentsData" type="application/json">
+        {!! json_encode($active->map(function($c){
+            $ym = now()->format('Y-m');
+            $paidThisMonth = $c->payments->filter(fn($p)=> $p->payment_date && $p->payment_date->format('Y-m') === $ym)->sum('amount_paid');
+            return [
+                'id'=>$c->id,
+                'customer_name'=>$c->customer_name,
+                'customer_phone'=>$c->customer_phone ?? '',
+                'product_name'=>$c->product_name,
+                'due_day'=>(int)$c->due_day,
+                'monthly_installment'=>(float)$c->monthly_installment,
+                'remaining_balance'=>(float)$c->remaining_balance,
+                'paid_this_month'=> $paidThisMonth >= ((float)$c->monthly_installment * 0.99) && (float)$c->monthly_installment > 0,
+                'paid_this_month_amount'=>(float)$paidThisMonth,
+            ];
+        })->values(), JSON_UNESCAPED_UNICODE) !!}
+        </script>
+        <script id="customerProgressData" type="application/json">
+        {!! json_encode($contracts->groupBy(function($c){
+            $phone = trim((string)($c->customer_phone ?? ''));
+            return ($phone !== '' && $phone !== '—') ? $phone : ('n:'.($c->customer_name ?? ''));
+        })->map(fn($g)=>[
+            'total_value'=>(float)$g->sum('total_after_interest'),
+            'total_remaining'=>(float)$g->sum(fn($c)=>max(0,(float)$c->remaining_balance)),
+        ]), JSON_UNESCAPED_UNICODE) !!}
+        </script>
       </div>
 
-      {{-- Modal Body --}}
-      <div class="modal-body">
-
-        {{-- Summary KPIs --}}
-        <div class="modal-summary">
-          <div class="ms-item">
-            <div class="ms-label">إجمالي الأقساط المتعاقد عليها</div>
-            <div class="ms-val">{{ number_format($project->inst_total) }} <small class="text-muted">ج.م</small></div>
-          </div>
-          <div class="ms-item">
-            <div class="ms-label">المقدم والمدفوع حتى الآن</div>
-            <div class="ms-val" style="color:var(--success)">{{ number_format($project->inst_paid) }} <small>ج.م</small></div>
-          </div>
-          <div class="ms-item">
-            <div class="ms-label">المتبقي المستحق</div>
-            <div class="ms-val" style="color:var(--danger)">{{ number_format($project->inst_remaining) }} <small>ج.م</small></div>
-          </div>
-          <div class="ms-item">
-            <div class="ms-label">نسبة التحصيل</div>
-            <div class="ms-val" style="color:var(--accent)">{{ $project->inst_progress }}%</div>
-          </div>
+      {{-- ═══════ منتهية ═══════ --}}
+      <div class="tab-pane fade" id="completedTab">
+        <div class="table-responsive">
+          <table class="custom-table" style="opacity:.9">
+            <thead><tr>
+              <th class="text-start">العميل</th><th>المشروع</th><th>إجمالي العقد</th><th>المقدم</th><th>تاريخ الإنشاء</th><th>الحالة</th><th class="no-print">كشف</th>
+            </tr></thead>
+            <tbody>
+              @forelse($completed as $c)
+              <tr class="clickable-row" onclick="openStatement(@js($c->customer_phone), @js($c->customer_name))">
+                <td class="text-start"><strong class="d-block">{{ $c->customer_name }}</strong><small class="text-muted" dir="ltr">{{ $c->customer_phone ?: '—' }}</small></td>
+                <td>{{ Str::limit($c->product_name, 24) }}</td>
+                <td class="fw-bold">{{ number_format($c->total_after_interest) }} ج</td>
+                <td class="text-success fw-bold">{{ number_format($c->down_payment) }} ج</td>
+                <td class="text-muted">{{ $c->created_at->format('Y/m/d') }}</td>
+                <td><span class="badge bg-success">مسدد بالكامل ✓</span></td>
+                <td class="no-print"><button class="btn btn-sm btn-outline-success fw-bold" onclick="event.stopPropagation(); openStatement(@js($c->customer_phone), @js($c->customer_name))"><i class="fa fa-table me-1"></i> كشف</button></td>
+              </tr>
+              @empty
+              <tr><td colspan="7" class="text-center py-5 text-muted fw-bold">لا توجد عقود منتهية.</td></tr>
+              @endforelse
+            </tbody>
+          </table>
         </div>
-
-        {{-- Progress bar --}}
-        <div style="margin-bottom:20px">
-          <div style="display:flex;justify-content:space-between;font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:6px">
-            <span>تقدم التحصيل</span>
-            <span>{{ $project->inst_progress }}% من {{ number_format($project->inst_total) }} ج.م</span>
-          </div>
-          <div style="height:8px;background:var(--border);border-radius:99px;overflow:hidden">
-            <div style="height:100%;width:{{ $project->inst_progress }}%;background:var(--success);border-radius:99px;transition:width .6s"></div>
-          </div>
-        </div>
-
-        {{-- Installment rows --}}
-        @php $instNum = 0; @endphp
-        @forelse($project->installments as $inst)
-          @php
-            $instNum++;
-            $rowClass = match($inst->status) {
-              'paid'     => 'paid-row',
-              'due'      => 'due-row',
-              default    => '',
-            };
-          @endphp
-          <div class="inst-row {{ $rowClass }}">
-            {{-- Number badge --}}
-            <div class="inst-num">{{ $instNum }}</div>
-
-            {{-- Info --}}
-            <div style="flex:1;min-width:0">
-              <div style="font-weight:600;font-size:.9rem;color:var(--text)">{{ $inst->label }}</div>
-              <div style="font-size:.78rem;color:var(--muted);margin-top:2px">
-                @if($inst->band)
-                  <span style="background:var(--acbg);color:var(--accent);border-radius:6px;padding:2px 8px;margin-left:6px">{{ $inst->band->name }}</span>
-                @endif
-                <span><i class="fa fa-calendar-alt me-1"></i>{{ $inst->due_date->format('Y-m-d') }}</span>
-                @if($inst->paid_date)
-                  <span style="margin-right:8px"><i class="fa fa-check me-1 text-success"></i>دُفع: {{ $inst->paid_date->format('Y-m-d') }}</span>
-                @endif
-                @if($inst->payment_method)
-                  <span style="margin-right:8px"><i class="fa fa-wallet me-1"></i>{{ $inst->payment_method }}</span>
-                @endif
-              </div>
-            </div>
-
-            {{-- Amount --}}
-            <div style="text-align:center;min-width:110px">
-              <div style="font-size:1.05rem;font-weight:700;color:{{ $inst->status==='paid' ? 'var(--success)' : ($inst->status==='due' ? 'var(--danger)' : 'var(--text)') }}">
-                {{ number_format($inst->amount) }} <small>ج.م</small>
-              </div>
-              <span class="sbadge {{ $inst->status==='paid' ? 'sb-paid' : ($inst->status==='due' ? 'sb-due' : 'sb-up') }}">
-                {{ $inst->statusAr() }}
-              </span>
-            </div>
-
-            {{-- Actions --}}
-            <div style="display:flex;gap:6px;flex-shrink:0">
-              @if($inst->status !== 'paid')
-                <form method="POST" action="{{ route('installments.markPaid', $inst) }}" onclick="event.stopPropagation()">
-                  @csrf
-                  <button type="submit" class="btn btn-sm btn-success fw-bold" style="white-space:nowrap">
-                    <i class="fa fa-cash-register me-1"></i> تحصيل
-                  </button>
-                </form>
-              @else
-                <span class="badge bg-success py-2 px-3 fs-6"><i class="fa fa-check me-1"></i> مسدد</span>
-              @endif
-              <form method="POST" action="{{ route('installments.destroy', $inst) }}" onclick="event.stopPropagation()" onsubmit="return confirm('حذف هذا القسط؟')">
-                @csrf @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-outline-danger fw-bold">
-                  <i class="fa fa-trash"></i>
-                </button>
-              </form>
-            </div>
-          </div>
-        @empty
-          <div style="text-align:center;padding:30px;color:var(--muted)">
-            <i class="fa fa-inbox fa-2x mb-2 d-block opacity-50"></i>
-            لا توجد أقساط لهذا المشروع
-          </div>
-        @endforelse
-
-        {{-- Totals row --}}
-        @if($project->installments->count())
-        <div style="background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:14px 18px;margin-top:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
-          <span style="font-weight:600;font-size:.88rem">الإجماليات</span>
-          <div style="display:flex;gap:24px;flex-wrap:wrap;text-align:center">
-            <div>
-              <div style="font-size:.72rem;color:var(--muted)">إجمالي</div>
-              <div style="font-weight:700">{{ number_format($project->inst_total) }} ج.م</div>
-            </div>
-            <div>
-              <div style="font-size:.72rem;color:var(--success)">محصول</div>
-              <div style="font-weight:700;color:var(--success)">{{ number_format($project->inst_paid) }} ج.م</div>
-            </div>
-            <div>
-              <div style="font-size:.72rem;color:var(--danger)">متبقي</div>
-              <div style="font-weight:700;color:var(--danger)">{{ number_format($project->inst_remaining) }} ج.م</div>
-            </div>
-            <div>
-              <div style="font-size:.72rem;color:var(--muted)">الأقساط</div>
-              <div style="font-weight:700">{{ $project->inst_total_cnt }} قسط</div>
-            </div>
-          </div>
-        </div>
-        @endif
-
-      </div>{{-- /modal-body --}}
-
+      </div>
     </div>
   </div>
-</div>
-@endforeach
+
+  {{-- host لكشف الحساب (يُحمّل AJAX) --}}
+  <div id="statementModalHost"></div>
+
+  {{-- ═══ مودال: عقد جديد (مربوط بمشروع) ═══ --}}
+  <div class="modal fade" id="newContractModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <form method="POST" action="{{ route('installments.store') }}" class="modal-content border-0 shadow-lg" onsubmit="return validateContract(event, this)">
+        @csrf
+        <div class="modal-header text-white" style="background:linear-gradient(135deg,#0f172a,#4f46e5)">
+          <h5 class="modal-title fw-bold"><i class="fa fa-file-signature me-2"></i>إنشاء عقد تقسيط جديد</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4" style="background:#fafbfd">
+          <div class="mb-3">
+            <label class="fw-bold mb-1 d-block">المشروع / العميل <span class="text-danger">*</span></label>
+            <select name="project_id" id="nc_project" class="form-select" required onchange="ncProjectChanged(this)">
+              <option value="">— اختر المشروع —</option>
+              @foreach($projectsForContract as $p)
+                <option value="{{ $p->id }}" data-billed="{{ $p->billed }}" data-bands='@json($p->bands)'>
+                  {{ $p->name }} — {{ $p->client_name }} ({{ number_format($p->billed) }} ج)
+                </option>
+              @endforeach
+            </select>
+            @if($projectsForContract->isEmpty())
+              <small class="text-muted d-block mt-1">لا توجد مشاريع بعد. اعمل مشروع أولاً.</small>
+            @endif
+          </div>
+
+          {{-- تقسيط بند محدد فقط (اختياري) --}}
+          <div class="mb-3">
+            <label class="fw-bold mb-1 d-block">تقسيط بند محدد؟ <span class="text-muted small">(اختياري)</span></label>
+            <select name="band_id" id="nc_band" class="form-select" onchange="ncBandChanged(this)">
+              <option value="">المشروع كامل</option>
+            </select>
+            <small class="text-muted d-block mt-1">سيب «المشروع كامل» لتقسيط الفاتورة كلها، أو اختر بند معيّن لتقسيطه لوحده — قيمة العقد بتتظبط تلقائيًا.</small>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-4"><label class="fw-bold mb-1 small">قيمة العقد (كاش) <span class="text-danger">*</span></label>
+              <input type="number" step="0.01" min="0" name="cash_price" id="nc_cash" class="form-control fw-bold" required oninput="ncCalc()"></div>
+            <div class="col-md-4"><label class="fw-bold mb-1 small" style="color:#0ea5e9">خصم</label>
+              <input type="number" step="0.01" min="0" name="discount" id="nc_disc" class="form-control" value="0" oninput="ncCalc()"></div>
+            <div class="col-md-4"><label class="fw-bold mb-1 small text-success">المقدم المدفوع الآن</label>
+              <input type="number" step="0.01" min="0" name="down_payment" id="nc_down" class="form-control text-success fw-bold" value="0" oninput="ncCalc()"></div>
+            <div class="col-md-4"><label class="fw-bold mb-1 small text-secondary">نسبة الفائدة %</label>
+              <input type="number" step="0.1" min="0" name="interest_rate" id="nc_rate" class="form-control" value="0" oninput="ncCalc()"></div>
+            <div class="col-md-4"><label class="fw-bold mb-1 small text-warning">عدد الشهور <span class="text-danger">*</span></label>
+              <input type="number" step="1" min="1" name="installment_months" id="nc_months" class="form-control text-warning fw-bold" required oninput="ncCalc()"></div>
+            <div class="col-md-4"><label class="fw-bold mb-1 small text-primary">يوم السداد الشهري <span class="text-danger">*</span></label>
+              <select name="due_day" class="form-select text-primary fw-bold" required>
+                @for($dy=1;$dy<=31;$dy++)<option value="{{ $dy }}" {{ (int)date('d')==$dy?'selected':'' }}>يوم {{ $dy }}</option>@endfor
+              </select></div>
+            <div class="col-md-6"><label class="fw-bold mb-1 small">تاريخ العقد <span class="text-danger">*</span></label>
+              <input type="date" name="start_date" class="form-control" value="{{ today()->format('Y-m-d') }}" required></div>
+            <div class="col-md-6"><label class="fw-bold mb-1 small">ملاحظات</label>
+              <input type="text" name="notes" class="form-control" placeholder="اختياري"></div>
+            <div class="col-md-6"><label class="fw-bold mb-1 small"><i class="fa fa-wallet text-primary me-1"></i>المحفظة (تحصيل المقدم فيها)</label>
+              <select name="account_id" class="form-select">
+                <option value="">— المحفظة الافتراضية (المقاولات) —</option>
+                @foreach($wallets->groupBy(fn($w) => $w->categoryAr()) as $cat => $grp)
+                  <optgroup label="{{ $cat }}">
+                    @foreach($grp as $w)
+                      <option value="{{ $w->id }}">{{ $w->account_name }}@if($w->id == \App\Models\Account::WALLET_ID) ★@endif — {{ number_format((float)$w->balance) }} ج</option>
+                    @endforeach
+                  </optgroup>
+                @endforeach
+              </select></div>
+          </div>
+
+          <div class="row g-3 mt-1">
+            <div class="col-md-6"><div class="p-3 rounded-3" style="background:#fffbeb;border:1px solid #fcd34d">
+              <div class="small fw-bold text-warning">إجمالي المديونية (المتبقي)</div>
+              <div class="fw-black fs-4 text-dark" id="nc_total">0</div><small class="text-muted">ج.م</small></div></div>
+            <div class="col-md-6"><div class="p-3 rounded-3" style="background:#fef2f2;border:1px solid #fca5a5">
+              <div class="small fw-bold text-danger">القسط الشهري الثابت</div>
+              <div class="fw-black fs-4 text-danger" id="nc_monthly">0</div><small class="text-muted">ج.م / شهر</small></div></div>
+          </div>
+        </div>
+        <div class="modal-footer bg-white">
+          <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal">إلغاء</button>
+          <button type="submit" class="btn btn-primary fw-bold px-4 flex-grow-1"><i class="fa fa-check-circle me-2"></i>اعتماد وحفظ العقد</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>{{-- /inst-wrap --}}
+@endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-function openProjectModal(id) {
-  new bootstrap.Modal(document.getElementById('projModal' + id)).show();
+// ═══ عقد جديد: حساب حي + بنود المشروع ═══
+function ncProjectChanged(sel){
+  const opt = sel.options[sel.selectedIndex];
+  const billed = parseFloat(opt?.dataset.billed)||0;
+  // املأ قائمة البنود من المشروع المختار
+  const bandSel = document.getElementById('nc_band');
+  bandSel.innerHTML = '<option value="">المشروع كامل ('+(billed?billed.toLocaleString('en-US'):'0')+' ج)</option>';
+  let bands = [];
+  try { bands = JSON.parse(opt?.dataset.bands||'[]'); } catch(e){ bands = []; }
+  bands.forEach(b=>{
+    const o = document.createElement('option');
+    o.value = b.id; o.dataset.billed = b.billed;
+    o.textContent = b.name + ' (' + (Number(b.billed)||0).toLocaleString('en-US') + ' ج)';
+    bandSel.appendChild(o);
+  });
+  document.getElementById('nc_cash').value = billed>0 ? billed.toFixed(2) : '';
+  ncCalc();
+}
+function ncBandChanged(sel){
+  const opt = sel.options[sel.selectedIndex];
+  let billed;
+  if(sel.value){ billed = parseFloat(opt?.dataset.billed)||0; }
+  else { const p = document.getElementById('nc_project').selectedOptions[0]; billed = parseFloat(p?.dataset.billed)||0; }
+  document.getElementById('nc_cash').value = billed>0 ? billed.toFixed(2) : '';
+  ncCalc();
+}
+function ncCalc(){
+  const cash=parseFloat(document.getElementById('nc_cash').value)||0;
+  const disc=parseFloat(document.getElementById('nc_disc').value)||0;
+  const down=parseFloat(document.getElementById('nc_down').value)||0;
+  const rate=parseFloat(document.getElementById('nc_rate').value)||0;
+  const mos =parseInt(document.getElementById('nc_months').value)||0;
+  const afterDisc=Math.max(0,cash-disc);
+  const baseForInt=Math.max(0,afterDisc-down);
+  const interest=baseForInt*(rate/100);
+  const total=afterDisc+interest;
+  const rem=Math.max(0,total-down);
+  const monthly=mos>0?rem/mos:0;
+  const fmt=v=> v%1===0? v.toLocaleString('en-US'): v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('nc_total').innerText=fmt(rem);
+  document.getElementById('nc_monthly').innerText=fmt(monthly);
+}
+function validateContract(e,form){
+  const pid=form.project_id.value;
+  const mos=parseInt(form.installment_months.value)||0;
+  if(!pid){e.preventDefault();Swal.fire('بيانات ناقصة','اختر المشروع','warning');return false;}
+  if(mos<=0){e.preventDefault();Swal.fire('بيانات ناقصة','اكتب عدد الشهور','warning');return false;}
+  return true;
 }
 
-function filterRows(q) {
-  q = q.toLowerCase();
-  document.querySelectorAll('#projectsTableBody tr').forEach(tr => {
-    tr.style.display = tr.dataset.name.includes(q) ? '' : 'none';
+// ═══ كشف الحساب (AJAX) ═══
+function _injectAndShow(html,hostId){
+  const host=document.getElementById(hostId);
+  host.innerHTML=html;
+  const modalEl=host.querySelector('.modal');
+  if(!modalEl)return null;
+  const m=bootstrap.Modal.getOrCreateInstance(modalEl);
+  modalEl.addEventListener('hidden.bs.modal',()=>{host.innerHTML='';},{once:true});
+  m.show();
+  return modalEl;
+}
+async function openStatement(phone,name){
+  try{
+    const qs=new URLSearchParams({phone:phone||'',name:name||''});
+    const res=await fetch(`{{ route('installments.customer_statement') }}?${qs.toString()}`,{headers:{'X-Requested-With':'XMLHttpRequest'}});
+    if(!res.ok)throw new Error('فشل');
+    _injectAndShow(await res.text(),'statementModalHost');
+  }catch(e){Swal.fire('خطأ','تعذّر فتح كشف الحساب','error');}
+}
+
+// أزرار سرعة تعبئة مبلغ الدفعة داخل كشف الحساب (عالمية عشان الـ partial بيتحقن بـ innerHTML)
+function stmtSetPay(cid, monthly, remaining, type){
+  const inp=document.getElementById('pay_amt_'+cid);
+  if(!inp)return;
+  if(type==='monthly') inp.value=Math.min(monthly,remaining).toFixed(2);
+  else if(type==='full') inp.value=remaining.toFixed(2);
+  else { inp.value=''; inp.focus(); }
+}
+
+// ═══ كشف الحساب: تبديل التابات + إظهار فورم السداد/التعديل + طباعة/تحميل/واتساب ═══
+function switchTab(group, pane){
+  const root=document.getElementById('captureCustomer_'+group);
+  if(!root)return;
+  root.querySelectorAll('.cst-pane').forEach(p=>p.style.display='none');
+  const el=document.getElementById('pane_'+group+'_'+pane);
+  if(el)el.style.display='block';
+  const strip=document.getElementById('tabs_'+group);
+  if(strip){
+    strip.querySelectorAll('.cst-tab').forEach(t=>t.classList.remove('active-tab'));
+    const tab=[...strip.querySelectorAll('.cst-tab')].find(t=>t.getAttribute('data-pane')===pane);
+    if(tab)tab.classList.add('active-tab');
+  }
+  root.setAttribute('data-active-pane', pane);
+}
+function toggleStmtForm(id, which){
+  const el =document.getElementById('stmt'+(which==='pay'?'Pay':'Edit')+'_'+id);
+  const oth=document.getElementById('stmt'+(which==='pay'?'Edit':'Pay')+'_'+id);
+  if(oth)oth.style.display='none';
+  if(el)el.style.display=(el.style.display==='none'||!el.style.display)?'block':'none';
+}
+function _activePane(group){
+  const root=document.getElementById('captureCustomer_'+group);
+  return root?document.getElementById('pane_'+group+'_'+root.getAttribute('data-active-pane')):null;
+}
+function sendCustomerSheetWhatsApp(group){
+  const p=_activePane(group); const url=p&&p.getAttribute('data-wa');
+  if(url){window.open(url,'_blank');return;}
+  const root=document.getElementById('captureCustomer_'+group); const all=root&&root.getAttribute('data-wa-all');
+  if(all)window.open(all,'_blank');
+}
+function sendAllContractsWhatsApp(group){
+  const root=document.getElementById('captureCustomer_'+group); const url=root&&root.getAttribute('data-wa-all');
+  if(url)window.open(url,'_blank');
+}
+function printCustomerStatement(group){
+  const node=document.getElementById('captureCustomer_'+group);
+  if(!node)return;
+  const styles=[...document.querySelectorAll('style, link[rel="stylesheet"]')].map(e=>e.outerHTML).join('');
+  const clone=node.cloneNode(true);
+  clone.querySelectorAll('.cst-pane').forEach(p=>p.style.display='block');
+  clone.querySelectorAll('.no-print, .sheet-no-export').forEach(e=>e.remove());
+  const ph=clone.querySelector('[class*="print-header-"]'); if(ph)ph.style.display='block';
+  const w=window.open('','_blank','width=800,height=700');
+  w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8">'+styles+'<style>@page{size:A4;margin:8mm}body{background:#fff;padding:10px;font-family:\'IBM Plex Sans Arabic\',sans-serif}</style></head><body>'+clone.innerHTML+'</body></html>');
+  w.document.close();
+  setTimeout(()=>{w.focus();w.print();},400);
+}
+function downloadCustomerSheet(group){
+  const p=_activePane(group)||document.getElementById('captureCustomer_'+group);
+  if(!p||typeof html2canvas==='undefined')return;
+  html2canvas(p,{scale:2,backgroundColor:'#fff'}).then(canvas=>{
+    const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='statement_'+group+'.png';a.click();
   });
 }
+// طباعة كشف الحساب المفتوح في نافذة مستقلة (تتجنّب تعارض print CSS)
+function printStatement(){
+  const node=document.getElementById('stmtPrint');
+  if(!node)return;
+  const styles=[...document.querySelectorAll('style, link[rel="stylesheet"]')].map(e=>e.outerHTML).join('');
+  const w=window.open('','_blank','width=900,height=700');
+  w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8">'+styles+'<style>body{background:#fff;padding:16px;font-family:"IBM Plex Sans Arabic",sans-serif}.no-print{display:none!important}</style></head><body class="inst-wrap">'+node.innerHTML+'</body></html>');
+  w.document.close();
+  setTimeout(()=>{w.focus();w.print();},400);
+}
+
+// إعادة فتح كشف نفس العميل بعد سداد/عكس دفعة
+@if(session('reopen_phone') !== null || session('reopen_name') !== null)
+(function(){
+  const rP=@json(session('reopen_phone','')), rN=@json(session('reopen_name',''));
+  setTimeout(()=>{try{openStatement(rP,rN);}catch(e){}},350);
+})();
+@endif
+
+// ═══ فلاتر + إحصائيات + رسم الجدول (بروح السيستم الأول) ═══
+let allInstData=[], customerProgress={}, currentStatusFilter='all';
+function loadInstData(){
+  try{allInstData=JSON.parse(document.getElementById('allInstallmentsData').textContent);}catch(e){allInstData=[];}
+  try{customerProgress=JSON.parse(document.getElementById('customerProgressData').textContent);}catch(e){customerProgress={};}
+}
+function custKey(i){const p=String(i.customer_phone||'').trim();return (p&&p!=='—')?p:('n:'+(i.customer_name||''));}
+function setStatusFilter(s,btn){currentStatusFilter=s;document.querySelectorAll('#statusPills .status-pill').forEach(p=>p.classList.remove('active'));if(btn)btn.classList.add('active');applyActiveFilters();}
+function setTodayDueFilter(){const t=new Date().getDate();document.getElementById('dueRangeFrom').value=String(t);document.getElementById('dueRangeTo').value=String(t);applyActiveFilters();}
+function resetActiveFilters(){document.getElementById('activeSearch').value='';document.getElementById('dueRangeFrom').value='0';document.getElementById('dueRangeTo').value='0';currentStatusFilter='all';document.querySelectorAll('#statusPills .status-pill').forEach(p=>p.classList.toggle('active',p.dataset.status==='all'));applyActiveFilters();}
+
+function updateDueStats(range){
+  const totalAmt=range.reduce((s,i)=>s+i.monthly_installment,0);
+  const full=range.filter(i=>i._isPaid).length;
+  const partial=range.filter(i=>!i._isPaid&&i._collected>0).length;
+  const unpaid=range.filter(i=>i._collected===0).length;
+  const collected=range.reduce((s,i)=>s+i._collected,0);
+  document.getElementById('statTotal').innerText=range.length;
+  document.getElementById('statDue').innerText=totalAmt.toLocaleString('en-US')+' ج';
+  document.getElementById('statFullPaid').innerText=full;
+  document.getElementById('statPartialPaid').innerText=partial;
+  document.getElementById('statUnpaid').innerText=unpaid;
+  document.getElementById('statCollected').innerText=collected.toLocaleString('en-US')+' ج';
+  document.getElementById('statRemaining').innerText=(totalAmt-collected).toLocaleString('en-US')+' ج';
+}
+function computeStatus(i){return {paid:i.paid_this_month_amount, isFull:i.paid_this_month};}
+function groupByCustomer(list){
+  const g={};
+  list.forEach(i=>{const k=custKey(i);if(!g[k])g[k]={key:k,name:i.customer_name,phone:i.customer_phone,items:[]};g[k].items.push(i);});
+  return Object.values(g).map(x=>{
+    const full=x.items.filter(c=>c._isPaid).length, partial=x.items.filter(c=>!c._isPaid&&c._collected>0).length, unpaid=x.items.filter(c=>c._collected===0).length;
+    const prog=customerProgress[x.key]; let pct=0;
+    if(prog&&prog.total_value>0){pct=Math.round((1-(prog.total_remaining/prog.total_value))*100);pct=Math.max(0,Math.min(100,pct));}
+    return {name:x.name,phone:x.phone,count:x.items.length,
+      totalMonthly:x.items.reduce((s,c)=>s+c.monthly_installment,0),
+      totalRemaining:x.items.reduce((s,c)=>s+c.remaining_balance,0),
+      full,partial,unpaid,pct};
+  });
+}
+const PAGE=15; let _sorted=[], _page=1;
+function renderRows(rows){_sorted=[...rows].sort((a,b)=>b.totalRemaining-a.totalRemaining);_page=1;renderPage();}
+function gotoPage(p){_page=p;renderPage();}
+function renderPage(){
+  const tb=document.getElementById('dueByDayBody');tb.innerHTML='';
+  const total=_sorted.length, pages=Math.max(1,Math.ceil(total/PAGE));
+  if(_page>pages)_page=pages;
+  const start=(_page-1)*PAGE, rows=_sorted.slice(start,start+PAGE);
+  rows.forEach(r=>{
+    const ini=r.name?r.name.charAt(0):'?';
+    const wa=r.phone?`<a href="https://wa.me/2${r.phone}?text=${encodeURIComponent('السلام عليكم، تذكير بموعد سداد القسط.')}" target="_blank" onclick="event.stopPropagation()" class="whatsapp-link" title="واتساب"><i class="fab fa-whatsapp"></i></a>`:'';
+    let badge='';
+    if(r.unpaid===0&&r.partial===0) badge=`<span style="background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:20px;padding:4px 12px;font-size:.82rem;font-weight:800"><i class="fa fa-check-circle"></i> الكل مدفوع</span>`;
+    else if(r.full===0&&r.partial===0) badge=`<span style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;border-radius:20px;padding:4px 12px;font-size:.82rem;font-weight:800"><span style="width:8px;height:8px;border-radius:50%;background:#dc2626;display:inline-block;animation:pulse 1.5s infinite"></span> الكل لم يسدد</span>`;
+    else{const p=[];if(r.full>0)p.push(`${r.full} كامل`);if(r.partial>0)p.push(`${r.partial} جزئي`);if(r.unpaid>0)p.push(`${r.unpaid} لسه`);badge=`<span style="background:#eff6ff;color:#1d4ed8;border:1px solid #93c5fd;border-radius:20px;padding:4px 12px;font-size:.82rem;font-weight:800"><i class="fa fa-chart-pie"></i> مختلط (${p.join(' / ')})</span>`;}
+    const ph=String(r.phone||'').replace(/'/g,"\\'"), nm=String(r.name||'').replace(/'/g,"\\'");
+    const allPaid=r.unpaid===0&&r.partial===0;
+    tb.innerHTML+=`<tr class="clickable-row" onclick="openStatement('${ph}','${nm}')">
+      <td class="text-start"><div class="d-flex align-items-center gap-2">
+        <div class="client-avatar" style="background:${allPaid?'linear-gradient(135deg,#059669,#10b981)':'linear-gradient(135deg,#4f46e5,#60a5fa)'};color:#fff">${ini}</div>
+        <div><strong class="d-block" style="font-size:.9rem">${r.name}</strong><small class="text-muted" dir="ltr">${r.phone||'—'}</small></div>${wa}</div></td>
+      <td><span class="badge bg-secondary">${r.count} عقد</span></td>
+      <td class="fw-bold text-danger">${r.totalMonthly.toLocaleString('en-US')} ج</td>
+      <td class="fw-bold" style="color:#7c3aed">${r.totalRemaining.toLocaleString('en-US')} ج</td>
+      <td style="min-width:110px"><div class="d-flex align-items-center gap-2">
+        <div style="flex:1;height:8px;border-radius:5px;background:#e5e7eb;overflow:hidden"><div style="height:100%;width:${r.pct}%;background:${r.pct>=100?'#059669':(r.pct>=50?'#2563eb':'#d97706')}"></div></div>
+        <small class="fw-bold" style="min-width:34px">${r.pct}%</small></div></td>
+      <td>${badge}</td>
+      <td class="no-print"><button class="btn btn-sm btn-outline-dark fw-bold" onclick="event.stopPropagation(); openStatement('${ph}','${nm}')"><i class="fa fa-table me-1"></i> كشف حساب</button></td>
+    </tr>`;
+  });
+  const pager=document.getElementById('duePager');
+  if(total<=PAGE){pager.style.display='none';}
+  else{pager.style.display='flex';const from=start+1,to=Math.min(start+PAGE,total);
+    document.getElementById('duePagerInfo').innerText=`عرض ${from}–${to} من ${total} عميل`;
+    const btns=document.getElementById('duePagerBtns');btns.innerHTML='';
+    const mk=(l,p,o={})=>{const b=document.createElement('button');b.type='button';b.className='btn btn-sm '+(o.active?'btn-dark':'btn-outline-secondary')+' fw-bold';b.innerHTML=l;if(o.disabled)b.disabled=true;else b.onclick=()=>gotoPage(p);return b;};
+    btns.appendChild(mk('<i class="fa fa-angle-right"></i>',_page-1,{disabled:_page===1}));
+    let s=Math.max(1,_page-2),e=Math.min(pages,_page+2);
+    for(let p=s;p<=e;p++)btns.appendChild(mk(String(p),p,{active:p===_page}));
+    btns.appendChild(mk('<i class="fa fa-angle-left"></i>',_page+1,{disabled:_page===pages}));
+  }
+}
+function applyActiveFilters(){
+  loadInstData();
+  const fromDay=parseInt(document.getElementById('dueRangeFrom').value)||1;
+  const toDay=parseInt(document.getElementById('dueRangeTo').value)||31;
+  const term=(document.getElementById('activeSearch').value||'').trim().toLowerCase();
+  allInstData.forEach(i=>{const st=computeStatus(i);i._collected=st.paid;i._isPaid=st.isFull;});
+  let inRange=allInstData.filter(i=>i.due_day>=fromDay&&i.due_day<=toDay);
+  if(term)inRange=inRange.filter(i=>String(i.customer_name||'').toLowerCase().includes(term)||String(i.customer_phone||'').toLowerCase().includes(term));
+  updateDueStats(inRange);
+  let matching=inRange;
+  if(currentStatusFilter==='full')matching=inRange.filter(i=>i._isPaid);
+  else if(currentStatusFilter==='partial')matching=inRange.filter(i=>!i._isPaid&&i._collected>0);
+  else if(currentStatusFilter==='unpaid')matching=inRange.filter(i=>i._collected===0);
+  const tb=document.getElementById('dueByDayBody');
+  if(matching.length===0){tb.innerHTML='<tr><td colspan="7" class="text-center py-5 text-muted fw-bold"><i class="fa fa-calendar-check fa-2x d-block mb-2" style="opacity:.4"></i>لا يوجد عملاء مطابقين للفلتر</td></tr>';document.getElementById('duePager').style.display='none';return;}
+  const keys=new Set(matching.map(custKey));
+  renderRows(groupByCustomer(allInstData.filter(i=>keys.has(custKey(i)))));
+}
+document.addEventListener('DOMContentLoaded',applyActiveFilters);
 </script>
 @endpush
-@endsection

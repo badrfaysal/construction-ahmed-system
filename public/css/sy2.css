@@ -10,6 +10,12 @@
   --accent:#1f5fd6;--accent-soft:#eaf1fd;--accent-ink:#1c4fb0;
   --pos:#0f8a5f;--pos-soft:#e7f5ef;--neg:#c0392b;--neg-soft:#fbecea;
   --warn:#b7791f;--warn-soft:#fbf3e3;
+  /* هوية الشركة الدافئة (نفس ذهبي الشعار في السايدبار) — بتتحط في اللمسات
+     المميّزة (كارت رأس المال، الشرايط العلوية، عناصر البراند) بدل ما يفضل
+     كل حاجة في النظام أزرق/رمادي واحد */
+  --brand:#b8842a;--brand-soft:#fbf1de;--brand-ink:#8a631d;
+  --info:#0891b2;--info-soft:#e0f7fa;--info-ink:#066e87;
+  --purple:#7c3aed;--purple-soft:#f2ecfe;--purple-ink:#5b21b6;
   --radius:8px;
   --shadow-sm:0 1px 2px rgba(16,30,54,.06);
   --shadow:0 4px 16px rgba(16,30,54,.08);
@@ -39,7 +45,8 @@ svg{display:block}
 .nav-item{display:flex;align-items:center;gap:12px;padding:9.5px 12px;border-radius:7px;cursor:pointer;
   color:#aeb9c9;font-weight:500;font-size:13.5px;transition:background .14s,color .14s;margin-bottom:1px}
 .nav-item:hover{background:var(--sidebar-hover);color:#fff}
-.nav-item.active{background:var(--accent);color:#fff;font-weight:600;box-shadow:0 4px 12px rgba(31,95,214,.3)}
+.nav-item.active{background:var(--accent);color:#fff;font-weight:600;box-shadow:0 4px 12px rgba(31,95,214,.3);
+  border-inline-start:3px solid var(--brand);padding-inline-start:9px}
 .nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.92}
 .sb-foot{padding:14px 16px;border-top:1px solid rgba(255,255,255,.07);font-size:11px;color:#6c7c93}
 
@@ -83,17 +90,76 @@ svg{display:block}
 
 /* ---- Grid & Cards ---- */
 .grid{display:grid;gap:16px}
+.cols-5{grid-template-columns:repeat(5,1fr)}
 .cols-4{grid-template-columns:repeat(4,1fr)}
 .cols-3{grid-template-columns:repeat(3,1fr)}
 .cols-2{grid-template-columns:repeat(2,1fr)}
 @media(max-width:1080px){
+  .cols-5{grid-template-columns:repeat(3,1fr)}
   .cols-4{grid-template-columns:repeat(2,1fr)}
   .cols-3{grid-template-columns:repeat(2,1fr)}
   .cols-2{grid-template-columns:1fr}
 }
+@media(max-width:640px){
+  .cols-5{grid-template-columns:repeat(2,1fr)}
+}
+
+/* رأس مال المقاولات — تفصيل مضغوط 2×2 جوّه كارت الإحصائية نفسه */
+.cap-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2)}
+.cap-breakdown div{display:flex;justify-content:space-between;gap:6px;font-size:10.5px;color:var(--ink-3);font-weight:500}
+.cap-breakdown b{font-weight:700;color:var(--ink);white-space:nowrap}
+
+/* ---- Vivid stat cards (لوحة التحكم فقط) — كروت متدرّجة ملوّنة بروح "المركز
+   المالي الشامل" (نظام 1)، بدل الكارت الأبيض الهادي، عشان تدي اللوحة الرئيسية
+   حيوية أكتر. مكوّن منفصل عن .stat العادي (مستخدم في 12+ صفحة تانية) عشان
+   ميأثرش على حاجة تانية غير الداشبورد. ---- */
+.vstat{border-radius:14px;padding:19px 21px;color:#fff;position:relative;overflow:hidden;
+  box-shadow:var(--shadow);display:flex;flex-direction:column;gap:3px;transition:.16s}
+.vstat::after{content:'';position:absolute;top:-46px;inset-inline-end:-46px;width:150px;height:150px;
+  border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 70%);pointer-events:none}
+.vstat:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+.vstat .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;position:relative;z-index:1}
+.vstat .label{font-size:12.5px;font-weight:700;color:rgba(255,255,255,.88)}
+.vstat .ic{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.16);display:grid;place-items:center;color:#fff;flex-shrink:0}
+.vstat .ic svg{width:19px;height:19px}
+.vstat .val{font-size:25px;font-weight:800;letter-spacing:-.02em;color:#fff;position:relative;z-index:1}
+.vstat .val small{font-size:12px;font-weight:600;color:rgba(255,255,255,.78)}
+.vstat .note{font-size:11.5px;color:rgba(255,255,255,.78);font-weight:500;margin-top:2px;position:relative;z-index:1}
+.vstat .cap-breakdown{border-top-color:rgba(255,255,255,.22);position:relative;z-index:1}
+.vstat .cap-breakdown div{color:rgba(255,255,255,.78)}
+.vstat .cap-breakdown b{color:#fff}
+.vstat-navy{background:linear-gradient(135deg,#22314a 0%,#0a1220 100%)}
+.vstat-blue{background:linear-gradient(135deg,#3b7cf5 0%,#1c4fb0 100%)}
+.vstat-teal{background:linear-gradient(135deg,#17b3d9 0%,#066e87 100%)}
+.vstat-green{background:linear-gradient(135deg,#16b87e 0%,#0b6b49 100%)}
+.vstat-red{background:linear-gradient(135deg,#e5573f 0%,#a8291c 100%)}
+.vstat-amber{background:linear-gradient(135deg,#e8a93c 0%,#a8721c 100%)}
+
+/* ---- Dashboard 2-col layout: main content + side panel (روابط سريعة + آخر الحركات) ---- */
+.dash-layout{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+@media(max-width:1080px){.dash-layout{grid-template-columns:1fr}}
+.qlinks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.qlink{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;padding:13px 8px;
+  border-radius:10px;border:1px solid var(--line);background:var(--surface-2);transition:.14s;text-decoration:none;color:var(--ink)}
+.qlink:hover{background:var(--surface);border-color:#d4ddea;transform:translateY(-2px);box-shadow:var(--shadow-sm)}
+.qlink .ic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center}
+.qlink .ic svg{width:17px;height:17px}
+.qlink .lbl{font-size:11.5px;font-weight:600;line-height:1.3}
+.feed-compact .tx{padding:11px 16px}
+.feed-compact .tx-ic{width:36px;height:36px}
+.feed-compact .tx-main .t{font-size:12.5px}
+.feed-compact .tx-amt{font-size:13px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow-sm)}
 .card-pad{padding:20px}
-.stat{padding:18px 20px;display:flex;flex-direction:column;gap:3px;position:relative}
+.stat{padding:18px 20px;display:flex;flex-direction:column;gap:3px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;inset-inline-start:0;inset-inline-end:0;height:3px;background:var(--line)}
+.stat.stat-blue::before{background:var(--accent)}
+.stat.stat-green::before{background:var(--pos)}
+.stat.stat-red::before{background:var(--neg)}
+.stat.stat-amber::before{background:var(--warn)}
+.stat.stat-gold::before{background:linear-gradient(90deg,#c9962f,#a8761c)}
+.stat.stat-teal::before{background:var(--info)}
+.stat.stat-purple::before{background:var(--purple)}
 .stat .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .stat .label{font-size:12.5px;color:var(--ink-2);font-weight:600}
 .stat .ic{width:36px;height:36px;border-radius:9px;display:grid;place-items:center}
@@ -105,6 +171,9 @@ svg{display:block}
 .ic-green{background:var(--pos-soft);color:var(--pos)}
 .ic-amber{background:var(--warn-soft);color:var(--warn)}
 .ic-red{background:var(--neg-soft);color:var(--neg)}
+.ic-gold{background:var(--brand-soft);color:var(--brand-ink)}
+.ic-teal{background:var(--info-soft);color:var(--info-ink)}
+.ic-purple{background:var(--purple-soft);color:var(--purple-ink)}
 
 /* ---- Section label ---- */
 .section-label{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--ink-2);text-transform:uppercase;
@@ -133,6 +202,9 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
 .tag.amber{background:var(--warn-soft);color:var(--warn);border-color:#f0e2c2}
 .tag.red{background:var(--neg-soft);color:var(--neg);border-color:#f3d4cf}
 .tag.blue{background:var(--accent-soft);color:var(--accent-ink);border-color:#cfe0fa}
+.tag.gold{background:var(--brand-soft);color:var(--brand-ink);border-color:#f0dfb8}
+.tag.teal{background:var(--info-soft);color:var(--info-ink);border-color:#bfeaf1}
+.tag.purple{background:var(--purple-soft);color:var(--purple-ink);border-color:#e0d1fb}
 .tag.gray{background:#eef1f6;color:var(--ink-2);border-color:#e0e6ee}
 .tag .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
 

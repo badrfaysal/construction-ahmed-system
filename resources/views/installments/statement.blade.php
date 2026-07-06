@@ -71,16 +71,34 @@ body{font-family:'IBM Plex Sans Arabic','Cairo',sans-serif;background:var(--bg);
 /* Footer */
 .stmt-footer{background:#f8fafc;padding:14px 20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;border-top:1px solid var(--border);}
 
-/* ── Print CSS ── */
+/* ── Print CSS — يضغط الكشف في صفحة واحدة على قد الإمكان ── */
 @media print {
-  body{background:#fff !important;}
+  @page{size:A4 portrait;margin:8mm;}
+  html,body{background:#fff !important;}
   .page-head,.sidebar,.topbar,.stmt-actions,.stmt-footer,.no-print{display:none !important;}
   .stmt-wrap{max-width:100%;margin:0;}
   .stmt-card{box-shadow:none;border-radius:0;}
   .page-wrap{padding:0 !important;margin:0 !important;}
   .inst-table tr.paid-row td{background:#e6f7f0 !important;-webkit-print-color-adjust:exact;}
   .inst-table tr.due-row td{background:#fde8e8 !important;-webkit-print-color-adjust:exact;}
-  .stmt-head{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .stmt-head,.ig-head,.sched-head,.info-row .lbl,.info-row .val{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+
+  /* تصغير الهوامش والخطوط عشان كل حاجة تدخل في صفحة واحدة */
+  .stmt-head{padding:8px 16px;}
+  .stmt-head h2{font-size:.95rem;}
+  .stmt-head p{font-size:.7rem;margin-top:2px;}
+  .info-grid{border-bottom-width:2px;}
+  .ig-head{padding:4px 12px;font-size:.68rem;}
+  .info-row .lbl,.info-row .val{padding:4px 12px;font-size:.7rem;border-bottom-width:1px;}
+  .sched-head{padding:5px 14px;font-size:.72rem;}
+  .inst-table th{padding:3px 8px;font-size:.6rem;}
+  .inst-table td{padding:3px 8px;font-size:.66rem;}
+  .inst-table td span{width:20px !important;height:20px !important;font-size:.62rem !important;}
+  .spill{padding:1px 7px;font-size:.6rem;}
+
+  /* منع قطع الصف بين صفحتين، والحفاظ على ترابط رأس الجدول */
+  .inst-table tr{break-inside:avoid;}
+  thead{display:table-header-group;}
 }
 </style>
 @endpush

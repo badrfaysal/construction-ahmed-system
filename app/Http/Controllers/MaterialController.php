@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Material;
 use App\Models\Project;
+use App\Models\ProjectBand;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,14 +19,58 @@ class MaterialController extends Controller
             ->orderByDesc('date')
             ->orderByDesc('id');
 
-        if ($pid = $request->get('project_id')) {
+        $pid = $request->get('project_id');
+        if ($pid) {
             $query->where('project_id', $pid);
         }
 
         $materials = $query->paginate(60);
         $projects  = Project::orderBy('name')->get(['id', 'name']);
+        $insights  = $this->buildInsights($pid ? (int) $pid : null);
 
-        return view('materials.index', compact('materials', 'projects'));
+        return view('materials.index', compact('materials', 'projects', 'insights'));
+    }
+
+    // أكتر خامة اشتريتها (بالتكلفة)، أكتر خامة عملت لها مرتجع (بالقيمة)، وأكتر
+    // بند اشتريت له خامات — بتحترم فلتر المشروع الحالي لو موجود
+    private function buildInsights(?int $projectId): array
+    {
+        $topMaterial = Material::query()
+            ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
+            ->selectRaw('item, unit, SUM(qty) as total_qty, SUM(qty * unit_price) as total_cost, COUNT(*) as purchase_count')
+            ->groupBy('item', 'unit')
+            ->orderByDesc('total_cost')
+            ->first();
+
+        $topReturned = DB::table('sy2_material_returns as r')
+            ->join('sy2_materials as m', 'm.id', '=', 'r.material_id')
+            ->when($projectId, fn ($q) => $q->where('m.project_id', $projectId))
+            ->selectRaw('m.item, m.unit, SUM(r.qty) as total_qty, SUM(r.qty * m.unit_price) as total_value, COUNT(*) as return_count')
+            ->groupBy('m.item', 'm.unit')
+            ->orderByDesc('total_value')
+            ->first();
+
+        $topBandRow = Material::query()
+            ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
+            ->whereNotNull('band_id')
+            ->selectRaw('band_id, SUM(qty * unit_price) as total_cost')
+            ->groupBy('band_id')
+            ->orderByDesc('total_cost')
+            ->first();
+
+        $topBand = null;
+        if ($topBandRow) {
+            $band = ProjectBand::with('project')->find($topBandRow->band_id);
+            if ($band) {
+                $topBand = (object) [
+                    'band_name'    => $band->name,
+                    'project_name' => $band->project->name ?? '—',
+                    'total_cost'   => (float) $topBandRow->total_cost,
+                ];
+            }
+        }
+
+        return compact('topMaterial', 'topReturned', 'topBand');
     }
 
     // Show form to register a batch of purchases: one project, several bands,
@@ -33,12 +79,13 @@ class MaterialController extends Controller
     {
         $projects  = Project::orderBy('name')->get(['id', 'name', 'default_supervision_pct']);
         $suppliers = Supplier::orderBy('name')->get(['id', 'name']);
+        $wallets   = Account::selectable();
 
         // Pre-select a project if provided via query string (e.g. from a project page)
         $selectedProject = $request->get('project_id') ? Project::find($request->get('project_id')) : null;
         $bands = $selectedProject ? $selectedProject->bands()->get(['id', 'name']) : collect();
 
-        return view('materials.create', compact('projects', 'suppliers', 'bands', 'selectedProject'));
+        return view('materials.create', compact('projects', 'suppliers', 'wallets', 'bands', 'selectedProject'));
     }
 
     // Save every item from every band group in one go
@@ -49,6 +96,7 @@ class MaterialController extends Controller
             'groups'                        => ['required', 'array', 'min:1'],
             'groups.*.band_id'              => ['nullable', 'exists:sy2_project_bands,id'],
             'groups.*.supplier_id'          => ['nullable', 'exists:sy2_suppliers,id'],
+            'groups.*.account_id'           => ['required', 'integer', 'exists:accounts,id'],
             'groups.*.date'                 => ['required', 'date'],
             'groups.*.payment_status'       => ['nullable', 'in:paid,partial,deferred'],
             'groups.*.paid_amount'          => ['nullable', 'numeric', 'min:0'],
@@ -85,6 +133,7 @@ class MaterialController extends Controller
                     Material::create([
                         'project_id'      => $data['project_id'],
                         'band_id'         => $group['band_id'] ?? null,
+                        'account_id'      => $group['account_id'] ?? null,
                         'supplier_id'     => $group['supplier_id'] ?? null,
                         'item'            => $item['item'],
                         'unit'            => $item['unit'],
@@ -120,8 +169,9 @@ class MaterialController extends Controller
         $bands       = $project->bands()->orderBy('sort_order')->get(['id', 'name', 'status']);
         $activeBand  = $bands->firstWhere('status', 'active');
         $defaultSup  = $project->defaultSupervisionPct();
+        $wallets     = Account::selectable();
 
-        return view('materials.expense', compact('project', 'bands', 'activeBand', 'defaultSup'));
+        return view('materials.expense', compact('project', 'bands', 'activeBand', 'defaultSup', 'wallets'));
     }
 
     // Save a misc expense as a Material row (category=misc) so it flows through
@@ -130,6 +180,7 @@ class MaterialController extends Controller
     {
         $data = $request->validate([
             'band_id'         => ['nullable', 'exists:sy2_project_bands,id'],
+            'account_id'      => ['required', 'integer', 'exists:accounts,id'],
             'item'            => ['required', 'string', 'max:255'],
             'amount'          => ['required', 'numeric', 'min:0'],
             'sell_price'      => ['required', 'numeric', 'min:0'],
@@ -140,6 +191,7 @@ class MaterialController extends Controller
         DB::transaction(fn () => Material::create([
             'project_id'      => $project->id,
             'band_id'         => $data['band_id'] ?? null,
+            'account_id'      => $data['account_id'] ?? null,
             'category'        => 'misc',
             'item'            => $data['item'],
             'unit'            => 'مبلغ',

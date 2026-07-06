@@ -11,7 +11,7 @@ class Material extends Model
     protected $table = 'sy2_materials';
 
     protected $fillable = [
-        'project_id', 'band_id', 'supplier_id', 'category',
+        'project_id', 'band_id', 'account_id', 'supplier_id', 'category',
         'item', 'unit', 'qty', 'unit_price', 'sell_price', 'supervision_pct',
         'date', 'payment_status', 'paid_amount',
     ];
@@ -65,6 +65,32 @@ class Material extends Model
     public function netCost(): float
     {
         return $this->netQty() * (float) $this->unit_price;
+    }
+
+    // Gross cost = full purchased quantity × unit price, before any returns.
+    // The purchase's سجل الحركات line is booked at this amount; returns are
+    // then booked as their own separate credit entries.
+    public function grossCost(): float
+    {
+        return (float) $this->qty * (float) $this->unit_price;
+    }
+
+    // Fraction of this purchase that was actually paid in cash at purchase
+    // time (1 for a fully-paid buy, paid_amount/gross for partial, 0 for a
+    // fully-deferred one) — used to work out how much of a return is a cash
+    // refund vs a reduction of what we still owe the supplier.
+    public function paidRatio(): float
+    {
+        $gross = $this->grossCost();
+        if ($gross <= 0) {
+            return 0.0;
+        }
+
+        return match ($this->payment_status ?? 'paid') {
+            'partial'  => min(1.0, (float) $this->paid_amount / $gross),
+            'deferred' => 0.0,
+            default    => 1.0,
+        };
     }
 
     // Per-unit price charged to the client: sell price (falls back to purchase

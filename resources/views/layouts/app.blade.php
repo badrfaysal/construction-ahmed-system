@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('css/sy2.css') }}">
+{{-- flatpickr — يخلّي كل حقول التاريخ تتعرض يوم/شهر/سنة (dd/mm/yyyy) وتتبعت Y-m-d --}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
 @stack('styles')
 </head>
 <body>
@@ -78,6 +80,12 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>
       سجل الحركات
     </a>
+    @if(auth()->user()->isAdmin())
+    <a class="nav-item {{ request()->routeIs('wallet.*') ? 'active' : '' }}" href="{{ route('wallet.index') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>
+      المحفظة
+    </a>
+    @endif
     <a class="nav-item {{ request()->routeIs('installments.*') ? 'active' : '' }}" href="{{ route('installments.index') }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
       المدفوعات والأقساط
@@ -98,6 +106,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg>
       الفنيين والعمال
     </a>
+    <a class="nav-item {{ request()->routeIs('craftsmen.*') ? 'active' : '' }}" href="{{ route('craftsmen.index') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg>
+      الصنايعية ومستحقاتهم
+    </a>
 
     <div class="nav-label">التقارير</div>
     <a class="nav-item {{ request()->routeIs('reports.statement*') ? 'active' : '' }}" href="{{ route('reports.statement.index') }}">
@@ -112,6 +124,12 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bar-chart"/></svg>
       التقارير
     </a>
+    @if(auth()->user()->canSeeFinancials())
+    <a class="nav-item {{ request()->routeIs('reports.estimation.*') ? 'active' : '' }}" href="{{ route('reports.estimation.index') }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg>
+      تقدير تكلفة مشروع
+    </a>
+    @endif
 
     <div class="nav-label">المتابعة</div>
     <a class="nav-item {{ request()->routeIs('suppliers.*') ? 'active' : '' }}" href="{{ route('suppliers.index') }}">
@@ -178,6 +196,17 @@
       <input type="search" name="q" placeholder="ابحث عن صنف، مشروع، أو مورد..." value="{{ request('q') }}">
     </form>
     <div class="right">
+      @if(auth()->user()->isAdmin())
+      {{-- تصفير قاعدة البيانات (للتجارب فقط) — يمسح كل بيانات المقاولات --}}
+      <form method="POST" action="{{ route('maintenance.reset') }}" style="margin:0"
+            onsubmit="return confirm('⚠️ تحذير: هيتم مسح كل بيانات المقاولات (المشاريع، الخامات، الحركات، العروض...) وتصفير المحفظة نهائيًا.\n\nالخطوة دي للتيست فقط ومش ممكن التراجع عنها.\n\nمتأكد إنك عايز تكمل؟');">
+        @csrf
+        <button type="submit" class="btn danger sm" title="تصفير كل بيانات المقاولات — للتيست فقط">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-x"/></svg>
+          تصفير الداتا
+        </button>
+      </form>
+      @endif
       {{-- Logout button --}}
       <form method="POST" action="{{ route('logout') }}" style="margin:0">
         @csrf
@@ -218,6 +247,41 @@
   </div>
 </div>
 
+{{-- flatpickr: كل حقول <input type="date"> تتعرض dd/mm/yyyy (يوم/شهر/سنة) للمستخدم
+     بينما القيمة اللي بتتبعت للسيرفر تفضل Y-m-d. بيشتغل كمان على الحقول اللي بتتضاف
+     ديناميكيًا (فورمات الخامات) أو اللي بتتحمّل عبر AJAX (كشف حساب الأقساط) عن طريق
+     MutationObserver. --}}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://npmcdn.com/flatpickr@4.6.13/dist/l10n/ar.js"></script>
+<script>
+(function () {
+  const OPTS = {
+    dateFormat: 'Y-m-d',   // القيمة المُرسَلة
+    altInput: true,
+    altFormat: 'd/m/Y',    // اللي بيشوفه المستخدم: يوم/شهر/سنة
+    allowInput: true,
+    locale: (window.flatpickr && flatpickr.l10ns && flatpickr.l10ns.ar) ? 'ar' : 'default',
+  };
+  function initDatePickers(root) {
+    (root || document).querySelectorAll('input[type="date"]:not([data-fp])').forEach(el => {
+      el.dataset.fp = '1';
+      try { flatpickr(el, OPTS); } catch (e) {}
+    });
+  }
+  window.initDatePickers = initDatePickers;
+  document.addEventListener('DOMContentLoaded', () => initDatePickers(document));
+  // امسك أي حقل تاريخ يتضاف بعد تحميل الصفحة (فورمات ديناميكية / محتوى AJAX)
+  new MutationObserver(muts => {
+    for (const m of muts) {
+      for (const n of m.addedNodes) {
+        if (n.nodeType !== 1) continue;
+        if (n.matches && n.matches('input[type="date"]')) initDatePickers(n.parentNode || document);
+        else if (n.querySelectorAll) initDatePickers(n);
+      }
+    }
+  }).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
 @stack('scripts')
 </body>
 </html>

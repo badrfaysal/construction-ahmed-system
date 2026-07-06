@@ -91,7 +91,7 @@
             <th>الحالة</th>
             <th>الفنيين</th>
             <th class="num">سعر العميل</th>
-            <th class="num">الأجر المدفوع</th>
+            <th class="num">أجر المصنعية</th>
             <th class="num">المواد</th>
             <th class="num">الربح</th>
             <th></th>
@@ -172,51 +172,49 @@
 
 <div class="tab-panel" data-panel="installments" style="display:none">
 <div class="section-label" style="display:flex;justify-content:space-between;align-items:center;margin-top:0">
-  <span>الأقساط</span>
-  <a href="{{ route('installments.create', ['project_id' => $project->id]) }}" class="btn sm">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
-    قسط جديد
+  <span>عقد التقسيط</span>
+  <a href="{{ route('installments.index') }}" class="btn sm">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
+    إدارة العقود والأقساط
   </a>
 </div>
 <div class="table-card" style="margin-bottom:24px">
-  @if($project->installments->count())
+  @php $contract = $project->contracts->first(); @endphp
+  @if($contract)
+    @php
+      $collected = (float) $contract->down_payment + (float) $contract->payments->sum('amount_paid');
+    @endphp
     <div class="table-scroll">
       <table>
         <thead>
           <tr>
-            <th>البند</th>
-            <th>الاستحقاق</th>
-            <th class="num">المبلغ</th>
+            <th class="num">إجمالي العقد</th>
+            <th class="num">المقدم</th>
+            <th class="num">القسط الشهري</th>
+            <th class="num">عدد الأقساط</th>
+            <th class="num">المحصّل</th>
+            <th class="num">المتبقي</th>
             <th>الحالة</th>
-            <th>طريقة الدفع</th>
-            <th>تاريخ الدفع</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
-          @foreach($project->installments as $inst)
-            <tr>
-              <td>{{ $inst->label }}</td>
-              <td>{{ $inst->due_date->format('Y-m-d') }}</td>
-              <td class="num">{{ number_format($inst->amount) }}</td>
-              <td><span class="tag {{ $inst->statusTag() }}">{{ $inst->statusAr() }}</span></td>
-              <td class="muted">{{ $inst->payment_method ?: '—' }}</td>
-              <td class="muted">{{ $inst->paid_date?->format('Y-m-d') ?? '—' }}</td>
-              <td>
-                @if($inst->status !== 'paid')
-                  <form method="POST" action="{{ route('installments.markPaid', $inst) }}" style="display:inline">
-                    @csrf
-                    <button class="btn pos sm">تحصيل</button>
-                  </form>
-                @endif
-              </td>
-            </tr>
-          @endforeach
+          <tr>
+            <td class="num">{{ number_format($contract->total_after_interest) }}</td>
+            <td class="num">{{ number_format($contract->down_payment) }}</td>
+            <td class="num">{{ number_format($contract->monthly_installment) }}</td>
+            <td class="num">{{ $contract->installment_months }}</td>
+            <td class="num" style="color:var(--pos)">{{ number_format($collected) }}</td>
+            <td class="num" style="color:{{ $contract->remaining_balance > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ number_format($contract->remaining_balance) }}</td>
+            <td><span class="tag {{ $contract->remaining_balance > 0 ? 'amber' : 'green' }}">{{ $contract->remaining_balance > 0 ? 'نشط' : 'مسدد بالكامل' }}</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
   @else
-    <div class="empty-state"><h4>لا توجد أقساط</h4></div>
+    <div class="empty-state">
+      <h4>لا يوجد عقد تقسيط لهذا المشروع</h4>
+      <a href="{{ route('installments.index') }}" class="btn sm" style="margin-top:10px">إنشاء عقد من صفحة الأقساط</a>
+    </div>
   @endif
 </div>
 </div>{{-- /tab-panel: installments --}}
@@ -351,7 +349,11 @@
 </div>{{-- /tab-panel: returns --}}
 
 <div class="tab-panel" data-panel="workers" style="display:none">
-<div class="section-label" style="margin-top:0">الفنيين الشغالين في المشروع</div>
+<div class="section-label" style="margin-top:0">الصنايعية الشغالين في المشروع</div>
+<p class="muted" style="margin:-6px 0 12px">
+  الصنايعي بياخد فلوسه على دفعات لغاية ما الشغل يخلص — كل دفعة بتتخصم من المحفظة وقتها بس، والباقي يفضل مستحق (مش دين علينا).
+  لو صنايعي عمل جزء من الشغل ومشي، سيبه بأمتاره اللي اتعملت وضيف صنايعي تاني في نفس البند يكمّل الباقي (من تعديل البند).
+</p>
 @php $allWorkers = $project->bands->flatMap(fn($b) => $b->workers->map(fn($w) => (object) ['worker' => $w, 'band' => $b])); @endphp
 <div class="table-card" style="margin-bottom:24px">
   @if($allWorkers->count())
@@ -360,29 +362,44 @@
         <thead>
           <tr>
             <th>الاسم</th>
-            <th>الموبايل</th>
             <th>البند</th>
-            <th>تاريخ بداية العمل</th>
-            <th class="num">الأجر (المصروف)</th>
-            <th>ملاحظات</th>
+            <th>التعاقد</th>
+            <th class="num">المتعاقد عليه</th>
+            <th class="num">المدفوع</th>
+            <th class="num">المتبقي</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
           @foreach($allWorkers as $row)
+            @php $paid = $row->worker->paidTotal(); $remaining = $row->worker->remaining(); @endphp
             <tr>
-              <td><strong>{{ $row->worker->name }}</strong></td>
-              <td class="muted">{{ $row->worker->phone ?: '—' }}</td>
+              <td>
+                <strong>{{ $row->worker->name }}</strong>
+                @if($row->worker->specialty)<div class="muted" style="font-size:12px">{{ $row->worker->specialty }}</div>@endif
+              </td>
               <td class="muted">{{ $row->band->name }}</td>
-              <td class="muted">{{ $row->worker->start_date?->format('Y-m-d') ?? '—' }}</td>
+              <td class="muted">
+                {{ $row->worker->contractTypeAr() }}
+                @if(in_array($row->worker->contract_type, ['per_meter','per_piece','daily']) && $row->worker->contract_qty)
+                  <div style="font-size:12px">{{ rtrim(rtrim(number_format($row->worker->contract_qty, 2), '0'), '.') }} × {{ number_format($row->worker->contract_unit_rate) }}</div>
+                @endif
+              </td>
               <td class="num">{{ number_format($row->worker->amount) }}</td>
-              <td class="muted">{{ $row->worker->notes ?: '—' }}</td>
+              <td class="num" style="color:var(--pos)">{{ number_format($paid) }}</td>
+              <td class="num" style="color:{{ $remaining > 0 ? 'var(--amber, #b45309)' : 'var(--pos)' }}">{{ number_format($remaining) }}</td>
+              <td>
+                <a href="{{ route('workers.payments', $row->worker) }}" class="btn ghost sm">الدفعات</a>
+              </td>
             </tr>
           @endforeach
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="4">الإجمالي</td>
+            <td colspan="3">الإجمالي</td>
             <td class="num">{{ number_format($allWorkers->sum(fn($r) => $r->worker->amount)) }}</td>
+            <td class="num" style="color:var(--pos)">{{ number_format($allWorkers->sum(fn($r) => $r->worker->paidTotal())) }}</td>
+            <td class="num">{{ number_format($allWorkers->sum(fn($r) => $r->worker->remaining())) }}</td>
             <td></td>
           </tr>
         </tfoot>
@@ -391,7 +408,7 @@
   @else
     <div class="empty-state">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg>
-      <h4>لا يوجد فنيين مسجلين بعد</h4>
+      <h4>لا يوجد صنايعية مسجلين بعد</h4>
     </div>
   @endif
 </div>
