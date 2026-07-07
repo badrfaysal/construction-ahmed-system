@@ -16,7 +16,11 @@ class Settings extends Model
 
     public static function current(): self
     {
-        return static::firstOrCreate(['id' => 1], [
+        if ($settings = static::find(1)) {
+            return $settings;
+        }
+
+        $settings = new static([
             'default_supervision_pct' => 0,
             'company_name'            => 'شركة الضبع للتجارة والتوريدات',
             'company_tagline'         => 'مقاولات وتشطيبات · القاهرة',
@@ -24,5 +28,9 @@ class Settings extends Model
             'company_registration'    => '12345',
             'whatsapp_country_code'   => '20',
         ]);
+        $settings->id = 1;
+        $settings->save();
+
+        return $settings;
     }
 }
