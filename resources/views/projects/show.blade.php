@@ -12,6 +12,7 @@
   </div>
   <div class="btn-row">
     <a href="{{ route('reports.statement', $project) }}" class="btn ghost">كشف حساب العميل</a>
+    <a href="{{ route('reports.statement.summary', $project) }}" class="btn ghost">كشف حساب مختصر</a>
     @if(auth()->user()->canSeeFinancials())
       <a href="{{ route('reports.company', $project) }}" class="btn ghost">كشف حساب الشركة</a>
     @endif

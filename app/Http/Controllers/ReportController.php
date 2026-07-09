@@ -203,6 +203,31 @@ class ReportController extends Controller
         ));
     }
 
+    // نسخة مختصرة من كشف حساب العميل: تكلفة كل بند كرقم واحد فقط بدون تفاصيل
+    // الخامات والكميات — للعميل اللي عايز يشوف الإجمالي بسرعة بس
+    public function clientStatementSummary(Project $project)
+    {
+        $project->load([
+            'client',
+            'bands.materials.returns',
+            'materials.returns',
+            'installments' => fn ($q) => $q->orderBy('due_date'),
+        ]);
+
+        $spentBands = $project->bands->where('status', '!=', 'pending');
+        $generalMaterials = $project->generalMaterials()->sortBy('date');
+        $generalTotal = $generalMaterials->sum(fn ($m) => $m->netClientCost());
+
+        $initialContractValue = $project->initialContractValue();
+        $totalPaid            = $project->totalCollected();
+        $actualTotal          = $spentBands->sum(fn ($band) => $band->actualClientTotal()) + $generalTotal;
+        $balance              = $actualTotal - $totalPaid;
+
+        return view('reports.statement-summary', compact(
+            'project', 'spentBands', 'generalTotal', 'initialContractValue', 'totalPaid', 'actualTotal', 'balance'
+        ));
+    }
+
     // Printable internal cost statement for a whole project — every band, every
     // purchase (item, qty, real cost, supplier), returns, wages, and the total
     // cost per band and for the project. Admin-only: shows real cost & profit,

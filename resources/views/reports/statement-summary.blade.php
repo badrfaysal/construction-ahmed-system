@@ -1,12 +1,12 @@
-﻿@extends('layouts.app')
-@section('title', 'كشف حساب — ' . $project->name)
-@section('page-title', 'كشف حساب العميل')
+@extends('layouts.app')
+@section('title', 'كشف حساب مختصر — ' . $project->name)
+@section('page-title', 'كشف حساب العميل — مختصر')
 
 @section('content')
 <div class="page-head no-print">
-  <div><h3>كشف حساب — {{ $project->name }}</h3><p>{{ $project->client->name }}</p></div>
+  <div><h3>كشف حساب مختصر — {{ $project->name }}</h3><p>{{ $project->client->name }}</p></div>
   <div class="btn-row">
-    <a href="{{ route('reports.statement.summary', $project) }}" class="btn ghost">الكشف المختصر</a>
+    <a href="{{ route('reports.statement', $project) }}" class="btn ghost">الكشف التفصيلي</a>
     <button onclick="window.print()" class="btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg>
       طباعة / حفظ PDF
@@ -24,7 +24,7 @@
       <p>{{ $settings->company_tagline }} @if($settings->company_phone)· هاتف {{ $settings->company_phone }}@endif @if($settings->company_registration)· سجل تجاري {{ $settings->company_registration }}@endif</p>
     </div>
     <div class="meta">
-      <b>كشف حساب</b><br>
+      <b>كشف حساب مختصر</b><br>
       رقم: INV-{{ 1000 + $project->id }}<br>
       التاريخ: {{ now()->format('d/m/Y') }}
     </div>
@@ -45,58 +45,30 @@
       <div class="st-box due"><div class="l">المتبقي</div><div class="v">{{ \App\Support\Money::format($balance) }} ج.م</div></div>
     </div>
 
-    {{-- Per-band expense breakdown --}}
-    <div class="st-sec">تفاصيل المصروفات لكل بند</div>
+    {{-- Per-band totals only — no material/quantity detail --}}
+    <div class="st-sec">تكلفة كل بند</div>
     <table class="st-table">
-      <thead><tr><th>التاريخ</th><th>البيان</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead>
+      <thead><tr><th>البند</th><th>الحالة</th><th class="num">التكلفة الإجمالية</th></tr></thead>
       <tbody>
         @forelse($spentBands as $band)
-          <tr class="grp">
-            <td colspan="6">بند: {{ $band->name }} <span class="bt">إجمالي البند: {{ \App\Support\Money::format($band->actualClientTotal()) }} ج.م</span></td>
-          </tr>
-          @foreach($band->materials->sortBy('date') as $m)
-            <tr>
-              <td>{{ $m->date->format('Y-m-d') }}</td>
-              <td>{{ $m->item }}</td>
-              <td>{{ \App\Support\Money::format($m->netQty(), 1) }}</td>
-              <td>{{ $m->unit }}</td>
-              <td>{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
-              <td><b>{{ \App\Support\Money::format($m->netClientCost()) }}</b></td>
-            </tr>
-          @endforeach
-          @if($band->labor_amount > 0)
-            <tr>
-              <td>{{ $band->labor_date?->format('Y-m-d') ?? '—' }}</td>
-              <td>مصنعية وتنفيذ — {{ $band->team_name ?: '—' }} ({{ $band->contract_type ?: '—' }})</td>
-              <td>—</td><td>—</td><td>—</td>
-              <td><b>{{ \App\Support\Money::format($band->laborClientPrice()) }}</b></td>
-            </tr>
-          @endif
-          <tr class="sub">
-            <td colspan="5" style="text-align:left">إجمالي بند {{ $band->name }}</td>
-            <td>{{ \App\Support\Money::format($band->actualClientTotal()) }} ج.م</td>
+          <tr>
+            <td><strong>{{ $band->name }}</strong></td>
+            <td><span class="tag {{ $band->status === 'done' ? 'green' : ($band->status === 'active' ? 'blue' : 'gray') }}">{{ $band->status === 'done' ? 'مكتمل' : ($band->status === 'active' ? 'جاري' : 'معلق') }}</span></td>
+            <td class="num"><b>{{ \App\Support\Money::format($band->actualClientTotal()) }} ج.م</b></td>
           </tr>
         @empty
-          <tr><td colspan="6" class="muted" style="text-align:center;padding:20px">لا توجد بنود بدأ العمل بها بعد</td></tr>
+          <tr><td colspan="3" class="muted" style="text-align:center;padding:20px">لا توجد بنود بدأ العمل بها بعد</td></tr>
         @endforelse
-        @if($generalMaterials->count())
-          <tr class="grp">
-            <td colspan="6">مصروفات عامة على المشروع <span class="bt">الإجمالي: {{ \App\Support\Money::format($generalMaterials->sum(fn($m) => $m->netClientCost())) }} ج.م</span></td>
+        @if($generalTotal > 0)
+          <tr>
+            <td><strong>مصروفات عامة على المشروع</strong></td>
+            <td>—</td>
+            <td class="num"><b>{{ \App\Support\Money::format($generalTotal) }} ج.م</b></td>
           </tr>
-          @foreach($generalMaterials as $m)
-            <tr>
-              <td>{{ $m->date->format('Y-m-d') }}</td>
-              <td>{{ $m->item }}</td>
-              <td>{{ $m->category === 'misc' ? '—' : \App\Support\Money::format($m->netQty(), 1) }}</td>
-              <td>{{ $m->category === 'misc' ? '—' : $m->unit }}</td>
-              <td>{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
-              <td><b>{{ \App\Support\Money::format($m->netClientCost()) }}</b></td>
-            </tr>
-          @endforeach
         @endif
         <tr class="sub" style="background:var(--accent-soft)">
-          <td colspan="5" style="text-align:left;color:var(--accent-ink)">إجمالي المستحق حتى الآن</td>
-          <td style="color:var(--accent-ink)">{{ \App\Support\Money::format($actualTotal) }} ج.م</td>
+          <td colspan="2" style="text-align:left;color:var(--accent-ink)">إجمالي المستحق حتى الآن</td>
+          <td class="num" style="color:var(--accent-ink)">{{ \App\Support\Money::format($actualTotal) }} ج.م</td>
         </tr>
       </tbody>
     </table>
@@ -129,7 +101,7 @@
   </div>
 
   <div class="st-foot">
-    <span>كشف تفصيلي معتمد بكل بند ومصروفاته وكمياته وتواريخه.</span>
+    <span>كشف مختصر — إجمالي كل بند فقط بدون تفاصيل الخامات والكميات.</span>
     <span>توقيع الشركة: ____________</span>
   </div>
 </div>

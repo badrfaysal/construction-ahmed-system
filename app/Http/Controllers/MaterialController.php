@@ -105,7 +105,7 @@ class MaterialController extends Controller
             'groups'                        => ['required', 'array', 'min:1'],
             'groups.*.band_id'              => ['nullable', 'exists:sy2_project_bands,id'],
             'groups.*.supplier_id'          => ['nullable', 'exists:sy2_suppliers,id'],
-            'groups.*.account_id'           => ['required', 'integer', 'exists:accounts,id'],
+            'groups.*.account_id'           => ['required_unless:groups.*.payment_status,deferred', 'nullable', 'integer', 'exists:accounts,id'],
             'groups.*.date'                 => ['required', 'date'],
             'groups.*.payment_status'       => ['nullable', 'in:paid,partial,deferred'],
             'groups.*.paid_amount'          => ['nullable', 'numeric', 'min:0'],

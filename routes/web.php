@@ -144,6 +144,7 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::get('/reports/profitability', [ReportController::class, 'profitability'])->name('reports.profitability');
     Route::get('/reports/dashboard', [ReportController::class, 'dashboard'])->name('reports.dashboard');
     Route::get('/projects/{project}/statement', [ReportController::class, 'clientStatement'])->name('reports.statement');
+    Route::get('/projects/{project}/statement/summary', [ReportController::class, 'clientStatementSummary'])->name('reports.statement.summary');
 
     // Analytics (التحليلات) + technicians labor report
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');

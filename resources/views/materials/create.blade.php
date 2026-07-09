@@ -198,7 +198,7 @@ function itemRowHtml(g, i) {
       <div class="row3">
         <div class="field" style="margin:0">
           <label>الوحدة</label>
-          <input type="text" name="groups[${g}][items][${i}][unit]" placeholder="شيكارة" required list="units-list">
+          <input type="text" name="groups[${g}][items][${i}][unit]" value="وحدة" required list="units-list">
         </div>
         <div class="field" style="margin:0">
           <label>الكمية</label>
@@ -290,9 +290,9 @@ function addGroup() {
       {{-- Payment type for this purchase group --}}
       <div style="background:var(--bg);border-radius:8px;padding:14px 16px;margin-bottom:14px">
         <div style="margin-bottom:10px;font-size:.85rem;font-weight:600;color:var(--text-muted)">طريقة دفع هذا الشراء</div>
-        <div class="field" style="max-width:320px;margin-bottom:12px">
+        <div class="field" style="max-width:320px;margin-bottom:12px" id="wallet-row-${g}">
           <label style="display:flex;align-items:center;gap:5px;font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg> المحفظة (الصرف منها) *</label>
-          <select name="groups[${g}][account_id]" required>${walletOptionsHtml}</select>
+          <select name="groups[${g}][account_id]" id="wallet-${g}" required>${walletOptionsHtml}</select>
         </div>
         <div style="display:flex;gap:16px;flex-wrap:wrap">
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
@@ -335,6 +335,18 @@ function togglePaidAmt(g, val) {
     row.style.display = 'none';
     inp.required = false;
     inp.value = '';
+  }
+
+  // آجل بالكامل = مفيش فلوس بتتصرف دلوقتي، فمفيش داعي تختار محفظة
+  const walletRow = document.getElementById('wallet-row-' + g);
+  const walletSel = document.getElementById('wallet-' + g);
+  if (val === 'deferred') {
+    walletRow.style.display = 'none';
+    walletSel.required = false;
+    walletSel.selectedIndex = 0;
+  } else {
+    walletRow.style.display = 'block';
+    walletSel.required = true;
   }
 }
 

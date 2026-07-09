@@ -29,7 +29,10 @@
               <td class="num">{{ \App\Support\Money::format($project->contract_value) }}</td>
               <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($project->total_paid) }}</td>
               <td class="num" style="color:{{ $project->balance > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($project->balance) }}</td>
-              <td><a href="{{ route('reports.statement', $project) }}" class="btn ghost sm">عرض الكشف</a></td>
+              <td style="white-space:nowrap">
+                <a href="{{ route('reports.statement', $project) }}" class="btn ghost sm">تفصيلي</a>
+                <a href="{{ route('reports.statement.summary', $project) }}" class="btn ghost sm">مختصر</a>
+              </td>
             </tr>
           @endforeach
         </tbody>
