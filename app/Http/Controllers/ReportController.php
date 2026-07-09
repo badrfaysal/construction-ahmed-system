@@ -261,7 +261,7 @@ class ReportController extends Controller
     {
         abort_unless(auth()->user()->canSeeFinancials(), 403);
 
-        $project->load(['client', 'bands.materials.returns', 'bands.workers']);
+        $project->load(['client', 'bands.materials.returns', 'bands.workers.payments']);
 
         $area = (float) $project->area;
 
@@ -279,6 +279,16 @@ class ReportController extends Controller
                 ->sortByDesc('cost')
                 ->values();
 
+            $workers = $band->workers->map(fn ($w) => (object) [
+                'name'          => $w->name,
+                'contract_type' => $w->contractTypeAr(),
+                'qty'           => in_array($w->contract_type, ['per_meter','per_piece','daily']) ? $w->contract_qty : null,
+                'unit_rate'     => in_array($w->contract_type, ['per_meter','per_piece','daily']) ? (float) $w->contract_unit_rate : null,
+                'amount'        => (float) $w->amount,
+                'paid'          => (float) $w->paidTotal(),
+                'remaining'     => (float) $w->remaining(),
+            ])->sortByDesc('amount')->values();
+
             $materialCost = $materials->sum('cost');
             $laborCost    = (float) $band->labor_amount;
             $totalCost    = $materialCost + $laborCost;
@@ -286,6 +296,7 @@ class ReportController extends Controller
             return (object) [
                 'band'          => $band,
                 'materials'     => $materials,
+                'workers'       => $workers,
                 'material_cost' => $materialCost,
                 'labor_cost'    => $laborCost,
                 'total_cost'    => $totalCost,

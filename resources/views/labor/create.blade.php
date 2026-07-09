@@ -70,8 +70,15 @@ function addWorker(prefill = null) {
   updateWorkerUI(document.querySelector(`.worker-row[data-worker="${g}"]`));
 }
 
-// Start with one empty worker row ready to fill in
-addWorker();
+// لو الفورم رجع بعد فشل فاليديشن، رجّع نفس صفوف الفنيين اللي المستخدم كتبها
+// بدل ما نبدأ بصف فاضي واحد ونضيع كل اللي كان مكتوب
+@if(count(old('workers', [])))
+  @foreach(old('workers') as $ow)
+    addWorker(@json($ow));
+  @endforeach
+@else
+  addWorker();
+@endif
 </script>
 @endpush
 @endsection

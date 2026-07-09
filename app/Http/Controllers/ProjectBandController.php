@@ -6,18 +6,32 @@ use App\Models\Project;
 use App\Models\ProjectBand;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ProjectBandController extends Controller
 {
     // Show form to add a new band (work phase) to a project
     public function create(Project $project)
     {
+        // مشروع اتقسّط بالكامل يقفل إضافة بنود جديدة خالص — رجّع قبل ما نعرض
+        // الفورم أصلاً بدل ما المستخدم يملاها ويكتشف الرفض بعد كده
+        if ($project->hasWholeProjectInstallmentContract()) {
+            return redirect()->route('projects.show', $project)
+                ->with('error', 'تم تقسيط المشروع بالكامل — لا يمكن إضافة بنود جديدة لهذا المشروع.');
+        }
+
         return view('bands.create', compact('project'));
     }
 
     // Save a new band under the given project
     public function store(Request $request, Project $project)
     {
+        if ($project->hasWholeProjectInstallmentContract()) {
+            throw ValidationException::withMessages([
+                'name' => 'تم تقسيط المشروع بالكامل — لا يمكن إضافة بنود جديدة لهذا المشروع.',
+            ]);
+        }
+
         $this->stripEmptyWorkers($request);
         $data = $this->validateData($request);
         $workers = $data['workers'] ?? [];
@@ -93,10 +107,13 @@ class ProjectBandController extends Controller
     }
 
     // JSON list of a project's bands — used by materials/create.blade.php
-    // to refill the band dropdown when the project select changes
+    // to refill the band dropdown when the project select changes. Flags
+    // bands already under their own installment contract so the UI can grey
+    // them out (buying materials into them is blocked server-side too).
     public function bandsJson(Project $project)
     {
-        return $project->bands()->orderBy('sort_order')->get(['id', 'name']);
+        return $project->bands()->orderBy('sort_order')->get(['id', 'name'])
+            ->map(fn ($b) => ['id' => $b->id, 'name' => $b->name, 'has_contract' => $b->hasInstallmentContract()]);
     }
 
     // A band always ships with at least one blank worker row in the UI as a

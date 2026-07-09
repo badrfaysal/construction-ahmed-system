@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'الموردون')
 @section('page-title', 'الموردون')
 
@@ -18,6 +18,16 @@
   </div>
 </div>
 
+<form method="GET" class="filter-bar">
+  @include('partials._sort-select', ['options' => [
+    'name'        => 'أبجديًا (أ-ي)',
+    'newest'      => 'الأحدث',
+    'oldest'      => 'الأقدم',
+    'spent_desc'  => 'الأعلى إنفاقًا',
+    'spent_asc'   => 'الأقل إنفاقًا',
+  ]])
+</form>
+
 @if($suppliers->count())
   <div class="sup-grid">
     @foreach($suppliers as $s)
@@ -32,15 +42,15 @@
         </div>
         <div class="kv">
           <span class="k">إجمالي المشتريات</span>
-          <span class="v tnum" style="color:var(--warn)">{{ number_format($s->total_spent) }} ج.م</span>
+          <span class="v tnum" style="color:var(--warn)">{{ \App\Support\Money::format($s->total_spent) }} ج.م</span>
         </div>
         <div class="kv">
           <span class="k">إجمالي المرتجعات</span>
-          <span class="v tnum" style="color:var(--pos)">{{ number_format($s->total_returns) }} ج.م</span>
+          <span class="v tnum" style="color:var(--pos)">{{ \App\Support\Money::format($s->total_returns) }} ج.م</span>
         </div>
         <div class="kv">
           <span class="k">الصافي</span>
-          <span class="v tnum">{{ number_format($s->total_spent - $s->total_returns) }} ج.م</span>
+          <span class="v tnum">{{ \App\Support\Money::format($s->total_spent - $s->total_returns) }} ج.م</span>
         </div>
       </a>
     @endforeach

@@ -1,4 +1,4 @@
-{{-- الـ <select> نفسه — مفصول عشان يتقدر يتطبع سواء لوحده (bare) أو جوّه wrapper.
+﻿{{-- الـ <select> نفسه — مفصول عشان يتقدر يتطبع سواء لوحده (bare) أو جوّه wrapper.
      لو $required=true بيبقى إجباري، والخيار الأول placeholder مِتعطّل عشان يجبر المستخدم يختار. --}}
 @php $required = $required ?? false; @endphp
 <select name="{{ $name }}"
@@ -15,7 +15,7 @@
       @foreach($group as $w)
         <option value="{{ $w->id }}"
           @selected((string) $selected === (string) $w->id)>
-          {{ $w->account_name }}@if($w->id == $defaultId) ★@endif — {{ number_format((float) $w->balance) }} ج
+          {{ $w->account_name }}@if($w->id == $defaultId) ★@endif — {{ \App\Support\Money::format($w->balance) }} ج
         </option>
       @endforeach
     </optgroup>

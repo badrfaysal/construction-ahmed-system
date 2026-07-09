@@ -17,7 +17,12 @@ class QuoteController extends Controller
     {
         $tab = $request->get('tab', 'all');
 
-        $query = Quote::with('bands.items')->orderByDesc('date');
+        $query = Quote::with('bands.items');
+
+        match ($request->get('sort', 'newest')) {
+            'oldest' => $query->orderBy('date')->orderBy('id'),
+            default  => $query->orderByDesc('date')->orderByDesc('id'),
+        };
 
         if ($tab !== 'all') {
             $query->where('status', $tab);

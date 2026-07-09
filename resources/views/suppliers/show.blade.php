@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', $supplier->name)
 @section('page-title', $supplier->name)
 
@@ -17,15 +17,15 @@
 <div class="grid cols-3" style="margin-bottom:24px">
   <div class="card stat">
     <div class="top"><span class="label">إجمالي المشتريات</span></div>
-    <div class="val tnum" style="color:var(--warn)">{{ number_format($supplier->total_spent) }} <small>ج.م</small></div>
+    <div class="val tnum" style="color:var(--warn)">{{ \App\Support\Money::format($supplier->total_spent) }} <small>ج.م</small></div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">المرتجعات</span></div>
-    <div class="val tnum" style="color:var(--pos)">{{ number_format($supplier->total_returns) }} <small>ج.م</small></div>
+    <div class="val tnum" style="color:var(--pos)">{{ \App\Support\Money::format($supplier->total_returns) }} <small>ج.م</small></div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">الصافي</span></div>
-    <div class="val tnum">{{ number_format($supplier->total_spent - $supplier->total_returns) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($supplier->total_spent - $supplier->total_returns) }} <small>ج.م</small></div>
   </div>
 </div>
 
@@ -55,9 +55,9 @@
               <td class="muted">{{ $m->band?->name ?? '—' }}</td>
               <td class="num">{{ number_format($m->qty, 1) }}</td>
               <td class="muted">{{ $m->unit }}</td>
-              <td class="num">{{ number_format($m->unit_price) }}</td>
-              <td class="num muted">{{ number_format($m->returnedQty(), 1) }}</td>
-              <td class="num">{{ number_format($m->netCost()) }}</td>
+              <td class="num">{{ \App\Support\Money::format($m->unit_price) }}</td>
+              <td class="num muted">{{ \App\Support\Money::format($m->returnedQty(), 1) }}</td>
+              <td class="num">{{ \App\Support\Money::format($m->netCost()) }}</td>
               <td class="muted">{{ $m->date->format('d/m/Y') }}</td>
             </tr>
           @endforeach

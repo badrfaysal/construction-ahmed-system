@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 class SupplierController extends Controller
 {
     // List all suppliers with aggregated stats from materials
-    public function index()
+    public function index(Request $request)
     {
         // Load each supplier with a summary of their total deals
         $suppliers = Supplier::withCount('materials')
@@ -24,6 +24,14 @@ class SupplierController extends Controller
             $s->total_returns = $s->materials->sum(fn ($m) => $m->returnedQty() * $m->unit_price);
             return $s;
         });
+
+        $suppliers = match ($request->get('sort', 'name')) {
+            'newest'      => $suppliers->sortByDesc('id'),
+            'oldest'      => $suppliers->sortBy('id'),
+            'spent_desc'  => $suppliers->sortByDesc('total_spent'),
+            'spent_asc'   => $suppliers->sortBy('total_spent'),
+            default       => $suppliers->sortBy('name'),
+        }->values();
 
         return view('suppliers.index', compact('suppliers'));
     }

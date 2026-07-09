@@ -1,9 +1,8 @@
-@php
+﻿@php
     // مطابق لكشف حساب العقد في السيستم الأول — بس بداتا العقود المربوطة بالمشاريع.
     if (!function_exists('fmtMoney')) {
         function fmtMoney($val) {
-            $v = round((float) $val, 2);
-            return fmod($v, 1.0) === 0.0 ? number_format($v, 0, '.', ',') : number_format($v, 2, '.', ',');
+            return \App\Support\Money::format($val);
         }
     }
     $cName        = $customerName;
@@ -148,7 +147,7 @@
                   <select name="account_id" class="form-select form-select-sm" required>
                     <option value="" disabled {{ $c->account_id ? '' : 'selected' }}>— اختر المحفظة —</option>
                     @foreach(($wallets ?? collect()) as $w)
-                      <option value="{{ $w->id }}" @selected($c->account_id == $w->id)>{{ $w->account_name }} — {{ number_format((float)$w->balance) }} ج</option>
+                      <option value="{{ $w->id }}" @selected($c->account_id == $w->id)>{{ $w->account_name }} — {{ \App\Support\Money::format($w->balance) }} ج</option>
                     @endforeach
                   </select></div>
                 <div style="flex:1;min-width:110px"><label class="small fw-bold d-block">ملاحظات</label><input type="text" name="notes" class="form-control form-control-sm" placeholder="اختياري"></div>

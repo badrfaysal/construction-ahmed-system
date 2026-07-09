@@ -8,6 +8,7 @@ use App\Models\Project;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class ReceivablesController extends Controller
 {
@@ -21,7 +22,7 @@ class ReceivablesController extends Controller
             'materials.returns',
             'contracts.payments',
             'contracts.band',
-            'clientPayments',
+            'clientPayments.band',
             'installments',
         ])->orderByDesc('created_at')->get();
 
@@ -87,26 +88,39 @@ class ReceivablesController extends Controller
         $remaining   = $hasContract ? $project->receivableExcess() : $project->amountDue();
 
         if ($hasContract && $remaining <= 0.009) {
-            return back()->with('error', 'مفيش مستحق إضافي خارج نطاق عقد التقسيط — التحصيل على العقد نفسه بيتم من صفحة الأقساط.');
+            return back()->with('error', 'مفيش مستحق إضافي خارج نطاق عقد التقسيط — التحصيل على العقد نفسه بيتم من صفحة الأقساط.')
+                ->with('reopen_project', $project->id);
         }
 
-        $data = $request->validate([
+        // بنستخدم Validator يدويًا (بدل $request->validate() اللي بيرمي فورًا)
+        // عشان نقدر نلحق 'reopen_project' بالـ redirect ونفتح مودال المشروع ده
+        // تاني تلقائيًا لو الفاليديشن فشلت — من غيرها المودال بيتقفل والمستخدم
+        // مش هيشوف مكان الخطأ ولا يفقد اللي كتبه.
+        $validator = Validator::make($request->all(), [
             'amount'     => ['required', 'numeric', 'min:0.01'],
+            'discount'   => ['nullable', 'numeric', 'min:0'],
             'account_id' => ['required', 'integer', 'exists:accounts,id'],
             'band_id'    => ['nullable', 'integer', 'exists:sy2_project_bands,id'],
             'date'       => ['required', 'date'],
-            'method'     => ['nullable', 'string', 'max:50'],
             'notes'      => ['nullable', 'string', 'max:255'],
         ]);
 
-        // البند لازم يكون تابع لنفس المشروع (لو اتحدد بند معيّن)
-        if (! empty($data['band_id']) && ! $project->bands()->whereKey($data['band_id'])->exists()) {
-            return back()->with('error', 'البند المختار مش تابع لهذا المشروع.');
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput()->with('reopen_project', $project->id);
         }
 
-        if ($data['amount'] > $remaining + 0.01) {
+        $data = $validator->validated();
+        $discount = (float) ($data['discount'] ?? 0);
+
+        // البند لازم يكون تابع لنفس المشروع (لو اتحدد بند معيّن)
+        if (! empty($data['band_id']) && ! $project->bands()->whereKey($data['band_id'])->exists()) {
+            return back()->with('error', 'البند المختار مش تابع لهذا المشروع.')->with('reopen_project', $project->id);
+        }
+
+        if ($data['amount'] + $discount > $remaining + 0.01) {
             $label = $hasContract ? 'المستحق الإضافي خارج عقد التقسيط' : 'المتبقي على العميل';
-            return back()->with('error', 'المبلغ أكبر من ' . $label . ' (' . number_format($remaining, 2) . ' ج).');
+            return back()->with('error', 'المجموع (تحصيل + خصم) أكبر من ' . $label . ' (' . number_format($remaining, 2) . ' ج).')
+                ->with('reopen_project', $project->id);
         }
 
         // وصف الدفعة: عامة للمشروع أو تحت بند محدد
@@ -125,6 +139,7 @@ class ReceivablesController extends Controller
             'type'        => 'تحصيل من العميل',
             'party'       => $project->client->name ?? null,
             'amount'      => $data['amount'],
+            'discount'    => $discount,
             'date'        => $data['date'],
             'description' => $desc,
             'ref_type'    => 'client_payment',

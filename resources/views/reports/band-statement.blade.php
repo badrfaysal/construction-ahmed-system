@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'كشف حساب بند: ' . $band->name)
 @section('page-title', 'كشف حساب البند')
 
@@ -45,9 +45,9 @@
 
     {{-- Summary --}}
     <div class="st-summary">
-      <div class="st-box tot"><div class="l">إجمالي التكلفة</div><div class="v">{{ number_format($totalCost) }} ج.م</div></div>
-      <div class="st-box"><div class="l">مستحق العميل</div><div class="v">{{ number_format($actualTotal) }} ج.م</div></div>
-      <div class="st-box {{ $profit >= 0 ? 'paid' : 'due' }}"><div class="l">الربح</div><div class="v">{{ number_format($profit) }} ج.م</div></div>
+      <div class="st-box tot"><div class="l">إجمالي التكلفة</div><div class="v">{{ \App\Support\Money::format($totalCost) }} ج.م</div></div>
+      <div class="st-box"><div class="l">مستحق العميل</div><div class="v">{{ \App\Support\Money::format($actualTotal) }} ج.م</div></div>
+      <div class="st-box {{ $profit >= 0 ? 'paid' : 'due' }}"><div class="l">الربح</div><div class="v">{{ \App\Support\Money::format($profit) }} ج.م</div></div>
     </div>
 
     {{-- Materials --}}
@@ -61,21 +61,21 @@
             <td>
               {{ $m->item }}
               @if($m->returnedQty() > 0)
-                <span style="color:var(--neg);font-size:10.5px">(مرتجع {{ number_format($m->returnedQty(), 1) }})</span>
+                <span style="color:var(--neg);font-size:10.5px">(مرتجع {{ \App\Support\Money::format($m->returnedQty(), 1) }})</span>
               @endif
             </td>
             <td class="muted">{{ $m->supplier?->name ?? '—' }}</td>
-            <td class="num">{{ number_format($m->netQty(), 1) }} {{ $m->unit }}</td>
-            <td class="num">{{ number_format($m->unit_price) }}</td>
-            <td class="num">{{ number_format($m->clientUnitPrice()) }}</td>
-            <td class="num"><b>{{ number_format($m->netCost()) }}</b></td>
+            <td class="num">{{ \App\Support\Money::format($m->netQty(), 1) }} {{ $m->unit }}</td>
+            <td class="num">{{ \App\Support\Money::format($m->unit_price) }}</td>
+            <td class="num">{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
+            <td class="num"><b>{{ \App\Support\Money::format($m->netCost()) }}</b></td>
           </tr>
         @empty
           <tr><td colspan="7" class="muted" style="text-align:center;padding:16px">لا توجد خامات مسجلة لهذا البند</td></tr>
         @endforelse
         <tr class="sub">
           <td colspan="6" style="text-align:left">إجمالي تكلفة الخامات</td>
-          <td class="num">{{ number_format($materialCost) }} ج.م</td>
+          <td class="num">{{ \App\Support\Money::format($materialCost) }} ج.م</td>
         </tr>
       </tbody>
     </table>
@@ -90,7 +90,7 @@
             <td>{{ $w->name }}</td>
             <td class="muted">{{ $w->specialty ?: '—' }}</td>
             <td class="muted">{{ $w->contractTypeAr() }}</td>
-            <td class="num"><b>{{ number_format($w->amount) }}</b></td>
+            <td class="num"><b>{{ \App\Support\Money::format($w->amount) }}</b></td>
             <td class="num">—</td>
           </tr>
         @empty
@@ -99,8 +99,8 @@
               <td>{{ $band->team_name ?: '—' }}</td>
               <td class="muted">—</td>
               <td class="muted">{{ $band->contract_type ? $band->contractTypeAr() : '—' }}</td>
-              <td class="num"><b>{{ number_format($band->labor_amount) }}</b></td>
-              <td class="num">{{ number_format($band->laborClientPrice()) }}</td>
+              <td class="num"><b>{{ \App\Support\Money::format($band->labor_amount) }}</b></td>
+              <td class="num">{{ \App\Support\Money::format($band->laborClientPrice()) }}</td>
             </tr>
           @else
             <tr><td colspan="5" class="muted" style="text-align:center;padding:16px">لا توجد مصنعية مسجلة لهذا البند</td></tr>
@@ -108,8 +108,8 @@
         @endforelse
         <tr class="sub">
           <td colspan="3" style="text-align:left">إجمالي المصنعية</td>
-          <td class="num">{{ number_format($laborCost) }} ج.م</td>
-          <td class="num">{{ number_format($band->laborClientPrice()) }} ج.م</td>
+          <td class="num">{{ \App\Support\Money::format($laborCost) }} ج.م</td>
+          <td class="num">{{ \App\Support\Money::format($band->laborClientPrice()) }} ج.م</td>
         </tr>
       </tbody>
     </table>
@@ -117,9 +117,9 @@
     {{-- Final summary --}}
     <div class="st-final">
       <table>
-        <tr><td class="muted">إجمالي التكلفة (خامات + مصنعية)</td><td style="text-align:left;font-weight:700">{{ number_format($totalCost) }} ج.م</td></tr>
-        <tr><td class="muted">مستحق العميل عن هذا البند</td><td style="text-align:left;font-weight:700">{{ number_format($actualTotal) }} ج.م</td></tr>
-        <tr class="big"><td>الربح</td><td style="text-align:left">{{ number_format($profit) }} ج.م</td></tr>
+        <tr><td class="muted">إجمالي التكلفة (خامات + مصنعية)</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($totalCost) }} ج.م</td></tr>
+        <tr><td class="muted">مستحق العميل عن هذا البند</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($actualTotal) }} ج.م</td></tr>
+        <tr class="big"><td>الربح</td><td style="text-align:left">{{ \App\Support\Money::format($profit) }} ج.م</td></tr>
       </table>
     </div>
   </div>

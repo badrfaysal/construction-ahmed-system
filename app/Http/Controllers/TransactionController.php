@@ -15,9 +15,14 @@ class TransactionController extends Controller
 {
     public function index(Request $request)
     {
-        $query = AuditLog::with(['project', 'band'])
-            ->orderByDesc('happened_at')
-            ->orderByDesc('id');
+        $query = AuditLog::with(['project', 'band']);
+
+        match ($request->get('sort', 'newest')) {
+            'oldest'      => $query->orderBy('happened_at')->orderBy('id'),
+            'amount_desc' => $query->orderByDesc('amount'),
+            'amount_asc'  => $query->orderBy('amount'),
+            default       => $query->orderByDesc('happened_at')->orderByDesc('id'),
+        };
 
         if ($pid = $request->get('project_id')) {
             $query->where('project_id', $pid);

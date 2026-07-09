@@ -10,6 +10,7 @@ use App\Models\Project;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 // منظومة العقود والأقساط (بروح السيستم الأول) — العقد هنا مربوط بمشروع/عميل.
@@ -35,23 +36,49 @@ class InstallmentController extends Controller
 
         // كل المشاريع متاحة لعمل عقد جديد (يُسمح بعقد للمشروع كامل أو لبند محدد،
         // وبأكثر من عقد للمشروع الواحد) + قيمة فاتورة كل مشروع/بند للعميل
-        $projectsForContract = Project::with(['client', 'bands.materials.returns', 'bands.workers', 'materials.returns'])
+        $projectsForContract = Project::with(['client', 'bands.materials.returns', 'bands.workers', 'materials.returns', 'clientPayments', 'contracts'])
             ->orderByDesc('id')
             ->get()
             ->map(function ($p) {
                 $billed = $p->actualClientTotal();
+
+                // فلوس اتحصّلت من العميل مباشرة (صفحة المستحقات) — بتتملى تلقائي
+                // في «المقدم المدفوع الآن» وقت إنشاء العقد، بمعياريْن:
+                //  - already_paid: نطاق ضيّق (تحت البند المختار بس، أو دفعات
+                //    عامة لو المشروع كامل)، ده الافتراضي.
+                //  - already_paid_total: كل فلوس المشروع مهما كان البند —
+                //    بيتفعّل لما المستخدم يحدد checkbox «اعتبر كل المبلغ...».
+                // في الحالتين ناقص أي مقدم اتسجّل بالفعل لعقود سابقة (عشان
+                // مايتحسبش مرتين). كل دفعة = amount + discount (الخصم بيتحسب
+                // كأنه اتحصّل برضو، بروح Project::totalCollected()).
+                $paidSum = fn ($payments) => (float) $payments->sum(fn ($t) => (float) $t->amount + (float) $t->discount);
+
+                $totalPaidAll = $paidSum($p->clientPayments);
+                $totalClaimed = (float) $p->contracts->sum('down_payment');
+                $totalUnclaimed = max(0, $totalPaidAll - $totalClaimed);
+
                 return (object) [
-                    'id'            => $p->id,
-                    'name'          => $p->name,
-                    'client_name'   => $p->client->name ?? '',
-                    'client_phone'  => $p->client->phone ?? '',
-                    'billed'        => round($billed, 2),
+                    'id'                 => $p->id,
+                    'name'               => $p->name,
+                    'client_name'        => $p->client->name ?? '',
+                    'client_phone'       => $p->client->phone ?? '',
+                    'billed'             => round($billed, 2),
+                    'already_paid'       => round($totalUnclaimed, 2),
+                    'already_paid_total' => round($totalUnclaimed, 2),
                     // بنود المشروع مع قيمة كل بند للعميل — لتقسيط بند محدد
-                    'bands'         => $p->bands->map(fn ($b) => (object) [
-                        'id'     => $b->id,
-                        'name'   => $b->name,
-                        'billed' => round($b->actualClientTotal(), 2),
-                    ])->values(),
+                    'bands'         => $p->bands->map(function ($b) use ($p, $paidSum, $totalUnclaimed) {
+                        $bandPaid = max(0,
+                            $paidSum($p->clientPayments->where('band_id', $b->id))
+                            - (float) $p->contracts->where('band_id', $b->id)->sum('down_payment')
+                        );
+                        return (object) [
+                            'id'                 => $b->id,
+                            'name'               => $b->name,
+                            'billed'             => round($b->actualClientTotal(), 2),
+                            'already_paid'       => round($bandPaid, 2),
+                            'already_paid_total' => round($totalUnclaimed, 2),
+                        ];
+                    })->values(),
                 ];
             });
 
@@ -140,7 +167,12 @@ class InstallmentController extends Controller
     // تسجيل دفعة تحصيل على عقد (تحصيل كامل / قسط شهري / جزئي + خصم اختياري)
     public function pay(Request $request, InstallmentContract $contract)
     {
-        $data = $request->validate([
+        // Manual Validator (not $request->validate()) + explicit try/catch
+        // around the business-rule check below — both paths need to flash
+        // reopen_phone/reopen_name on FAILURE too, not just success, so the
+        // customer's statement modal reopens with the error visible instead
+        // of silently closing and losing what was typed.
+        $validator = Validator::make($request->all(), [
             'amount_paid'      => ['required', 'numeric', 'min:0'],
             'discount_applied' => ['nullable', 'numeric', 'min:0'],
             'account_id'       => ['required', 'integer', 'exists:accounts,id'],
@@ -149,28 +181,58 @@ class InstallmentController extends Controller
             'notes'            => ['nullable', 'string', 'max:255'],
         ]);
 
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput()
+                ->with('reopen_phone', $contract->customer_phone)
+                ->with('reopen_name', $contract->customer_name)
+                ->with('reopen_contract_id', $contract->id)
+                ->with('reopen_form', 'pay');
+        }
+
+        $data = $validator->validated();
         $amount   = (float) $data['amount_paid'];
         $discount = (float) ($data['discount_applied'] ?? 0);
 
         if ($amount <= 0 && $discount <= 0) {
-            throw ValidationException::withMessages(['amount_paid' => 'أدخل مبلغ تحصيل أو خصم.']);
-        }
-        if ($amount + $discount > (float) $contract->remaining_balance + 0.01) {
-            throw ValidationException::withMessages([
-                'amount_paid' => 'المجموع (تحصيل + خصم) أكبر من المتبقي على العقد (' . number_format($contract->remaining_balance, 2) . ' ج.م).',
-            ]);
+            return back()->withErrors(['amount_paid' => 'أدخل مبلغ تحصيل أو خصم.'])->withInput()
+                ->with('reopen_phone', $contract->customer_phone)
+                ->with('reopen_name', $contract->customer_name)
+                ->with('reopen_contract_id', $contract->id)
+                ->with('reopen_form', 'pay');
         }
 
-        DB::transaction(fn () => InstallmentPayment::create([
-            'contract_id'      => $contract->id,
-            'project_id'       => $contract->project_id,
-            'account_id'       => $data['account_id'] ?? $contract->account_id,
-            'amount_paid'      => $amount,
-            'discount_applied' => $discount,
-            'payment_date'     => $data['payment_date'],
-            'method'           => $data['method'] ?? null,
-            'notes'            => $data['notes'] ?? null,
-        ]));
+        try {
+            // Lock the contract row for the duration of the check + insert so
+            // two concurrent/double-click submissions can't both pass the
+            // remaining-balance check before either one writes (which would
+            // overpay it).
+            DB::transaction(function () use ($contract, $amount, $discount, $data) {
+                $locked = InstallmentContract::whereKey($contract->id)->lockForUpdate()->firstOrFail();
+
+                if ($amount + $discount > (float) $locked->remaining_balance + 0.01) {
+                    throw ValidationException::withMessages([
+                        'amount_paid' => 'المجموع (تحصيل + خصم) أكبر من المتبقي على العقد (' . number_format($locked->remaining_balance, 2) . ' ج.م).',
+                    ]);
+                }
+
+                InstallmentPayment::create([
+                    'contract_id'      => $contract->id,
+                    'project_id'       => $contract->project_id,
+                    'account_id'       => $data['account_id'] ?? $contract->account_id,
+                    'amount_paid'      => $amount,
+                    'discount_applied' => $discount,
+                    'payment_date'     => $data['payment_date'],
+                    'method'           => $data['method'] ?? null,
+                    'notes'            => $data['notes'] ?? null,
+                ]);
+            });
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->validator)->withInput()
+                ->with('reopen_phone', $contract->customer_phone)
+                ->with('reopen_name', $contract->customer_name)
+                ->with('reopen_contract_id', $contract->id)
+                ->with('reopen_form', 'pay');
+        }
 
         return back()
             ->with('success', 'تم تسجيل الدفعة.')
@@ -240,7 +302,7 @@ class InstallmentController extends Controller
     // تعديل عقد قائم — يعيد حساب الخطة ويزامن المقدم في المحفظة لو اتغيّر
     public function update(Request $request, InstallmentContract $contract)
     {
-        $data = $request->validate([
+        $validator = Validator::make($request->all(), [
             'customer_name'      => ['required', 'string', 'max:255'],
             'customer_phone'     => ['nullable', 'string', 'max:30'],
             'product_name'       => ['nullable', 'string', 'max:255'],
@@ -254,6 +316,15 @@ class InstallmentController extends Controller
             'notes'              => ['nullable', 'string'],
         ]);
 
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput()
+                ->with('reopen_phone', $contract->customer_phone)
+                ->with('reopen_name', $contract->customer_name)
+                ->with('reopen_contract_id', $contract->id)
+                ->with('reopen_form', 'edit');
+        }
+
+        $data = $validator->validated();
         $cash   = (float) $data['cash_price'];
         $disc   = (float) ($data['discount'] ?? 0);
         $down   = (float) ($data['down_payment'] ?? 0);
@@ -266,7 +337,11 @@ class InstallmentController extends Controller
         $monthly       = $months > 0 ? ($totalAfterInt - $down) / $months : 0;
 
         if ($down > $afterDisc + 0.01) {
-            throw ValidationException::withMessages(['down_payment' => 'المقدم أكبر من قيمة العقد بعد الخصم.']);
+            return back()->withErrors(['down_payment' => 'المقدم أكبر من قيمة العقد بعد الخصم.'])->withInput()
+                ->with('reopen_phone', $contract->customer_phone)
+                ->with('reopen_name', $contract->customer_name)
+                ->with('reopen_contract_id', $contract->id)
+                ->with('reopen_form', 'edit');
         }
 
         // المتبقي بعد التعديل = (الإجمالي − المقدم) − اللي اتحصّل فعلاً على العقد

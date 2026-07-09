@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'الديون — ما علينا للموردين')
 @section('page-title', 'الديون')
 
@@ -11,11 +11,11 @@
 <div class="grid cols-3" style="margin-bottom:24px">
   <div class="card stat">
     <div class="top"><span class="label">إجمالي الديون المتبقية</span></div>
-    <div class="val tnum" style="color:var(--neg)">{{ number_format($totals['remaining']) }} <small>ج.م</small></div>
+    <div class="val tnum" style="color:var(--neg)">{{ \App\Support\Money::format($totals['remaining']) }} <small>ج.م</small></div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">تم سداده حتى الآن</span></div>
-    <div class="val tnum" style="color:var(--pos)">{{ number_format($totals['paid_so_far']) }} <small>ج.م</small></div>
+    <div class="val tnum" style="color:var(--pos)">{{ \App\Support\Money::format($totals['paid_so_far']) }} <small>ج.م</small></div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">ديون متأخرة</span></div>
@@ -58,7 +58,13 @@
       <a href="{{ request()->fullUrlWithQuery(['status' => 'paid']) }}" class="tab {{ request('status') === 'paid' ? 'active' : '' }}">مسدد</a>
     </div>
   </div>
-  @if(request()->hasAny(['project_id','supplier_id','status']))
+  @include('partials._sort-select', ['options' => [
+    'due_asc'     => 'الأقرب استحقاقًا',
+    'newest'      => 'الأحدث إضافة',
+    'amount_desc' => 'الأعلى قيمة',
+    'amount_asc'  => 'الأقل قيمة',
+  ]])
+  @if(request()->hasAny(['project_id','supplier_id','status','sort']))
     <div class="f-actions">
       <a href="{{ route('debts.index') }}" class="btn ghost sm">مسح الفلتر</a>
     </div>
@@ -90,9 +96,9 @@
               <td><span class="tag gray">{{ $debt->project?->name ?? '—' }}</span></td>
               <td class="muted">{{ $debt->band?->name ?? '—' }}</td>
               <td class="muted">{{ $debt->supplier?->name ?? '—' }}</td>
-              <td class="num">{{ number_format($debt->total_amount) }}</td>
-              <td class="num" style="color:var(--pos)">{{ number_format($debt->paid_amount) }}</td>
-              <td class="num" style="color:var(--neg)"><strong>{{ number_format($debt->remaining()) }}</strong></td>
+              <td class="num">{{ \App\Support\Money::format($debt->total_amount) }}</td>
+              <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($debt->paid_amount) }}</td>
+              <td class="num" style="color:var(--neg)"><strong>{{ \App\Support\Money::format($debt->remaining()) }}</strong></td>
               <td class="muted">
                 @if($debt->due_date)
                   <span @if($debt->isOverdue()) style="color:var(--neg)" @endif>{{ $debt->due_date->format('Y-m-d') }}</span>
@@ -134,6 +140,7 @@
         <input type="number" name="amount" id="pay-amount" min="0.01" step="0.01" required>
         <small class="muted" id="pay-max-note"></small>
       </div>
+      @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true])
       <div class="field">
         <label>تاريخ الدفع *</label>
         <input type="date" name="pay_date" value="{{ today()->toDateString() }}" required>
@@ -154,6 +161,8 @@ function openPayModal(id, remaining, desc) {
   document.getElementById('pay-amount').value = remaining;
   document.getElementById('pay-max-note').textContent = 'الحد الأقصى: ' + remaining.toLocaleString('ar-EG') + ' ج.م';
   document.getElementById('pay-form').action = '/debts/' + id + '/pay';
+  const walletSelect = document.querySelector('#pay-form select[name="account_id"]');
+  if (walletSelect) walletSelect.selectedIndex = 0;
   document.getElementById('pay-modal').style.display = 'flex';
 }
 </script>

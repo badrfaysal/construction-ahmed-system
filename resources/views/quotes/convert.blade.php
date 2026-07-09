@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'تحويل عرض لمشروع')
 @section('page-title', 'تحويل عرض ' . $quote->ref . ' لمشروع')
 
@@ -6,7 +6,7 @@
 <div class="page-head">
   <div>
     <h3>تحويل العرض إلى مشروع</h3>
-    <p>{{ $quote->client_name }} — قيمة التعاقد المبدئية {{ number_format($quote->total()) }} ج.م</p>
+    <p>{{ $quote->client_name }} — قيمة التعاقد المبدئية {{ \App\Support\Money::format($quote->total()) }} ج.م</p>
   </div>
   <a href="{{ route('quotes.show', $quote) }}" class="btn ghost">رجوع</a>
 </div>
@@ -49,7 +49,7 @@
   @php $idx = 0; @endphp
 
   @foreach($quote->bands as $band)
-    <div class="section-label" style="margin-top:18px">{{ $band->name }} <span class="muted">— {{ number_format($band->price) }} ج.م</span></div>
+    <div class="section-label" style="margin-top:18px">{{ $band->name }} <span class="muted">— {{ \App\Support\Money::format($band->price) }} ج.م</span></div>
     <div class="table-card" style="margin-bottom:14px">
       @if($band->items->count())
         <div class="table-scroll">

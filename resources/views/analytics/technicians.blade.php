@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'تقرير الفنيين')
 @section('page-title', 'تقرير الفنيين والفرق')
 
@@ -24,8 +24,8 @@
             <tr>
               <td><strong>{{ $t->team_name }}</strong></td>
               <td class="num">{{ $t->bands_count }}</td>
-              <td class="num">{{ number_format($t->total_labor) }}</td>
-              <td class="num">{{ number_format($t->total_client_price) }}</td>
+              <td class="num">{{ \App\Support\Money::format($t->total_labor) }}</td>
+              <td class="num">{{ \App\Support\Money::format($t->total_client_price) }}</td>
             </tr>
           @endforeach
         </tbody>
@@ -33,8 +33,8 @@
           <tr>
             <td>الإجماليات</td>
             <td class="num">{{ $technicians->sum('bands_count') }}</td>
-            <td class="num">{{ number_format($technicians->sum('total_labor')) }}</td>
-            <td class="num">{{ number_format($technicians->sum('total_client_price')) }}</td>
+            <td class="num">{{ \App\Support\Money::format($technicians->sum('total_labor')) }}</td>
+            <td class="num">{{ \App\Support\Money::format($technicians->sum('total_client_price')) }}</td>
           </tr>
         </tfoot>
       </table>

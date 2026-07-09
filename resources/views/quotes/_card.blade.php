@@ -1,4 +1,4 @@
-{{-- Single quote card — shared by quotes/index.blade.php and quotes/approved.blade.php --}}
+﻿{{-- Single quote card — shared by quotes/index.blade.php and quotes/approved.blade.php --}}
 <div class="qcard {{ $q->status === 'approved' ? 'approved' : '' }}">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
     <span class="tag {{ $q->statusTag() }}"><span class="dot"></span>{{ $q->statusAr() }}</span>
@@ -26,12 +26,12 @@
       @foreach($q->bands as $band)
         <div class="qband">
           <span class="n">{{ $band->name }}</span>
-          <span class="v">{{ number_format($band->price) }} ج.م</span>
+          <span class="v">{{ \App\Support\Money::format($band->price) }} ج.م</span>
         </div>
         @if($band->items->count())
           <div style="margin:2px 0 6px;font-size:11.5px;color:var(--ink-2)">
             @foreach($band->items as $item)
-              <div>{{ $item->name }} — {{ rtrim(rtrim($item->qty, '0'), '.') }} × {{ number_format($item->unit_price) }}</div>
+              <div>{{ $item->name }} — {{ rtrim(rtrim($item->qty, '0'), '.') }} × {{ \App\Support\Money::format($item->unit_price) }}</div>
             @endforeach
           </div>
         @endif
@@ -41,7 +41,7 @@
 
   <div class="qtot">
     <span style="font-size:12.5px;color:var(--ink-2);font-weight:600">إجمالي عرض السعر</span>
-    <span class="v">{{ number_format($q->total()) }} ج.م</span>
+    <span class="v">{{ \App\Support\Money::format($q->total()) }} ج.م</span>
   </div>
 
   <div class="qfooter">

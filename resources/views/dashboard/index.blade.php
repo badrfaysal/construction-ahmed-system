@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'لوحة التحكم')
 @section('page-title', 'لوحة التحكم')
@@ -16,12 +16,12 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>
       </span>
     </div>
-    <div class="val tnum">{{ number_format($netCapital) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($netCapital) }} <small>ج.م</small></div>
     <div class="cap-breakdown">
-      <div><span>سيولة</span><b>{{ number_format($walletBalance) }}</b></div>
-      <div><span>ديون −</span><b>{{ number_format($supplierDebtsRemaining) }}</b></div>
-      <div><span>مستحق مباشر</span><b>{{ number_format($directReceivables) }}</b></div>
-      <div><span>مستحق تقسيط</span><b>{{ number_format($installmentReceivables) }}</b></div>
+      <div><span>سيولة</span><b>{{ \App\Support\Money::format($walletBalance) }}</b></div>
+      <div><span>ديون −</span><b>{{ \App\Support\Money::format($supplierDebtsRemaining) }}</b></div>
+      <div><span>مستحق مباشر</span><b>{{ \App\Support\Money::format($directReceivables) }}</b></div>
+      <div><span>مستحق تقسيط</span><b>{{ \App\Support\Money::format($installmentReceivables) }}</b></div>
     </div>
   </div>
 
@@ -43,8 +43,8 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>
       </span>
     </div>
-    <div class="val tnum">{{ number_format($totalCollected) }} <small>ج.م</small></div>
-    <div class="note">من إجمالي {{ number_format($totalContract) }} ج.م</div>
+    <div class="val tnum">{{ \App\Support\Money::format($totalCollected) }} <small>ج.م</small></div>
+    <div class="note">من إجمالي {{ \App\Support\Money::format($totalContract) }} ج.م</div>
   </div>
 
   @php $walletIsAdmin = auth()->user()->isAdmin(); @endphp
@@ -120,16 +120,16 @@
               <div class="pc-fin">
                 <div>
                   <div class="l">قيمة التعاقد</div>
-                  <div class="v">{{ number_format($total) }}</div>
+                  <div class="v">{{ \App\Support\Money::format($total) }}</div>
                   @include('partials._actual-vs-initial', ['initial' => $total, 'actual' => $actual])
                 </div>
                 <div>
                   <div class="l">محصّل</div>
-                  <div class="v" style="color:var(--pos)">{{ number_format($paid) }}</div>
+                  <div class="v" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }}</div>
                 </div>
                 <div>
                   <div class="l">متبقي</div>
-                  <div class="v" style="color:var(--warn)">{{ number_format($due) }}</div>
+                  <div class="v" style="color:var(--warn)">{{ \App\Support\Money::format($due) }}</div>
                 </div>
               </div>
             </div>
@@ -211,7 +211,7 @@
                   <span>{{ $tx->date->format('d/m/Y') }}</span>
                 </div>
               </div>
-              <div class="tx-amt">{{ $tx->direction === 'in' ? '+' : '−' }}{{ number_format($tx->amount) }}</div>
+              <div class="tx-amt">{{ $tx->direction === 'in' ? '+' : '−' }}{{ \App\Support\Money::format($tx->amount) }}</div>
             </div>
           @endforeach
         </div>

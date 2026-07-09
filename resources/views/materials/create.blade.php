@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'تسجيل خامات')
 @section('page-title', 'تسجيل خامات')
 
@@ -43,18 +43,23 @@
   <div class="form-card" style="max-width:none;margin-bottom:16px">
     <div class="field" style="margin-bottom:0">
       <label>المشروع *</label>
-      <select name="project_id" id="project_select" required onchange="loadBandsForProject(this.value); updateSupervisionDefault(this)">
+      <select name="project_id" id="project_select" required onchange="loadBandsForProject(this.value); updateSupervisionDefault(this); checkProjectLock(this)">
         <option value="">— اختر المشروع —</option>
         @foreach($projects as $p)
-          <option value="{{ $p->id }}" data-sup="{{ $p->default_supervision_pct > 0 ? $p->default_supervision_pct : $settings->default_supervision_pct }}" {{ $selectedProject?->id == $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
+          <option value="{{ $p->id }}" data-sup="{{ $p->default_supervision_pct > 0 ? $p->default_supervision_pct : $settings->default_supervision_pct }}" data-locked="{{ $p->hasWholeProjectInstallmentContract() ? 1 : 0 }}" {{ $selectedProject?->id == $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
         @endforeach
       </select>
     </div>
   </div>
 
+  <div id="wholeContractBanner" class="flash error" style="display:none">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"/></svg>
+    <div>تم تقسيط هذا المشروع بالكامل — لا يمكن شراء خامات جديدة له.</div>
+  </div>
+
   <div id="groups-container"></div>
 
-  <button type="button" class="btn ghost" style="margin-bottom:20px" onclick="addGroup()">
+  <button type="button" id="addGroupBtn" class="btn ghost" style="margin-bottom:20px" onclick="addGroup()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
     إضافة بند آخر
   </button>
@@ -102,8 +107,17 @@
 @push('scripts')
 <script>
 // Bands of the currently selected project — refreshed whenever the project changes
-let bandsList = @json($bands->map(fn($b) => ['id' => $b->id, 'name' => $b->name]));
+let bandsList = @json($bands);
 let groupCounter = 0;
+
+// مشروع اتقسّط بالكامل يقفل الفورم كله (مفيش خامات جديدة تتضاف له)
+function checkProjectLock(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  const locked = opt?.dataset.locked === '1';
+  document.getElementById('groups-container').style.display = locked ? 'none' : '';
+  document.getElementById('addGroupBtn').disabled = locked;
+  document.getElementById('wholeContractBanner').style.display = locked ? 'flex' : 'none';
+}
 
 // Default supervision % for new item rows — follows the selected project's
 // default (falls back to the global settings value). Editable per row.
@@ -134,7 +148,7 @@ const walletOptionsHtml = `
   @foreach($wallets->groupBy(fn($w) => $w->categoryAr()) as $cat => $grp)
     <optgroup label="{{ $cat }}">
       @foreach($grp as $w)
-        <option value="{{ $w->id }}">{{ $w->account_name }}@if($w->id == \App\Models\Account::WALLET_ID) ★@endif — {{ number_format((float) $w->balance) }} ج</option>
+        <option value="{{ $w->id }}">{{ $w->account_name }}@if($w->id == \App\Models\Account::WALLET_ID) ★@endif — {{ \App\Support\Money::format($w->balance) }} ج</option>
       @endforeach
     </optgroup>
   @endforeach
@@ -143,7 +157,11 @@ const walletOptionsHtml = `
 function bandOptionsHtml() {
   let html = '<option value="">— بند عام (بدون بند) —</option>';
   bandsList.forEach(b => {
-    html += `<option value="${b.id}">${b.name}</option>`;
+    if (b.has_contract) {
+      html += `<option value="${b.id}" disabled>${b.name} (بند مقسط — اعمل بند جديد)</option>`;
+    } else {
+      html += `<option value="${b.id}">${b.name}</option>`;
+    }
   });
   return html;
 }
@@ -322,6 +340,12 @@ function togglePaidAmt(g, val) {
 
 // Start with one band group ready to fill in
 addGroup();
+
+// لو المشروع متحدد مسبقًا من الرابط (project_id) وهو متقسّط بالكامل، اقفل
+// الفورم من أول ما الصفحة تحمّل بدل ما ينتظر المستخدم يغيّر السيلكت
+@if($selectedProject)
+  checkProjectLock(document.getElementById('project_select'));
+@endif
 </script>
 @endpush
 @endsection

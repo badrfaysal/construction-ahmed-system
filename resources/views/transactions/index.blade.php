@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'سجل الحركات')
 @section('page-title', 'سجل الحركات المالية')
 
@@ -13,13 +13,13 @@
   <div class="col-6 col-md-4">
     <div class="card" style="padding:16px 18px">
       <div class="muted" style="font-size:.78rem;margin-bottom:4px">إجمالي الوارد (حي)</div>
-      <div style="font-size:1.25rem;font-weight:700;color:#059669">{{ number_format($totalIn) }} <small class="muted" style="font-size:.75rem;font-weight:400">ج.م</small></div>
+      <div style="font-size:1.25rem;font-weight:700;color:#059669">{{ \App\Support\Money::format($totalIn) }} <small class="muted" style="font-size:.75rem;font-weight:400">ج.م</small></div>
     </div>
   </div>
   <div class="col-6 col-md-4">
     <div class="card" style="padding:16px 18px">
       <div class="muted" style="font-size:.78rem;margin-bottom:4px">إجمالي الصادر (حي)</div>
-      <div style="font-size:1.25rem;font-weight:700;color:#dc2626">{{ number_format($totalOut) }} <small class="muted" style="font-size:.75rem;font-weight:400">ج.م</small></div>
+      <div style="font-size:1.25rem;font-weight:700;color:#dc2626">{{ \App\Support\Money::format($totalOut) }} <small class="muted" style="font-size:.75rem;font-weight:400">ج.م</small></div>
     </div>
   </div>
 </div>
@@ -64,7 +64,13 @@
       <a href="{{ request()->fullUrlWithQuery(['action' => 'deleted']) }}" class="tab {{ request('action') === 'deleted' ? 'active' : '' }}">حذف/إلغاء</a>
     </div>
   </div>
-  @if(request()->hasAny(['project_id','direction','action']))
+  @include('partials._sort-select', ['options' => [
+    'newest'      => 'الأحدث',
+    'oldest'      => 'الأقدم',
+    'amount_desc' => 'الأعلى مبلغًا',
+    'amount_asc'  => 'الأقل مبلغًا',
+  ]])
+  @if(request()->hasAny(['project_id','direction','action','sort']))
     <div class="f-actions">
       <a href="{{ route('transactions.index') }}" class="btn ghost sm">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-x"/></svg>
@@ -133,7 +139,7 @@
             @endif
           </div>
           <div class="tx-amt" style="{{ $log->action === 'deleted' ? 'text-decoration:line-through' : '' }}">
-            {{ $log->direction === 'in' ? '+ ' : '− ' }}{{ number_format($log->amount) }} ج.م
+            {{ $log->direction === 'in' ? '+ ' : '− ' }}{{ \App\Support\Money::format($log->amount) }} ج.م
           </div>
         </div>
       @endforeach

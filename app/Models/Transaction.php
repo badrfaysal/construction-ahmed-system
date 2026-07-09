@@ -11,7 +11,7 @@ class Transaction extends Model
 
     protected $fillable = [
         'project_id', 'band_id', 'account_id', 'direction', 'type',
-        'party', 'amount', 'date', 'description', 'ref_type', 'ref_id',
+        'party', 'amount', 'discount', 'date', 'description', 'ref_type', 'ref_id',
     ];
 
     // المحفظة اللي الحركة اتحرّكت منها/عليها (من جدول accounts) — للعرض

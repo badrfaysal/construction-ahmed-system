@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'العملاء')
 @section('page-title', 'العملاء')
@@ -41,8 +41,8 @@
                   <span class="tag gray" style="margin-left:4px">{{ $p->name }}</span>
                 @endforeach
               </td>
-              <td class="num">{{ number_format($contract) }}</td>
-              <td class="num" style="color:var(--pos)">{{ number_format($collected) }}</td>
+              <td class="num">{{ \App\Support\Money::format($contract) }}</td>
+              <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($collected) }}</td>
               <td>
                 <a href="{{ route('clients.show', $c) }}" class="btn ghost sm" onclick="event.stopPropagation()">تفاصيل</a>
               </td>

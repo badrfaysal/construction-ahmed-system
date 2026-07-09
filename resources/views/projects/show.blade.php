@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', $project->name)
 @section('page-title', $project->name)
@@ -28,27 +28,68 @@
   $totalProfit = $project->bands->sum(fn ($b) => $b->profit());
   $initialValue = $project->initialContractValue();
   $actualValue  = $project->actualClientTotal();
+  $owedWorkers  = $project->bands->flatMap(fn ($b) => $b->workers->map(fn ($w) => (object)[
+    'name'      => $w->name,
+    'band'      => $b->name,
+    'remaining' => $w->remaining(),
+  ]))->filter(fn ($w) => $w->remaining > 0)->values();
 @endphp
+
+@if($owedWorkers->isNotEmpty())
+<div class="flash warning" style="cursor:pointer;margin-bottom:16px" onclick="document.getElementById('owed-modal').classList.add('open')">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0"><use href="#i-hardhat"/></svg>
+  فيه <strong>{{ $owedWorkers->count() }}</strong> {{ $owedWorkers->count() === 1 ? 'صنايعي مستحق' : 'صنايعية مستحقين' }} فلوس في المشروع ده — اضغط للتفاصيل
+</div>
+
+<div class="modal-overlay" id="owed-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box" style="max-width:520px">
+    <div class="modal-head">
+      <h4 style="margin:0">الصنايعية المستحقين فلوس</h4>
+      <button class="btn ghost sm" onclick="document.getElementById('owed-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="table-scroll" style="margin:0">
+      <table>
+        <thead><tr><th>الاسم</th><th>البند</th><th class="num">المتبقي</th></tr></thead>
+        <tbody>
+          @foreach($owedWorkers as $w)
+            <tr>
+              <td><strong>{{ $w->name }}</strong></td>
+              <td class="muted">{{ $w->band }}</td>
+              <td class="num" style="color:var(--neg);font-weight:600">{{ \App\Support\Money::format($w->remaining) }} ج.م</td>
+            </tr>
+          @endforeach
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2"><strong>الإجمالي</strong></td>
+            <td class="num" style="color:var(--neg);font-weight:700">{{ \App\Support\Money::format($owedWorkers->sum('remaining')) }} ج.م</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+@endif
 
 <div class="grid {{ $isOwner ? 'cols-4' : 'cols-3' }}" style="margin-bottom:20px">
   <div class="card stat">
     <div class="top"><span class="label">قيمة التعاقد</span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span></div>
-    <div class="val tnum">{{ number_format($initialValue) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($initialValue) }} <small>ج.م</small></div>
     @include('partials._actual-vs-initial', ['initial' => $initialValue, 'actual' => $actualValue])
   </div>
   <div class="card stat">
     <div class="top"><span class="label">محصّل من العميل</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span></div>
-    <div class="val tnum" style="color:var(--pos)">{{ number_format($project->totalCollected()) }} <small>ج.م</small></div>
-    <div class="note">الباقي عليه: {{ number_format(max($project->amountDue(), 0)) }} ج.م</div>
+    <div class="val tnum" style="color:var(--pos)">{{ \App\Support\Money::format($project->totalCollected()) }} <small>ج.م</small></div>
+    <div class="note">الباقي عليه: {{ \App\Support\Money::format(max($project->amountDue(), 0)) }} ج.م</div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">إجمالي المصروف</span><span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></span></div>
-    <div class="val tnum">{{ number_format($project->totalSpent()) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($project->totalSpent()) }} <small>ج.م</small></div>
   </div>
   @if($isOwner)
     <div class="card stat row-click" onclick="document.getElementById('profit-modal').classList.add('open')">
       <div class="top"><span class="label">الربح المتحقق</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg></span></div>
-      <div class="val tnum" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ number_format($totalProfit) }} <small>ج.م</small></div>
+      <div class="val tnum" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalProfit) }} <small>ج.م</small></div>
       <div class="note">دوس هنا لتفاصيل الربح</div>
     </div>
   @endif
@@ -134,11 +175,11 @@
                   —
                 @endif
               </td>
-              <td class="num">{{ number_format($band->client_price) }}</td>
-              <td class="num">{{ number_format($band->labor_amount) }}</td>
-              <td class="num">{{ number_format($matCost) }}</td>
+              <td class="num">{{ \App\Support\Money::format($band->client_price) }}</td>
+              <td class="num">{{ \App\Support\Money::format($band->labor_amount) }}</td>
+              <td class="num">{{ \App\Support\Money::format($matCost) }}</td>
               <td class="num" style="color:{{ $profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
-                {{ number_format($profit) }}
+                {{ \App\Support\Money::format($profit) }}
               </td>
               <td style="display:flex;gap:6px">
                 @if($isOwner)
@@ -152,10 +193,10 @@
         <tfoot>
           <tr>
             <td colspan="4">الإجماليات</td>
-            <td class="num">{{ number_format($project->bands->sum('client_price')) }}</td>
-            <td class="num">{{ number_format($project->bands->sum('labor_amount')) }}</td>
-            <td class="num">{{ number_format($project->bands->sum(fn($b) => $b->materialCost())) }}</td>
-            <td class="num" style="color:var(--pos)">{{ number_format($project->bands->sum(fn($b) => $b->profit())) }}</td>
+            <td class="num">{{ \App\Support\Money::format($project->bands->sum('client_price')) }}</td>
+            <td class="num">{{ \App\Support\Money::format($project->bands->sum('labor_amount')) }}</td>
+            <td class="num">{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->materialCost())) }}</td>
+            <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->profit())) }}</td>
             <td></td>
           </tr>
         </tfoot>
@@ -199,12 +240,12 @@
         </thead>
         <tbody>
           <tr>
-            <td class="num">{{ number_format($contract->total_after_interest) }}</td>
-            <td class="num">{{ number_format($contract->down_payment) }}</td>
-            <td class="num">{{ number_format($contract->monthly_installment) }}</td>
+            <td class="num">{{ \App\Support\Money::format($contract->total_after_interest) }}</td>
+            <td class="num">{{ \App\Support\Money::format($contract->down_payment) }}</td>
+            <td class="num">{{ \App\Support\Money::format($contract->monthly_installment) }}</td>
             <td class="num">{{ $contract->installment_months }}</td>
-            <td class="num" style="color:var(--pos)">{{ number_format($collected) }}</td>
-            <td class="num" style="color:{{ $contract->remaining_balance > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ number_format($contract->remaining_balance) }}</td>
+            <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($collected) }}</td>
+            <td class="num" style="color:{{ $contract->remaining_balance > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($contract->remaining_balance) }}</td>
             <td><span class="tag {{ $contract->remaining_balance > 0 ? 'amber' : 'green' }}">{{ $contract->remaining_balance > 0 ? 'نشط' : 'مسدد بالكامل' }}</span></td>
           </tr>
         </tbody>
@@ -282,9 +323,9 @@
               <td class="muted">{{ $m->supplier?->name ?? '—' }}</td>
               <td class="num">{{ number_format($m->qty, 1) }}</td>
               <td class="muted">{{ $m->unit }}</td>
-              <td class="num">{{ number_format($m->unit_price) }}</td>
-              <td class="num {{ $m->returnedQty() > 0 ? '' : 'muted' }}">{{ number_format($m->returnedQty(), 1) }}</td>
-              <td class="num">{{ number_format($m->netCost()) }}</td>
+              <td class="num">{{ \App\Support\Money::format($m->unit_price) }}</td>
+              <td class="num {{ $m->returnedQty() > 0 ? '' : 'muted' }}">{{ \App\Support\Money::format($m->returnedQty(), 1) }}</td>
+              <td class="num">{{ \App\Support\Money::format($m->netCost()) }}</td>
               <td class="muted">{{ $m->date->format('Y-m-d') }}</td>
             </tr>
           @endforeach
@@ -382,12 +423,12 @@
               <td class="muted">
                 {{ $row->worker->contractTypeAr() }}
                 @if(in_array($row->worker->contract_type, ['per_meter','per_piece','daily']) && $row->worker->contract_qty)
-                  <div style="font-size:12px">{{ rtrim(rtrim(number_format($row->worker->contract_qty, 2), '0'), '.') }} × {{ number_format($row->worker->contract_unit_rate) }}</div>
+                  <div style="font-size:12px">{{ rtrim(rtrim(number_format($row->worker->contract_qty, 2), '0'), '.') }} × {{ \App\Support\Money::format($row->worker->contract_unit_rate) }}</div>
                 @endif
               </td>
-              <td class="num">{{ number_format($row->worker->amount) }}</td>
-              <td class="num" style="color:var(--pos)">{{ number_format($paid) }}</td>
-              <td class="num" style="color:{{ $remaining > 0 ? 'var(--amber, #b45309)' : 'var(--pos)' }}">{{ number_format($remaining) }}</td>
+              <td class="num">{{ \App\Support\Money::format($row->worker->amount) }}</td>
+              <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }}</td>
+              <td class="num" style="color:{{ $remaining > 0 ? 'var(--amber, #b45309)' : 'var(--pos)' }}">{{ \App\Support\Money::format($remaining) }}</td>
               <td>
                 <a href="{{ route('workers.payments', $row->worker) }}" class="btn ghost sm">الدفعات</a>
               </td>
@@ -397,9 +438,9 @@
         <tfoot>
           <tr>
             <td colspan="3">الإجمالي</td>
-            <td class="num">{{ number_format($allWorkers->sum(fn($r) => $r->worker->amount)) }}</td>
-            <td class="num" style="color:var(--pos)">{{ number_format($allWorkers->sum(fn($r) => $r->worker->paidTotal())) }}</td>
-            <td class="num">{{ number_format($allWorkers->sum(fn($r) => $r->worker->remaining())) }}</td>
+            <td class="num">{{ \App\Support\Money::format($allWorkers->sum(fn($r) => $r->worker->amount)) }}</td>
+            <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($allWorkers->sum(fn($r) => $r->worker->paidTotal())) }}</td>
+            <td class="num">{{ \App\Support\Money::format($allWorkers->sum(fn($r) => $r->worker->remaining())) }}</td>
             <td></td>
           </tr>
         </tfoot>
@@ -441,18 +482,18 @@
                 @php $bProfit = $band->profit(); @endphp
                 <tr>
                   <td>{{ $band->name }}</td>
-                  <td class="num">{{ number_format($band->actualClientTotal()) }}</td>
-                  <td class="num">{{ number_format($band->totalCost()) }}</td>
-                  <td class="num" style="color:{{ $bProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ number_format($bProfit) }}</td>
+                  <td class="num">{{ \App\Support\Money::format($band->actualClientTotal()) }}</td>
+                  <td class="num">{{ \App\Support\Money::format($band->totalCost()) }}</td>
+                  <td class="num" style="color:{{ $bProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($bProfit) }}</td>
                 </tr>
               @endforeach
             </tbody>
             <tfoot>
               <tr>
                 <td>الإجمالي</td>
-                <td class="num">{{ number_format($project->bands->sum(fn($b) => $b->actualClientTotal())) }}</td>
-                <td class="num">{{ number_format($project->bands->sum(fn($b) => $b->totalCost())) }}</td>
-                <td class="num" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ number_format($totalProfit) }}</td>
+                <td class="num">{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->actualClientTotal())) }}</td>
+                <td class="num">{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->totalCost())) }}</td>
+                <td class="num" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalProfit) }}</td>
               </tr>
             </tfoot>
           </table>

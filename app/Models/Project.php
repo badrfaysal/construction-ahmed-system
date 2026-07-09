@@ -151,7 +151,7 @@ class Project extends Model
             fn ($c) => (float) $c->down_payment + (float) $c->payments->sum('amount_paid')
         );
 
-        $fromDirect = (float) $this->clientPayments->sum('amount');
+        $fromDirect = (float) $this->clientPayments->sum(fn ($p) => (float) $p->amount + (float) $p->discount);
 
         return $fromContracts + $fromDirect;
     }
@@ -160,6 +160,14 @@ class Project extends Model
     public function hasInstallmentContract(): bool
     {
         return $this->contracts->isNotEmpty();
+    }
+
+    // عقد يغطي المشروع بالكامل (مش بند محدد) — لو موجود، يمنع إضافة أي بند
+    // جديد أو شراء أي خامة جديدة على المشروع كله (شايف MaterialController /
+    // ProjectBandController::store)
+    public function hasWholeProjectInstallmentContract(): bool
+    {
+        return $this->contracts()->whereNull('band_id')->exists();
     }
 
     // النطاق (قيمة الفوترة) اللي اتغطى بعقود التقسيط وقت إنشائها — مجموع
@@ -177,7 +185,7 @@ class Project extends Model
     public function receivableExcess(): float
     {
         $gross = max(0, $this->actualClientTotal() - $this->contractedScope());
-        return max(0, $gross - (float) $this->clientPayments->sum('amount'));
+        return max(0, $gross - (float) $this->clientPayments->sum(fn ($p) => (float) $p->amount + (float) $p->discount));
     }
 
     // Execution progress = share of bands marked "منفذ" (done) — replaces the

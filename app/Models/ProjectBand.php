@@ -40,6 +40,18 @@ class ProjectBand extends Model
         return $this->hasMany(BandWorker::class, 'project_band_id')->orderBy('sort_order');
     }
 
+    public function installmentContracts(): HasMany
+    {
+        return $this->hasMany(InstallmentContract::class, 'band_id');
+    }
+
+    // البند ده معموله عقد تقسيط بنفسه؟ لو أيوه، يُمنع تسجيل أي خامة جديدة عليه
+    // (اعمل بند جديد باسم مختلف بدل ما تخلط فوترة خامة جديدة مع عقد قايم)
+    public function hasInstallmentContract(): bool
+    {
+        return $this->installmentContracts()->exists();
+    }
+
     // Sum of what each itemized worker is paid — when workers exist, this
     // drives the band's labor_amount instead of the simple contract fields
     public function workersTotal(): float

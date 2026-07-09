@@ -100,8 +100,13 @@ function addWorker(prefill = null) {
 // fields, so nothing looks blank/lost the first time this band is reopened.
 const existingWorkers = @json($existingWorkers);
 const legacySeed = @json($legacySeed);
+// لو الفورم رجع بعد فشل فاليديشن، القيم اللي المستخدم كتبها فعلًا (حتى لو
+// عدّل/ضاف/شال فنيين) لها الأولوية على بيانات القاعدة القديمة
+const oldWorkers = @json(old('workers', []));
 
-if (existingWorkers.length) {
+if (oldWorkers.length) {
+  oldWorkers.forEach(w => addWorker(w));
+} else if (existingWorkers.length) {
   existingWorkers.forEach(w => addWorker(w));
 } else if (legacySeed) {
   addWorker(legacySeed);

@@ -9,15 +9,21 @@ use App\Models\ProjectBand;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class MaterialController extends Controller
 {
     // List all materials across all projects, with optional project filter
     public function index(Request $request)
     {
-        $query = Material::with(['project', 'band', 'supplier', 'returns'])
-            ->orderByDesc('date')
-            ->orderByDesc('id');
+        $query = Material::with(['project', 'band', 'supplier', 'returns']);
+
+        match ($request->get('sort', 'newest')) {
+            'oldest'      => $query->orderBy('date')->orderBy('id'),
+            'cost_desc'   => $query->orderByRaw('qty * unit_price DESC'),
+            'cost_asc'    => $query->orderByRaw('qty * unit_price ASC'),
+            default       => $query->orderByDesc('date')->orderByDesc('id'),
+        };
 
         $pid = $request->get('project_id');
         if ($pid) {
@@ -77,13 +83,16 @@ class MaterialController extends Controller
     // each band with several items — all saved together in one submission
     public function create(Request $request)
     {
-        $projects  = Project::orderBy('name')->get(['id', 'name', 'default_supervision_pct']);
+        $projects  = Project::with('contracts')->orderBy('name')->get(['id', 'name', 'default_supervision_pct']);
         $suppliers = Supplier::orderBy('name')->get(['id', 'name']);
         $wallets   = Account::selectable();
 
         // Pre-select a project if provided via query string (e.g. from a project page)
         $selectedProject = $request->get('project_id') ? Project::find($request->get('project_id')) : null;
-        $bands = $selectedProject ? $selectedProject->bands()->get(['id', 'name']) : collect();
+        $bands = $selectedProject
+            ? $selectedProject->bands()->get(['id', 'name'])
+                ->map(fn ($b) => ['id' => $b->id, 'name' => $b->name, 'has_contract' => $b->hasInstallmentContract()])
+            : collect();
 
         return view('materials.create', compact('projects', 'suppliers', 'wallets', 'bands', 'selectedProject'));
     }
@@ -108,6 +117,48 @@ class MaterialController extends Controller
             'groups.*.items.*.sell_price'   => ['required', 'numeric', 'min:0'],
             'groups.*.items.*.supervision_pct' => ['nullable', 'numeric', 'min:0', 'max:100'],
         ]);
+
+        // عقد تقسيط للمشروع كامل بيقفل أي فوترة جديدة على المشروع خالص — مفيش
+        // خامات ولا بنود بعد كده، عشان مايتلخبطش مع نطاق العقد المتفق عليه.
+        $project = Project::findOrFail($data['project_id']);
+        if ($project->hasWholeProjectInstallmentContract()) {
+            throw ValidationException::withMessages([
+                'project_id' => 'تم تقسيط المشروع بالكامل — لا يمكن شراء خامات جديدة لهذا المشروع.',
+            ]);
+        }
+
+        // بند معموله عقد تقسيط لوحده بيتقفل هو بس — اعمل بند جديد باسم مختلف
+        // لتسجيل خامات جديدة، عشان فوترة الخامة الجديدة متتخلطش مع عقد قايم.
+        foreach ($data['groups'] as $i => $group) {
+            if (empty($group['band_id'])) {
+                continue;
+            }
+            $band = ProjectBand::find($group['band_id']);
+            if ($band && $band->hasInstallmentContract()) {
+                throw ValidationException::withMessages([
+                    "groups.{$i}.band_id" => 'البند "' . $band->name . '" داخل في عقد تقسيط — اعمل بند جديد باسم جديد لتسجيل خامات عليه.',
+                ]);
+            }
+        }
+
+        // Can't pay more than the group's actual purchase cost — a partial
+        // payment above the total would over-debit the wallet for more than
+        // what was really bought.
+        foreach ($data['groups'] as $i => $group) {
+            if (($group['payment_status'] ?? 'paid') !== 'partial') {
+                continue;
+            }
+            $groupTotalCost = array_sum(array_map(
+                fn ($item) => (float) $item['qty'] * (float) $item['unit_price'],
+                $group['items']
+            ));
+            $paidAmount = (float) ($group['paid_amount'] ?? 0);
+            if ($paidAmount > $groupTotalCost + 0.01) {
+                throw ValidationException::withMessages([
+                    "groups.{$i}.paid_amount" => 'المبلغ المدفوع أكبر من إجمالي تكلفة الشراء (' . number_format($groupTotalCost, 2) . ' ج.م).',
+                ]);
+            }
+        }
 
         // Wrapped in one transaction so a purchase that would overdraw
         // محفظة المقاولات rolls back the whole batch, not just that one item.
@@ -187,6 +238,21 @@ class MaterialController extends Controller
             'supervision_pct' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'date'            => ['required', 'date'],
         ]);
+
+        if ($project->hasWholeProjectInstallmentContract()) {
+            throw ValidationException::withMessages([
+                'band_id' => 'تم تقسيط المشروع بالكامل — لا يمكن تسجيل خامات أو مصروفات جديدة لهذا المشروع.',
+            ]);
+        }
+
+        if (! empty($data['band_id'])) {
+            $band = ProjectBand::find($data['band_id']);
+            if ($band && $band->hasInstallmentContract()) {
+                throw ValidationException::withMessages([
+                    'band_id' => 'البند "' . $band->name . '" داخل في عقد تقسيط — اعمل بند جديد باسم جديد.',
+                ]);
+            }
+        }
 
         DB::transaction(fn () => Material::create([
             'project_id'      => $project->id,

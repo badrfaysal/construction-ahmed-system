@@ -471,3 +471,41 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
   .st-foot{padding:8px 16px;font-size:9px}
   .qnote{font-size:10px}
 }
+
+/* ============================================================
+   Construction loading overlay — يظهر لحد ما أي صفحة تتحمّل أو
+   فورم يتبعت، بتصميم كرين وبناء بيتشيّد بروح هوية السيستم.
+   ============================================================ */
+.constr-loader{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+  background:rgba(15,28,46,.32);backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .16s ease}
+.constr-loader.show{opacity:1;pointer-events:all}
+.constr-loader .cl-box{background:var(--surface);border-radius:14px;padding:22px 30px 18px;box-shadow:var(--shadow-lg);
+  display:flex;flex-direction:column;align-items:center;gap:2px;min-width:168px}
+.constr-loader .cl-text{margin-top:8px;font-size:12.5px;font-weight:700;color:var(--ink-2);letter-spacing:-.01em}
+.constr-loader .cl-dots::after{content:'';display:inline-block;width:1.1em;text-align:right;animation:clDots 1.2s steps(4) infinite}
+@keyframes clDots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}100%{content:''}}
+
+/* كرين ثابت — الخطاف بينزل ويشيل بلوكة ويرفعها فوق البناية */
+.constr-loader .cl-hook{animation:clHook 1.8s ease-in-out infinite}
+@keyframes clHook{
+  0%{transform:translateY(0)}
+  45%{transform:translateY(20px)}
+  55%{transform:translateY(20px)}
+  100%{transform:translateY(0)}
+}
+
+/* البناية بتترفع طوبة طوبة — كل عمود بيكبر ويصغر بتتابع بسيط */
+.constr-loader .cl-bar{transform-origin:bottom center;animation:clRise 1.8s ease-in-out infinite}
+.constr-loader .cl-bar1{animation-delay:0s}
+.constr-loader .cl-bar2{animation-delay:.18s}
+.constr-loader .cl-bar3{animation-delay:.36s}
+@keyframes clRise{
+  0%{transform:scaleY(.35);opacity:.55}
+  50%{transform:scaleY(1);opacity:1}
+  100%{transform:scaleY(.35);opacity:.55}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .constr-loader .cl-hook,.constr-loader .cl-bar{animation:none}
+  .constr-loader .cl-dots::after{animation:none;content:'...'}
+}

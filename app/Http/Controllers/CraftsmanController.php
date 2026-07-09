@@ -12,7 +12,7 @@ use App\Support\ItemNameMatcher;
 // he's still owed right now (مستحق). Sorted by who we owe the most.
 class CraftsmanController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
         $workers = BandWorker::with(['payments', 'band.project'])->get();
 
@@ -31,9 +31,15 @@ class CraftsmanController extends Controller
                     // One line per band assignment, newest-worked first
                     'assignments' => $rows->sortByDesc(fn ($w) => $w->start_date)->values(),
                 ];
-            })
-            ->sortByDesc('remaining')
-            ->values();
+            });
+
+        $craftsmen = (match ($request->get('sort', 'remaining_desc')) {
+            'paid_desc'       => $craftsmen->sortByDesc('paid'),
+            'contracted_desc' => $craftsmen->sortByDesc('contracted'),
+            'projects_desc'   => $craftsmen->sortByDesc('projects'),
+            'name'            => $craftsmen->sortBy('name'),
+            default           => $craftsmen->sortByDesc('remaining'),
+        })->values();
 
         $totalRemaining = $craftsmen->sum('remaining');
         $totalPaid      = $craftsmen->sum('paid');

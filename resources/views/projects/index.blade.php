@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'الشقق والمشاريع')
 @section('page-title', 'الشقق والمشاريع')
@@ -67,12 +67,12 @@
           <div class="pc-fin">
             <div>
               <div class="l">التعاقد</div>
-              <div class="v">{{ number_format($total) }}</div>
+              <div class="v">{{ \App\Support\Money::format($total) }}</div>
               @include('partials._actual-vs-initial', ['initial' => $total, 'actual' => $actual])
             </div>
             <div>
               <div class="l">محصّل</div>
-              <div class="v" style="color:var(--pos)">{{ number_format($paid) }}</div>
+              <div class="v" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }}</div>
             </div>
             <div>
               <div class="l">{{ $p->status === 'done' ? 'تاريخ التسليم' : 'موعد التسليم' }}</div>

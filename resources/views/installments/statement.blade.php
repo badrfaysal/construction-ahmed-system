@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'كشف حساب — ' . $project->name)
 @section('page-title', 'كشف حساب التقسيط')
 
@@ -126,18 +126,18 @@ body{font-family:'IBM Plex Sans Arabic','Cairo',sans-serif;background:var(--bg);
         $lines[] = '*كشف حساب التقسيط*';
         $lines[] = 'المشروع: ' . $project->name;
         $lines[] = 'العميل: ' . $project->client->name;
-        $lines[] = 'قيمة الأقساط الإجمالية: ' . number_format($totalWithInst) . ' ج.م';
-        $lines[] = 'المدفوع حتى الآن: ' . number_format($downPaid) . ' ج.م';
-        $lines[] = 'المتبقي: ' . number_format($remaining) . ' ج.م';
+        $lines[] = 'قيمة الأقساط الإجمالية: ' . \App\Support\Money::format($totalWithInst) . ' ج.م';
+        $lines[] = 'المدفوع حتى الآن: ' . \App\Support\Money::format($downPaid) . ' ج.م';
+        $lines[] = 'المتبقي: ' . \App\Support\Money::format($remaining) . ' ج.م';
         if ($monthCount > 0) {
           $lines[] = 'عدد الأقساط: ' . $monthCount . ' قسط';
-          $lines[] = 'القسط الشهري: ' . number_format($avgMonthly, 0) . ' ج.م';
+          $lines[] = 'القسط الشهري: ' . \App\Support\Money::format($avgMonthly) . ' ج.م';
         }
         $lines[] = '';
         $lines[] = '*جدول الأقساط:*';
         foreach ($installments as $n => $inst) {
           $status = match($inst->status) { 'paid' => '✅', 'due' => '❗', default => '⏳' };
-          $lines[] = ($n+1) . '- ' . $inst->due_date->format('Y/m/d') . ' — ' . number_format($inst->amount) . ' ج.م ' . $status;
+          $lines[] = ($n+1) . '- ' . $inst->due_date->format('Y/m/d') . ' — ' . \App\Support\Money::format($inst->amount) . ' ج.م ' . $status;
         }
         $waText = urlencode(implode("\n", $lines));
         $waUrl = 'https://wa.me/' . $phone . '?text=' . $waText;
@@ -162,7 +162,7 @@ body{font-family:'IBM Plex Sans Arabic','Cairo',sans-serif;background:var(--bg);
         </span>
         @if($downPaid > 0)
           <span class="count-badge" style="background:rgba(5,150,105,.25);border-color:rgba(5,150,105,.4)">
-            <i class="fa fa-circle-check me-1"></i>محصول {{ number_format($downPaid) }} ج.م
+            <i class="fa fa-circle-check me-1"></i>محصول {{ \App\Support\Money::format($downPaid) }} ج.م
           </span>
         @endif
       </div>
@@ -206,15 +206,15 @@ body{font-family:'IBM Plex Sans Arabic','Cairo',sans-serif;background:var(--bg);
       </div>
       <div class="info-row">
         <div class="lbl">إجمالي قيمة الأقساط</div>
-        <div class="val" style="color:#0f172a">{{ number_format($totalWithInst) }} ج.م</div>
+        <div class="val" style="color:#0f172a">{{ \App\Support\Money::format($totalWithInst) }} ج.م</div>
       </div>
       <div class="info-row alt">
         <div class="lbl">المقدم المدفوع حتى الآن</div>
-        <div class="val" style="color:var(--success)">{{ number_format($downPaid) }} ج.م</div>
+        <div class="val" style="color:var(--success)">{{ \App\Support\Money::format($downPaid) }} ج.م</div>
       </div>
       <div class="info-row">
         <div class="lbl">المتبقي (قبل الفوائد)</div>
-        <div class="val" style="color:var(--danger)">{{ number_format($totalWithInst - $downPaid) }} ج.م</div>
+        <div class="val" style="color:var(--danger)">{{ \App\Support\Money::format($totalWithInst - $downPaid) }} ج.م</div>
       </div>
       <div class="info-row alt">
         <div class="lbl">عدد الأقساط الشهرية</div>
@@ -223,7 +223,7 @@ body{font-family:'IBM Plex Sans Arabic','Cairo',sans-serif;background:var(--bg);
       @if($avgMonthly > 0)
       <div class="info-row">
         <div class="lbl">القسط الشهري</div>
-        <div class="val" style="color:var(--accent);font-size:1.05rem">{{ number_format($avgMonthly) }} ج.م</div>
+        <div class="val" style="color:var(--accent);font-size:1.05rem">{{ \App\Support\Money::format($avgMonthly) }} ج.م</div>
       </div>
       @endif
       @if($payDay)
@@ -272,7 +272,7 @@ body{font-family:'IBM Plex Sans Arabic','Cairo',sans-serif;background:var(--bg);
               <td class="text-start" style="font-weight:600">{{ $inst->label }}</td>
               <td><small>{{ $inst->band?->name ?? '—' }}</small></td>
               <td>{{ $inst->due_date->format('Y/m/d') }}</td>
-              <td style="font-weight:700;font-size:.95rem">{{ number_format($inst->amount) }} ج.م</td>
+              <td style="font-weight:700;font-size:.95rem">{{ \App\Support\Money::format($inst->amount) }} ج.م</td>
               <td>
                 @if($inst->paid_date)
                   <span style="color:var(--success)">{{ $inst->paid_date->format('Y/m/d') }}</span>
@@ -299,11 +299,11 @@ body{font-family:'IBM Plex Sans Arabic','Cairo',sans-serif;background:var(--bg);
         <tfoot>
           <tr style="background:#f0f2f8;font-weight:700">
             <td colspan="4" style="text-align:start;padding:10px 14px">الإجمالي</td>
-            <td>{{ number_format($totalWithInst) }} ج.م</td>
+            <td>{{ \App\Support\Money::format($totalWithInst) }} ج.م</td>
             <td colspan="2">
-              محصول: <span style="color:var(--success)">{{ number_format($downPaid) }} ج.م</span>
+              محصول: <span style="color:var(--success)">{{ \App\Support\Money::format($downPaid) }} ج.م</span>
               &nbsp;|&nbsp;
-              متبقي: <span style="color:var(--danger)">{{ number_format($remaining) }} ج.م</span>
+              متبقي: <span style="color:var(--danger)">{{ \App\Support\Money::format($remaining) }} ج.م</span>
             </td>
           </tr>
         </tfoot>

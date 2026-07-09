@@ -24,6 +24,14 @@
   @endforeach
 </div>
 
+<form method="GET" class="filter-bar">
+  <input type="hidden" name="tab" value="{{ $tab }}">
+  @include('partials._sort-select', ['options' => [
+    'newest' => 'الأحدث',
+    'oldest' => 'الأقدم',
+  ]])
+</form>
+
 @if($quotes->count())
   <div class="qcards">
     @foreach($quotes as $q)

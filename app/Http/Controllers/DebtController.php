@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Project;
 use App\Models\Supplier;
 use App\Models\SupplierDebt;
@@ -15,8 +16,14 @@ class DebtController extends Controller
     public function index(Request $request)
     {
         $query = SupplierDebt::with(['project', 'band', 'supplier'])
-            ->orderBy('status') // pending first
-            ->orderBy('due_date');
+            ->orderBy('status'); // pending first
+
+        match ($request->get('sort', 'due_asc')) {
+            'newest'      => $query->orderByDesc('created_at'),
+            'amount_desc' => $query->orderByDesc('total_amount'),
+            'amount_asc'  => $query->orderBy('total_amount'),
+            default       => $query->orderBy('due_date'),
+        };
 
         if ($pid = $request->get('project_id')) {
             $query->where('project_id', $pid);
@@ -36,6 +43,7 @@ class DebtController extends Controller
         $debts     = $query->paginate(60);
         $projects  = Project::orderBy('name')->get(['id', 'name']);
         $suppliers = Supplier::orderBy('name')->get(['id', 'name']);
+        $wallets   = Account::selectable();
 
         // Summary totals (unfiltered except for project if selected)
         $baseQuery = SupplierDebt::query();
@@ -49,15 +57,16 @@ class DebtController extends Controller
             'overdue_count'  => $baseQuery->clone()->where('status', '!=', 'paid')->whereNotNull('due_date')->where('due_date', '<', today())->count(),
         ];
 
-        return view('debts.index', compact('debts', 'projects', 'suppliers', 'totals'));
+        return view('debts.index', compact('debts', 'projects', 'suppliers', 'wallets', 'totals'));
     }
 
     // Partially or fully pay off a debt
     public function pay(Request $request, SupplierDebt $debt)
     {
         $data = $request->validate([
-            'amount'   => ['required', 'numeric', 'min:0.01', 'max:' . $debt->remaining()],
-            'pay_date' => ['required', 'date'],
+            'amount'     => ['required', 'numeric', 'min:0.01', 'max:' . $debt->remaining()],
+            'account_id' => ['required', 'integer', 'exists:accounts,id'],
+            'pay_date'   => ['required', 'date'],
         ]);
 
         DB::transaction(function () use ($debt, $data) {
@@ -73,6 +82,7 @@ class DebtController extends Controller
             Transaction::create([
                 'project_id'  => $debt->project_id,
                 'band_id'     => $debt->band_id,
+                'account_id'  => $data['account_id'],
                 'direction'   => 'out',
                 'type'        => 'سداد دين مورد',
                 'party'       => $debt->supplier?->name ?? $debt->description,

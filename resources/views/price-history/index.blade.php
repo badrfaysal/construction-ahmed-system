@@ -7,6 +7,15 @@
   <div><h3>متابعة أسعار الخامات</h3><p>مبنية تلقائياً من الخامات المسجلة فعلياً — بدون إدخال يدوي</p></div>
 </div>
 
+<form method="GET" class="filter-bar">
+  @include('partials._sort-select', ['options' => [
+    'name'       => 'أبجديًا',
+    'price_desc' => 'الأعلى سعرًا',
+    'price_asc'  => 'الأقل سعرًا',
+    'count_desc' => 'الأكثر شراءً',
+  ]])
+</form>
+
 <div class="table-card">
   @if($items->count())
     <div class="table-scroll">

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'المستحقات')
 @section('page-title', 'المستحقات')
 
@@ -198,31 +198,31 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
     <div class="top"><span class="label">إجمالي المفوتر</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg></span>
     </div>
-    <div class="val tnum">{{ number_format($totals['total_billed']) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($totals['total_billed']) }} <small>ج.م</small></div>
   </div>
   <div class="vstat vstat-green">
     <div class="top"><span class="label">المحصول من العملاء</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span>
     </div>
-    <div class="val tnum">{{ number_format($totals['total_collected']) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($totals['total_collected']) }} <small>ج.م</small></div>
   </div>
   <div class="vstat vstat-red">
     <div class="top"><span class="label">المتبقي على العملاء</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg></span>
     </div>
-    <div class="val tnum">{{ number_format($totals['total_remaining']) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($totals['total_remaining']) }} <small>ج.م</small></div>
   </div>
   <div class="vstat vstat-amber">
     <div class="top"><span class="label">الربح الدفتري</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></span>
     </div>
-    <div class="val tnum">{{ number_format($totals['book_profit']) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($totals['book_profit']) }} <small>ج.م</small></div>
   </div>
   <div class="vstat vstat-navy">
     <div class="top"><span class="label">الربح المحصل فعليًا</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg></span>
     </div>
-    <div class="val tnum">{{ number_format($totals['earned_profit']) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($totals['earned_profit']) }} <small>ج.م</small></div>
   </div>
 </div>
 
@@ -273,14 +273,14 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
                 <span class="rv-cont-tag"><i class="fa fa-file-contract"></i> عقد تقسيط</span>
               @endif
             </td>
-            <td style="font-weight:600">{{ number_format($row->billed) }}</td>
-            <td style="color:var(--ok);font-weight:600">{{ number_format($row->collected) }}</td>
-            <td style="color:{{ $row->remaining > 0 ? 'var(--bad)' : 'var(--ok)' }};font-weight:700">{{ number_format($row->remaining) }}</td>
+            <td style="font-weight:600">{{ \App\Support\Money::format($row->billed) }}</td>
+            <td style="color:var(--ok);font-weight:600">{{ \App\Support\Money::format($row->collected) }}</td>
+            <td style="color:{{ $row->remaining > 0 ? 'var(--bad)' : 'var(--ok)' }};font-weight:700">{{ \App\Support\Money::format($row->remaining) }}</td>
             <td>
               <span style="font-size:.75rem;font-weight:700">{{ $pct }}%</span>
               <div class="rv-mini-prog"><i style="width:{{ min($pct,100) }}%"></i></div>
             </td>
-            <td style="color:var(--mut)">{{ number_format($row->book_profit) }}</td>
+            <td style="color:var(--mut)">{{ \App\Support\Money::format($row->book_profit) }}</td>
             <td>
               @if($isPaid)
                 <span class="rv-st done"><span class="rv-dot"></span>مسدد</span>
@@ -294,11 +294,11 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
       <tfoot>
         <tr>
           <td style="text-align:right;padding-right:16px">الإجمالي ({{ $rows->count() }} مشروع)</td>
-          <td>{{ number_format($totals['total_billed']) }}</td>
-          <td style="color:var(--ok)">{{ number_format($totals['total_collected']) }}</td>
-          <td style="color:{{ $totals['total_remaining'] > 0 ? 'var(--bad)' : 'var(--ok)' }}">{{ number_format($totals['total_remaining']) }}</td>
+          <td>{{ \App\Support\Money::format($totals['total_billed']) }}</td>
+          <td style="color:var(--ok)">{{ \App\Support\Money::format($totals['total_collected']) }}</td>
+          <td style="color:{{ $totals['total_remaining'] > 0 ? 'var(--bad)' : 'var(--ok)' }}">{{ \App\Support\Money::format($totals['total_remaining']) }}</td>
           <td>{{ $totals['total_billed'] > 0 ? round($totals['total_collected'] / $totals['total_billed'] * 100) : 0 }}%</td>
-          <td style="color:var(--mut)">{{ number_format($totals['book_profit']) }}</td>
+          <td style="color:var(--mut)">{{ \App\Support\Money::format($totals['book_profit']) }}</td>
           <td></td>
         </tr>
       </tfoot>
@@ -322,7 +322,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
 <div class="rv-box">
   <div class="rv-boxhead">
     <h2 style="color:var(--bad)"><i class="fa fa-triangle-exclamation"></i> أقساط متأخرة ({{ $overdueInstallments->count() }})</h2>
-    <span class="c" style="color:var(--bad);font-weight:700">إجمالي: {{ number_format($overdueInstallments->sum('amount')) }} ج.م</span>
+    <span class="c" style="color:var(--bad);font-weight:700">إجمالي: {{ \App\Support\Money::format($overdueInstallments->sum('amount')) }} ج.م</span>
   </div>
   @foreach($overdueInstallments as $inst)
     <div class="rv-line">
@@ -331,7 +331,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
         <div class="s">{{ $inst->project->name }} — {{ $inst->project->client->name }}@if($inst->band) | {{ $inst->band->name }}@endif</div>
       </div>
       <div style="text-align:left">
-        <div style="font-weight:700;color:var(--bad)">{{ number_format($inst->amount) }} ج</div>
+        <div style="font-weight:700;color:var(--bad)">{{ \App\Support\Money::format($inst->amount) }} ج</div>
         <div class="s">استحق: {{ $inst->due_date->format('d/m/Y') }}</div>
       </div>
       <form method="POST" action="{{ route('installments.markPaid', $inst) }}" class="no-print">
@@ -348,7 +348,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
 <div class="rv-box">
   <div class="rv-boxhead">
     <h2><i class="fa fa-calendar-days" style="color:var(--mut)"></i> أقساط قادمة — خلال 60 يوماً ({{ $upcomingInstallments->count() }})</h2>
-    <span class="c" style="font-weight:700">إجمالي: {{ number_format($upcomingInstallments->sum('amount')) }} ج.م</span>
+    <span class="c" style="font-weight:700">إجمالي: {{ \App\Support\Money::format($upcomingInstallments->sum('amount')) }} ج.م</span>
   </div>
   @foreach($upcomingInstallments as $inst)
     @php $daysLeft = (int) now()->diffInDays($inst->due_date, false); @endphp
@@ -359,7 +359,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
         <div class="s">{{ $inst->project->name }} — {{ $inst->project->client->name }}@if($inst->band) | {{ $inst->band->name }}@endif</div>
       </div>
       <div style="text-align:left">
-        <div style="font-weight:700">{{ number_format($inst->amount) }} ج</div>
+        <div style="font-weight:700">{{ \App\Support\Money::format($inst->amount) }} ج</div>
         <div class="s">يستحق: {{ $inst->due_date->format('d/m/Y') }}</div>
       </div>
     </div>
@@ -396,9 +396,9 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
 
         {{-- الأرقام --}}
         <div class="rv-nums">
-          <div class="rv-num"><div class="l">المفوتر</div><div class="v">{{ number_format($row->billed) }}</div></div>
-          <div class="rv-num ok"><div class="l">المحصّل</div><div class="v">{{ number_format($row->collected) }}</div></div>
-          <div class="rv-num {{ $isPaid ? 'ok' : 'bad' }}"><div class="l">المتبقي</div><div class="v">{{ number_format($row->remaining) }}</div></div>
+          <div class="rv-num"><div class="l">المفوتر</div><div class="v">{{ \App\Support\Money::format($row->billed) }}</div></div>
+          <div class="rv-num ok"><div class="l">المحصّل</div><div class="v">{{ \App\Support\Money::format($row->collected) }}</div></div>
+          <div class="rv-num {{ $isPaid ? 'ok' : 'bad' }}"><div class="l">المتبقي</div><div class="v">{{ \App\Support\Money::format($row->remaining) }}</div></div>
         </div>
         <div class="rv-prog"><i style="width:{{ min($pct,100) }}%"></i></div>
 
@@ -408,8 +408,8 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
             <a href="{{ route('installments.index') }}" class="rv-act main" style="{{ $hasExcess ? '' : 'grid-column:span 2' }}"><i class="fa fa-file-contract"></i> فتح صفحة الأقساط</a>
           @endif
           @if($hasExcess || (!$hasCont && !$isPaid))
-            <button class="rv-act {{ $hasCont ? '' : 'main' }}" onclick="recvFull({{ $proj->id }}, {{ $payAmount }})"><i class="fa fa-check-double"></i> سداد {{ $hasCont ? 'المستحق الإضافي' : 'كلي' }}</button>
-            <button class="rv-act" onclick="recvPartial({{ $proj->id }})"><i class="fa fa-money-bill"></i> سداد جزئي</button>
+            <button class="rv-act" id="rv-full-{{ $proj->id }}" onclick="recvFull({{ $proj->id }}, {{ $payAmount }})"><i class="fa fa-check-double"></i> سداد {{ $hasCont ? 'المستحق الإضافي' : 'كلي' }}</button>
+            <button class="rv-act" id="rv-partial-{{ $proj->id }}" onclick="recvPartial({{ $proj->id }})"><i class="fa fa-money-bill"></i> سداد جزئي</button>
           @elseif(!$hasCont && $isPaid)
             <span class="rv-act done" style="grid-column:span 2"><i class="fa fa-check-circle"></i> تم السداد الكامل</span>
           @endif
@@ -428,9 +428,9 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
                   <tr>
                     <td style="text-align:right">{{ $c->product_name }}</td>
                     <td>{{ $c->band_id ? 'بند: ' . ($c->band?->name ?? '—') : 'المشروع كامل' }}</td>
-                    <td style="font-weight:700">{{ number_format($c->total_after_interest) }}</td>
-                    <td style="color:var(--ok);font-weight:700">{{ number_format($c->down_payment + $c->payments->sum('amount_paid')) }}</td>
-                    <td style="color:{{ $c->remaining_balance > 0 ? 'var(--bad)' : 'var(--ok)' }};font-weight:700">{{ number_format($c->remaining_balance) }}</td>
+                    <td style="font-weight:700">{{ \App\Support\Money::format($c->total_after_interest) }}</td>
+                    <td style="color:var(--ok);font-weight:700">{{ \App\Support\Money::format($c->down_payment + $c->payments->sum('amount_paid')) }}</td>
+                    <td style="color:{{ $c->remaining_balance > 0 ? 'var(--bad)' : 'var(--ok)' }};font-weight:700">{{ \App\Support\Money::format($c->remaining_balance) }}</td>
                   </tr>
                 @endforeach
               </tbody>
@@ -454,47 +454,56 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
               <span><i class="fa fa-cash-register"></i> تسجيل تحصيل من العميل</span>
               <button type="button" class="rv-x" style="color:var(--soft);font-size:1rem" onclick="hidePayPanel({{ $proj->id }})">×</button>
             </div>
+            @php $reopenHere = session('reopen_project') == $proj->id; @endphp
+            @if($reopenHere && $errors->any())
+              <div class="rv-form-errors" style="background:var(--neg-soft,#fbecea);color:var(--neg,#c0392b);border:1px solid var(--neg,#c0392b);border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:.8rem;font-weight:600;line-height:1.6">
+                @foreach($errors->all() as $err)
+                  <div>{{ $err }}</div>
+                @endforeach
+              </div>
+            @endif
             @if($payAmount > 0.009)
             <form method="POST" action="{{ route('receivables.pay', $proj) }}">
               @csrf
               <div class="rv-presets">
-                <span class="rv-preset hot" onclick="setAmt({{ $proj->id }}, {{ $payAmount }})">سداد كامل — {{ number_format($payAmount) }} ج</span>
-                <span class="rv-preset" onclick="setAmt({{ $proj->id }}, {{ round($payAmount * 0.5, 2) }})">النصف — {{ number_format($payAmount * 0.5) }} ج</span>
-                <span class="rv-preset" onclick="setAmt({{ $proj->id }}, {{ round($payAmount * 0.25, 2) }})">الربع — {{ number_format($payAmount * 0.25) }} ج</span>
+                <span class="rv-preset hot" onclick="setAmt({{ $proj->id }}, {{ $payAmount }})">سداد كامل — {{ \App\Support\Money::format($payAmount) }} ج</span>
+                <span class="rv-preset" onclick="setAmt({{ $proj->id }}, {{ round($payAmount * 0.5, 2) }})">النصف — {{ \App\Support\Money::format($payAmount * 0.5) }} ج</span>
+                <span class="rv-preset" onclick="setAmt({{ $proj->id }}, {{ round($payAmount * 0.25, 2) }})">الربع — {{ \App\Support\Money::format($payAmount * 0.25) }} ج</span>
               </div>
               <div class="rv-row2">
                 <div>
                   <label>المبلغ (ج.م) *</label>
-                  <input type="number" step="0.01" min="0.01" name="amount" id="recv_amt_{{ $proj->id }}" placeholder="0.00" required>
+                  <input type="number" step="0.01" min="0.01" name="amount" id="recv_amt_{{ $proj->id }}" placeholder="0.00" value="{{ $reopenHere ? old('amount') : '' }}" required>
                 </div>
                 <div>
                   <label>التاريخ *</label>
-                  <input type="date" name="date" value="{{ today()->format('Y-m-d') }}" required>
+                  <input type="date" name="date" value="{{ $reopenHere ? old('date', today()->format('Y-m-d')) : today()->format('Y-m-d') }}" required>
                 </div>
               </div>
               <div class="rv-row2">
                 <div>
-                  <label>طريقة الدفع</label>
-                  <input type="text" name="method" placeholder="كاش / تحويل">
+                  <label>الخصم (ج.م)</label>
+                  <input type="number" step="0.01" min="0" name="discount" id="recv_disc_{{ $proj->id }}" placeholder="0.00" value="{{ $reopenHere ? old('discount') : '' }}">
                 </div>
                 <div>
                   <label>ملاحظات</label>
-                  <input type="text" name="notes" placeholder="اختياري">
+                  <input type="text" name="notes" placeholder="اختياري" value="{{ $reopenHere ? old('notes') : '' }}">
                 </div>
               </div>
               <label><i class="fa fa-wallet"></i> المحفظة (التحصيل فيها) *</label>
-              @include('partials._wallet-select', ['wallets' => $wallets, 'bare' => true, 'required' => true, 'selectStyle' => 'width:100%'])
+              @include('partials._wallet-select', ['wallets' => $wallets, 'bare' => true, 'required' => true, 'selectStyle' => 'width:100%', 'selected' => $reopenHere ? old('account_id') : null])
 
               @if($proj->bands->count())
+                @php $oldBandChoice = $reopenHere ? old('band_choice', 'general') : 'general'; @endphp
                 <label>الدفعة دي تتسجّل على إيه؟</label>
                 <div class="rv-radio">
-                  <label><input type="radio" name="band_choice" value="general" checked onchange="toggleRecvBand({{ $proj->id }}, this.value)"> دفعة عامة للمشروع</label>
-                  <label><input type="radio" name="band_choice" value="band" onchange="toggleRecvBand({{ $proj->id }}, this.value)"> تحت بند محدد</label>
+                  <label><input type="radio" name="band_choice" value="general" {{ $oldBandChoice === 'general' ? 'checked' : '' }} onchange="toggleRecvBand({{ $proj->id }}, this.value)"> دفعة عامة للمشروع</label>
+                  <label><input type="radio" name="band_choice" value="band" {{ $oldBandChoice === 'band' ? 'checked' : '' }} onchange="toggleRecvBand({{ $proj->id }}, this.value)"> تحت بند محدد</label>
                 </div>
-                <select name="band_id" id="recv-band-{{ $proj->id }}" disabled style="display:none;margin-top:7px">
+                <select name="band_id" id="recv-band-{{ $proj->id }}" {{ $oldBandChoice === 'band' ? '' : 'disabled' }} style="display:{{ $oldBandChoice === 'band' ? 'block' : 'none' }};margin-top:7px">
                   <option value="">— اختر البند —</option>
                   @foreach($proj->bands as $band)
-                    <option value="{{ $band->id }}">{{ $band->name }}</option>
+                    <option value="{{ $band->id }}" {{ $reopenHere && (int) old('band_id') === $band->id ? 'selected' : '' }}>{{ $band->name }}</option>
                   @endforeach
                 </select>
               @endif
@@ -511,7 +520,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
           {{-- السجل --}}
           <div class="rv-hist-h">
             <h6>سجل التحصيلات{{ $hasCont ? ' (المستحق الإضافي)' : '' }}</h6>
-            @if($payAmount > 0.009)<span class="rem">المتبقي: {{ number_format($payAmount) }} ج</span>@endif
+            @if($payAmount > 0.009)<span class="rem">المتبقي: {{ \App\Support\Money::format($payAmount) }} ج</span>@endif
           </div>
 
           <div class="rv-hf no-print" id="hist-filters-{{ $proj->id }}">
@@ -536,13 +545,26 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
             <tbody>
               @foreach($proj->clientPayments as $pay)
                 <tr data-date="{{ \Carbon\Carbon::parse($pay->date)->format('Y-m-d') }}"
-                    data-desc="{{ mb_strtolower($pay->description ?? '') }}">
+                    data-desc="{{ mb_strtolower($pay->description ?? '') }}"
+                    style="cursor:pointer"
+                    onclick="showPayDetail(this)"
+                    data-full-date="{{ \Carbon\Carbon::parse($pay->date)->format('d/m/Y') }}"
+                    data-amount="{{ number_format($pay->amount, 2) }}"
+                    data-discount="{{ \App\Support\Money::format($pay->discount, 2) }}"
+                    data-description="{{ $pay->description ?: 'تحصيل مباشر' }}"
+                    data-band="{{ $pay->band->name ?? '' }}">
                   <td style="color:var(--mut)">{{ \Carbon\Carbon::parse($pay->date)->format('d/m/Y') }}</td>
                   <td class="desc" title="{{ $pay->description }}">{{ $pay->description ?: 'تحصيل مباشر' }}</td>
-                  <td style="color:var(--ok);font-weight:700">{{ number_format($pay->amount) }} ج</td>
+                  <td style="color:var(--ok);font-weight:700">
+                    {{ \App\Support\Money::format($pay->amount) }} ج
+                    @if((float) $pay->discount > 0)
+                      <span style="color:var(--mut);font-size:10.5px">(خصم {{ \App\Support\Money::format($pay->discount) }})</span>
+                    @endif
+                  </td>
                   <td class="no-print">
                     <form method="POST" action="{{ route('receivables.payment.delete', $pay) }}"
-                          onsubmit="return confirm('حذف هذا التحصيل وإرجاع المبلغ للمحفظة؟')">
+                          onsubmit="return confirm('حذف هذا التحصيل وإرجاع المبلغ للمحفظة؟')"
+                          onclick="event.stopPropagation()">
                       @csrf @method('DELETE')
                       <button type="submit" class="del" title="حذف"><i class="fa fa-trash-alt"></i></button>
                     </form>
@@ -553,7 +575,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
             <tfoot>
               <tr>
                 <td colspan="2" style="text-align:right;font-size:.72rem;color:var(--mut)">إجمالي التحصيلات</td>
-                <td style="color:var(--ok)">{{ number_format($proj->clientPayments->sum('amount')) }} ج</td>
+                <td style="color:var(--ok)">{{ \App\Support\Money::format($proj->clientPayments->sum(fn($p) => (float) $p->amount + (float) $p->discount)) }} ج</td>
                 <td class="no-print"></td>
               </tr>
             </tfoot>
@@ -579,7 +601,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
                   @php $st = $band->status ?? 'pending'; @endphp
                   <tr>
                     <td style="font-weight:600">{{ $band->name }}</td>
-                    <td style="text-align:center;font-weight:700">{{ number_format($band->client_price ?? 0) }} ج</td>
+                    <td style="text-align:center;font-weight:700">{{ \App\Support\Money::format($band->client_price ?? 0) }} ج</td>
                     <td style="text-align:center;font-size:.72rem;color:var(--mut)">
                       {{ $st === 'completed' ? 'مكتمل' : ($st === 'in_progress' || $st === 'active' ? 'جاري' : 'معلق') }}
                     </td>
@@ -593,9 +615,39 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
       </div>{{-- /rv-mbody --}}
     </div>
   </div>
+  @if(session('reopen_project') == $proj->id)
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        openModal({{ $proj->id }});
+        showPayPanel({{ $proj->id }});
+      });
+    </script>
+  @endif
 @endforeach
 
 </div>{{-- /rv --}}
+
+{{-- تفاصيل تحصيل — مودال واحد مشترك لكل الصفوف، بيتملى بالـ JS من data-* الصف
+     اللي اتدوس عليه، بدل ما نعمل مودال منفصل لكل تحصيل --}}
+<div class="rv-modal" id="payDetailModal" onclick="if(event.target===this) closePayDetail()">
+  <div class="rv-card" style="max-width:420px">
+    <div class="rv-mhead">
+      <div class="nm">تفاصيل التحصيل</div>
+      <button type="button" class="rv-x" onclick="closePayDetail()">×</button>
+    </div>
+    <div class="rv-mbody" style="padding:16px 18px">
+      <div class="rv-nums" style="grid-template-columns:1fr 1fr">
+        <div class="rv-num"><div class="l">التاريخ</div><div class="v" id="pd-date" style="font-size:1rem"></div></div>
+        <div class="rv-num ok"><div class="l">المبلغ</div><div class="v" id="pd-amount" style="font-size:1rem"></div></div>
+      </div>
+      <div style="margin-top:10px;font-size:.8rem;line-height:1.9">
+        <div id="pd-discount-row"><b>الخصم:</b> <span id="pd-discount"></span></div>
+        <div id="pd-band-row"><b>البند:</b> <span id="pd-band"></span></div>
+        <div><b>البيان:</b> <span id="pd-desc"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 @push('scripts')
 <script>
@@ -623,15 +675,54 @@ function hidePayPanel(id) {
   const p = document.getElementById('pay-panel-' + id);
   if (p) p.style.display = 'none';
 }
-function recvPartial(id) { showPayPanel(id); }
+// الزرار اللي المستخدم اختاره (كلي/جزئي) هو الوحيد اللي بيتلوّن — التاني بيرجع لشكله العادي
+function markRecvMode(id, mode) {
+  const full = document.getElementById('rv-full-' + id);
+  const partial = document.getElementById('rv-partial-' + id);
+  if (full) full.classList.toggle('main', mode === 'full');
+  if (partial) partial.classList.toggle('main', mode === 'partial');
+}
+function recvPartial(id) {
+  showPayPanel(id);
+  markRecvMode(id, 'partial');
+}
 function recvFull(id, amt) {
   showPayPanel(id);
   setAmt(id, amt);
+  markRecvMode(id, 'full');
 }
 function setAmt(id, amt) {
   showPayPanel(id);
   const i = document.getElementById('recv_amt_' + id);
   if (i) { i.value = parseFloat(amt).toFixed(2); i.focus(); }
+}
+
+/* ── بوب أب تفاصيل صف في سجل التحصيلات ────── */
+function showPayDetail(row) {
+  const d = row.dataset;
+  document.getElementById('pd-date').textContent = d.fullDate;
+  document.getElementById('pd-amount').textContent = d.amount + ' ج';
+  document.getElementById('pd-desc').textContent = d.description;
+  const discRow = document.getElementById('pd-discount-row');
+  if (parseFloat(d.discount) > 0) {
+    document.getElementById('pd-discount').textContent = d.discount + ' ج';
+    discRow.style.display = '';
+  } else {
+    discRow.style.display = 'none';
+  }
+  const bandRow = document.getElementById('pd-band-row');
+  if (d.band) {
+    document.getElementById('pd-band').textContent = d.band;
+    bandRow.style.display = '';
+  } else {
+    bandRow.style.display = 'none';
+  }
+  document.getElementById('payDetailModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closePayDetail() {
+  document.getElementById('payDetailModal').classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 /* ── دفعة عامة أم تحت بند ─────────────────── */

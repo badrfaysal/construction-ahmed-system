@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'العروض المعتمدة')
 @section('page-title', 'العروض المعتمدة')
 
@@ -15,11 +15,11 @@
   </div>
   <div class="card stat">
     <div class="top"><span class="label">إجمالي القيمة</span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span></div>
-    <div class="val tnum">{{ number_format($stats['total_value']) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($stats['total_value']) }} <small>ج.م</small></div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">متوسط قيمة العرض</span><span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></span></div>
-    <div class="val tnum">{{ number_format($stats['avg_value']) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($stats['avg_value']) }} <small>ج.م</small></div>
   </div>
 </div>
 

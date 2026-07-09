@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'الفنيين والعمال')
 @section('page-title', 'الفنيين والعمال')
 
@@ -69,7 +69,7 @@
                   <span class="tag gray">لم يبدأ</span>
                 @endif
               </td>
-              <td class="num">{{ number_format($band->labor_amount) }}</td>
+              <td class="num">{{ \App\Support\Money::format($band->labor_amount) }}</td>
             </tr>
           @endforeach
         </tbody>

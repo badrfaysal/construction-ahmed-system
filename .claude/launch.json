@@ -12,6 +12,18 @@
       "runtimeExecutable": "php",
       "runtimeArgs": ["artisan", "serve", "--port=8000"],
       "port": 8000
+    },
+    {
+      "name": "app-verify",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["artisan", "serve", "--port=8020"],
+      "port": 8020
+    },
+    {
+      "name": "app-verify2",
+      "runtimeExecutable": "php",
+      "runtimeArgs": ["artisan", "serve", "--port=8031"],
+      "port": 8031
     }
   ]
 }

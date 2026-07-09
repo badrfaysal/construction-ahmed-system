@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'التنبيهات')
 @section('page-title', 'التنبيهات والمتابعة')
 
@@ -39,7 +39,7 @@
               <td><a href="{{ route('projects.show', $inst->project) }}">{{ $inst->project->name }}</a></td>
               <td class="muted">{{ $inst->label }}</td>
               <td><span class="tag red">{{ $inst->due_date->format('Y-m-d') }}</span></td>
-              <td class="num">{{ number_format($inst->amount) }}</td>
+              <td class="num">{{ \App\Support\Money::format($inst->amount) }}</td>
               <td>
                 <form method="POST" action="{{ route('installments.markPaid', $inst) }}">
                   @csrf
@@ -69,7 +69,7 @@
               <td><a href="{{ route('projects.show', $inst->project) }}">{{ $inst->project->name }}</a></td>
               <td class="muted">{{ $inst->label }}</td>
               <td><span class="tag amber">{{ $inst->due_date->format('Y-m-d') }}</span></td>
-              <td class="num">{{ number_format($inst->amount) }}</td>
+              <td class="num">{{ \App\Support\Money::format($inst->amount) }}</td>
             </tr>
           @endforeach
         </tbody>

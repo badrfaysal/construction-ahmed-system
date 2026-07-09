@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'دفعات الصنايعي')
 @section('page-title', 'دفعات ' . $worker->name)
 
@@ -17,7 +17,7 @@
       {{ $project->name }} — بند {{ $worker->band->name }}
       · {{ $worker->contractTypeAr() }}
       @if(in_array($worker->contract_type, ['per_meter','per_piece','daily']) && $worker->contract_qty)
-        ({{ rtrim(rtrim(number_format($worker->contract_qty, 2), '0'), '.') }} × {{ number_format($worker->contract_unit_rate) }})
+        ({{ rtrim(rtrim(number_format($worker->contract_qty, 2), '0'), '.') }} × {{ \App\Support\Money::format($worker->contract_unit_rate) }})
       @endif
     </p>
   </div>
@@ -34,15 +34,15 @@
 <div class="grid cols-3" style="margin-bottom:20px">
   <div class="card stat">
     <div class="top"><span class="label">المتعاقد عليه</span></div>
-    <div class="val tnum">{{ number_format($contract) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($contract) }} <small>ج.م</small></div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">المدفوع للصنايعي</span></div>
-    <div class="val tnum" style="color:var(--pos)">{{ number_format($paid) }} <small>ج.م</small></div>
+    <div class="val tnum" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }} <small>ج.م</small></div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">المتبقي (مستحق)</span></div>
-    <div class="val tnum" style="color:{{ $remaining > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ number_format($remaining) }} <small>ج.م</small></div>
+    <div class="val tnum" style="color:{{ $remaining > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($remaining) }} <small>ج.م</small></div>
   </div>
 </div>
 
@@ -56,7 +56,7 @@
         <div class="field">
           <label>المبلغ (ج.م) *</label>
           <input type="number" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" placeholder="{{ number_format($remaining, 2, '.', '') }}" required>
-          @if($remaining > 0)<p class="muted" style="margin-top:4px;font-size:12px">المتبقي: {{ number_format($remaining) }} ج.م</p>@endif
+          @if($remaining > 0)<p class="muted" style="margin-top:4px;font-size:12px">المتبقي: {{ \App\Support\Money::format($remaining) }} ج.م</p>@endif
         </div>
         <div class="field">
           <label>التاريخ *</label>
@@ -101,7 +101,7 @@
             @foreach($worker->payments as $p)
               <tr>
                 <td class="muted">{{ $p->date->format('Y-m-d') }}</td>
-                <td class="num">{{ number_format($p->amount) }}</td>
+                <td class="num">{{ \App\Support\Money::format($p->amount) }}</td>
                 <td class="muted">{{ $p->method ?: '—' }}</td>
                 <td class="muted">{{ $p->notes ?: '—' }}</td>
                 <td>
@@ -116,7 +116,7 @@
           <tfoot>
             <tr>
               <td>الإجمالي</td>
-              <td class="num" style="color:var(--pos)">{{ number_format($paid) }}</td>
+              <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }}</td>
               <td colspan="3"></td>
             </tr>
           </tfoot>
@@ -133,18 +133,18 @@
 
 {{-- تبديل الفني — متاح طول ما لسه فاضل مستحق يتسلّم لحد تاني --}}
 @if($remaining > 0)
-<details class="form-card" style="max-width:none;margin-top:20px">
+<details class="form-card" style="max-width:none;margin-top:20px" {{ $errors->hasAny(['new_name', 'new_phone', 'new_amount']) ? 'open' : '' }}>
   <summary style="cursor:pointer;font-weight:700;display:flex;align-items:center;gap:8px;list-style:none">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="color:var(--accent,#4f46e5)"><use href="#i-users"/></svg>
     تبديل الفني (مشي بدري وحد تاني هيكمّل)
   </summary>
   <p class="muted" style="margin:10px 0 14px;font-size:13px;line-height:1.7">
     لو <strong>{{ $worker->name }}</strong> عمل جزء من الشغل واستلم دفعاته ومشي، هنثبّت تعاقده على اللي استلمه فعلاً
-    (<strong>{{ number_format($paid) }} ج.م</strong> — يبقى مستحقه صفر)، وهنضيف فني جديد يكمّل الباقي
-    (<strong>{{ number_format($remaining) }} ج.م</strong>) في نفس البند من غير ما يتغيّر إجمالي البند أو تتمسح دفعات حد.
+    (<strong>{{ \App\Support\Money::format($paid) }} ج.م</strong> — يبقى مستحقه صفر)، وهنضيف فني جديد يكمّل الباقي
+    (<strong>{{ \App\Support\Money::format($remaining) }} ج.م</strong>) في نفس البند من غير ما يتغيّر إجمالي البند أو تتمسح دفعات حد.
   </p>
   <form method="POST" action="{{ route('workers.swap', $worker) }}"
-        onsubmit="return confirm('تأكيد التبديل؟\n{{ $worker->name }} هيتثبّت على {{ number_format($paid) }} ج.م، والفني الجديد هياخد الباقي.');">
+        onsubmit="return confirm('تأكيد التبديل؟\n{{ $worker->name }} هيتثبّت على {{ \App\Support\Money::format($paid) }} ج.م، والفني الجديد هياخد الباقي.');">
     @csrf
     <div class="row2">
       <div class="field">

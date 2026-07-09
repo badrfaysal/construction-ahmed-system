@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'كشف حساب العميل')
 @section('page-title', 'كشف حساب العميل')
 
@@ -26,9 +26,9 @@
             <tr>
               <td><strong>{{ $project->name }}</strong></td>
               <td class="muted">{{ $project->client->name }}</td>
-              <td class="num">{{ number_format($project->contract_value) }}</td>
-              <td class="num" style="color:var(--pos)">{{ number_format($project->total_paid) }}</td>
-              <td class="num" style="color:{{ $project->balance > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ number_format($project->balance) }}</td>
+              <td class="num">{{ \App\Support\Money::format($project->contract_value) }}</td>
+              <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($project->total_paid) }}</td>
+              <td class="num" style="color:{{ $project->balance > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($project->balance) }}</td>
               <td><a href="{{ route('reports.statement', $project) }}" class="btn ghost sm">عرض الكشف</a></td>
             </tr>
           @endforeach

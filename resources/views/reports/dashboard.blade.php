@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'التقارير')
 @section('page-title', 'التقارير')
 
@@ -54,15 +54,15 @@
 <div class="grid cols-3" style="margin-bottom:20px">
   <div class="card stat">
     <div class="top"><span class="label">إجمالي الربح</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg></span></div>
-    <div class="val tnum" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ number_format($totalProfit) }} <small>ج.م</small></div>
+    <div class="val tnum" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalProfit) }} <small>ج.م</small></div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">إجمالي المصروف</span><span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></span></div>
-    <div class="val tnum">{{ number_format($totalSpent) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($totalSpent) }} <small>ج.م</small></div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">إجمالي المحصّل</span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span></div>
-    <div class="val tnum">{{ number_format($totalCollected) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($totalCollected) }} <small>ج.م</small></div>
   </div>
 </div>
 
@@ -87,7 +87,7 @@
         <thead><tr><th>المشروع</th><th class="num">المصروف</th></tr></thead>
         <tbody>
           @forelse($topProjectsBySpend as $row)
-            <tr><td>{{ $row->name }}</td><td class="num">{{ number_format($row->spent) }}</td></tr>
+            <tr><td>{{ $row->name }}</td><td class="num">{{ \App\Support\Money::format($row->spent) }}</td></tr>
           @empty
             <tr><td colspan="2" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
           @endforelse
@@ -102,7 +102,7 @@
         <thead><tr><th>المشروع</th><th class="num">الربح</th></tr></thead>
         <tbody>
           @forelse($topProjectsByProfit as $row)
-            <tr><td>{{ $row->name }}</td><td class="num" style="color:{{ $row->profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ number_format($row->profit) }}</td></tr>
+            <tr><td>{{ $row->name }}</td><td class="num" style="color:{{ $row->profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($row->profit) }}</td></tr>
           @empty
             <tr><td colspan="2" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
           @endforelse
@@ -121,7 +121,7 @@
         <thead><tr><th>البند</th><th class="num">عدد المرات</th><th class="num">المصروف</th></tr></thead>
         <tbody>
           @forelse($topBandNamesBySpend as $row)
-            <tr><td>{{ $row->name }}</td><td class="num">{{ $row->count }}</td><td class="num">{{ number_format($row->spent) }}</td></tr>
+            <tr><td>{{ $row->name }}</td><td class="num">{{ $row->count }}</td><td class="num">{{ \App\Support\Money::format($row->spent) }}</td></tr>
           @empty
             <tr><td colspan="3" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
           @endforelse
@@ -136,7 +136,7 @@
         <thead><tr><th>البند</th><th class="num">عدد المرات</th><th class="num">الربح</th></tr></thead>
         <tbody>
           @forelse($topBandNamesByProfit as $row)
-            <tr><td>{{ $row->name }}</td><td class="num">{{ $row->count }}</td><td class="num" style="color:{{ $row->profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ number_format($row->profit) }}</td></tr>
+            <tr><td>{{ $row->name }}</td><td class="num">{{ $row->count }}</td><td class="num" style="color:{{ $row->profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($row->profit) }}</td></tr>
           @empty
             <tr><td colspan="3" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
           @endforelse
@@ -155,7 +155,7 @@
         <thead><tr><th>البند</th><th>المشروع</th><th class="num">المصروف</th></tr></thead>
         <tbody>
           @forelse($topBandInstancesBySpend as $row)
-            <tr><td>{{ $row->name }}</td><td class="muted">{{ $row->project }}</td><td class="num">{{ number_format($row->spent) }}</td></tr>
+            <tr><td>{{ $row->name }}</td><td class="muted">{{ $row->project }}</td><td class="num">{{ \App\Support\Money::format($row->spent) }}</td></tr>
           @empty
             <tr><td colspan="3" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
           @endforelse
@@ -170,7 +170,7 @@
         <thead><tr><th>البند</th><th>المشروع</th><th class="num">الربح</th></tr></thead>
         <tbody>
           @forelse($topBandInstancesByProfit as $row)
-            <tr><td>{{ $row->name }}</td><td class="muted">{{ $row->project }}</td><td class="num" style="color:{{ $row->profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ number_format($row->profit) }}</td></tr>
+            <tr><td>{{ $row->name }}</td><td class="muted">{{ $row->project }}</td><td class="num" style="color:{{ $row->profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($row->profit) }}</td></tr>
           @empty
             <tr><td colspan="3" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
           @endforelse
@@ -188,7 +188,7 @@
       <thead><tr><th>الفني</th><th class="num">عدد مرات العمل</th><th class="num">إجمالي المدفوع</th></tr></thead>
       <tbody>
         @forelse($technicians as $t)
-          <tr><td><strong>{{ $t->name }}</strong></td><td class="num">{{ $t->count }}</td><td class="num">{{ number_format($t->total) }}</td></tr>
+          <tr><td><strong>{{ $t->name }}</strong></td><td class="num">{{ $t->count }}</td><td class="num">{{ \App\Support\Money::format($t->total) }}</td></tr>
         @empty
           <tr><td colspan="3" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
         @endforelse

@@ -34,12 +34,16 @@ class WorkerPaymentController extends Controller
             'notes'      => ['nullable', 'string'],
         ]);
 
-        // Can't pay a craftsman more than his contracted amount (guards typos —
-        // an unbounded overpayment is almost always a mistake). Only enforced
-        // when a contract amount is actually set: a worker whose amount is
-        // still 0 has no known cap yet, but a fully-paid one is capped at 0.
+        // Can't pay a craftsman more than his contracted amount. If the
+        // contract amount isn't set yet, there's nothing to bound the
+        // payment by — block it instead of allowing an unlimited amount.
+        if ((float) $worker->amount <= 0) {
+            throw ValidationException::withMessages([
+                'amount' => 'لازم تحدد قيمة تعاقد الصنايعي الأول قبل ما تسجّل له أي دفعة.',
+            ]);
+        }
         $remaining = $worker->remaining();
-        if ((float) $worker->amount > 0 && $data['amount'] > $remaining + 0.01) {
+        if ($data['amount'] > $remaining + 0.01) {
             throw ValidationException::withMessages([
                 'amount' => 'المبلغ أكبر من المتبقي للصنايعي (' . number_format($remaining, 2) . ' ج.م).',
             ]);

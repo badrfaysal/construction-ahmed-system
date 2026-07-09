@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', $client->name)
 @section('page-title', $client->name)
 
@@ -26,8 +26,8 @@
             <span class="tag {{ $p->status === 'done' ? 'green' : 'blue' }}">{{ $p->status === 'done' ? 'مكتمل' : 'جاري' }}</span>
           </div>
           <div class="pc-fin">
-            <div><div class="l">التعاقد</div><div class="v">{{ number_format($p->initialContractValue()) }}</div></div>
-            <div><div class="l">محصّل</div><div class="v" style="color:var(--pos)">{{ number_format($p->totalCollected()) }}</div></div>
+            <div><div class="l">التعاقد</div><div class="v">{{ \App\Support\Money::format($p->initialContractValue()) }}</div></div>
+            <div><div class="l">محصّل</div><div class="v" style="color:var(--pos)">{{ \App\Support\Money::format($p->totalCollected()) }}</div></div>
           </div>
         </div>
       </a>

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'لوحة التحليلات')
 @section('page-title', 'لوحة التحليلات')
 
@@ -31,8 +31,8 @@
         @endphp
         <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%">
           <div style="flex:1;display:flex;align-items:flex-end;gap:4px;width:100%;justify-content:center">
-            <div title="وارد: {{ number_format($in) }}" style="width:18px;border-radius:4px 4px 0 0;background:var(--pos);height:{{ ($in / $maxVal) * 100 }}%"></div>
-            <div title="صادر: {{ number_format($out) }}" style="width:18px;border-radius:4px 4px 0 0;background:var(--neg);height:{{ ($out / $maxVal) * 100 }}%"></div>
+            <div title="وارد: {{ \App\Support\Money::format($in) }}" style="width:18px;border-radius:4px 4px 0 0;background:var(--pos);height:{{ ($in / $maxVal) * 100 }}%"></div>
+            <div title="صادر: {{ \App\Support\Money::format($out) }}" style="width:18px;border-radius:4px 4px 0 0;background:var(--neg);height:{{ ($out / $maxVal) * 100 }}%"></div>
           </div>
           <span class="muted tnum">{{ $month }}</span>
         </div>
@@ -58,7 +58,7 @@
           @foreach($topSuppliers as $s)
             <tr>
               <td><a href="{{ route('suppliers.show', $s) }}">{{ $s->name }}</a></td>
-              <td class="num">{{ number_format($s->net_spend) }}</td>
+              <td class="num">{{ \App\Support\Money::format($s->net_spend) }}</td>
             </tr>
           @endforeach
         </tbody>

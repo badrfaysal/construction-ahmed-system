@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'الخامات')
 @section('page-title', 'الخامات والمرتجعات')
 
@@ -21,7 +21,7 @@
     </div>
     @if($insights['topMaterial'])
       <div class="val">{{ $insights['topMaterial']->item }}</div>
-      <div class="note">{{ number_format($insights['topMaterial']->total_qty, 1) }} {{ $insights['topMaterial']->unit }} — بتكلفة {{ number_format($insights['topMaterial']->total_cost) }} ج.م ({{ $insights['topMaterial']->purchase_count }} عملية شراء)</div>
+      <div class="note">{{ number_format($insights['topMaterial']->total_qty, 1) }} {{ $insights['topMaterial']->unit }} — بتكلفة {{ \App\Support\Money::format($insights['topMaterial']->total_cost) }} ج.م ({{ $insights['topMaterial']->purchase_count }} عملية شراء)</div>
     @else
       <div class="val">—</div>
       <div class="note">لا توجد بيانات كافية بعد</div>
@@ -34,7 +34,7 @@
     </div>
     @if($insights['topReturned'])
       <div class="val">{{ $insights['topReturned']->item }}</div>
-      <div class="note">{{ number_format($insights['topReturned']->total_qty, 1) }} {{ $insights['topReturned']->unit }} مرتجعة — بقيمة {{ number_format($insights['topReturned']->total_value) }} ج.م ({{ $insights['topReturned']->return_count }} مرتجع)</div>
+      <div class="note">{{ number_format($insights['topReturned']->total_qty, 1) }} {{ $insights['topReturned']->unit }} مرتجعة — بقيمة {{ \App\Support\Money::format($insights['topReturned']->total_value) }} ج.م ({{ $insights['topReturned']->return_count }} مرتجع)</div>
     @else
       <div class="val">—</div>
       <div class="note">لا توجد مرتجعات مسجّلة بعد</div>
@@ -47,7 +47,7 @@
     </div>
     @if($insights['topBand'])
       <div class="val">{{ $insights['topBand']->band_name }}</div>
-      <div class="note">{{ $insights['topBand']->project_name }} — بتكلفة {{ number_format($insights['topBand']->total_cost) }} ج.م</div>
+      <div class="note">{{ $insights['topBand']->project_name }} — بتكلفة {{ \App\Support\Money::format($insights['topBand']->total_cost) }} ج.م</div>
     @else
       <div class="val">—</div>
       <div class="note">لا توجد بيانات كافية بعد</div>
@@ -71,7 +71,13 @@
       <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-down"/></svg>
     </div>
   </div>
-  @if(request('project_id'))
+  @include('partials._sort-select', ['options' => [
+    'newest'    => 'الأحدث',
+    'oldest'    => 'الأقدم',
+    'cost_desc' => 'الأعلى تكلفة',
+    'cost_asc'  => 'الأقل تكلفة',
+  ]])
+  @if(request()->hasAny(['project_id','sort']))
     <div class="f-actions">
       <a href="{{ route('materials.index') }}" class="btn ghost sm">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-x"/></svg>
@@ -109,9 +115,9 @@
               <td class="muted">{{ $m->supplier?->name ?? '—' }}</td>
               <td class="num">{{ number_format($m->qty, 1) }}</td>
               <td class="muted">{{ $m->unit }}</td>
-              <td class="num">{{ number_format($m->unit_price) }}</td>
-              <td class="num {{ $m->returnedQty() > 0 ? '' : 'muted' }}">{{ number_format($m->returnedQty(), 1) }}</td>
-              <td class="num">{{ number_format($m->netCost()) }}</td>
+              <td class="num">{{ \App\Support\Money::format($m->unit_price) }}</td>
+              <td class="num {{ $m->returnedQty() > 0 ? '' : 'muted' }}">{{ \App\Support\Money::format($m->returnedQty(), 1) }}</td>
+              <td class="num">{{ \App\Support\Money::format($m->netCost()) }}</td>
               <td class="muted">{{ $m->date->format('d/m/Y') }}</td>
               <td>
                 <form method="POST" action="{{ route('materials.destroy', $m) }}" onsubmit="return confirm('حذف؟')">

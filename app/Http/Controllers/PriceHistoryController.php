@@ -11,7 +11,7 @@ class PriceHistoryController extends Controller
     // "جردل بوية" / "جردل البويه" count as the same item — see ItemNameMatcher)
     // and shows each one's latest price and how it's trending. Fully automatic:
     // there's no manual entry, this is derived straight from real purchases.
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
         $materials = Material::orderBy('date')->orderBy('id')->get();
         $groups = ItemNameMatcher::group($materials, fn ($m) => $m->item);
@@ -32,7 +32,14 @@ class PriceHistoryController extends Controller
                 'min_price'      => (float) $purchases->min('unit_price'),
                 'max_price'      => (float) $purchases->max('unit_price'),
             ];
-        })->sortBy('name')->values();
+        });
+
+        $items = (match ($request->get('sort', 'name')) {
+            'price_desc'  => $items->sortByDesc('latest_price'),
+            'price_asc'   => $items->sortBy('latest_price'),
+            'count_desc'  => $items->sortByDesc('purchase_count'),
+            default       => $items->sortBy('name'),
+        })->values();
 
         return view('price-history.index', compact('items'));
     }

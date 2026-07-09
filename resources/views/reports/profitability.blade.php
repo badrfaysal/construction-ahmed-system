@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'ربحية المشاريع')
 @section('page-title', 'ربحية المشاريع')
 
@@ -11,17 +11,17 @@
 <div class="grid cols-3" style="margin-bottom:24px">
   <div class="card stat">
     <div class="top"><span class="label">إجمالي التكلفة الفعلية</span></div>
-    <div class="val tnum" style="color:var(--warn)">{{ number_format($totals['total_spent']) }} <small>ج.م</small></div>
+    <div class="val tnum" style="color:var(--warn)">{{ \App\Support\Money::format($totals['total_spent']) }} <small>ج.م</small></div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">ربح دفتري (على الورق)</span></div>
-    <div class="val tnum" style="color:{{ $totals['book_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ number_format($totals['book_profit']) }} <small>ج.م</small></div>
-    <div class="sub">إجمالي المفوتر: {{ number_format($totals['total_billed']) }} ج.م</div>
+    <div class="val tnum" style="color:{{ $totals['book_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totals['book_profit']) }} <small>ج.م</small></div>
+    <div class="sub">إجمالي المفوتر: {{ \App\Support\Money::format($totals['total_billed']) }} ج.م</div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">ربح محصل (قُبض فعلاً)</span></div>
-    <div class="val tnum" style="color:{{ $totals['earned_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ number_format($totals['earned_profit']) }} <small>ج.م</small></div>
-    <div class="sub">إجمالي المحصول: {{ number_format($totals['total_collected']) }} ج.م</div>
+    <div class="val tnum" style="color:{{ $totals['earned_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totals['earned_profit']) }} <small>ج.م</small></div>
+    <div class="sub">إجمالي المحصول: {{ \App\Support\Money::format($totals['total_collected']) }} ج.م</div>
   </div>
 </div>
 
@@ -54,17 +54,17 @@
                   <span class="tag blue">نشط</span>
                 @endif
               </td>
-              <td class="num">{{ number_format($project->total_spent) }}</td>
-              <td class="num">{{ number_format($project->total_billed) }}</td>
+              <td class="num">{{ \App\Support\Money::format($project->total_spent) }}</td>
+              <td class="num">{{ \App\Support\Money::format($project->total_billed) }}</td>
               <td class="num" style="color:{{ $project->book_profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
-                {{ number_format($project->book_profit) }}
+                {{ \App\Support\Money::format($project->book_profit) }}
               </td>
               <td class="num" style="color:{{ $project->book_margin >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
                 {{ number_format($project->book_margin, 1) }}%
               </td>
-              <td class="num">{{ number_format($project->total_collected) }}</td>
+              <td class="num">{{ \App\Support\Money::format($project->total_collected) }}</td>
               <td class="num" style="color:{{ $project->earned_profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
-                {{ number_format($project->earned_profit) }}
+                {{ \App\Support\Money::format($project->earned_profit) }}
               </td>
             </tr>
           @endforeach
@@ -72,12 +72,12 @@
         <tfoot>
           <tr>
             <td colspan="3"><strong>الإجماليات</strong></td>
-            <td class="num">{{ number_format($totals['total_spent']) }}</td>
-            <td class="num">{{ number_format($totals['total_billed']) }}</td>
-            <td class="num" style="color:var(--pos)">{{ number_format($totals['book_profit']) }}</td>
+            <td class="num">{{ \App\Support\Money::format($totals['total_spent']) }}</td>
+            <td class="num">{{ \App\Support\Money::format($totals['total_billed']) }}</td>
+            <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($totals['book_profit']) }}</td>
             <td></td>
-            <td class="num">{{ number_format($totals['total_collected']) }}</td>
-            <td class="num" style="color:var(--pos)">{{ number_format($totals['earned_profit']) }}</td>
+            <td class="num">{{ \App\Support\Money::format($totals['total_collected']) }}</td>
+            <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($totals['earned_profit']) }}</td>
           </tr>
         </tfoot>
       </table>

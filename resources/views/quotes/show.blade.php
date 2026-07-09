@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', $quote->ref)
 @section('page-title', 'عرض سعر: ' . $quote->ref)
 
@@ -81,29 +81,29 @@
       <tbody>
         @foreach($quote->bands as $band)
           <tr class="grp">
-            <td colspan="4">بند: {{ $band->name }} <span class="bt">إجمالي البند: {{ number_format($band->price) }} ج.م</span></td>
+            <td colspan="4">بند: {{ $band->name }} <span class="bt">إجمالي البند: {{ \App\Support\Money::format($band->price) }} ج.م</span></td>
           </tr>
           @forelse($band->items as $item)
             <tr>
               <td>{{ $item->name }}</td>
               <td>{{ rtrim(rtrim($item->qty, '0'), '.') }}</td>
-              <td>{{ number_format($item->unit_price) }}</td>
-              <td><b>{{ number_format($item->total()) }}</b></td>
+              <td>{{ \App\Support\Money::format($item->unit_price) }}</td>
+              <td><b>{{ \App\Support\Money::format($item->total()) }}</b></td>
             </tr>
           @empty
             <tr>
               <td colspan="3" class="muted">سعر مقطوع — بدون تفصيل أصناف</td>
-              <td><b>{{ number_format($band->price) }}</b></td>
+              <td><b>{{ \App\Support\Money::format($band->price) }}</b></td>
             </tr>
           @endforelse
           <tr class="sub">
             <td colspan="3" style="text-align:left">إجمالي بند {{ $band->name }}</td>
-            <td>{{ number_format($band->price) }} ج.م</td>
+            <td>{{ \App\Support\Money::format($band->price) }} ج.م</td>
           </tr>
         @endforeach
         <tr class="sub" style="background:var(--accent-soft)">
           <td colspan="3" style="text-align:left;color:var(--accent-ink)">إجمالي عرض السعر</td>
-          <td style="color:var(--accent-ink)">{{ number_format($quote->total()) }} ج.م</td>
+          <td style="color:var(--accent-ink)">{{ \App\Support\Money::format($quote->total()) }} ج.م</td>
         </tr>
       </tbody>
     </table>

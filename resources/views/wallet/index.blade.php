@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'المحفظة')
 @section('page-title', 'محفظة المقاولات')
 
@@ -30,7 +30,7 @@
       <span class="label">رصيد محفظة المقاولات</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg></span>
     </div>
-    <div class="val tnum">{{ number_format($balance) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($balance) }} <small>ج.م</small></div>
     <div class="note">بيتحرك تلقائيًا مع كل مشتريات، تحصيلات، ودفعات الصنايعية</div>
   </div>
 </div>
@@ -46,7 +46,7 @@
           {{ $w->account_name }}@if($isDefault) <span style="color:var(--brand)">★</span>@endif
         </div>
         <div style="font-weight:700;font-size:1.05rem;color:{{ (float)$w->balance >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
-          {{ number_format((float) $w->balance) }} <small style="font-weight:400;color:var(--ink-3)">ج.م</small>
+          {{ \App\Support\Money::format($w->balance) }} <small style="font-weight:400;color:var(--ink-3)">ج.م</small>
         </div>
       </div>
     @endforeach
@@ -127,7 +127,7 @@
                   @if($tx->description)<div class="muted" style="font-size:12px">{{ $tx->description }}</div>@endif
                 </td>
                 <td class="num" style="color:{{ $tx->direction === 'in' ? 'var(--pos)' : 'var(--neg)' }}">
-                  {{ $tx->direction === 'in' ? '+ ' : '− ' }}{{ number_format($tx->amount) }}
+                  {{ $tx->direction === 'in' ? '+ ' : '− ' }}{{ \App\Support\Money::format($tx->amount) }}
                 </td>
                 <td>
                   <form method="POST" action="{{ route('wallet.destroy', $tx) }}" onsubmit="return confirm('حذف هذه الحركة؟ هيتعدّل رصيد المحفظة.')">

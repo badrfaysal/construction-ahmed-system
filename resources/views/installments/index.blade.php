@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'العقود والأقساط')
 @section('page-title', 'منظومة العقود والأقساط')
 
@@ -132,8 +132,8 @@
 
   {{-- ═══ Stat cards ═══ --}}
   <div class="row g-3 mb-4">
-    <div class="col-md col-6"><div class="stat-card blue"><div class="sc-icon"><i class="fa fa-money-bill-wave"></i></div><p>إجمالي المتبقي بالخارج</p><h3>{{ number_format($totalOut) }} <small>ج</small></h3></div></div>
-    <div class="col-md col-6"><div class="stat-card green"><div class="sc-icon"><i class="fa fa-circle-check"></i></div><p>إجمالي المحصّل</p><h3>{{ number_format($totalCollected) }} <small>ج</small></h3></div></div>
+    <div class="col-md col-6"><div class="stat-card blue"><div class="sc-icon"><i class="fa fa-money-bill-wave"></i></div><p>إجمالي المتبقي بالخارج</p><h3>{{ \App\Support\Money::format($totalOut) }} <small>ج</small></h3></div></div>
+    <div class="col-md col-6"><div class="stat-card green"><div class="sc-icon"><i class="fa fa-circle-check"></i></div><p>إجمالي المحصّل</p><h3>{{ \App\Support\Money::format($totalCollected) }} <small>ج</small></h3></div></div>
     <div class="col-md col-6"><div class="stat-card orange"><div class="sc-icon"><i class="fa fa-file-contract"></i></div><p>العقود النشطة</p><h3>{{ $active->count() }} <small>عقد</small></h3></div></div>
     <div class="col-md col-6"><div class="stat-card red"><div class="sc-icon"><i class="fa fa-flag-checkered"></i></div><p>العقود المنتهية</p><h3>{{ $completed->count() }} <small>عقد</small></h3></div></div>
     <div class="col-md col-6"><div class="stat-card purple"><div class="sc-icon"><i class="fa fa-calendar-day"></i></div><p>أقساط اليوم ({{ date('d') }})</p><h3>{{ $todayContracts->count() }} <small>قسط</small></h3></div></div>
@@ -249,8 +249,8 @@
               <tr class="clickable-row" onclick="openStatement(@js($c->customer_phone), @js($c->customer_name))">
                 <td class="text-start"><strong class="d-block">{{ $c->customer_name }}</strong><small class="text-muted" dir="ltr">{{ $c->customer_phone ?: '—' }}</small></td>
                 <td>{{ Str::limit($c->product_name, 24) }}</td>
-                <td class="fw-bold">{{ number_format($c->total_after_interest) }} ج</td>
-                <td class="text-success fw-bold">{{ number_format($c->down_payment) }} ج</td>
+                <td class="fw-bold">{{ \App\Support\Money::format($c->total_after_interest) }} ج</td>
+                <td class="text-success fw-bold">{{ \App\Support\Money::format($c->down_payment) }} ج</td>
                 <td class="text-muted">{{ $c->created_at->format('Y/m/d') }}</td>
                 <td><span class="badge bg-success">مسدد بالكامل ✓</span></td>
                 <td class="no-print"><button class="btn btn-sm btn-outline-success fw-bold" onclick="event.stopPropagation(); openStatement(@js($c->customer_phone), @js($c->customer_name))"><i class="fa fa-table me-1"></i> كشف</button></td>
@@ -283,8 +283,8 @@
             <select name="project_id" id="nc_project" class="form-select" required onchange="ncProjectChanged(this)">
               <option value="">— اختر المشروع —</option>
               @foreach($projectsForContract as $p)
-                <option value="{{ $p->id }}" data-billed="{{ $p->billed }}" data-bands='@json($p->bands)'>
-                  {{ $p->name }} — {{ $p->client_name }} ({{ number_format($p->billed) }} ج)
+                <option value="{{ $p->id }}" data-billed="{{ $p->billed }}" data-paid="{{ $p->already_paid }}" data-paid-total="{{ $p->already_paid_total }}" data-bands='@json($p->bands)'>
+                  {{ $p->name }} — {{ $p->client_name }} ({{ \App\Support\Money::format($p->billed) }} ج)
                 </option>
               @endforeach
             </select>
@@ -308,7 +308,12 @@
             <div class="col-md-4"><label class="fw-bold mb-1 small" style="color:#0ea5e9">خصم</label>
               <input type="number" step="0.01" min="0" name="discount" id="nc_disc" class="form-control" value="0" oninput="ncCalc()"></div>
             <div class="col-md-4"><label class="fw-bold mb-1 small text-success">المقدم المدفوع الآن</label>
-              <input type="number" step="0.01" min="0" name="down_payment" id="nc_down" class="form-control text-success fw-bold" value="0" oninput="ncCalc()"></div>
+              <input type="number" step="0.01" min="0" name="down_payment" id="nc_down" class="form-control text-success fw-bold" value="0" readonly oninput="ncCalc()">
+              <div class="form-check mt-1">
+                <input class="form-check-input" type="checkbox" id="nc_use_paid" onchange="ncUsePaidToggled(this)">
+                <label class="form-check-label small text-muted" for="nc_use_paid">اعتبر كل المبلغ اللي اتحصّل فعليًا من العميل في المشروع مقدم (مش بس تحت البند ده)</label>
+              </div>
+              <small id="nc_down_warning" class="text-danger d-none d-block mt-1"><i class="fa fa-triangle-exclamation me-1"></i>المقدم أكبر من قيمة العقد بعد الخصم — قلّل المقدم أو اختر بند/مشروع بقيمة أعلى.</small></div>
             <div class="col-md-4"><label class="fw-bold mb-1 small text-secondary">نسبة الفائدة %</label>
               <input type="number" step="0.1" min="0" name="interest_rate" id="nc_rate" class="form-control" value="0" oninput="ncCalc()"></div>
             <div class="col-md-4"><label class="fw-bold mb-1 small text-warning">عدد الشهور <span class="text-danger">*</span></label>
@@ -327,7 +332,7 @@
                 @foreach($wallets->groupBy(fn($w) => $w->categoryAr()) as $cat => $grp)
                   <optgroup label="{{ $cat }}">
                     @foreach($grp as $w)
-                      <option value="{{ $w->id }}">{{ $w->account_name }}@if($w->id == \App\Models\Account::WALLET_ID) ★@endif — {{ number_format((float)$w->balance) }} ج</option>
+                      <option value="{{ $w->id }}">{{ $w->account_name }}@if($w->id == \App\Models\Account::WALLET_ID) ★@endif — {{ \App\Support\Money::format($w->balance) }} ج</option>
                     @endforeach
                   </optgroup>
                 @endforeach
@@ -345,7 +350,7 @@
         </div>
         <div class="modal-footer bg-white">
           <button type="button" class="btn btn-light fw-bold px-4" data-bs-dismiss="modal">إلغاء</button>
-          <button type="submit" class="btn btn-primary fw-bold px-4 flex-grow-1"><i class="fa fa-check-circle me-2"></i>اعتماد وحفظ العقد</button>
+          <button type="submit" id="nc_submit_btn" class="btn btn-primary fw-bold px-4 flex-grow-1"><i class="fa fa-check-circle me-2"></i>اعتماد وحفظ العقد</button>
         </div>
       </form>
     </div>
@@ -358,9 +363,30 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // ═══ عقد جديد: حساب حي + بنود المشروع ═══
+// اتنين قيمة بتتحدّث كل مرة يتغيّر فيها المشروع/البند:
+//  - ncAlreadyPaidScoped: اللي اتدفع تحت البند المختار بس (أو دفعات عامة لو
+//    "المشروع كامل") — ده الافتراضي اللي بيتكتب في المقدم.
+//  - ncAlreadyPaidTotal: كل فلوس المشروع مهما كان البند — بيتكتب بدل الأول
+//    لو المستخدم فعّل checkbox «اعتبر كل المبلغ... في المشروع».
+let ncAlreadyPaidScoped = 0;
+let ncAlreadyPaidTotal = 0;
+
+function ncApplyPaidToDown(){
+  const cb = document.getElementById('nc_use_paid');
+  const downInput = document.getElementById('nc_down');
+  const val = cb.checked ? ncAlreadyPaidTotal : ncAlreadyPaidScoped;
+  downInput.value = val>0 ? val.toFixed(2) : 0;
+  downInput.readOnly = true;
+  ncCalc();
+}
+function ncUsePaidToggled(cb){
+  ncApplyPaidToDown();
+}
 function ncProjectChanged(sel){
   const opt = sel.options[sel.selectedIndex];
   const billed = parseFloat(opt?.dataset.billed)||0;
+  ncAlreadyPaidScoped = parseFloat(opt?.dataset.paid)||0;
+  ncAlreadyPaidTotal = parseFloat(opt?.dataset.paidTotal)||0;
   // املأ قائمة البنود من المشروع المختار
   const bandSel = document.getElementById('nc_band');
   bandSel.innerHTML = '<option value="">المشروع كامل ('+(billed?billed.toLocaleString('en-US'):'0')+' ج)</option>';
@@ -368,20 +394,32 @@ function ncProjectChanged(sel){
   try { bands = JSON.parse(opt?.dataset.bands||'[]'); } catch(e){ bands = []; }
   bands.forEach(b=>{
     const o = document.createElement('option');
-    o.value = b.id; o.dataset.billed = b.billed;
+    o.value = b.id; o.dataset.billed = b.billed; o.dataset.paid = b.already_paid; o.dataset.paidTotal = b.already_paid_total;
     o.textContent = b.name + ' (' + (Number(b.billed)||0).toLocaleString('en-US') + ' ج)';
     bandSel.appendChild(o);
   });
   document.getElementById('nc_cash').value = billed>0 ? billed.toFixed(2) : '';
-  ncCalc();
+  // أي فلوس اتحصّلت من العميل قبل كده تتملى تلقائي كمقدم — على نطاق البند
+  // المختار بالافتراض، أو كل فلوس المشروع لو الـ checkbox مفعّل
+  ncApplyPaidToDown();
 }
 function ncBandChanged(sel){
   const opt = sel.options[sel.selectedIndex];
   let billed;
-  if(sel.value){ billed = parseFloat(opt?.dataset.billed)||0; }
-  else { const p = document.getElementById('nc_project').selectedOptions[0]; billed = parseFloat(p?.dataset.billed)||0; }
+  if(sel.value){
+    billed = parseFloat(opt?.dataset.billed)||0;
+    ncAlreadyPaidScoped = parseFloat(opt?.dataset.paid)||0;
+    ncAlreadyPaidTotal = parseFloat(opt?.dataset.paidTotal)||0;
+  } else {
+    const p = document.getElementById('nc_project').selectedOptions[0];
+    billed = parseFloat(p?.dataset.billed)||0;
+    ncAlreadyPaidScoped = parseFloat(p?.dataset.paid)||0;
+    ncAlreadyPaidTotal = parseFloat(p?.dataset.paidTotal)||0;
+  }
   document.getElementById('nc_cash').value = billed>0 ? billed.toFixed(2) : '';
-  ncCalc();
+  // نفس فكرة ncProjectChanged: تحديد بند بيبدّل النطاق الافتراضي لفلوس البند
+  // ده بس، إلا لو الـ checkbox مفعّل فبيفضل ياخد كل فلوس المشروع
+  ncApplyPaidToDown();
 }
 function ncCalc(){
   const cash=parseFloat(document.getElementById('nc_cash').value)||0;
@@ -398,12 +436,40 @@ function ncCalc(){
   const fmt=v=> v%1===0? v.toLocaleString('en-US'): v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   document.getElementById('nc_total').innerText=fmt(rem);
   document.getElementById('nc_monthly').innerText=fmt(monthly);
+
+  // المقدم لازم يكون ≤ قيمة العقد بعد الخصم — لو أكبر امنع الحفظ فورًا بدل
+  // ما المستخدم يكتشف الرفض بعد ما يبعت الفورم (نفس القاعدة اللي السيرفر
+  // بيتحقق منها في InstallmentController::store/update)
+  const warnEl = document.getElementById('nc_down_warning');
+  const submitBtn = document.getElementById('nc_submit_btn');
+  const invalid = down > afterDisc + 0.01;
+  warnEl.classList.toggle('d-none', !invalid);
+  if(submitBtn) submitBtn.disabled = invalid;
 }
 function validateContract(e,form){
   const pid=form.project_id.value;
   const mos=parseInt(form.installment_months.value)||0;
   if(!pid){e.preventDefault();Swal.fire('بيانات ناقصة','اختر المشروع','warning');return false;}
   if(mos<=0){e.preventDefault();Swal.fire('بيانات ناقصة','اكتب عدد الشهور','warning');return false;}
+
+  // تقسيط "المشروع كامل" (من غير تحديد بند) بيقفل المشروع خالص عن أي بند أو
+  // خامة جديدة بعد كده — لازم تأكيد صريح من المستخدم قبل الحفظ
+  if(!form.band_id.value){
+    e.preventDefault();
+    Swal.fire({
+      icon:'warning',
+      title:'تقسيط المشروع بالكامل؟',
+      html:'لو أكّدت تقسيط المشروع بالكامل، مش هتقدر تضيف أي بنود جديدة أو تشتري أي خامات تانية لهذا المشروع بعد كده.<br><br>متأكد إنك عايز تكمل؟',
+      showCancelButton:true,
+      confirmButtonText:'أيوه، أكمل التقسيط',
+      cancelButtonText:'إلغاء',
+      confirmButtonColor:'#dc2626',
+      reverseButtons:true,
+    }).then(result=>{
+      if(result.isConfirmed) form.submit();
+    });
+    return false;
+  }
   return true;
 }
 
@@ -418,13 +484,45 @@ function _injectAndShow(html,hostId){
   m.show();
   return modalEl;
 }
-async function openStatement(phone,name){
+async function openStatement(phone,name,prefill){
+  if (window.showConstructionLoader) window.showConstructionLoader();
   try{
     const qs=new URLSearchParams({phone:phone||'',name:name||''});
     const res=await fetch(`{{ route('installments.customer_statement') }}?${qs.toString()}`,{headers:{'X-Requested-With':'XMLHttpRequest'}});
     if(!res.ok)throw new Error('فشل');
     _injectAndShow(await res.text(),'statementModalHost');
+    if(prefill && prefill.contractId) applyStatementPrefill(prefill);
   }catch(e){Swal.fire('خطأ','تعذّر فتح كشف الحساب','error');}
+  finally{ if (window.hideConstructionLoader) window.hideConstructionLoader(); }
+}
+
+// بعد فشل حفظ سداد/تعديل جوه كشف الحساب (AJAX modal)، الصفحة بترجع تحمّل تاني
+// وكشف الحساب بيتفتح من جديد فاضي — الدالة دي بتفتح نفس فورم السداد/التعديل
+// المطلوب وترجّع القيم اللي المستخدم كتبها + تعرض رسالة الخطأ، عشان مفيش داتا
+// تضيع ولا خطأ يفوت من غير ما يتشاف.
+function applyStatementPrefill(prefill){
+  const cid = prefill.contractId;
+  const which = prefill.form === 'edit' ? 'edit' : 'pay';
+  const tab = document.querySelector('.cst-tab[data-pane="contract_'+cid+'"]');
+  if (tab) tab.click();
+  toggleStmtForm(cid, which);
+  const formHost = document.getElementById('stmt' + (which === 'pay' ? 'Pay' : 'Edit') + '_' + cid);
+  if (!formHost) return;
+  const form = formHost.querySelector('form');
+  if (!form) return;
+  if (prefill.old) {
+    Object.entries(prefill.old).forEach(([key, val]) => {
+      const input = form.querySelector('[name="'+key+'"]');
+      if (input && val !== null && val !== undefined) input.value = val;
+    });
+  }
+  if (prefill.errors && prefill.errors.length) {
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:#fbecea;color:#c0392b;border:1px solid #c0392b;border-radius:6px;padding:8px 12px;margin-bottom:8px;font-size:12px;font-weight:600;line-height:1.6';
+    banner.innerHTML = prefill.errors.map(e => '<div>' + e + '</div>').join('');
+    form.prepend(banner);
+  }
+  formHost.scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
 // أزرار سرعة تعبئة مبلغ الدفعة داخل كشف الحساب (عالمية عشان الـ partial بيتحقن بـ innerHTML)
@@ -502,11 +600,22 @@ function printStatement(){
   setTimeout(()=>{w.focus();w.print();},400);
 }
 
-// إعادة فتح كشف نفس العميل بعد سداد/عكس دفعة
+// إعادة فتح كشف نفس العميل بعد سداد/عكس دفعة — ولو الحفظ فشل (فاليديشن)، بترجّع
+// تفتح نفس فورم السداد/التعديل مع رسالة الخطأ والقيم اللي المستخدم كتبها
 @if(session('reopen_phone') !== null || session('reopen_name') !== null)
 (function(){
   const rP=@json(session('reopen_phone','')), rN=@json(session('reopen_name',''));
-  setTimeout(()=>{try{openStatement(rP,rN);}catch(e){}},350);
+  @if(session('reopen_contract_id') && $errors->any())
+  const prefill = {
+    contractId: @json(session('reopen_contract_id')),
+    form: @json(session('reopen_form', 'pay')),
+    errors: @json($errors->all()),
+    old: @json(session()->getOldInput()),
+  };
+  @else
+  const prefill = null;
+  @endif
+  setTimeout(()=>{try{openStatement(rP,rN,prefill);}catch(e){}},350);
 })();
 @endif
 
