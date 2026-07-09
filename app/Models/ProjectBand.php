@@ -224,6 +224,11 @@ class ProjectBand extends Model
     // Total cost of this band (materials + labor) — our real cost
     public function totalCost(): float
     {
+        return (float) $this->cached_total_cost;
+    }
+
+    public function computeTotalCost(): float
+    {
         return $this->materialCost() + (float) $this->labor_amount;
     }
 
@@ -246,7 +251,25 @@ class ProjectBand extends Model
     // separate from the pre-agreed client_price from the quote
     public function actualClientTotal(): float
     {
+        return (float) $this->cached_actual_total;
+    }
+
+    public function computeActualClientTotal(): float
+    {
         return $this->materialClientCost() + $this->laborClientPrice();
+    }
+
+    // Updates cached values and cascades up to the parent project
+    public function recalculateCachedTotals(): void
+    {
+        $this->updateQuietly([
+            'cached_actual_total' => $this->computeActualClientTotal(),
+            'cached_total_cost'   => $this->computeTotalCost(),
+        ]);
+
+        if ($this->project) {
+            $this->project->recalculateCachedTotals();
+        }
     }
 
     // Company profit for this band = what the client actually pays minus our real cost

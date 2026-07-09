@@ -28,9 +28,9 @@ class WorkerPaymentController extends Controller
     {
         $data = $request->validate([
             'amount'     => ['required', 'numeric', 'min:0.01'],
+            'discount'   => ['nullable', 'numeric', 'min:0'],
             'account_id' => ['required', 'integer', 'exists:accounts,id'],
             'date'       => ['required', 'date'],
-            'method'     => ['nullable', 'string', 'max:50'],
             'notes'      => ['nullable', 'string'],
         ]);
 
@@ -43,9 +43,9 @@ class WorkerPaymentController extends Controller
             ]);
         }
         $remaining = $worker->remaining();
-        if ($data['amount'] > $remaining + 0.01) {
+        if ($data['amount'] + ($data['discount'] ?? 0) > $remaining + 0.01) {
             throw ValidationException::withMessages([
-                'amount' => 'المبلغ أكبر من المتبقي للصنايعي (' . number_format($remaining, 2) . ' ج.م).',
+                'amount' => 'إجمالي المبلغ والخصم أكبر من المتبقي للصنايعي (' . number_format($remaining, 2) . ' ج.م).',
             ]);
         }
 
@@ -57,8 +57,8 @@ class WorkerPaymentController extends Controller
             'project_band_id' => $band->id,
             'account_id'      => $data['account_id'] ?? null,
             'amount'          => $data['amount'],
+            'discount'        => $data['discount'] ?? 0,
             'date'            => $data['date'],
-            'method'          => $data['method'] ?? null,
             'notes'           => $data['notes'] ?? null,
         ]));
 

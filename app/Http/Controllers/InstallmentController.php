@@ -36,7 +36,7 @@ class InstallmentController extends Controller
 
         // كل المشاريع متاحة لعمل عقد جديد (يُسمح بعقد للمشروع كامل أو لبند محدد،
         // وبأكثر من عقد للمشروع الواحد) + قيمة فاتورة كل مشروع/بند للعميل
-        $projectsForContract = Project::with(['client', 'bands.materials.returns', 'bands.workers', 'materials.returns', 'clientPayments', 'contracts'])
+        $projectsForContract = Project::with(['client', 'bands', 'clientPayments', 'contracts'])
             ->orderByDesc('id')
             ->get()
             ->map(function ($p) {

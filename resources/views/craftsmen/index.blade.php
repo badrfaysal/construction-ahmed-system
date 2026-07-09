@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'الصنايعية ومستحقاتهم')
 @section('page-title', 'الصنايعية ومستحقاتهم')
 
@@ -28,6 +28,8 @@
     'paid_desc'       => 'الأعلى مدفوعًا',
     'contracted_desc' => 'الأعلى تعاقدًا',
     'projects_desc'   => 'الأكثر مشاريع',
+    'rating_desc'     => 'الأعلى تقييمًا',
+    'rating_asc'      => 'الأقل تقييمًا',
     'name'            => 'أبجديًا',
   ]])
 </form>
@@ -35,18 +37,53 @@
 @forelse($craftsmen as $c)
   <div class="table-card" style="margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--line)">
-      <div>
-        <h4 style="margin:0">{{ $c->name }}</h4>
-        <div class="muted" style="font-size:13px;margin-top:4px">
-          @if($c->specialties->count()){{ $c->specialties->join('، ') }} · @endif
-          @if($c->phones->count()){{ $c->phones->join(' / ') }} · @endif
-          {{ $c->projects }} مشروع · {{ $c->assignments->count() }} بند
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+          <h4 style="margin:0">{{ $c->name }}</h4>
+          <div style="color:var(--amber);font-size:16px;">
+            @for($i=1; $i<=5; $i++)
+              @if($i <= $c->rating) ★ @else ☆ @endif
+            @endfor
+          </div>
+        </div>
+        <div class="muted" style="font-size:13px;line-height:1.6">
+          <div>
+            <strong>تاريخ البداية:</strong> {{ $c->start_date ? $c->start_date->format('Y-m-d') : '—' }} ·
+            <strong>الهاتف:</strong> @if($c->phones->count()){{ $c->phones->join(' / ') }}@else — @endif
+          </div>
+          <div>
+            <strong>البنود التي عمل بها:</strong> @if($c->bands_worked->count()){{ $c->bands_worked->join('، ') }}@else — @endif ·
+            <strong>التخصصات:</strong> @if($c->specialties->count()){{ $c->specialties->join('، ') }}@else — @endif
+          </div>
+          <div>
+            <strong>المشاريع:</strong> {{ $c->projects }} مشروع ·
+            <strong>الدفعات:</strong> {{ $c->payments_count }} دفعة مستلمة ·
+            <strong>المهام:</strong> {{ $c->assignments->count() }} بند
+          </div>
+          @if($c->notes)
+            <div style="margin-top:4px;padding:6px;background:var(--bg-muted);border-radius:4px">
+              <strong>ملاحظات التقييم:</strong> {{ $c->notes }}
+            </div>
+          @endif
         </div>
       </div>
-      <div style="display:flex;gap:20px;text-align:center">
-        <div><div class="muted" style="font-size:12px">متعاقد</div><div class="tnum" style="font-weight:700">{{ \App\Support\Money::format($c->contracted) }}</div></div>
-        <div><div class="muted" style="font-size:12px">مدفوع</div><div class="tnum" style="font-weight:700;color:var(--pos)">{{ \App\Support\Money::format($c->paid) }}</div></div>
-        <div><div class="muted" style="font-size:12px">متبقي</div><div class="tnum" style="font-weight:700;color:{{ $c->remaining > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($c->remaining) }}</div></div>
+      <div style="display:flex;flex-direction:column;gap:12px;align-items:flex-end">
+        <div style="display:flex;gap:20px;text-align:center">
+          <div><div class="muted" style="font-size:12px">متعاقد</div><div class="tnum" style="font-weight:700">{{ \App\Support\Money::format($c->contracted) }}</div></div>
+          <div><div class="muted" style="font-size:12px">مدفوع</div><div class="tnum" style="font-weight:700;color:var(--pos)">{{ \App\Support\Money::format($c->paid) }}</div></div>
+          <div><div class="muted" style="font-size:12px">متبقي</div><div class="tnum" style="font-weight:700;color:{{ $c->remaining > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($c->remaining) }}</div></div>
+        </div>
+        <form action="{{ route('craftsmen.rate', $c->name) }}" method="POST" style="display:flex;gap:8px;align-items:center;background:var(--bg-muted);padding:8px 12px;border-radius:6px;width:100%;max-width:300px">
+          @csrf
+          <select name="rating" style="padding:4px;border:1px solid var(--line);border-radius:4px;background:var(--bg-card);color:var(--text)">
+            <option value="">التقييم</option>
+            @for($i=1; $i<=5; $i++)
+              <option value="{{ $i }}" @selected($c->rating == $i)>{{ $i }} نجوم</option>
+            @endfor
+          </select>
+          <input type="text" name="notes" placeholder="ملاحظة عن الفني..." value="{{ $c->notes }}" style="flex:1;padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:var(--bg-card);color:var(--text);font-size:12px">
+          <button type="submit" class="btn sm ghost" style="padding:4px 8px">حفظ</button>
+        </form>
       </div>
     </div>
     <div class="table-scroll">

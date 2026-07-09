@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'دفعات الصنايعي')
 @section('page-title', 'دفعات ' . $worker->name)
 
@@ -55,8 +55,14 @@
       <div class="row2">
         <div class="field">
           <label>المبلغ (ج.م) *</label>
-          <input type="number" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" placeholder="{{ number_format($remaining, 2, '.', '') }}" required>
-          @if($remaining > 0)<p class="muted" style="margin-top:4px;font-size:12px">المتبقي: {{ \App\Support\Money::format($remaining) }} ج.م</p>@endif
+          <input type="number" id="pay_amt" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" placeholder="{{ number_format($remaining, 2, '.', '') }}" required>
+          @if($remaining > 0)
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <button type="button" class="btn ghost sm pay-btn" id="btn-full" onclick="setPayAmount({{ $remaining }}, 'full')">سداد كلي</button>
+            <button type="button" class="btn ghost sm pay-btn" id="btn-partial" onclick="setPayAmount({{ round($remaining * 0.5, 2) }}, 'partial')">النصف</button>
+            <button type="button" class="btn ghost sm pay-btn" id="btn-quarter" onclick="setPayAmount({{ round($remaining * 0.25, 2) }}, 'quarter')">الربع</button>
+          </div>
+          @endif
         </div>
         <div class="field">
           <label>التاريخ *</label>
@@ -65,8 +71,8 @@
       </div>
       <div class="row2">
         <div class="field">
-          <label>طريقة الدفع</label>
-          <input type="text" name="method" value="{{ old('method') }}" placeholder="كاش / تحويل...">
+          <label>الخصم (ج.م)</label>
+          <input type="number" name="discount" step="0.01" min="0" value="{{ old('discount') }}" placeholder="0.00">
         </div>
         <div class="field">
           @include('partials._wallet-select', ['wallets' => $wallets, 'label' => 'المحفظة (الصرف منها) *', 'required' => true, 'selectStyle' => 'width:100%'])
@@ -92,17 +98,21 @@
             <tr>
               <th>التاريخ</th>
               <th class="num">المبلغ</th>
-              <th>الطريقة</th>
+              <th>الخصم</th>
               <th>ملاحظات</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             @foreach($worker->payments as $p)
-              <tr>
+              <tr style="cursor:pointer" onclick="showPayDetail(this)"
+                  data-date="{{ $p->date->format('Y-m-d') }}"
+                  data-amount="{{ \App\Support\Money::format($p->amount) }}"
+                  data-discount="{{ \App\Support\Money::format($p->discount) }}"
+                  data-notes="{{ $p->notes ?: '—' }}">
                 <td class="muted">{{ $p->date->format('Y-m-d') }}</td>
                 <td class="num">{{ \App\Support\Money::format($p->amount) }}</td>
-                <td class="muted">{{ $p->method ?: '—' }}</td>
+                <td class="muted">{{ $p->discount > 0 ? \App\Support\Money::format($p->discount) : '—' }}</td>
                 <td class="muted">{{ $p->notes ?: '—' }}</td>
                 <td>
                   <form method="POST" action="{{ route('worker-payments.destroy', $p) }}" onsubmit="return confirm('حذف هذه الدفعة؟')">
@@ -177,4 +187,53 @@
 </details>
 @endif
 
+{{-- بوب أب تفاصيل الدفعة --}}
+<div class="rv-modal" id="payDetailModal" onclick="if(event.target===this) closePayDetail()">
+  <div class="rv-card" style="max-width:420px;margin:20px;background:#fff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.1);padding:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:1px solid #eee;padding-bottom:12px">
+      <h3 style="margin:0;font-size:1.1rem">تفاصيل الدفعة</h3>
+      <button class="btn ghost sm" onclick="closePayDetail()" style="padding:4px 8px"><i class="fa fa-times"></i></button>
+    </div>
+    <div style="display:grid;grid-template-columns:100px 1fr;gap:12px;font-size:0.95rem">
+      <div style="color:var(--muted);font-weight:600">التاريخ:</div><div id="pd-date" style="font-weight:700"></div>
+      <div style="color:var(--muted);font-weight:600">المبلغ:</div><div id="pd-amount" style="font-weight:700;color:var(--pos)"></div>
+      <div style="color:var(--muted);font-weight:600" id="pd-disc-lbl">الخصم:</div><div id="pd-discount" style="font-weight:700;color:var(--warning)"></div>
+      <div style="color:var(--muted);font-weight:600">ملاحظات:</div><div id="pd-notes" style="font-weight:600"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+.rv-modal { position:fixed; inset:0; z-index:1060; display:none; align-items:center; justify-content:center; background:rgba(15,23,42,.55); }
+.rv-modal.open { display:flex; }
+.pay-btn { transition: 0.2s; }
+.pay-btn.main { background: var(--accent); color: white; border-color: var(--accent); }
+</style>
+
+<script>
+function setPayAmount(amt, type) {
+  document.getElementById('pay_amt').value = amt;
+  document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('main'));
+  document.getElementById('btn-' + type).classList.add('main');
+}
+function showPayDetail(row) {
+  const d = row.dataset;
+  document.getElementById('pd-date').textContent = d.date;
+  document.getElementById('pd-amount').textContent = d.amount + ' ج.م';
+  const disc = parseFloat(d.discount);
+  if (disc > 0) {
+    document.getElementById('pd-discount').textContent = d.discount + ' ج.م';
+    document.getElementById('pd-disc-lbl').style.display = 'block';
+    document.getElementById('pd-discount').style.display = 'block';
+  } else {
+    document.getElementById('pd-disc-lbl').style.display = 'none';
+    document.getElementById('pd-discount').style.display = 'none';
+  }
+  document.getElementById('pd-notes').textContent = d.notes;
+  document.getElementById('payDetailModal').classList.add('open');
+}
+function closePayDetail() {
+  document.getElementById('payDetailModal').classList.remove('open');
+}
+</script>
 @endsection

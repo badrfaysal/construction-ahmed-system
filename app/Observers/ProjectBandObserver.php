@@ -20,11 +20,13 @@ class ProjectBandObserver
     public function updated(ProjectBand $band): void
     {
         $this->removeLegacyLaborTransaction($band);
+        $band->recalculateCachedTotals();
     }
 
     public function deleted(ProjectBand $band): void
     {
         $this->removeLegacyLaborTransaction($band);
+        $band->project?->recalculateCachedTotals();
     }
 
     private function removeLegacyLaborTransaction(ProjectBand $band): void

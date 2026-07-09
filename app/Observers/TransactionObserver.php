@@ -28,6 +28,7 @@ class TransactionObserver
     {
         $this->apply($transaction->direction, (float) $transaction->amount, $transaction->account_id, block: true);
         $this->mirrorUpsert($transaction);
+        $this->recalculateProjectTotals($transaction);
     }
 
     public function updated(Transaction $transaction): void
@@ -44,12 +45,21 @@ class TransactionObserver
         $this->apply($transaction->direction, (float) $transaction->amount, $transaction->account_id, block: true);
 
         $this->mirrorUpsert($transaction);
+        $this->recalculateProjectTotals($transaction);
     }
 
     public function deleted(Transaction $transaction): void
     {
         $this->apply($transaction->direction, (float) $transaction->amount, $transaction->account_id, block: false, reverse: true);
         $this->mirrorDelete($transaction);
+        $this->recalculateProjectTotals($transaction);
+    }
+
+    private function recalculateProjectTotals(Transaction $transaction): void
+    {
+        if ($transaction->ref_type === 'client_payment' && $transaction->project_id) {
+            $transaction->project?->recalculateCachedTotals();
+        }
     }
 
     // ── Wallet balance mutation ────────────────────────────────────────────

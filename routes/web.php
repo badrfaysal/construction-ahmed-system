@@ -134,6 +134,7 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     // Unified craftsmen directory (الصنايعية ومستحقاتهم) — one person across all
     // their bands/projects, with what they're still owed
     Route::get('/craftsmen', [CraftsmanController::class, 'index'])->name('craftsmen.index');
+    Route::post('/craftsmen/{name}/rate', [CraftsmanController::class, 'rate'])->name('craftsmen.rate');
 
     // Alerts / monitoring (التنبيهات)
     Route::get('/alerts', [AlertController::class, 'index'])->name('alerts.index');

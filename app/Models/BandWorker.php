@@ -55,10 +55,9 @@ class BandWorker extends Model
         return $base * (1 + (float) $this->supervision_pct / 100);
     }
 
-    // Total دفعات already paid to this craftsman
     public function paidTotal(): float
     {
-        return (float) $this->payments->sum('amount');
+        return (float) $this->payments->sum(fn ($p) => $p->amount + $p->discount);
     }
 
     // What's still owed to this craftsman = his contracted amount minus what

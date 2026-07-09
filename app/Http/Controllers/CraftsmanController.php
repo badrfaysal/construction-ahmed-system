@@ -16,20 +16,28 @@ class CraftsmanController extends Controller
     {
         $workers = BandWorker::with(['payments', 'band.project'])->get();
 
+        $ratings = \App\Models\CraftsmanRating::all()->keyBy('craftsman_name');
+
         $craftsmen = collect(ItemNameMatcher::group($workers, fn ($w) => $w->name))
-            ->map(function ($group) {
+            ->map(function ($group) use ($ratings) {
                 $rows = collect($group['items']);
+                $ratingObj = $ratings->get($group['canonical']);
 
                 return (object) [
-                    'name'        => $group['canonical'],
-                    'phones'      => $rows->pluck('phone')->filter()->unique()->values(),
-                    'specialties' => $rows->pluck('specialty')->filter()->unique()->values(),
-                    'projects'    => $rows->pluck('band.project.name')->filter()->unique()->count(),
-                    'contracted'  => (float) $rows->sum(fn ($w) => (float) $w->amount),
-                    'paid'        => (float) $rows->sum(fn ($w) => $w->paidTotal()),
-                    'remaining'   => (float) $rows->sum(fn ($w) => $w->remaining()),
+                    'name'           => $group['canonical'],
+                    'phones'         => $rows->pluck('phone')->filter()->unique()->values(),
+                    'specialties'    => $rows->pluck('specialty')->filter()->unique()->values(),
+                    'bands_worked'   => $rows->pluck('band.name')->filter()->unique()->values(),
+                    'projects'       => $rows->pluck('band.project.name')->filter()->unique()->count(),
+                    'contracted'     => (float) $rows->sum(fn ($w) => (float) $w->amount),
+                    'paid'           => (float) $rows->sum(fn ($w) => $w->paidTotal()),
+                    'remaining'      => (float) $rows->sum(fn ($w) => $w->remaining()),
+                    'payments_count' => $rows->sum(fn ($w) => $w->payments->count()),
+                    'start_date'     => $rows->min('start_date'),
+                    'rating'         => $ratingObj?->rating ?? 0,
+                    'notes'          => $ratingObj?->notes ?? '',
                     // One line per band assignment, newest-worked first
-                    'assignments' => $rows->sortByDesc(fn ($w) => $w->start_date)->values(),
+                    'assignments'    => $rows->sortByDesc(fn ($w) => $w->start_date)->values(),
                 ];
             });
 
@@ -38,6 +46,8 @@ class CraftsmanController extends Controller
             'contracted_desc' => $craftsmen->sortByDesc('contracted'),
             'projects_desc'   => $craftsmen->sortByDesc('projects'),
             'name'            => $craftsmen->sortBy('name'),
+            'rating_desc'     => $craftsmen->sortByDesc('rating'),
+            'rating_asc'      => $craftsmen->sortBy('rating'),
             default           => $craftsmen->sortByDesc('remaining'),
         })->values();
 
@@ -45,5 +55,20 @@ class CraftsmanController extends Controller
         $totalPaid      = $craftsmen->sum('paid');
 
         return view('craftsmen.index', compact('craftsmen', 'totalRemaining', 'totalPaid'));
+    }
+
+    public function rate(\Illuminate\Http\Request $request, string $name)
+    {
+        $validated = $request->validate([
+            'rating' => 'nullable|integer|min:1|max:5',
+            'notes'  => 'nullable|string',
+        ]);
+
+        \App\Models\CraftsmanRating::updateOrCreate(
+            ['craftsman_name' => $name],
+            $validated
+        );
+
+        return redirect()->back()->with('success', 'تم حفظ التقييم بنجاح.');
     }
 }

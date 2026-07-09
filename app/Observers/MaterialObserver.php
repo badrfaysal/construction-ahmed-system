@@ -51,6 +51,9 @@ class MaterialObserver
                 'status'       => 'pending',
             ]);
         }
+
+        $material->band?->recalculateCachedTotals();
+        $material->project?->recalculateCachedTotals();
     }
 
     public function updated(Material $material): void
@@ -119,6 +122,9 @@ class MaterialObserver
             // Debt is fully cancelled (purchase is now fully paid), remove it
             $debt->delete();
         }
+
+        $material->band?->recalculateCachedTotals();
+        $material->project?->recalculateCachedTotals();
     }
 
     public function deleted(Material $material): void
@@ -127,6 +133,9 @@ class MaterialObserver
         Transaction::where('ref_type', 'material')->where('ref_id', $material->id)->first()?->delete();
         // Remove any outstanding debt linked to this purchase
         SupplierDebt::where('material_id', $material->id)->where('paid_amount', 0)->delete();
+
+        $material->band?->recalculateCachedTotals();
+        $material->project?->recalculateCachedTotals();
     }
 
     // How much hits the wallet right now based on payment_status — the gross

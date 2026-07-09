@@ -17,13 +17,8 @@ class ReceivablesController extends Controller
     {
         $projects = Project::with([
             'client',
-            'bands.materials.returns',
-            'bands.workers',
-            'materials.returns',
-            'contracts.payments',
-            'contracts.band',
-            'clientPayments.band',
-            'installments',
+            'contracts', // Needed for hasInstallmentContract()
+            'clientPayments' // Needed for receivableExcess()
         ])->orderByDesc('created_at')->get();
 
         $rows = $projects->map(function ($project) {

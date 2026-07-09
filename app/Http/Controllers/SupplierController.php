@@ -25,13 +25,13 @@ class SupplierController extends Controller
             return $s;
         });
 
-        $suppliers = match ($request->get('sort', 'name')) {
+        $suppliers = (match ($request->get('sort', 'name')) {
             'newest'      => $suppliers->sortByDesc('id'),
             'oldest'      => $suppliers->sortBy('id'),
             'spent_desc'  => $suppliers->sortByDesc('total_spent'),
             'spent_asc'   => $suppliers->sortBy('total_spent'),
             default       => $suppliers->sortBy('name'),
-        }->values();
+        })->values();
 
         return view('suppliers.index', compact('suppliers'));
     }

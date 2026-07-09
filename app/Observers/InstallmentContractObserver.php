@@ -26,6 +26,8 @@ class InstallmentContractObserver
                 'ref_id'      => $contract->id,
             ]);
         }
+
+        $contract->project?->recalculateCachedTotals();
     }
 
     public function deleting(InstallmentContract $contract): void
@@ -37,5 +39,7 @@ class InstallmentContractObserver
 
         // احذف حركة المقدم
         Transaction::where('ref_type', 'inst_down')->where('ref_id', $contract->id)->first()?->delete();
+
+        $contract->project?->recalculateCachedTotals();
     }
 }

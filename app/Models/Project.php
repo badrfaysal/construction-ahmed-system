@@ -123,7 +123,12 @@ class Project extends Model
     // to one specific band) which live outside any band's own materials list.
     public function actualClientTotal(): float
     {
-        $bandsTotal = (float) $this->bands->sum(fn ($band) => $band->actualClientTotal());
+        return (float) $this->cached_actual_total;
+    }
+
+    public function computeActualClientTotal(): float
+    {
+        $bandsTotal = (float) $this->bands->sum(fn ($band) => $band->computeActualClientTotal());
         $generalMaterials = (float) $this->generalMaterials()->sum(fn ($m) => $m->netClientCost());
         return $bandsTotal + $generalMaterials;
     }
@@ -146,6 +151,11 @@ class Project extends Model
     // Total collected from client = مقدمات + دفعات عقود التقسيط + التحصيلات
     // المباشرة المسجّلة من صفحة المستحقات (للمشاريع اللي مش معمولها عقد تقسيط)
     public function totalCollected(): float
+    {
+        return (float) $this->cached_collected;
+    }
+
+    public function computeTotalCollected(): float
     {
         $fromContracts = (float) $this->contracts->sum(
             fn ($c) => (float) $c->down_payment + (float) $c->payments->sum('amount_paid')
@@ -204,8 +214,23 @@ class Project extends Model
     // Total spent on materials + labor for non-pending bands
     public function totalSpent(): float
     {
+        return (float) $this->cached_spent;
+    }
+
+    public function computeTotalSpent(): float
+    {
         $materialCost = $this->materials->sum(fn ($m) => $m->netCost());
         $laborCost    = $this->bands->whereIn('status', ['active', 'done'])->sum('labor_amount');
         return $materialCost + $laborCost;
+    }
+
+    // Updates cached values and saves
+    public function recalculateCachedTotals(): void
+    {
+        $this->updateQuietly([
+            'cached_actual_total' => $this->computeActualClientTotal(),
+            'cached_collected'    => $this->computeTotalCollected(),
+            'cached_spent'        => $this->computeTotalSpent(),
+        ]);
     }
 }

@@ -175,10 +175,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bar-chart"/></svg>
       لوحة التحليلات
     </a>
-    <a class="nav-item {{ request()->routeIs('analytics.technicians') ? 'active' : '' }}" href="{{ route('analytics.technicians') }}">
+    {{-- <a class="nav-item {{ request()->routeIs('analytics.technicians') ? 'active' : '' }}" href="{{ route('analytics.technicians') }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg>
       تقرير الفنيين
-    </a>
+    </a> --}}
     <a class="nav-item {{ request()->routeIs('price-history.*') ? 'active' : '' }}" href="{{ route('price-history.index') }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg>
       متابعة الأسعار

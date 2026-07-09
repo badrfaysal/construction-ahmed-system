@@ -14,7 +14,7 @@ class ReportController extends Controller
     // Entry screen for client statements — pick a project to view/print its statement
     public function statementIndex()
     {
-        $projects = Project::with(['client', 'bands.materials.returns', 'installments'])
+        $projects = Project::with(['client'])
             ->orderByDesc('created_at')
             ->get()
             ->map(function ($project) {
@@ -30,7 +30,7 @@ class ReportController extends Controller
     // Profitability table — real sell prices vs cost, split into book profit and collected profit
     public function profitability()
     {
-        $projects = Project::with(['client', 'bands.materials.returns', 'bands.workers', 'installments'])
+        $projects = Project::with(['client'])
             ->orderByDesc('created_at')
             ->get()
             ->map(function ($project) {
@@ -73,7 +73,7 @@ class ReportController extends Controller
         $to   = $request->filled('to') ? \Carbon\Carbon::parse($request->to)->endOfDay() : null;
         $projectId = $request->get('project_id');
 
-        $projectsQuery = Project::with(['client', 'bands.materials.returns', 'bands.workers', 'installments']);
+        $projectsQuery = Project::with(['client', 'bands.workers']);
         if ($projectId) {
             $projectsQuery->where('id', $projectId);
         }

@@ -45,6 +45,9 @@ class MaterialReturnObserver
         if ($debtDrop > 0) {
             $this->adjustDebt($material->id, -$debtDrop);
         }
+
+        $material->band?->recalculateCachedTotals();
+        $material->project?->recalculateCachedTotals();
     }
 
     // Removing a return → reverse the refund (re-debits the wallet, blocked by
@@ -63,6 +66,9 @@ class MaterialReturnObserver
         if ($debtDrop > 0) {
             $this->adjustDebt($material->id, $debtDrop);
         }
+
+        $material->band?->recalculateCachedTotals();
+        $material->project?->recalculateCachedTotals();
     }
 
     // Nudge the outstanding supplier debt for a material by $delta (negative to

@@ -29,6 +29,8 @@ class WorkerPaymentObserver
             'ref_type'    => 'worker_payment',
             'ref_id'      => $payment->id,
         ]);
+
+        $payment->band?->recalculateCachedTotals();
     }
 
     public function deleted(WorkerPayment $payment): void
@@ -36,5 +38,7 @@ class WorkerPaymentObserver
         // Model instance (not query-builder) so TransactionObserver fires and
         // credits the wallet back for this reversed payment.
         Transaction::where('ref_type', 'worker_payment')->where('ref_id', $payment->id)->first()?->delete();
+
+        $payment->band?->recalculateCachedTotals();
     }
 }

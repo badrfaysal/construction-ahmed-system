@@ -33,6 +33,8 @@ class InstallmentPaymentObserver
             'ref_type'    => 'inst_payment',
             'ref_id'      => $payment->id,
         ]);
+
+        $contract?->project?->recalculateCachedTotals();
     }
 
     public function deleted(InstallmentPayment $payment): void
@@ -45,5 +47,7 @@ class InstallmentPaymentObserver
 
         // احذف حركة التحصيل (Model instance عشان TransactionObserver يعكس المحفظة)
         Transaction::where('ref_type', 'inst_payment')->where('ref_id', $payment->id)->first()?->delete();
+
+        $contract?->project?->recalculateCachedTotals();
     }
 }
