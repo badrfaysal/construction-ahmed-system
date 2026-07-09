@@ -14,7 +14,7 @@ class ProjectController extends Controller
     {
         $tab = $request->get('tab', 'active'); // default to active tab
 
-        $projects = Project::with(['client', 'bands'])
+        $projects = Project::with(['client', 'bands.workers.payments'])
             ->where('status', $tab === 'done' ? 'done' : 'active')
             ->orderByDesc('created_at')
             ->get();

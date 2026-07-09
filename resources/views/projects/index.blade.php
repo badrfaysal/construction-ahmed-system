@@ -36,6 +36,7 @@
         $total = $p->initialContractValue();
         $actual = $p->actualClientTotal();
         $activeBand = $p->bands->where('status', 'active')->first();
+        $paidWorkers = $p->bands->flatMap(fn($b) => $b->workers)->sum(fn($w) => $w->paidTotal());
       @endphp
       <a class="pcard {{ $p->status === 'done' ? 'is-done' : '' }}" href="{{ route('projects.show', $p) }}">
         <div class="pc-band"></div>
@@ -71,12 +72,25 @@
               @include('partials._actual-vs-initial', ['initial' => $total, 'actual' => $actual])
             </div>
             <div>
-              <div class="l">محصّل</div>
+              <div class="l">محصّل من العميل</div>
               <div class="v" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }}</div>
             </div>
             <div>
               <div class="l">{{ $p->status === 'done' ? 'تاريخ التسليم' : 'موعد التسليم' }}</div>
               <div class="v">{{ $p->status === 'done' ? ($p->delivered_date?->format('Y-m-d') ?? '—') : ($p->deliver_date?->format('Y-m-d') ?? '—') }}</div>
+            </div>
+          </div>
+          {{-- شريط مدفوعات مختصر: دفعات العميل + المدفوع للصنايعية --}}
+          <div class="pc-pays">
+            <div class="pc-pay in">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>
+              <span class="l">دفعات العميل</span>
+              <span class="v">{{ \App\Support\Money::format($paid) }}</span>
+            </div>
+            <div class="pc-pay out">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg>
+              <span class="l">مدفوع للصنايعية</span>
+              <span class="v">{{ \App\Support\Money::format($paidWorkers) }}</span>
             </div>
           </div>
         </div>

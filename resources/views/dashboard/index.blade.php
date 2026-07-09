@@ -91,6 +91,7 @@
             $actual = $p->actualClientTotal();
             $due    = $total - $paid;
             $activeBand = $p->bands->where('status', 'active')->first();
+            $paidWorkers = $p->bands->flatMap(fn($b) => $b->workers)->sum(fn($w) => $w->paidTotal());
           @endphp
           <a class="pcard" href="{{ route('projects.show', $p) }}">
             <div class="pc-band"></div>
@@ -130,6 +131,18 @@
                 <div>
                   <div class="l">متبقي</div>
                   <div class="v" style="color:var(--warn)">{{ \App\Support\Money::format($due) }}</div>
+                </div>
+              </div>
+              <div class="pc-pays">
+                <div class="pc-pay in">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>
+                  <span class="l">دفعات العميل</span>
+                  <span class="v">{{ \App\Support\Money::format($paid) }}</span>
+                </div>
+                <div class="pc-pay out">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg>
+                  <span class="l">مدفوع للصنايعية</span>
+                  <span class="v">{{ \App\Support\Money::format($paidWorkers) }}</span>
                 </div>
               </div>
             </div>

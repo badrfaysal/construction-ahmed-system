@@ -22,18 +22,27 @@
 </div>
 
 {{-- Grand totals --}}
-<div class="grid cols-4" style="margin-bottom:20px">
+<div class="grid cols-5" style="margin-bottom:14px">
   <div class="vstat vstat-blue">
-    <div class="top"><span class="label">إجمالي تكلفة الخامات</span>
+    <div class="top"><span class="label">إجمالي الخامات</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg></span>
     </div>
     <div class="val tnum">{{ \App\Support\Money::format($totalMaterialCost) }} <small>ج.م</small></div>
+    @if($grandPerSqm !== null)<div class="note">{{ number_format($area > 0 ? $totalMaterialCost / $area : 0, 1) }} ج.م/م²</div>@endif
+  </div>
+  <div class="vstat vstat-red">
+    <div class="top"><span class="label">إجمالي النثريات</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span>
+    </div>
+    <div class="val tnum">{{ \App\Support\Money::format($totalPettyCost) }} <small>ج.م</small></div>
+    @if($grandPerSqm !== null)<div class="note">{{ number_format($area > 0 ? $totalPettyCost / $area : 0, 1) }} ج.م/م²</div>@endif
   </div>
   <div class="vstat vstat-amber">
     <div class="top"><span class="label">إجمالي المصنعية</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg></span>
     </div>
     <div class="val tnum">{{ \App\Support\Money::format($totalLaborCost) }} <small>ج.م</small></div>
+    @if($grandPerSqm !== null)<div class="note">{{ number_format($area > 0 ? $totalLaborCost / $area : 0, 1) }} ج.م/م²</div>@endif
   </div>
   <div class="vstat vstat-navy">
     <div class="top"><span class="label">التكلفة الإجمالية</span>
@@ -50,6 +59,20 @@
   </div>
 </div>
 
+{{-- شرح تكلفة المتر: المتر بياخد كام خامات + نثريات + مصنعية --}}
+@if($grandPerSqm !== null)
+<div class="card" style="padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px">
+  <strong style="color:var(--accent-ink)">المتر المربع الواحد يتكلّف:</strong>
+  <span class="tag blue">خامات {{ number_format($area > 0 ? $totalMaterialCost / $area : 0, 1) }} ج.م</span>
+  <span style="color:var(--ink-3)">+</span>
+  <span class="tag red">نثريات {{ number_format($area > 0 ? $totalPettyCost / $area : 0, 1) }} ج.م</span>
+  <span style="color:var(--ink-3)">+</span>
+  <span class="tag amber">مصنعية {{ number_format($area > 0 ? $totalLaborCost / $area : 0, 1) }} ج.م</span>
+  <span style="color:var(--ink-3)">=</span>
+  <span class="tag gray" style="font-weight:700">{{ number_format($grandPerSqm, 1) }} ج.م / م²</span>
+</div>
+@endif
+
 {{-- Per band breakdown --}}
 @foreach($bands as $row)
   <div class="table-card" style="margin-bottom:18px">
@@ -60,16 +83,23 @@
           {{ $row->band->status === 'done' ? 'مكتمل' : ($row->band->status === 'active' ? 'جاري' : 'معلق') }}
         </span>
       </h4>
-      <div style="display:flex;gap:18px;align-items:center">
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
         <div style="text-align:center">
           <div class="muted" style="font-size:11px">خامات</div>
           <div style="font-weight:600;color:var(--accent)">{{ \App\Support\Money::format($row->material_cost) }} <small class="muted">ج.م</small></div>
+          @if($row->mat_per_sqm !== null)<div class="muted" style="font-size:10px">{{ number_format($row->mat_per_sqm, 1) }}/م²</div>@endif
+        </div>
+        <div style="text-align:center">
+          <div class="muted" style="font-size:11px">نثريات</div>
+          <div style="font-weight:600;color:var(--neg)">{{ \App\Support\Money::format($row->petty_cost) }} <small class="muted">ج.م</small></div>
+          @if($row->petty_per_sqm !== null)<div class="muted" style="font-size:10px">{{ number_format($row->petty_per_sqm, 1) }}/م²</div>@endif
         </div>
         <div style="text-align:center">
           <div class="muted" style="font-size:11px">مصنعية</div>
           <div style="font-weight:600;color:var(--warn)">{{ \App\Support\Money::format($row->labor_cost) }} <small class="muted">ج.م</small></div>
+          @if($row->labor_per_sqm !== null)<div class="muted" style="font-size:10px">{{ number_format($row->labor_per_sqm, 1) }}/م²</div>@endif
         </div>
-        <div style="text-align:center">
+        <div style="text-align:center;padding-inline-start:12px;border-inline-start:1px solid var(--line)">
           <div class="muted" style="font-size:11px">الإجمالي</div>
           <div style="font-weight:700">{{ \App\Support\Money::format($row->total_cost) }} <small class="muted">ج.م</small></div>
         </div>
@@ -119,6 +149,40 @@
     @else
       <div style="padding:10px 18px;border-top:1px solid var(--line);color:var(--ink-3);font-size:13px">
         لا توجد خامات مسجّلة على هذا البند
+      </div>
+    @endif
+
+    {{-- Petty (نثريات) table --}}
+    @if($row->petty->count())
+      <div style="padding:8px 18px 4px;font-size:12px;font-weight:600;color:var(--neg);border-top:2px solid var(--line);background:color-mix(in srgb, var(--neg) 4%, transparent)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;vertical-align:middle;margin-inline-end:4px"><use href="#i-receipt"/></svg>
+        النثريات ({{ $row->petty->count() }} مصروف)
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>البيان</th>
+              <th>التاريخ</th>
+              <th class="num">التكلفة</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach($row->petty as $p)
+              <tr>
+                <td><strong>{{ $p->item }}</strong></td>
+                <td class="muted">{{ $p->date?->format('Y-m-d') ?? '—' }}</td>
+                <td class="num">{{ \App\Support\Money::format($p->cost) }}</td>
+              </tr>
+            @endforeach
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2" style="color:var(--neg)">إجمالي النثريات</td>
+              <td class="num" style="color:var(--neg)">{{ \App\Support\Money::format($row->petty_cost) }}</td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
     @endif
 
@@ -178,6 +242,44 @@
     @endif
   </div>
 @endforeach
+
+{{-- نثريات عامة على المشروع (مش مربوطة ببند) --}}
+@if($generalPetty->count())
+  <div class="table-card" style="margin-bottom:18px">
+    <div class="table-top">
+      <h4>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;vertical-align:middle;margin-inline-end:5px;color:var(--neg)"><use href="#i-receipt"/></svg>
+        نثريات عامة على المشروع
+      </h4>
+      <div style="text-align:center">
+        <div class="muted" style="font-size:11px">الإجمالي</div>
+        <div style="font-weight:700;color:var(--neg)">{{ \App\Support\Money::format($generalPettyCost) }} <small class="muted">ج.م</small></div>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>البيان</th><th>التاريخ</th><th class="num">التكلفة</th></tr>
+        </thead>
+        <tbody>
+          @foreach($generalPetty as $p)
+            <tr>
+              <td><strong>{{ $p->item }}</strong></td>
+              <td class="muted">{{ $p->date?->format('Y-m-d') ?? '—' }}</td>
+              <td class="num">{{ \App\Support\Money::format($p->cost) }}</td>
+            </tr>
+          @endforeach
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2" style="color:var(--neg)">إجمالي النثريات العامة</td>
+            <td class="num" style="color:var(--neg)">{{ \App\Support\Money::format($generalPettyCost) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+@endif
 
 @if($bands->isEmpty())
   <div class="empty-state">

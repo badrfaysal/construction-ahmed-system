@@ -509,3 +509,122 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
   .constr-loader .cl-hook,.constr-loader .cl-bar{animation:none}
   .constr-loader .cl-dots::after{animation:none;content:'...'}
 }
+
+/* ============================================================
+   UI REFRESH LAYER — تجديد بصري ملوّن وأسهل في الاستخدام.
+   طبقة واحدة في آخر الملف، بتاخد أولوية على القواعد فوق عشان
+   تدّي النظام روح ألوان أوضح وتباين أعلى من غير تعديل أي view.
+   لو حبينا نرجّع الشكل القديم نشيل البلوك ده بس.
+   ============================================================ */
+:root{
+  /* خلفية أهدى وأدفى شوية + أزرق أساسي أنضر وأوضح */
+  --bg:#eef2f9;
+  --accent:#2563eb;--accent-soft:#e5edff;--accent-ink:#1d4ed8;
+  --pos:#12936a;--pos-soft:#e3f6ee;--neg:#d63b2c;--neg-soft:#fdeae7;
+  --warn:#c9821a;--warn-soft:#fdf1dd;
+  /* درجات مساعدة للتدرّجات الملوّنة في الكروت */
+  --accent-2:#3b82f6;--pos-2:#22b583;--neg-2:#ef5a4a;--warn-2:#e6a52e;
+  --purple-2:#8b5cf6;--info-2:#14b8d4;--brand-2:#d4a13d;
+}
+
+/* ---- خلفية الصفحة: لمسة تدرّج ناعمة بدل اللون المسطّح ---- */
+body{background:linear-gradient(180deg,#eef2f9 0%,#e9eef7 100%)}
+
+/* ---- الأزرار: تدرّج وبروز أوضح للزر الأساسي ---- */
+.btn{background:linear-gradient(135deg,var(--accent-2),var(--accent));border-color:var(--accent);
+  box-shadow:0 2px 8px rgba(37,99,235,.28)}
+.btn:hover{background:linear-gradient(135deg,var(--accent),var(--accent-ink));border-color:var(--accent-ink);
+  box-shadow:0 4px 14px rgba(37,99,235,.36);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn.pos{background:linear-gradient(135deg,var(--pos-2),var(--pos));box-shadow:0 2px 8px rgba(18,147,106,.28)}
+.btn.warn{background:linear-gradient(135deg,var(--warn-2),var(--warn));box-shadow:0 2px 8px rgba(201,130,26,.28)}
+.btn.danger{background:linear-gradient(135deg,var(--neg-2),var(--neg));box-shadow:0 2px 8px rgba(214,59,44,.28)}
+.btn.ghost{background:var(--surface);box-shadow:var(--shadow-sm)}
+.btn.ghost:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);transform:translateY(-1px)}
+
+/* ---- عنوان الصفحة: شريط لوني جانبي للتوجيه البصري السريع ---- */
+.page-head h3{position:relative;padding-inline-start:14px}
+.page-head h3::before{content:'';position:absolute;inset-inline-start:0;top:50%;transform:translateY(-50%);
+  width:5px;height:0.95em;border-radius:3px;background:linear-gradient(180deg,var(--accent-2),var(--accent))}
+
+/* ---- عناوين الأقسام: نقطة لونية بدل الرمادي الباهت ---- */
+.section-label{color:var(--accent-ink)}
+.section-label::before{content:'';width:8px;height:8px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent-2),var(--accent))}
+
+/* ---- كروت الإحصائيات: خلفية ملوّنة خفيفة + أيقونة بارزة بدل الأبيض الممل ---- */
+.stat{background:linear-gradient(160deg,#fff,#fbfcff)}
+.stat .ic{background:var(--accent-soft);color:var(--accent)}
+.stat.stat-blue{background:linear-gradient(160deg,#fff,var(--accent-soft))}
+.stat.stat-blue .ic{background:var(--accent);color:#fff}
+.stat.stat-green{background:linear-gradient(160deg,#fff,var(--pos-soft))}
+.stat.stat-green .ic{background:var(--pos);color:#fff}
+.stat.stat-red{background:linear-gradient(160deg,#fff,var(--neg-soft))}
+.stat.stat-red .ic{background:var(--neg);color:#fff}
+.stat.stat-amber{background:linear-gradient(160deg,#fff,var(--warn-soft))}
+.stat.stat-amber .ic{background:var(--warn);color:#fff}
+.stat.stat-gold{background:linear-gradient(160deg,#fff,var(--brand-soft))}
+.stat.stat-gold .ic{background:linear-gradient(135deg,#c9962f,#a8761c);color:#fff}
+.stat.stat-teal{background:linear-gradient(160deg,#fff,var(--info-soft))}
+.stat.stat-teal .ic{background:var(--info);color:#fff}
+.stat.stat-purple{background:linear-gradient(160deg,#fff,var(--purple-soft))}
+.stat.stat-purple .ic{background:var(--purple);color:#fff}
+.card.stat{transition:.16s}
+.card.stat:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+
+/* ---- التابات: أوضح للمستخدم إن ده اللي مختار ---- */
+.tab.active{background:linear-gradient(135deg,var(--accent-2),var(--accent));color:#fff;
+  box-shadow:0 3px 10px rgba(37,99,235,.32)}
+.tab.active .cnt{background:rgba(255,255,255,.28);color:#fff}
+.tab.active svg{color:#fff}
+
+/* ---- رأس الجدول: خط سفلي ملوّن يوضّح بداية البيانات ---- */
+thead th{border-bottom:2px solid var(--accent-soft);color:var(--accent-ink)}
+tbody tr:hover{background:var(--accent-soft)}
+
+/* ---- شريط الفلاتر: لمسة لون علوية ---- */
+.filter-bar{border-top:3px solid var(--accent)}
+
+/* ---- السايدبار: أيقونات ملوّنة عشان التنقّل يبقى أوضح ---- */
+.nav-item svg{opacity:1;color:#9fb0ff}
+.nav-item:hover svg{color:#fff}
+.nav-item.active svg{color:#fff}
+.nav-label{color:#8ba0c9}
+
+/* ---- الفلاش والتنبيهات: شريط جانبي ملوّن أوضح ---- */
+.flash{border-inline-start-width:4px}
+.flash.success{border-inline-start:4px solid var(--pos)}
+.flash.error{border-inline-start:4px solid var(--neg)}
+.flash.warning{border-inline-start:4px solid var(--warn)}
+
+/* ---- كروت الموردين/المشاريع: بروز أظهر عند المرور ---- */
+.sup .av{background:linear-gradient(135deg,var(--accent-2),var(--accent));color:#fff}
+.pcard .pc-band{background:linear-gradient(90deg,var(--accent-2),var(--accent))}
+.pcard.is-done .pc-band{background:linear-gradient(90deg,var(--pos-2),var(--pos))}
+
+/* ---- اختيار طريقة الدفع (تاب المدفوعات في صفحة المشروع) ---- */
+.pay-choice{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+@media(max-width:720px){.pay-choice{grid-template-columns:1fr}}
+.pay-opt{display:flex;align-items:center;gap:14px;padding:18px 20px;border-radius:12px;
+  background:var(--surface);border:1.5px solid var(--line);box-shadow:var(--shadow-sm);transition:.16s;cursor:pointer}
+.pay-opt:hover{border-color:var(--accent);box-shadow:var(--shadow);transform:translateY(-2px)}
+.pay-opt-ic{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;color:#fff}
+.pay-opt-ic svg{width:23px;height:23px}
+.pay-opt-ic.in{background:linear-gradient(135deg,var(--pos-2),var(--pos))}
+.pay-opt-ic.amber{background:linear-gradient(135deg,var(--warn-2),var(--warn))}
+.pay-opt-body{flex:1;min-width:0}
+.pay-opt-t{font-size:15px;font-weight:700;color:var(--ink)}
+.pay-opt-s{font-size:12px;color:var(--ink-3);margin-top:3px}
+.pay-opt-arrow{width:20px;height:20px;color:var(--ink-3);flex-shrink:0;transform:scaleX(-1)}
+.pay-opt:hover .pay-opt-arrow{color:var(--accent)}
+
+/* ---- شريط المدفوعات على كارت المشروع (دفعات العميل + المدفوع للصنايعية) ---- */
+.pc-pays{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.pc-pay{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;font-size:11px}
+.pc-pay svg{width:14px;height:14px;flex-shrink:0}
+.pc-pay .l{color:var(--ink-2);font-weight:600;white-space:nowrap}
+.pc-pay .v{margin-inline-start:auto;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pc-pay.in{background:var(--pos-soft)}
+.pc-pay.in svg,.pc-pay.in .v{color:var(--pos)}
+.pc-pay.out{background:var(--warn-soft)}
+.pc-pay.out svg,.pc-pay.out .v{color:var(--warn)}

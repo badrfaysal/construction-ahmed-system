@@ -291,7 +291,12 @@ class ReportController extends Controller
         $area = (float) $project->area;
 
         $bands = $project->bands->map(function ($band) use ($area) {
-            $materials = $band->materials
+            // نفصل الخامات الحقيقية عن النثريات (المصاريف المتنوعة category=misc)
+            // عشان يبان كل نوع لوحده في التقدير
+            $realMats = $band->materials->where('category', '!=', 'misc');
+            $miscMats = $band->materials->where('category', 'misc');
+
+            $materials = $realMats
                 ->groupBy('item')
                 ->map(function ($group) {
                     return (object) [
@@ -304,6 +309,12 @@ class ReportController extends Controller
                 ->sortByDesc('cost')
                 ->values();
 
+            $petty = $miscMats->map(fn ($m) => (object) [
+                'item' => $m->item,
+                'date' => $m->date,
+                'cost' => $m->netCost(),
+            ])->sortByDesc('cost')->values();
+
             $workers = $band->workers->map(fn ($w) => (object) [
                 'name'          => $w->name,
                 'contract_type' => $w->contractTypeAr(),
@@ -315,28 +326,45 @@ class ReportController extends Controller
             ])->sortByDesc('amount')->values();
 
             $materialCost = $materials->sum('cost');
+            $pettyCost    = $petty->sum('cost');
             $laborCost    = (float) $band->labor_amount;
-            $totalCost    = $materialCost + $laborCost;
+            $totalCost    = $materialCost + $pettyCost + $laborCost;
 
             return (object) [
-                'band'          => $band,
-                'materials'     => $materials,
-                'workers'       => $workers,
-                'material_cost' => $materialCost,
-                'labor_cost'    => $laborCost,
-                'total_cost'    => $totalCost,
-                'per_sqm'       => $area > 0 ? $totalCost / $area : null,
+                'band'           => $band,
+                'materials'      => $materials,
+                'petty'          => $petty,
+                'workers'        => $workers,
+                'material_cost'  => $materialCost,
+                'petty_cost'     => $pettyCost,
+                'labor_cost'     => $laborCost,
+                'total_cost'     => $totalCost,
+                'per_sqm'        => $area > 0 ? $totalCost / $area : null,
+                'mat_per_sqm'    => $area > 0 ? $materialCost / $area : null,
+                'petty_per_sqm'  => $area > 0 ? $pettyCost / $area : null,
+                'labor_per_sqm'  => $area > 0 ? $laborCost / $area : null,
             ];
         });
 
+        // نثريات عامة على المشروع (مش مربوطة ببند محدّد)
+        $generalPetty = $project->generalMaterials()
+            ->where('category', 'misc')
+            ->map(fn ($m) => (object) [
+                'item' => $m->item,
+                'date' => $m->date,
+                'cost' => $m->netCost(),
+            ])->sortByDesc('cost')->values();
+        $generalPettyCost = $generalPetty->sum('cost');
+
         $totalMaterialCost = $bands->sum('material_cost');
+        $totalPettyCost    = $bands->sum('petty_cost') + $generalPettyCost;
         $totalLaborCost    = $bands->sum('labor_cost');
-        $grandTotal        = $totalMaterialCost + $totalLaborCost;
+        $grandTotal        = $totalMaterialCost + $totalPettyCost + $totalLaborCost;
         $grandPerSqm       = $area > 0 ? $grandTotal / $area : null;
 
         return view('reports.estimation-show', compact(
-            'project', 'bands', 'area',
-            'totalMaterialCost', 'totalLaborCost', 'grandTotal', 'grandPerSqm'
+            'project', 'bands', 'area', 'generalPetty', 'generalPettyCost',
+            'totalMaterialCost', 'totalPettyCost', 'totalLaborCost', 'grandTotal', 'grandPerSqm'
         ));
     }
 }

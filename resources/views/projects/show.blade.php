@@ -102,7 +102,7 @@
     البنود والمراحل <span class="cnt">{{ $project->bands->count() }}</span>
   </button>
   <button type="button" class="tab" data-tab="installments" onclick="switchProjectTab('installments')">
-    الأقساط <span class="cnt">{{ $project->installments->count() }}</span>
+    المدفوعات
   </button>
   <button type="button" class="tab" data-tab="materials" onclick="switchProjectTab('materials')">
     الخامات المشتراة <span class="cnt">{{ $project->materials->count() }}</span>
@@ -213,11 +213,25 @@
 </div>{{-- /tab-panel: bands --}}
 
 <div class="tab-panel" data-panel="installments" style="display:none">
-<div class="section-label" style="display:flex;justify-content:space-between;align-items:center;margin-top:0">
-  <span>عقد التقسيط</span>
-  <a href="{{ route('installments.index') }}" class="btn sm">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
-    إدارة العقود والأقساط
+<div class="section-label" style="margin-top:0">طريقة تحصيل المدفوعات</div>
+
+{{-- اختيار طريقة الدفع: تحصيل جزء دلوقتي، أو عمل تقسيط بجدول سداد --}}
+<div class="pay-choice">
+  <a href="{{ route('receivables.index') }}" class="pay-opt">
+    <div class="pay-opt-ic in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></div>
+    <div class="pay-opt-body">
+      <div class="pay-opt-t">العميل يدفع دفعة / جزء</div>
+      <div class="pay-opt-s">سجّل تحصيل مبلغ من العميل من شاشة المستحقات</div>
+    </div>
+    <svg class="pay-opt-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg>
+  </a>
+  <a href="{{ route('installments.index') }}" class="pay-opt">
+    <div class="pay-opt-ic amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></div>
+    <div class="pay-opt-body">
+      <div class="pay-opt-t">تقسيط بجدول سداد</div>
+      <div class="pay-opt-s">اعمل عقد تقسيط بمقدم وأقساط شهرية من شاشة الأقساط</div>
+    </div>
+    <svg class="pay-opt-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg>
   </a>
 </div>
 <div class="table-card" style="margin-bottom:24px">

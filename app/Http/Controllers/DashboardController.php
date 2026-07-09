@@ -14,7 +14,7 @@ class DashboardController extends Controller
     public function index()
     {
         // Eager load what we need to avoid N+1 queries in the view
-        $projects = Project::with(['client', 'bands.materials.returns', 'materials.returns', 'contracts.payments', 'clientPayments'])->latest()->get();
+        $projects = Project::with(['client', 'bands.materials.returns', 'bands.workers.payments', 'materials.returns', 'contracts.payments', 'clientPayments'])->latest()->get();
 
         $activeProjects = $projects->where('status', 'active');
         $doneProjects   = $projects->where('status', 'done');
