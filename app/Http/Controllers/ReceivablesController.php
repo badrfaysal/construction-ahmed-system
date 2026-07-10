@@ -143,16 +143,4 @@ class ReceivablesController extends Controller
 
         return back()->with('success', 'تم تسجيل تحصيل ' . number_format($data['amount']) . ' ج من العميل.');
     }
-
-    // حذف تحصيل مباشر اتسجل بالغلط — يعكس المبلغ من المحفظة عبر الـ observer
-    public function deletePayment(Transaction $transaction)
-    {
-        if ($transaction->ref_type !== 'client_payment') {
-            return back()->with('error', 'دي مش حركة تحصيل مباشر.');
-        }
-
-        DB::transaction(fn () => $transaction->delete());
-
-        return back()->with('success', 'تم حذف التحصيل وإرجاع المبلغ.');
-    }
 }

@@ -64,6 +64,7 @@ class ProjectController extends Controller
             'materials.returns',
             'installments',
             'transactions',
+            'contracts.payments',
             'warranty',
         ]);
 

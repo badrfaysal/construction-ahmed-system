@@ -186,38 +186,38 @@ function loadBandsForProject(projectId) {
 function itemRowHtml(g, i) {
   return `
     <div class="item-row">
-      <div class="item-row-top">
-        <div class="field">
-          <label>اسم الصنف</label>
-          <input type="text" name="groups[${g}][items][${i}][item]" placeholder="مثل: أسمنت" required list="items-list">
+      <div class="item-row-grid">
+        <div class="irf" style="flex:2.2">
+          <label>الصنف *</label>
+          <input type="text" name="groups[${g}][items][${i}][item]" placeholder="أسمنت، سيراميك..." required list="items-list">
         </div>
-        <button type="button" class="btn ghost sm" onclick="this.closest('.item-row').remove(); recalcTotals()" title="حذف الصنف">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-x"/></svg>
-        </button>
-      </div>
-      <div class="row3">
-        <div class="field" style="margin:0">
+        <div class="irf" style="flex:1.6">
+          <label>المورد</label>
+          <select name="groups[${g}][items][${i}][supplier_id]">${supplierOptionsHtml}</select>
+        </div>
+        <div class="irf" style="flex:.9">
           <label>الوحدة</label>
           <input type="text" name="groups[${g}][items][${i}][unit]" value="وحدة" required list="units-list">
         </div>
-        <div class="field" style="margin:0">
+        <div class="irf" style="flex:.9">
           <label>الكمية</label>
           <input type="number" name="groups[${g}][items][${i}][qty]" class="mat-qty" placeholder="0" min="0" step="0.1" required oninput="recalcTotals()">
         </div>
-        <div class="field" style="margin:0">
-          <label>سعر الشراء (تكلفة)</label>
-          <input type="number" name="groups[${g}][items][${i}][unit_price]" class="mat-cost" placeholder="0" min="0" step="0.01" required oninput="recalcTotals()">
+        <div class="irf" style="flex:1.3">
+          <label>سعر الشراء</label>
+          <input type="number" name="groups[${g}][items][${i}][unit_price]" class="mat-cost" placeholder="0.00" min="0" step="0.01" required oninput="recalcTotals()">
         </div>
-      </div>
-      <div class="row3">
-        <div class="field" style="margin:0">
-          <label>سعر البيع للعميل</label>
-          <input type="number" name="groups[${g}][items][${i}][sell_price]" class="mat-sell" placeholder="0" min="0" step="0.01" required oninput="recalcTotals()">
+        <div class="irf" style="flex:1.3">
+          <label>سعر البيع</label>
+          <input type="number" name="groups[${g}][items][${i}][sell_price]" class="mat-sell" placeholder="0.00" min="0" step="0.01" required oninput="recalcTotals()">
         </div>
-        <div class="field" style="margin:0">
-          <label>نسبة الإشراف % (اختياري)</label>
+        <div class="irf" style="flex:.8">
+          <label>إشراف %</label>
           <input type="number" name="groups[${g}][items][${i}][supervision_pct]" class="mat-sup" placeholder="0" min="0" max="100" step="0.1" value="${defaultSupervisionPct}" oninput="this.dataset.touched='1'; recalcTotals()">
         </div>
+        <button type="button" class="btn ghost sm ir-del" onclick="this.closest('.item-row').remove(); recalcTotals()" title="حذف">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"/></svg>
+        </button>
       </div>
     </div>`;
 }
@@ -273,28 +273,29 @@ function addGroup() {
           حذف البند
         </button>
       </div>
-      <div class="row3">
+      <div class="row2" style="margin-bottom:12px">
         <div class="field">
           <label>البند</label>
           <select name="groups[${g}][band_id]" class="band-select">${bandOptionsHtml()}</select>
-        </div>
-        <div class="field">
-          <label>المورد</label>
-          <select name="groups[${g}][supplier_id]">${supplierOptionsHtml}</select>
         </div>
         <div class="field">
           <label>تاريخ الشراء *</label>
           <input type="date" name="groups[${g}][date]" value="${today}" required>
         </div>
       </div>
-      {{-- Payment type for this purchase group --}}
-      <div style="background:var(--bg);border-radius:8px;padding:14px 16px;margin-bottom:14px">
-        <div style="margin-bottom:10px;font-size:.85rem;font-weight:600;color:var(--text-muted)">طريقة دفع هذا الشراء</div>
-        <div class="field" style="max-width:320px;margin-bottom:12px" id="wallet-row-${g}">
-          <label style="display:flex;align-items:center;gap:5px;font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg> المحفظة (الصرف منها) *</label>
-          <select name="groups[${g}][account_id]" id="wallet-${g}" required>${walletOptionsHtml}</select>
+      <p class="muted" style="margin:0 0 8px;font-size:12px">كل صنف تقدر تختاره من مورد مختلف — المورد بقى جوه صف الصنف نفسه.</p>
+      <div class="items-container" id="items-${g}"></div>
+      <button type="button" class="btn ghost sm" style="margin:6px 0 14px" onclick="addItem(${g})">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
+        إضافة صنف
+      </button>
+      {{-- طريقة الدفع — آخر حاجة في كل مجموعة --}}
+      <div class="pay-section-box">
+        <div class="pay-section-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-wallet"/></svg>
+          طريقة دفع هذا الشراء
         </div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
             <input type="radio" name="groups[${g}][payment_status]" value="paid" checked onchange="togglePaidAmt(${g}, this.value)">
             <span>دفع بالكامل</span>
@@ -308,18 +309,19 @@ function addGroup() {
             <span>آجل بالكامل (دين)</span>
           </label>
         </div>
-        <div id="paid-amt-row-${g}" style="display:none;margin-top:12px">
-          <div class="field" style="max-width:260px;margin:0">
-            <label>المبلغ المدفوع الآن (ج.م) *</label>
-            <input type="number" name="groups[${g}][paid_amount]" id="paid-amt-${g}" min="0" step="0.01" placeholder="0">
+        <div class="row2" style="align-items:flex-end">
+          <div class="field" style="margin:0" id="wallet-row-${g}">
+            <label style="font-weight:600">المحفظة (الصرف منها) *</label>
+            <select name="groups[${g}][account_id]" id="wallet-${g}" required>${walletOptionsHtml}</select>
+          </div>
+          <div id="paid-amt-row-${g}" style="display:none">
+            <div class="field" style="margin:0">
+              <label>المبلغ المدفوع الآن (ج.م) *</label>
+              <input type="number" name="groups[${g}][paid_amount]" id="paid-amt-${g}" min="0" step="0.01" placeholder="0">
+            </div>
           </div>
         </div>
       </div>
-      <div class="items-container" id="items-${g}"></div>
-      <button type="button" class="btn ghost sm" onclick="addItem(${g})">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
-        إضافة صنف
-      </button>
     </div>`;
   document.getElementById('groups-container').insertAdjacentHTML('beforeend', html);
   addItem(g);

@@ -40,7 +40,7 @@ class DebtController extends Controller
             $query->where('status', '!=', 'paid');
         }
 
-        $debts     = $query->paginate(60);
+        $debts     = $query->get();
         $projects  = Project::orderBy('name')->get(['id', 'name']);
         $suppliers = Supplier::orderBy('name')->get(['id', 'name']);
         $wallets   = Account::selectable();
@@ -95,6 +95,57 @@ class DebtController extends Controller
         });
 
         return back()->with('success', 'تم تسجيل الدفع.');
+    }
+
+    // Pay all/partial remaining debts for a specific supplier in one shot
+    // Distributes the amount across unpaid/partial debts (oldest first).
+    public function paySupplier(Request $request, int $supplierId)
+    {
+        $supplier = Supplier::findOrFail($supplierId);
+        $debts = SupplierDebt::where('supplier_id', $supplierId)
+            ->where('status', '!=', 'paid')
+            ->orderBy('due_date')
+            ->orderBy('id')
+            ->get();
+
+        $totalRemaining = $debts->sum(fn($d) => $d->remaining());
+
+        $data = $request->validate([
+            'amount'     => ['required', 'numeric', 'min:0.01', 'max:' . $totalRemaining],
+            'account_id' => ['required', 'integer', 'exists:accounts,id'],
+            'pay_date'   => ['required', 'date'],
+        ]);
+
+        DB::transaction(function () use ($debts, $data, $supplier) {
+            $remaining = (float) $data['amount'];
+            foreach ($debts as $debt) {
+                if ($remaining <= 0) break;
+                $debtRemaining = $debt->remaining();
+                $pay = min($remaining, $debtRemaining);
+
+                $newPaid = (float) $debt->paid_amount + $pay;
+                $newStatus = $newPaid >= (float) $debt->total_amount ? 'paid' : 'partial';
+                $debt->update(['paid_amount' => $newPaid, 'status' => $newStatus]);
+
+                Transaction::create([
+                    'project_id'  => $debt->project_id,
+                    'band_id'     => $debt->band_id,
+                    'account_id'  => $data['account_id'],
+                    'direction'   => 'out',
+                    'type'        => 'سداد دين مورد',
+                    'party'       => $supplier->name,
+                    'amount'      => $pay,
+                    'date'        => $data['pay_date'],
+                    'description' => 'سداد: ' . $debt->description,
+                    'ref_type'    => 'debt',
+                    'ref_id'      => $debt->id,
+                ]);
+
+                $remaining -= $pay;
+            }
+        });
+
+        return back()->with('success', 'تم تسجيل الدفع للمورد ' . $supplier->name . '.');
     }
 
     // Delete a debt (admin use — e.g. data entry error)

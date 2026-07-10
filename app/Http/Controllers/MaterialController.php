@@ -104,13 +104,14 @@ class MaterialController extends Controller
             'project_id'                    => ['required', 'exists:sy2_projects,id'],
             'groups'                        => ['required', 'array', 'min:1'],
             'groups.*.band_id'              => ['nullable', 'exists:sy2_project_bands,id'],
-            'groups.*.supplier_id'          => ['nullable', 'exists:sy2_suppliers,id'],
             'groups.*.account_id'           => ['required_unless:groups.*.payment_status,deferred', 'nullable', 'integer', 'exists:accounts,id'],
             'groups.*.date'                 => ['required', 'date'],
             'groups.*.payment_status'       => ['nullable', 'in:paid,partial,deferred'],
             'groups.*.paid_amount'          => ['nullable', 'numeric', 'min:0'],
             'groups.*.items'                => ['required', 'array', 'min:1'],
             'groups.*.items.*.item'         => ['required', 'string', 'max:255'],
+            // كل صنف بقى ليه مورده الخاص — ممكن تشتري نفس البند من موردين مختلفين
+            'groups.*.items.*.supplier_id'  => ['nullable', 'exists:sy2_suppliers,id'],
             'groups.*.items.*.unit'         => ['required', 'string', 'max:50'],
             'groups.*.items.*.qty'          => ['required', 'numeric', 'min:0'],
             'groups.*.items.*.unit_price'   => ['required', 'numeric', 'min:0'],
@@ -185,7 +186,7 @@ class MaterialController extends Controller
                         'project_id'      => $data['project_id'],
                         'band_id'         => $group['band_id'] ?? null,
                         'account_id'      => $group['account_id'] ?? null,
-                        'supplier_id'     => $group['supplier_id'] ?? null,
+                        'supplier_id'     => $item['supplier_id'] ?? null,
                         'item'            => $item['item'],
                         'unit'            => $item['unit'],
                         'qty'             => $item['qty'],
@@ -229,9 +230,10 @@ class MaterialController extends Controller
     // the wallet, client statement, and cost statement exactly like a purchase.
     public function storeExpense(Request $request, Project $project)
     {
+        $isDeferred = $request->input('payment_type') === 'deferred';
         $data = $request->validate([
             'band_id'         => ['nullable', 'exists:sy2_project_bands,id'],
-            'account_id'      => ['required', 'integer', 'exists:accounts,id'],
+            'account_id'      => [$isDeferred ? 'nullable' : 'required', 'nullable', 'integer', 'exists:accounts,id'],
             'item'            => ['required', 'string', 'max:255'],
             'amount'          => ['required', 'numeric', 'min:0'],
             'sell_price'      => ['required', 'numeric', 'min:0'],
@@ -257,7 +259,7 @@ class MaterialController extends Controller
         DB::transaction(fn () => Material::create([
             'project_id'      => $project->id,
             'band_id'         => $data['band_id'] ?? null,
-            'account_id'      => $data['account_id'] ?? null,
+            'account_id'      => $isDeferred ? null : ($data['account_id'] ?? null),
             'category'        => 'misc',
             'item'            => $data['item'],
             'unit'            => 'مبلغ',
@@ -266,6 +268,7 @@ class MaterialController extends Controller
             'sell_price'      => $data['sell_price'],
             'supervision_pct' => $data['supervision_pct'] ?? 0,
             'date'            => $data['date'],
+            'payment_status'  => $isDeferred ? 'deferred' : 'paid',
         ]));
 
         return redirect()->route('projects.show', $project)

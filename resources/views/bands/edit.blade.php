@@ -81,6 +81,9 @@
       'supervision_pct'    => $w->supervision_pct,
       'start_date'         => $w->start_date?->format('Y-m-d'),
       'notes'              => $w->notes,
+      // اتدفعله أي جزء؟ بياناته تتقفل في الفورم — التعديل بعد الدفع لازم
+      // يعدي من "تبديل الفني" مش تعديل مباشر (شايف lockWorkerRow في contract-scripts)
+      'has_payments'       => $w->payments->isNotEmpty(),
   ]);
 @endphp
 

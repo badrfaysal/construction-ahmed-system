@@ -69,17 +69,4 @@ class WalletController extends Controller
 
         return back()->with('success', 'تم تسجيل الحركة في المحفظة.');
     }
-
-    public function destroy(Transaction $transaction)
-    {
-        // Guard: only hand-entered rows can be removed here. Auto rows belong to
-        // a material/band/return/payment and must be reversed at their source.
-        if ($transaction->ref_type !== 'manual') {
-            return back()->with('error', 'دي حركة تلقائية مش بتتحذف من هنا.');
-        }
-
-        DB::transaction(fn () => $transaction->delete());
-
-        return back()->with('success', 'تم حذف الحركة.');
-    }
 }

@@ -90,7 +90,7 @@
 
   {{-- Payment history --}}
   <div class="table-card">
-    <div class="section-label" style="margin:14px 18px 0">سجل الدفعات</div>
+    <div class="section-label" style="margin:14px 18px 0">سجل الدفعات <span class="muted" style="font-weight:400;font-size:11px">— التعديل والحذف من <a href="{{ route('transactions.index') }}">سجل الحركات</a></span></div>
     @if($worker->payments->count())
       <div class="table-scroll">
         <table>
@@ -100,7 +100,6 @@
               <th class="num">المبلغ</th>
               <th>الخصم</th>
               <th>ملاحظات</th>
-              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -114,12 +113,6 @@
                 <td class="num">{{ \App\Support\Money::format($p->amount) }}</td>
                 <td class="muted">{{ $p->discount > 0 ? \App\Support\Money::format($p->discount) : '—' }}</td>
                 <td class="muted">{{ $p->notes ?: '—' }}</td>
-                <td>
-                  <form method="POST" action="{{ route('worker-payments.destroy', $p) }}" onsubmit="return confirm('حذف هذه الدفعة؟')">
-                    @csrf @method('DELETE')
-                    <button class="btn ghost sm" style="color:var(--neg)">حذف</button>
-                  </form>
-                </td>
               </tr>
             @endforeach
           </tbody>
@@ -127,7 +120,7 @@
             <tr>
               <td>الإجمالي</td>
               <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }}</td>
-              <td colspan="3"></td>
+              <td colspan="2"></td>
             </tr>
           </tfoot>
         </table>

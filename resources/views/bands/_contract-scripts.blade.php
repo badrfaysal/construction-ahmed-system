@@ -37,13 +37,15 @@ function updateWorkerUI(row) {
     recalcWorkerAmounts(row);
   } else {
     qtyWrap.style.display = 'none';
-    row.querySelector('.final-amount').readOnly = false;
-    row.querySelector('.sell-amount-field').readOnly = false;
     updateClientPrice();
   }
 }
 
-// per_meter: amount = qty × cost rate, sell_amount = qty × sell rate (لو متملي)
+// per_meter/per_piece/daily: amount = qty × cost rate, sell_amount = qty ×
+// sell rate — auto-computed as a convenient default, but NEVER locked: the
+// user can always type a custom final amount directly (e.g. a negotiated
+// adjustment after work started). Once they touch either field by hand, it
+// stops following qty/rate changes so their override isn't silently wiped.
 function recalcWorkerAmounts(row) {
   const qty = parseFloat(row.querySelector('.contract-qty').value) || 0;
   const rate = parseFloat(row.querySelector('.contract-rate').value) || 0;
@@ -52,14 +54,12 @@ function recalcWorkerAmounts(row) {
   const amountField = row.querySelector('.final-amount');
   const sellField = row.querySelector('.sell-amount-field');
 
-  amountField.value = (qty * rate).toFixed(2);
-  amountField.readOnly = true;
+  if (amountField.dataset.touched !== '1') {
+    amountField.value = (qty * rate).toFixed(2);
+  }
 
-  if (sellRate > 0) {
+  if (sellField.dataset.touched !== '1' && sellRate > 0) {
     sellField.value = (qty * sellRate).toFixed(2);
-    sellField.readOnly = true;
-  } else {
-    sellField.readOnly = false;
   }
 
   updateClientPrice();
@@ -122,11 +122,11 @@ function workerRowHtml(g) {
       <div class="row3" style="margin-top:10px">
         <div class="field" style="margin:0">
           <label style="margin-bottom:4px">الأجر (تكلفة)</label>
-          <input type="number" name="workers[${g}][amount]" class="final-amount" min="0" step="0.01" oninput="updateClientPrice()">
+          <input type="number" name="workers[${g}][amount]" class="final-amount" min="0" step="0.01" oninput="this.dataset.touched='1'; updateClientPrice()">
         </div>
         <div class="field" style="margin:0">
           <label style="margin-bottom:4px">سعره للعميل</label>
-          <input type="number" name="workers[${g}][sell_amount]" class="sell-amount-field" min="0" step="0.01" oninput="updateClientPrice()">
+          <input type="number" name="workers[${g}][sell_amount]" class="sell-amount-field" min="0" step="0.01" oninput="this.dataset.touched='1'; updateClientPrice()">
         </div>
         <div class="field" style="margin:0">
           <label style="margin-bottom:4px">نسبة الإشراف %</label>
@@ -143,8 +143,8 @@ function workerRowHtml(g) {
           <input type="text" name="workers[${g}][notes]">
         </div>
       </div>
-      <div class="btn-row" style="margin-top:8px">
-        <button type="button" class="btn ghost sm danger" onclick="this.closest('.worker-row').remove(); updateClientPrice()">حذف الفني</button>
+      <div class="btn-row worker-del-row" style="margin-top:8px">
+        <button type="button" class="btn ghost sm danger worker-del-btn" onclick="this.closest('.worker-row').remove(); updateClientPrice(); if(typeof updateBandTabCounts==='function') updateBandTabCounts();">حذف الفني</button>
       </div>
     </div>`;
 }
@@ -159,11 +159,55 @@ function fillWorker(g, w) {
   row.querySelector('.contract-qty').value = w.contract_qty ?? '';
   row.querySelector('.contract-rate').value = w.contract_unit_rate ?? '';
   row.querySelector('.sell-rate').value = w.sell_rate ?? '';
-  row.querySelector('.final-amount').value = w.amount ?? 0;
-  row.querySelector('.sell-amount-field').value = w.sell_amount ?? 0;
+  const amountField = row.querySelector('.final-amount');
+  const sellField = row.querySelector('.sell-amount-field');
+  amountField.value = w.amount ?? 0;
+  sellField.value = w.sell_amount ?? 0;
+  // بند/فني موجود بالفعل — القيمة المحفوظة تفضل زي ما هي بالظبط لما الفورم
+  // يتفتح، مش تتحسب من جديد من الكمية×السعر (اللي ممكن تكون اتغيّرت يدويًا
+  // قبل كده) — تعديل الكمية/السعر بعد كده لسه بيحدّثها زي العادة
+  amountField.dataset.touched = '1';
+  sellField.dataset.touched = '1';
   row.querySelector('.supervision-pct').value = w.supervision_pct ?? 0;
   row.querySelector('[name*="[start_date]"]').value = w.start_date || '';
   row.querySelector('[name*="[notes]"]').value = w.notes || '';
   updateWorkerUI(row);
+
+  // اتدفعله أي جزء ولو قرش؟ بياناته تتقفل بالكامل من هنا — أي تغيير في
+  // شروط تعاقده لازم يعدي من "تبديل الفني" (يحافظ على سجل المدفوعات سليم
+  // ومربوط بنفس الشروط اللي اتدفعت بيها فعلًا)
+  if (w.has_payments) {
+    lockWorkerRow(row, w.id);
+  }
+}
+
+function lockWorkerRow(row, workerId) {
+  row.classList.add('worker-row-locked');
+
+  row.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]').forEach(inp => {
+    inp.readOnly = true;
+  });
+
+  const typeSelect = row.querySelector('.contract-type-select');
+  const hiddenType = document.createElement('input');
+  hiddenType.type = 'hidden';
+  hiddenType.name = typeSelect.name;
+  hiddenType.value = typeSelect.value;
+  typeSelect.insertAdjacentElement('afterend', hiddenType);
+  typeSelect.removeAttribute('name');
+  typeSelect.disabled = true;
+
+  const delRow = row.querySelector('.worker-del-row');
+  if (delRow) {
+    delRow.innerHTML = `<a href="/workers/${workerId}/payments" class="btn ghost sm" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg>
+      تبديل الفني من صفحة دفعاته
+    </a>`;
+  }
+
+  const note = document.createElement('div');
+  note.className = 'worker-lock-note';
+  note.innerHTML = '🔒 اتدفعله فلوس بالفعل — بياناته مقفولة عشان سجل الدفعات يفضل سليم. لو الشغل هيتغيّر أو التعاقد هيتعدّل، استخدم "تبديل الفني" بدل التعديل المباشر.';
+  row.appendChild(note);
 }
 </script>

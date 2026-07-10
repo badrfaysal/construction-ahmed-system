@@ -18,6 +18,7 @@ class ProjectBand extends Model
         'contract_type', 'contract_qty', 'contract_unit_rate', 'labor_sell_rate',
         'team_name', 'labor_amount', 'labor_sell_price',
         'labor_supervision_pct', 'labor_date', 'sort_order',
+        'cached_actual_total', 'cached_total_cost',
     ];
 
     protected function casts(): array
@@ -192,15 +193,24 @@ class ProjectBand extends Model
         ];
     }
 
-    // amount = qty × rate for daily/per_meter/per_piece contracts, or the
-    // manually entered fallback amount otherwise (lump_sum, or no type set)
+    // amount = qty × rate for daily/per_meter/per_piece contracts, falling
+    // back to qty×rate only when nothing meaningful was submitted directly.
+    // A positive submitted amount is always trusted as-is — the UI auto-fills
+    // it from qty×rate by default but lets the user type a custom final
+    // amount by hand (e.g. a negotiated adjustment after work started), and
+    // that override must survive the save, not get silently recomputed away.
     public static function computeContractAmount(?string $type, $qty, $rate, $fallback): float
     {
+        $fallback = (float) ($fallback ?? 0);
+        if ($fallback > 0) {
+            return $fallback;
+        }
+
         if (in_array($type, ['daily', 'per_meter', 'per_piece'], true) && $qty !== null && $rate !== null) {
             return (float) $qty * (float) $rate;
         }
 
-        return (float) ($fallback ?? 0);
+        return $fallback;
     }
 
     // Total دفعات paid across all this band's craftsmen so far

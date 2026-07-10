@@ -279,26 +279,6 @@ class InstallmentController extends Controller
         return back()->with('success', "تم تسجيل $count دفعة (سداد جماعي للأقساط الشهرية).");
     }
 
-    // عكس دفعة اتسجلت بالغلط — يرجّع المتبقي على العقد ويعكس المحفظة
-    public function reversePayment(InstallmentPayment $payment)
-    {
-        $contract = $payment->contract;
-        DB::transaction(fn () => $payment->delete());
-
-        return back()
-            ->with('success', 'تم إلغاء الدفعة وإرجاع المبلغ.')
-            ->with('reopen_phone', $contract?->customer_phone)
-            ->with('reopen_name', $contract?->customer_name);
-    }
-
-    // حذف عقد بالكامل (يعكس المقدم وكل دفعاته من المحفظة عبر الـ observer)
-    public function destroy(InstallmentContract $contract)
-    {
-        DB::transaction(fn () => $contract->delete());
-
-        return redirect()->route('installments.index')->with('success', 'تم حذف العقد.');
-    }
-
     // تعديل عقد قائم — يعيد حساب الخطة ويزامن المقدم في المحفظة لو اتغيّر
     public function update(Request $request, InstallmentContract $contract)
     {

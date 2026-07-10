@@ -23,6 +23,36 @@
 </div>
 
 <form method="GET" class="filter-bar">
+  <div class="f-field">
+    <label>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>
+      الشقة / المشروع
+    </label>
+    <div class="f-select-wrap">
+      <select name="project_id" class="f-select" onchange="this.form.submit()">
+        <option value="">كل المشاريع</option>
+        @foreach($projects as $p)
+          <option value="{{ $p->id }}" {{ request('project_id') == $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
+        @endforeach
+      </select>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-down"/></svg>
+    </div>
+  </div>
+  <div class="f-field">
+    <label>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-tool"/></svg>
+      التخصص
+    </label>
+    <div class="f-select-wrap">
+      <select name="specialty" class="f-select" onchange="this.form.submit()">
+        <option value="">كل التخصصات</option>
+        @foreach($specialties as $sp)
+          <option value="{{ $sp }}" {{ request('specialty') === $sp ? 'selected' : '' }}>{{ $sp }}</option>
+        @endforeach
+      </select>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-down"/></svg>
+    </div>
+  </div>
   @include('partials._sort-select', ['options' => [
     'remaining_desc'  => 'الأعلى مستحقًا',
     'paid_desc'       => 'الأعلى مدفوعًا',
@@ -32,18 +62,29 @@
     'rating_asc'      => 'الأقل تقييمًا',
     'name'            => 'أبجديًا',
   ]])
+  @if(request()->hasAny(['project_id','specialty']))
+    <div class="f-actions">
+      <a href="{{ route('craftsmen.index') }}" class="btn ghost sm">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-x"/></svg>
+        مسح الفلتر
+      </a>
+    </div>
+  @endif
 </form>
 
 @forelse($craftsmen as $c)
   <div class="table-card" style="margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--line)">
       <div style="flex:1">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap">
           <h4 style="margin:0">{{ $c->name }}</h4>
-          <div style="color:var(--amber);font-size:16px;">
+          <div class="star-display">
             @for($i=1; $i<=5; $i++)
-              @if($i <= $c->rating) ★ @else ☆ @endif
+              <svg class="star-icon {{ $i <= $c->rating ? 'filled' : '' }}" viewBox="0 0 24 24" width="18" height="18">
+                <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
             @endfor
+            @if($c->rating) <span class="muted" style="font-size:12px">({{ $c->rating }}/5)</span> @endif
           </div>
         </div>
         <div class="muted" style="font-size:13px;line-height:1.6">
@@ -73,16 +114,21 @@
           <div><div class="muted" style="font-size:12px">مدفوع</div><div class="tnum" style="font-weight:700;color:var(--pos)">{{ \App\Support\Money::format($c->paid) }}</div></div>
           <div><div class="muted" style="font-size:12px">متبقي</div><div class="tnum" style="font-weight:700;color:{{ $c->remaining > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($c->remaining) }}</div></div>
         </div>
-        <form action="{{ route('craftsmen.rate', $c->name) }}" method="POST" style="display:flex;gap:8px;align-items:center;background:var(--bg-muted);padding:8px 12px;border-radius:6px;width:100%;max-width:300px">
+        <form action="{{ route('craftsmen.rate', $c->name) }}" method="POST" class="craftsman-rate-form">
           @csrf
-          <select name="rating" style="padding:4px;border:1px solid var(--line);border-radius:4px;background:var(--bg-card);color:var(--text)">
-            <option value="">التقييم</option>
+          <div class="rate-stars">
             @for($i=1; $i<=5; $i++)
-              <option value="{{ $i }}" @selected($c->rating == $i)>{{ $i }} نجوم</option>
+              <button type="button" class="rate-star-btn {{ $c->rating >= $i ? 'on' : '' }}"
+                      onclick="setRating(this, {{ $i }})" title="{{ $i }} نجوم">
+                <svg viewBox="0 0 24 24" width="22" height="22">
+                  <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
             @endfor
-          </select>
-          <input type="text" name="notes" placeholder="ملاحظة عن الفني..." value="{{ $c->notes }}" style="flex:1;padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:var(--bg-card);color:var(--text);font-size:12px">
-          <button type="submit" class="btn sm ghost" style="padding:4px 8px">حفظ</button>
+          </div>
+          <input type="hidden" name="rating" class="rating-input" value="{{ $c->rating }}">
+          <input type="text" name="notes" placeholder="ملاحظة..." value="{{ $c->notes }}" class="rate-notes-inp">
+          <button type="submit" class="btn sm">حفظ</button>
         </form>
       </div>
     </div>
@@ -130,4 +176,14 @@
   </div>
 @endforelse
 
+@push('scripts')
+<script>
+function setRating(clickedBtn, val) {
+  const form = clickedBtn.closest('.craftsman-rate-form');
+  form.querySelector('.rating-input').value = val;
+  const btns = form.querySelectorAll('.rate-star-btn');
+  btns.forEach((b, i) => b.classList.toggle('on', i < val));
+}
+</script>
+@endpush
 @endsection

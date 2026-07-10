@@ -7,6 +7,7 @@ use App\Models\MaterialReturn;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class MaterialReturnController extends Controller
@@ -62,9 +63,18 @@ class MaterialReturnController extends Controller
 
     // Delete a return (e.g. entered by mistake) — MaterialReturnObserver raises
     // the purchase's net cost back up, so it's blocked if محفظة المقاولات can no
-    // longer cover it.
-    public function destroy(MaterialReturn $return)
+    // longer cover it. أدمن فقط + باسورد — مرتجع على شراء آجل بالكامل مالوش
+    // حركة في سجل الحركات أصلاً (مفيش مبلغ اترد فعليًا)، فمفيش طريقة تانية
+    // تحذفه غير من هنا مباشرة.
+    public function destroy(Request $request, MaterialReturn $return)
     {
+        abort_unless(auth()->user()->isAdmin(), 403);
+
+        $data = $request->validate(['current_password' => ['required', 'string']]);
+        if (! Hash::check($data['current_password'], auth()->user()->password)) {
+            throw ValidationException::withMessages(['current_password' => 'كلمة مرور الأدمن غير صحيحة.']);
+        }
+
         $project = $return->material->project;
 
         DB::transaction(fn () => $return->delete());

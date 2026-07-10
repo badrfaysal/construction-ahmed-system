@@ -541,6 +541,10 @@ body{background:linear-gradient(180deg,#eef2f9 0%,#e9eef7 100%)}
 .btn.danger{background:linear-gradient(135deg,var(--neg-2),var(--neg));box-shadow:0 2px 8px rgba(214,59,44,.28)}
 .btn.ghost{background:var(--surface);box-shadow:var(--shadow-sm)}
 .btn.ghost:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);transform:translateY(-1px)}
+/* ghost+danger معًا (زرار حذف صغير داخل فورم) — لازم ياخد شكل واضح مميّز عن
+   الـ ghost العادي، مش يتبلع فيه بسبب تساوي الأولوية بين الكلاسين */
+.btn.ghost.danger{background:var(--surface);color:var(--neg);border-color:var(--neg);box-shadow:none}
+.btn.ghost.danger:hover{background:var(--neg);color:#fff;border-color:var(--neg);transform:translateY(-1px)}
 
 /* ---- عنوان الصفحة: شريط لوني جانبي للتوجيه البصري السريع ---- */
 .page-head h3{position:relative;padding-inline-start:14px}
@@ -602,6 +606,30 @@ tbody tr:hover{background:var(--accent-soft)}
 .pcard .pc-band{background:linear-gradient(90deg,var(--accent-2),var(--accent))}
 .pcard.is-done .pc-band{background:linear-gradient(90deg,var(--pos-2),var(--pos))}
 
+/* ---- خلفية متحركة: أيقونات بناء بتعوم بهدوء ورا كل المحتوى ---- */
+.bg-icons{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.bg-icons svg{position:absolute;color:#93a6c4;opacity:.07;
+  animation-name:bgFloat;animation-timing-function:ease-in-out;animation-iteration-count:infinite;will-change:transform}
+@keyframes bgFloat{
+  0%{transform:translateY(0) rotate(0deg)}
+  33%{transform:translateY(-26px) rotate(7deg)}
+  66%{transform:translateY(14px) rotate(-6deg)}
+  100%{transform:translateY(0) rotate(0deg)}
+}
+@media (prefers-reduced-motion: reduce){
+  .bg-icons svg{animation:none}
+}
+@media(max-width:640px){
+  /* على الموبايل نقلّل الزحمة عشان الأداء والوضوح */
+  .bg-icons svg:nth-child(n+6){display:none}
+}
+
+/* ---- أيقونة الصفحة في التوب بار (لون مميّز لكل شاشة) ---- */
+.page-ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex-shrink:0;
+  box-shadow:var(--shadow-sm);transition:.16s}
+.page-ic svg{width:20px;height:20px}
+.topbar h2{margin-inline-start:2px}
+
 /* ---- اختيار طريقة الدفع (تاب المدفوعات في صفحة المشروع) ---- */
 .pay-choice{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
 @media(max-width:720px){.pay-choice{grid-template-columns:1fr}}
@@ -628,3 +656,126 @@ tbody tr:hover{background:var(--accent-soft)}
 .pc-pay.in svg,.pc-pay.in .v{color:var(--pos)}
 .pc-pay.out{background:var(--warn-soft)}
 .pc-pay.out svg,.pc-pay.out .v{color:var(--warn)}
+
+/* ============================================================
+   UI BATCH — July 2026: bands total box, compact item rows,
+   materials band groups, project card bands, craftsmen stars,
+   supplier debt groups
+   ============================================================ */
+
+/* ── Band Create: إجمالي الكلي box ── */
+.band-total-box{background:linear-gradient(135deg,var(--accent-soft),#f0f9ff);border:2px solid var(--accent);border-radius:14px;padding:20px 24px;margin:18px 0;text-align:center}
+.band-total-lbl{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+.band-total-inp{width:100%;border:none;background:transparent;color:var(--accent);font-size:32px;font-weight:900;text-align:center;font-variant-numeric:tabular-nums;padding:0;margin:0}
+.band-total-inp:focus{outline:none}
+.band-total-hint{font-size:11px;color:var(--ink-3);margin-top:6px}
+
+/* ── Materials Create: compact item rows ── */
+.item-row{border-bottom:1px solid var(--line-2);padding:6px 0}
+.item-row:last-child{border-bottom:none}
+.item-row-grid{display:flex;gap:6px;align-items:flex-end}
+.irf{display:flex;flex-direction:column;min-width:0}
+.irf label{font-size:10px;color:var(--ink-3);margin-bottom:3px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.irf input{padding:5px 7px;font-size:13px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);height:32px}
+.irf input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.ir-del{height:32px;width:34px;padding:0;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:flex-end;color:var(--neg);border-color:var(--neg)}
+.items-header-row{display:flex;gap:6px;padding:4px 0 6px;border-bottom:2px solid var(--line);margin-bottom:2px}
+.items-header-row span{font-size:11px;font-weight:700;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pay-section-box{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-top:12px}
+.pay-section-title{display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:700;color:var(--ink-2);margin-bottom:12px}
+@media(max-width:780px){.item-row-grid{flex-wrap:wrap}.irf{min-width:calc(50% - 4px)}.ir-del{align-self:flex-start;margin-top:20px}}
+
+/* ── Band Create: فورم البند فضل ضيق (مش مستطيل عريض) — صف الخامة/النثرية
+   بيتكسّر لسطرين مربّعين بدل ما يتزحلق أفقيًا في عرض ضيق ومساحات فاضية */
+.band-form-card{max-width:680px;margin:0 auto}
+.band-form-card .item-row-grid{flex-wrap:wrap}
+.band-form-card .item-row-grid .irf:first-child{flex:1 1 100%}
+.band-form-card .irf{flex:1 1 100px}
+.band-form-card .ir-del{position:absolute;top:6px;inset-inline-end:0}
+.band-form-card .item-row{position:relative;padding-inline-end:40px}
+
+/* ── فني اتدفعله فلوس: بياناته مقفولة بالكامل ── */
+.worker-row-locked{background:var(--warn-soft,#fef3e2);border-color:var(--warn,#c9821a);opacity:.92}
+.worker-row-locked input,.worker-row-locked select{background:var(--bg,#f4f7fb);cursor:not-allowed;color:var(--ink-2)}
+.worker-lock-note{margin-top:10px;padding:9px 12px;background:#fff;border:1px dashed var(--warn,#c9821a);border-radius:8px;font-size:12.5px;line-height:1.6;color:var(--warn,#c9821a)}
+
+/* ── جرس إشعارات حقيقي (بدل بانر تحذير عريض) ── */
+.bell-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);cursor:pointer;transition:.15s;flex-shrink:0}
+.bell-btn:hover{background:var(--warn-soft,#fef3e2);border-color:var(--warn,#c9821a);color:var(--warn,#c9821a);transform:translateY(-1px)}
+.bell-btn svg{width:19px;height:19px}
+.bell-badge{position:absolute;top:-6px;inset-inline-end:-6px;min-width:19px;height:19px;padding:0 4px;border-radius:999px;background:var(--neg,#dc2626);color:#fff;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--surface);animation:bellPulse 1.8s ease-in-out infinite}
+@keyframes bellPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+@media(prefers-reduced-motion:reduce){.bell-badge{animation:none}}
+
+/* ── تمييز واضح بين سعر الشراء (تكلفة للشركة) وسعر البيع (للعميل) — نفس
+   التلوين في كل الشاشات عشان العين تتعود عليه بسرعة ── */
+.price-cost{color:var(--ink-2);font-weight:600}
+.price-sell{color:var(--accent-ink,#1c4fb0);font-weight:700}
+th .price-cost,th .price-sell{font-weight:700;font-size:11px}
+
+/* ── بند منفذ بالكامل — صف بلون أخضر خفيف بدل عمود حالة منفصل ── */
+.band-row-done{background:var(--pos-soft,#e9f9f2)}
+.band-row-done td{color:var(--ink)}
+
+/* ── سجل الحركات: طابع بنكي — خلفية أيقونات مالية + شريط لون لكل نوع حركة ── */
+.txn-page-wrap{position:relative}
+.txn-bg-icons{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0;border-radius:14px}
+.txn-bg-icons svg{position:absolute;width:64px;height:64px;color:#8fa6c9;opacity:.05;fill:none}
+.txn-bg-icons svg:nth-child(1){top:4%;inset-inline-start:4%;width:52px;height:52px}
+.txn-bg-icons svg:nth-child(2){top:14%;inset-inline-end:8%;width:70px;height:70px}
+.txn-bg-icons svg:nth-child(3){top:38%;inset-inline-start:14%;width:46px;height:46px}
+.txn-bg-icons svg:nth-child(4){top:52%;inset-inline-end:5%;width:60px;height:60px}
+.txn-bg-icons svg:nth-child(5){top:68%;inset-inline-start:6%;width:56px;height:56px}
+.txn-bg-icons svg:nth-child(6){top:80%;inset-inline-end:16%;width:48px;height:48px}
+.txn-bg-icons svg:nth-child(7){top:25%;inset-inline-start:44%;width:64px;height:64px}
+.txn-bg-icons svg:nth-child(8){top:88%;inset-inline-start:38%;width:50px;height:50px}
+@media(max-width:900px){.txn-bg-icons svg:nth-child(n+5){display:none}}
+.txn-row{border-inline-start:3px solid var(--txn-color,transparent);transition:background .15s}
+.txn-row:hover{background:var(--surface-2)}
+.txn-icon-btn{width:28px;height:28px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.txn-icon-btn.danger{color:var(--neg);border-color:var(--neg)}
+.txn-icon-btn.danger:hover{background:var(--neg);color:#fff}
+
+/* ── تأكيد الباسورد الغلط: رسالة واضحة + اهتزاز المودال ── */
+.txn-pw-error{display:flex;align-items:center;gap:6px;margin-top:8px;padding:8px 10px;background:#fef2f2;border:1px solid var(--neg);border-radius:8px;color:var(--neg);font-size:12.5px;font-weight:700}
+.txn-pw-error svg{flex-shrink:0}
+@keyframes txnShake{
+  10%,90%{transform:translateX(-1px)}
+  20%,80%{transform:translateX(2px)}
+  30%,50%,70%{transform:translateX(-5px)}
+  40%,60%{transform:translateX(5px)}
+}
+.shake-error{animation:txnShake .5s cubic-bezier(.36,.07,.19,.97) both;border:2px solid var(--neg) !important}
+@media(prefers-reduced-motion:reduce){.shake-error{animation:none}}
+
+/* ── Project Show: materials band sections ── */
+.mat-band-section{border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.mat-band-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line)}
+.mat-total-strip{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--accent-soft);border:1px solid var(--accent);border-radius:10px;margin-bottom:24px;font-weight:600;color:var(--accent)}
+.mat-total-strip strong{font-size:16px;margin-inline-start:auto}
+
+/* ── Project Cards: band tags strip ── */
+.pc-bands{display:flex;flex-wrap:wrap;gap:4px;padding:8px 0 4px}
+.pc-bands .tag.sm{font-size:10px;padding:2px 8px}
+
+/* ── Craftsmen: star display and rating form ── */
+.star-display{display:flex;align-items:center;gap:2px}
+.star-icon{color:var(--line);fill:none}
+.star-icon.filled{color:#f59e0b;fill:#f59e0b}
+.craftsman-rate-form{display:flex;align-items:center;gap:8px;background:var(--bg);padding:8px 12px;border-radius:8px;flex-wrap:wrap}
+.rate-stars{display:flex;gap:2px}
+.rate-star-btn{background:none;border:none;cursor:pointer;padding:2px;color:var(--line);transition:color .15s,transform .1s}
+.rate-star-btn svg{fill:none;display:block}
+.rate-star-btn.on{color:#f59e0b}
+.rate-star-btn.on svg{fill:#f59e0b}
+.rate-star-btn:hover,.rate-star-btn:hover ~ .rate-star-btn{color:#f59e0b}
+.rate-star-btn:hover svg{fill:#fbbf24}
+.rate-star-btn:active{transform:scale(.85)}
+.rate-notes-inp{flex:1;min-width:120px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font-size:12px}
+
+/* ── Debts: supplier grouping ── */
+.supplier-debt-group{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.supplier-debt-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:linear-gradient(135deg,#f8faff,#f1f5fd);border-bottom:1px solid var(--line);flex-wrap:wrap;gap:12px}
+.supplier-ic{width:38px;height:38px;border-radius:10px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;color:var(--accent);flex-shrink:0}
+.supplier-fin-row{display:flex;align-items:center;gap:18px;margin-inline-start:auto;flex-wrap:wrap}
+@media(max-width:640px){.supplier-fin-row{margin-inline-start:0;width:100%}}

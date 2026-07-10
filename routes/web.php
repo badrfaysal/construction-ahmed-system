@@ -86,12 +86,8 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::post('/installments/{contract}/pay', [InstallmentController::class, 'pay'])->name('installments.pay');
     // دفع جماعي للأقساط الشهرية لعدة عقود
     Route::post('/installments/pay-bulk', [InstallmentController::class, 'payBulk'])->name('installments.pay_bulk');
-    // عكس/إلغاء دفعة
-    Route::post('/installment-payments/{payment}/reverse', [InstallmentController::class, 'reversePayment'])->name('installments.reverse_pay');
     // تعديل عقد
     Route::put('/installments/{contract}', [InstallmentController::class, 'update'])->name('installments.update');
-    // حذف عقد بالكامل
-    Route::delete('/installments/{contract}', [InstallmentController::class, 'destroy'])->name('installments.destroy');
     // (النظام القديم) تحديد قسط مشروع كمدفوع — يستخدمه المستحقات والتنبيهات
     Route::post('/installments/{installment}/mark-paid', [InstallmentController::class, 'markPaid'])->name('installments.markPaid');
 
@@ -104,6 +100,7 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     // Supplier debts — what we owe suppliers (الديون)
     Route::get('/debts', [DebtController::class, 'index'])->name('debts.index');
     Route::post('/debts/{debt}/pay', [DebtController::class, 'pay'])->name('debts.pay');
+    Route::post('/debts/supplier/{supplierId}/pay', [DebtController::class, 'paySupplier'])->name('debts.supplier.pay');
     Route::delete('/debts/{debt}', [DebtController::class, 'destroy'])->name('debts.destroy');
 
     // Suppliers (الموردون) — "compare" must be declared before the resource's {supplier} show route
@@ -172,7 +169,6 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
         // owner withdrawals, general overhead). Owner-level, hence admin-only.
         Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
         Route::post('/wallet/transactions', [WalletController::class, 'store'])->name('wallet.store');
-        Route::delete('/wallet/transactions/{transaction}', [WalletController::class, 'destroy'])->name('wallet.destroy');
         // Band statement (كشف حساب البند) — shows real cost & profit
         Route::get('/bands/{band}/statement', [ReportController::class, 'bandStatement'])->name('bands.statement');
         // Company cost statement (كشف حساب الشركة) — per-project real cost breakdown
@@ -185,6 +181,10 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
 
         // تصفير قاعدة البيانات (للتجارب فقط) — يمسح كل بيانات المقاولات ويصفّر المحفظة
         Route::post('/maintenance/reset', [MaintenanceController::class, 'resetDatabase'])->name('maintenance.reset');
+
+        // تعديل/حذف مركزي لأي حركة مالية — من سجل الحركات بس، محمي بباسورد الأدمن
+        Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
+        Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
     });
 
     // Global search (بحث) — available from the topbar on every screen

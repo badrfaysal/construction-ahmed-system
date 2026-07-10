@@ -50,12 +50,24 @@
         <input type="number" name="supervision_pct" value="{{ old('supervision_pct', $defaultSup) }}" min="0" max="100" step="0.1">
       </div>
     </div>
-    <div class="row2">
-      <div class="field">
-        <label>التاريخ *</label>
-        <input type="date" name="date" value="{{ old('date', today()->format('Y-m-d')) }}" required>
+    <div class="field">
+      <label>التاريخ *</label>
+      <input type="date" name="date" value="{{ old('date', today()->format('Y-m-d')) }}" required>
+    </div>
+    {{-- طريقة الدفع --}}
+    <div style="background:var(--bg);border-radius:8px;padding:14px 16px;margin-bottom:14px">
+      <div style="margin-bottom:10px;font-size:.85rem;font-weight:600;color:var(--text-muted)">طريقة الدفع</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="radio" name="payment_type" value="immediate" checked onchange="toggleExpenseWallet(this.value)">
+          <span>دفع فوري</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="radio" name="payment_type" value="deferred" onchange="toggleExpenseWallet(this.value)">
+          <span>آجل (يُسجّل بدون خصم من المحفظة)</span>
+        </label>
       </div>
-      <div class="field">
+      <div id="expense-wallet-row">
         @include('partials._wallet-select', ['wallets' => $wallets, 'label' => 'المحفظة (الصرف منها) *', 'required' => true, 'selectStyle' => 'width:100%'])
       </div>
     </div>
@@ -68,11 +80,21 @@
 
 @push('scripts')
 <script>
-// Sell price defaults to the cost amount until the user edits it by hand
 function syncSell() {
   const sell = document.getElementById('sell-field');
   if (sell.dataset.touched === '1') return;
   sell.value = document.getElementById('amount-field').value;
+}
+function toggleExpenseWallet(val) {
+  const row = document.getElementById('expense-wallet-row');
+  const sel = row.querySelector('select[name="account_id"]');
+  if (val === 'deferred') {
+    row.style.display = 'none';
+    if (sel) sel.required = false;
+  } else {
+    row.style.display = '';
+    if (sel) sel.required = true;
+  }
 }
 </script>
 @endpush

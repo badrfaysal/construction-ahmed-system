@@ -5,12 +5,30 @@
 
 @section('content')
 
+@php
+  $isOwner = auth()->user()->canSeeFinancials();
+  $totalProfit = $project->bands->sum(fn ($b) => $b->profit());
+  $initialValue = $project->initialContractValue();
+  $actualValue  = $project->actualClientTotal();
+  $owedWorkers  = $project->bands->flatMap(fn ($b) => $b->workers->map(fn ($w) => (object)[
+    'name'      => $w->name,
+    'band'      => $b->name,
+    'remaining' => $w->remaining(),
+  ]))->filter(fn ($w) => $w->remaining > 0)->values();
+@endphp
+
 <div class="page-head">
   <div>
     <h3>{{ $project->name }}</h3>
     <p>{{ $project->client->name }} @if($project->address)— {{ $project->address }}@endif</p>
   </div>
   <div class="btn-row">
+    @if($owedWorkers->isNotEmpty())
+      <button type="button" class="bell-btn" onclick="document.getElementById('owed-modal').classList.add('open')" title="{{ $owedWorkers->count() }} صنايعية مستحقين فلوس في المشروع ده">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bell"/></svg>
+        <span class="bell-badge">{{ $owedWorkers->count() }}</span>
+      </button>
+    @endif
     <a href="{{ route('reports.statement', $project) }}" class="btn ghost">كشف حساب العميل</a>
     <a href="{{ route('reports.statement.summary', $project) }}" class="btn ghost">كشف حساب مختصر</a>
     @if(auth()->user()->canSeeFinancials())
@@ -24,24 +42,7 @@
   </div>
 </div>
 
-@php
-  $isOwner = auth()->user()->canSeeFinancials();
-  $totalProfit = $project->bands->sum(fn ($b) => $b->profit());
-  $initialValue = $project->initialContractValue();
-  $actualValue  = $project->actualClientTotal();
-  $owedWorkers  = $project->bands->flatMap(fn ($b) => $b->workers->map(fn ($w) => (object)[
-    'name'      => $w->name,
-    'band'      => $b->name,
-    'remaining' => $w->remaining(),
-  ]))->filter(fn ($w) => $w->remaining > 0)->values();
-@endphp
-
 @if($owedWorkers->isNotEmpty())
-<div class="flash warning" style="cursor:pointer;margin-bottom:16px" onclick="document.getElementById('owed-modal').classList.add('open')">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0"><use href="#i-hardhat"/></svg>
-  فيه <strong>{{ $owedWorkers->count() }}</strong> {{ $owedWorkers->count() === 1 ? 'صنايعي مستحق' : 'صنايعية مستحقين' }} فلوس في المشروع ده — اضغط للتفاصيل
-</div>
-
 <div class="modal-overlay" id="owed-modal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal-box" style="max-width:520px">
     <div class="modal-head">
@@ -130,7 +131,6 @@
         <thead>
           <tr>
             <th>البند</th>
-            <th>الحالة</th>
             <th>الفنيين</th>
             <th class="num">سعر العميل</th>
             <th class="num">أجر المصنعية</th>
@@ -144,28 +144,14 @@
             @php
               $matCost = $band->materialCost();
               $profit  = $band->profit();
+              $isDone  = $band->status === 'done';
             @endphp
-            <tr>
-              <td><strong>{{ $band->name }}</strong></td>
+            <tr class="{{ $isDone ? 'band-row-done' : '' }}">
               <td>
-                @if(auth()->user()->canManage())
-                  <form method="POST" action="{{ route('bands.updateStatus', $band) }}" class="status-quick-form">
-                    @csrf @method('PATCH')
-                    <select name="status" class="status-quick-select tag-{{ $band->status }}" onchange="this.form.submit()">
-                      <option value="pending" {{ $band->status === 'pending' ? 'selected' : '' }}>لم يبدأ</option>
-                      <option value="active" {{ $band->status === 'active' ? 'selected' : '' }}>جاري</option>
-                      <option value="done" {{ $band->status === 'done' ? 'selected' : '' }}>منفذ</option>
-                    </select>
-                  </form>
-                @else
-                  @if($band->status === 'done')
-                    <span class="tag green"><span class="dot"></span>منفذ</span>
-                  @elseif($band->status === 'active')
-                    <span class="tag blue"><span class="dot"></span>جاري</span>
-                  @else
-                    <span class="tag gray">لم يبدأ</span>
-                  @endif
+                @if($isDone)
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--pos)" stroke-width="2.5" style="vertical-align:-2px;margin-inline-end:4px"><use href="#i-check-circle"/></svg>
                 @endif
+                <strong>{{ $band->name }}</strong>
               </td>
               <td class="muted">
                 @if($band->workers->count())
@@ -182,22 +168,34 @@
               <td class="num" style="color:{{ $profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
                 {{ \App\Support\Money::format($profit) }}
               </td>
-              <td style="display:flex;gap:6px">
+              <td style="display:flex;gap:6px;align-items:center">
                 @if($isOwner)
                   <a href="{{ route('bands.statement', $band) }}" class="btn ghost sm">كشف حساب</a>
                 @endif
-                <a href="{{ route('bands.edit', $band) }}" class="btn ghost sm">تعديل</a>
+                @if(! $isDone)
+                  <a href="{{ route('bands.edit', $band) }}" class="btn ghost sm">تعديل</a>
+                @endif
+                @if(auth()->user()->canManage() && ! $isDone)
+                  <button type="button" class="btn ghost sm" style="color:var(--pos);border-color:var(--pos)"
+                          onclick="openFinishBand({{ $band->id }}, '{{ addslashes($band->name) }}')">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-check"/></svg>
+                    إنهاء البند
+                  </button>
+                @endif
               </td>
             </tr>
           @endforeach
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="4">الإجماليات</td>
-            <td class="num">{{ \App\Support\Money::format($project->bands->sum('client_price')) }}</td>
-            <td class="num">{{ \App\Support\Money::format($project->bands->sum('labor_amount')) }}</td>
-            <td class="num">{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->materialCost())) }}</td>
-            <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->profit())) }}</td>
+            <td colspan="2"><strong>الإجماليات</strong></td>
+            <td class="num"><strong>{{ \App\Support\Money::format($project->bands->sum('client_price')) }}</strong><div class="muted" style="font-size:11px">سعر العميل</div></td>
+            <td class="num"><strong>{{ \App\Support\Money::format($project->bands->sum('labor_amount')) }}</strong><div class="muted" style="font-size:11px">مصنعية</div></td>
+            <td class="num"><strong>{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->materialCost())) }}</strong><div class="muted" style="font-size:11px">مواد</div></td>
+            <td class="num" style="color:{{ $project->bands->sum(fn($b) => $b->profit()) >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
+              <strong>{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->profit())) }}</strong>
+              <div class="muted" style="font-size:11px">الربح</div>
+            </td>
             <td></td>
           </tr>
         </tfoot>
@@ -273,6 +271,64 @@
     </div>
   @endif
 </div>
+
+@php
+  // كل الفلوس اللي العميل دفعها فعلًا — تحصيلات مباشرة + مقدم العقد (لو
+  // موجود) + كل قسط اتحصّل — مرتبة الأحدث أولًا، بشكل "شيك" واحد بيبان فيه
+  // نوع كل دفعة وتاريخها ومبلغها
+  $directPays = $project->transactions->where('ref_type', 'client_payment')->map(fn ($t) => (object) [
+    'date'   => $t->date,
+    'amount' => (float) $t->amount + (float) $t->discount,
+    'type'   => 'تحصيل مباشر',
+    'note'   => $t->description,
+  ]);
+  $contractPays = collect();
+  foreach ($project->contracts as $c) {
+    if ((float) $c->down_payment > 0) {
+      $contractPays->push((object) [
+        'date'   => $c->start_date ?? $c->created_at,
+        'amount' => (float) $c->down_payment,
+        'type'   => 'مقدم عقد تقسيط',
+        'note'   => $c->product_name,
+      ]);
+    }
+    foreach ($c->payments as $p) {
+      $contractPays->push((object) [
+        'date'   => $p->payment_date,
+        'amount' => (float) $p->amount_paid + (float) $p->discount_applied,
+        'type'   => 'قسط شهري',
+        'note'   => $p->notes,
+      ]);
+    }
+  }
+  $allClientPays = $directPays->concat($contractPays)->sortByDesc(fn ($p) => $p->date)->values();
+@endphp
+<div class="section-label" style="margin-top:0">سجل دفعات العميل بالتفصيل</div>
+<div class="table-card" style="margin-bottom:24px;overflow:hidden">
+  @if($allClientPays->isNotEmpty())
+    <div class="feed">
+      @foreach($allClientPays as $pay)
+        <div class="tx in">
+          <div class="tx-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></div>
+          <div class="tx-main">
+            <div class="t">{{ $pay->type }}</div>
+            <div class="s">
+              <span>{{ \Illuminate\Support\Carbon::parse($pay->date)->format('Y-m-d') }}</span>
+              @if($pay->note)<span>— {{ $pay->note }}</span>@endif
+            </div>
+          </div>
+          <div class="tx-amt">+{{ \App\Support\Money::format($pay->amount) }}</div>
+        </div>
+      @endforeach
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:var(--bg)">
+      <strong>إجمالي المحصّل</strong>
+      <strong class="tnum" style="color:var(--pos)">{{ \App\Support\Money::format($allClientPays->sum('amount')) }} ج.م</strong>
+    </div>
+  @else
+    <div class="empty-state"><h4>لسه مفيش دفعات مسجلة من العميل</h4></div>
+  @endif
+</div>
 </div>{{-- /tab-panel: installments --}}
 
 <div class="tab-panel" data-panel="materials" style="display:none">
@@ -297,6 +353,20 @@
 @if($project->materials->count())
 @php
   $matBands = $project->materials->map(fn($m) => $m->band)->filter()->unique('id');
+  $bandPalette = [
+    '#eff6ff', // أزرق فاتح
+    '#f0fdf4', // أخضر فاتح
+    '#fefce8', // أصفر فاتح
+    '#fdf4ff', // بنفسجي فاتح
+    '#fff7ed', // برتقالي فاتح
+    '#f0fdfa', // زمردي فاتح
+  ];
+  $bandColorMap = [];
+  $ci = 0;
+  foreach ($project->materials->pluck('band_id')->unique() as $bId) {
+      $bandColorMap[$bId ?? 'null'] = $bandPalette[$ci % count($bandPalette)];
+      $ci++;
+  }
 @endphp
 <div class="filter-bar no-print" style="margin-bottom:16px;padding:12px 16px;">
   <div class="f-field">
@@ -313,44 +383,74 @@
   </div>
 </div>
 @endif
-<div class="table-card" style="margin-bottom:24px">
-  @if($project->materials->count())
+@if($project->materials->count())
+@php
+  $matsByBand = $project->materials->sortByDesc('date')->groupBy('band_id');
+  $totalNetCost = $project->materials->sum(fn($m) => $m->netCost());
+@endphp
+@foreach($matsByBand as $bId => $bandMats)
+  @php
+    $bObj = $bandMats->first()->band;
+    $bColor = $bandColorMap[$bId === null ? 'null' : $bId] ?? '#f8fafc';
+    $bNetCost = $bandMats->sum(fn($m) => $m->netCost());
+  @endphp
+  <div class="table-card mat-band-section" style="margin-bottom:14px">
+    <div class="mat-band-header" style="background:{{ $bColor }}">
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-hardhat"/></svg>
+        <strong>{{ $bObj?->name ?? 'خامات بدون بند' }}</strong>
+        <span class="tag gray sm">{{ $bandMats->count() }} صنف</span>
+      </div>
+      <div class="tnum" style="font-weight:700">إجمالي: {{ \App\Support\Money::format($bNetCost) }} ج.م</div>
+    </div>
     <div class="table-scroll">
       <table>
         <thead>
-          <tr>
+          <tr style="background:{{ $bColor }}">
             <th>الصنف</th>
-            <th>البند</th>
             <th>المورد</th>
             <th class="num">الكمية</th>
             <th>الوحدة</th>
-            <th class="num">سعر الوحدة</th>
+            <th class="num"><span class="price-cost">سعر الشراء</span></th>
+            <th class="num"><span class="price-sell">سعر البيع</span></th>
             <th class="num">المرتجع</th>
-            <th class="num">الإجمالي</th>
+            <th class="num">الإجمالي الصافي</th>
             <th>التاريخ</th>
           </tr>
         </thead>
         <tbody>
-          @foreach($project->materials->sortByDesc('date') as $m)
+          @foreach($bandMats as $m)
             <tr class="mat-row" data-band="{{ $m->band_id }}">
-              <td><strong>{{ $m->item }}</strong>@if($m->isMisc())<span class="tag gray sm" style="margin-right:6px">نثري</span>@endif</td>
-              <td class="muted">{{ $m->band?->name ?? '—' }}</td>
+              <td>
+                <strong>{{ $m->item }}</strong>
+                @if($m->isMisc())<span class="tag gray sm" style="margin-right:6px">نثري</span>@endif
+              </td>
               <td class="muted">{{ $m->supplier?->name ?? '—' }}</td>
               <td class="num">{{ number_format($m->qty, 1) }}</td>
               <td class="muted">{{ $m->unit }}</td>
-              <td class="num">{{ \App\Support\Money::format($m->unit_price) }}</td>
+              <td class="num price-cost">{{ \App\Support\Money::format($m->unit_price) }}</td>
+              <td class="num price-sell">{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
               <td class="num {{ $m->returnedQty() > 0 ? '' : 'muted' }}">{{ \App\Support\Money::format($m->returnedQty(), 1) }}</td>
-              <td class="num">{{ \App\Support\Money::format($m->netCost()) }}</td>
+              <td class="num"><strong>{{ \App\Support\Money::format($m->netCost()) }}</strong></td>
               <td class="muted">{{ $m->date->format('Y-m-d') }}</td>
             </tr>
           @endforeach
         </tbody>
       </table>
     </div>
-  @else
-    <div class="empty-state"><h4>لا توجد خامات مسجلة</h4></div>
-  @endif
+  </div>
+@endforeach
+{{-- إجمالي كل الخامات --}}
+<div class="mat-total-strip">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-coins"/></svg>
+  إجمالي تكلفة الخامات الصافية:
+  <strong class="tnum">{{ \App\Support\Money::format($totalNetCost) }} ج.م</strong>
 </div>
+@else
+  <div class="table-card" style="margin-bottom:24px">
+    <div class="empty-state"><h4>لا توجد خامات مسجلة</h4></div>
+  </div>
+@endif
 </div>{{-- /tab-panel: materials --}}
 
 <div class="tab-panel" data-panel="returns" style="display:none">
@@ -385,10 +485,9 @@
               <td class="muted">{{ $r->material->date->format('Y-m-d') }} @if($r->material->supplier) — {{ $r->material->supplier->name }} @endif</td>
               <td class="muted">{{ $r->notes ?: '—' }}</td>
               <td>
-                <form method="POST" action="{{ route('returns.destroy', $r) }}" onsubmit="return confirm('حذف هذا المرتجع؟')">
-                  @csrf @method('DELETE')
-                  <button class="btn ghost sm" style="color:var(--neg)">حذف</button>
-                </form>
+                @if(auth()->user()->isAdmin())
+                  <button type="button" class="btn ghost sm" style="color:var(--neg)" onclick="openReturnDeleteModal({{ $r->id }})">حذف</button>
+                @endif
               </td>
             </tr>
           @endforeach
@@ -402,6 +501,35 @@
     </div>
   @endif
 </div>
+
+@if(auth()->user()->isAdmin())
+<div class="modal-overlay" id="return-delete-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-head">
+      <h4 style="margin:0;color:var(--neg)">حذف المرتجع</h4>
+      <button class="btn ghost sm" onclick="document.getElementById('return-delete-modal').classList.remove('open')">✕</button>
+    </div>
+    <form id="return-delete-form" method="POST" onsubmit="return submitReturnDelete(event)">
+      @csrf @method('DELETE')
+      <div class="modal-body">
+        <p style="margin:0 0 14px">هيتم عكس أثر هذا المرتجع بالكامل (رجوع الكمية للصافي المتاح، وأي مبلغ اترد للمحفظة هيتخصم تاني).</p>
+        <div class="field">
+          <label style="color:var(--neg)">كلمة مرور الأدمن للتأكيد *</label>
+          <input type="password" name="current_password" id="return-delete-password" required autocomplete="current-password">
+          <div id="return-delete-error" class="txn-pw-error" style="display:none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"/></svg>
+            <span></span>
+          </div>
+        </div>
+      </div>
+      <div class="btn-row" style="padding:0 20px 20px">
+        <button type="submit" class="btn danger" id="return-delete-submit">تأكيد الحذف</button>
+        <button type="button" class="btn ghost" onclick="document.getElementById('return-delete-modal').classList.remove('open')">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+@endif
 </div>{{-- /tab-panel: returns --}}
 
 <div class="tab-panel" data-panel="workers" style="display:none">
@@ -541,11 +669,117 @@
   @endpush
 @endif
 
+{{-- Modal: إنهاء البند --}}
+@if(auth()->user()->canManage())
+<div class="modal-overlay" id="finish-band-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-head">
+      <h4 style="margin:0">إنهاء البند</h4>
+      <button class="btn ghost sm" onclick="document.getElementById('finish-band-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin:0 0 8px">هل أنت متأكد من إنهاء البند <strong>"<span id="finish-band-name"></span>"</strong> بالكامل؟</p>
+      <p class="muted" style="font-size:13px;margin:0 0 20px">بعد الإنهاء يظهر البند باللون الأخضر ويُعتبر منتهيًا.</p>
+      <form id="finish-band-form" method="POST">
+        @csrf @method('PATCH')
+        <input type="hidden" name="status" value="done">
+        <div class="btn-row">
+          <button type="submit" class="btn pos">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-check"/></svg>
+            نعم، أنهِ البند
+          </button>
+          <button type="button" class="btn ghost" onclick="document.getElementById('finish-band-modal').classList.remove('open')">إلغاء</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+@endif
+
 @push('scripts')
 <script>
+function openFinishBand(bandId, bandName) {
+  document.getElementById('finish-band-name').textContent = bandName;
+  document.getElementById('finish-band-form').action = '/bands/' + bandId + '/status';
+  document.getElementById('finish-band-modal').classList.add('open');
+}
+
 function switchProjectTab(name) {
   document.querySelectorAll('#project-tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.querySelectorAll('.tab-panel').forEach(p => p.style.display = p.dataset.panel === name ? '' : 'none');
+}
+
+function openReturnDeleteModal(returnId) {
+  document.getElementById('return-delete-form').action = '/returns/' + returnId;
+  document.getElementById('return-delete-password').value = '';
+  document.getElementById('return-delete-error').style.display = 'none';
+  document.getElementById('return-delete-modal').classList.add('open');
+}
+
+function playAlarmSound() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (! Ctx) return;
+    const ctx = new Ctx();
+    const now = ctx.currentTime;
+    [[880, 0], [660, 0.16]].forEach(([freq, offset]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, now + offset);
+      gain.gain.setValueAtTime(0.16, now + offset);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.15);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + offset);
+      osc.stop(now + offset + 0.16);
+    });
+  } catch (e) {}
+}
+
+function shakeModal(box) {
+  box.classList.remove('shake-error');
+  void box.offsetWidth;
+  box.classList.add('shake-error');
+}
+
+async function submitReturnDelete(evt) {
+  evt.preventDefault();
+  const form = evt.target;
+  const submitBtn = document.getElementById('return-delete-submit');
+  const errorBox = document.getElementById('return-delete-error');
+  const errorSpan = errorBox.querySelector('span');
+  const passwordInput = document.getElementById('return-delete-password');
+
+  errorBox.style.display = 'none';
+  submitBtn.disabled = true;
+
+  try {
+    const res = await fetch(form.action, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: new FormData(form),
+    });
+
+    if (res.ok) {
+      window.location.reload();
+      return false;
+    }
+
+    const data = await res.json().catch(() => ({}));
+    const msg = data?.errors?.current_password?.[0] || data?.message || 'حصل خطأ — حاول تاني.';
+    errorSpan.textContent = msg;
+    errorBox.style.display = 'flex';
+    playAlarmSound();
+    shakeModal(form.closest('.modal-box'));
+    passwordInput.value = '';
+    passwordInput.focus();
+  } catch (e) {
+    errorSpan.textContent = 'حصل خطأ في الاتصال — حاول تاني.';
+    errorBox.style.display = 'flex';
+  } finally {
+    submitBtn.disabled = false;
+  }
+  return false;
 }
 
 document.getElementById('materials-band-filter')?.addEventListener('change', function() {

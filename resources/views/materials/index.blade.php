@@ -5,7 +5,7 @@
 @section('content')
 
 <div class="page-head">
-  <div><h3>الخامات والمرتجعات</h3><p>كل ما تم شراؤه ومرتجعاته</p></div>
+  <div><h3>الخامات والمرتجعات</h3><p>كل ما تم شراؤه ومرتجعاته — التعديل والحذف بقوا من <a href="{{ route('transactions.index') }}">سجل الحركات</a> فقط</p></div>
   <a href="{{ route('materials.create') }}" class="btn">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
     خامة جديدة
@@ -99,11 +99,11 @@
             <th>المورد</th>
             <th class="num">الكمية</th>
             <th>الوحدة</th>
-            <th class="num">سعر الوحدة</th>
+            <th class="num"><span class="price-cost">سعر الشراء (تكلفة)</span></th>
+            <th class="num"><span class="price-sell">سعر البيع للعميل</span></th>
             <th class="num">المرتجع</th>
             <th class="num">الإجمالي الصافي</th>
             <th>التاريخ</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -115,16 +115,11 @@
               <td class="muted">{{ $m->supplier?->name ?? '—' }}</td>
               <td class="num">{{ number_format($m->qty, 1) }}</td>
               <td class="muted">{{ $m->unit }}</td>
-              <td class="num">{{ \App\Support\Money::format($m->unit_price) }}</td>
+              <td class="num price-cost">{{ \App\Support\Money::format($m->unit_price) }}</td>
+              <td class="num price-sell">{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
               <td class="num {{ $m->returnedQty() > 0 ? '' : 'muted' }}">{{ \App\Support\Money::format($m->returnedQty(), 1) }}</td>
               <td class="num">{{ \App\Support\Money::format($m->netCost()) }}</td>
               <td class="muted">{{ $m->date->format('d/m/Y') }}</td>
-              <td>
-                <form method="POST" action="{{ route('materials.destroy', $m) }}" onsubmit="return confirm('حذف؟')">
-                  @csrf @method('DELETE')
-                  <button class="btn ghost sm" style="color:var(--neg)">حذف</button>
-                </form>
-              </td>
             </tr>
           @endforeach
         </tbody>

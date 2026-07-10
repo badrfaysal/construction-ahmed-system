@@ -122,10 +122,7 @@
               <button type="button" class="btn btn-success btn-sm fw-bold px-3" onclick="toggleStmtForm({{ $c->id }},'pay')"><i class="fa fa-cash-register me-1"></i>سداد قسط</button>
             @endif
             <button type="button" class="btn btn-primary btn-sm fw-bold px-3" onclick="toggleStmtForm({{ $c->id }},'edit')"><i class="fa fa-pen me-1"></i>تعديل</button>
-            <form method="POST" action="{{ route('installments.destroy', $c) }}" onsubmit="return confirm('حذف العقد بالكامل وإرجاع كل دفعاته؟')" style="margin:0">
-              @csrf @method('DELETE')
-              <button type="submit" class="btn btn-outline-danger btn-sm fw-bold px-3"><i class="fa fa-trash me-1"></i>حذف</button>
-            </form>
+            <span class="small text-muted align-self-center">حذف العقد من <a href="{{ route('transactions.index') }}">سجل الحركات</a></span>
           </div>
 
           {{-- ── نموذج سداد (مخفي) ── --}}
@@ -207,10 +204,6 @@
               <td class="pxls-pay-date" dir="ltr">{{ optional($p->payment_date)->format('Y-m-d') }}</td>
               <td class="pxls-pay-num" style="position:relative;">
                 <span class="pxls-pay-amount">{{ fmtMoney($p->amount_paid) }}@if((float)$p->discount_applied > 0)<small style="color:#0277bd;"> (+خصم {{ fmtMoney($p->discount_applied) }})</small>@endif</span>
-                <form method="POST" action="{{ route('installments.reverse_pay', $p) }}" class="no-print" style="display:inline;margin:0" onsubmit="return confirm('إلغاء هذه الدفعة وإرجاع المبلغ؟')">
-                  @csrf
-                  <button type="submit" title="إلغاء الدفعة" style="background:none;border:none;padding:0 4px;cursor:pointer;vertical-align:middle;opacity:.7;"><i class="fa fa-trash-alt" style="color:#c62828;font-size:13px;"></i></button>
-                </form>
                 <span class="pxls-row-badge">{{ $pIdx + 1 }}</span>
               </td>
             </tr>

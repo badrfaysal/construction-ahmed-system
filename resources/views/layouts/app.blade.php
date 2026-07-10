@@ -14,6 +14,22 @@
 </head>
 <body>
 
+{{-- خلفية متحركة: أيقونات بناء ومقاولات بتعوم بهدوء ورا المحتوى — لمسة حيوية
+     خفيفة جدًا (شفافة) مش بتأثر على القراءة. بتتعطّل تلقائيًا لو المستخدم مفضّل
+     تقليل الحركة (prefers-reduced-motion). --}}
+<div class="bg-icons" aria-hidden="true">
+  <svg style="top:8%;inset-inline-start:6%;width:46px;height:46px;animation-duration:13s;animation-delay:0s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg>
+  <svg style="top:22%;inset-inline-start:38%;width:64px;height:64px;animation-duration:18s;animation-delay:1.5s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>
+  <svg style="top:14%;inset-inline-start:78%;width:40px;height:40px;animation-duration:15s;animation-delay:3s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg>
+  <svg style="top:44%;inset-inline-start:14%;width:52px;height:52px;animation-duration:20s;animation-delay:.8s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-tool"/></svg>
+  <svg style="top:52%;inset-inline-start:62%;width:58px;height:58px;animation-duration:16s;animation-delay:2.2s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg>
+  <svg style="top:70%;inset-inline-start:30%;width:44px;height:44px;animation-duration:14s;animation-delay:4s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>
+  <svg style="top:80%;inset-inline-start:82%;width:50px;height:50px;animation-duration:19s;animation-delay:1s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-clipboard"/></svg>
+  <svg style="top:34%;inset-inline-start:90%;width:38px;height:38px;animation-duration:17s;animation-delay:2.8s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-coins"/></svg>
+  <svg style="top:88%;inset-inline-start:52%;width:42px;height:42px;animation-duration:15s;animation-delay:3.6s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
+  <svg style="top:60%;inset-inline-start:46%;width:36px;height:36px;animation-duration:21s;animation-delay:.4s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bar-chart"/></svg>
+</div>
+
 {{-- شاشة تحميل — بتظهر تلقائيًا مع أي إرسال فورم أو تنقّل بين الصفحات (انظر
      initConstructionLoader أسفل الصفحة)، بتصميم كرين وبناء بيتشيّد. --}}
 <div class="constr-loader" id="constrLoader" aria-hidden="true">
@@ -70,6 +86,18 @@
   <g id="i-hardhat"><path d="M4 18a8 8 0 0 1 16 0"/><path d="M2 18h20"/><path d="M12 10V4"/><path d="M4 14V11a8 8 0 0 1 16 0v3"/></g>
   <g id="i-check-circle"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></g>
   <g id="i-print"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></g>
+  <g id="i-tool"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></g>
+  <g id="i-settings"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></g>
+  <g id="i-logout"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></g>
+  <g id="i-trash"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></g>
+  <g id="i-coins"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></g>
+  <g id="i-credit-card"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></g>
+  <g id="i-calendar"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></g>
+  <g id="i-percent"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></g>
+  <g id="i-pie-chart"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></g>
+  <g id="i-scale"><path d="M12 3v18"/><path d="M5 7h14"/><path d="M6.5 7 3 14a3.5 3.5 0 0 0 7 0z"/><path d="M17.5 7 14 14a3.5 3.5 0 0 0 7 0z"/><path d="M8 21h8"/></g>
+  <g id="i-clipboard"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><line x1="8" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="14" y2="15"/></g>
+  <g id="i-chevron-down"><polyline points="6 9 12 15 18 9"/></g>
 </defs></svg>
 
 <aside class="sidebar">
@@ -106,7 +134,7 @@
       الفنيين والعمال
     </a>
     <a class="nav-item {{ request()->routeIs('craftsmen.*') ? 'active' : '' }}" href="{{ route('craftsmen.index') }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-tool"/></svg>
       الصنايعية ومستحقاتهم
     </a>
 
@@ -136,15 +164,15 @@
     </a>
     @endif
     <a class="nav-item {{ request()->routeIs('installments.*') ? 'active' : '' }}" href="{{ route('installments.index') }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-calendar"/></svg>
       المدفوعات والأقساط
     </a>
     <a class="nav-item {{ request()->routeIs('receivables.*') ? 'active' : '' }}" href="{{ route('receivables.index') }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-coins"/></svg>
       المستحقات
     </a>
     <a class="nav-item {{ request()->routeIs('debts.*') ? 'active' : '' }}" href="{{ route('debts.index') }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-credit-card"/></svg>
       الديون
     </a>
     <a class="nav-item {{ request()->routeIs('materials.*') ? 'active' : '' }}" href="{{ route('materials.index') }}">
@@ -158,7 +186,7 @@
       التقارير
     </a>
     <a class="nav-item {{ request()->routeIs('reports.profitability') ? 'active' : '' }}" href="{{ route('reports.profitability') }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-percent"/></svg>
       ربحية المشاريع
     </a>
     <a class="nav-item {{ request()->routeIs('reports.statement*') ? 'active' : '' }}" href="{{ route('reports.statement.index') }}">
@@ -167,12 +195,12 @@
     </a>
     @if(auth()->user()->canSeeFinancials())
     <a class="nav-item {{ request()->routeIs('reports.estimation.*') ? 'active' : '' }}" href="{{ route('reports.estimation.index') }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-clipboard"/></svg>
       تقدير تكلفة مشروع
     </a>
     @endif
     <a class="nav-item {{ request()->routeIs('analytics.index') ? 'active' : '' }}" href="{{ route('analytics.index') }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bar-chart"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pie-chart"/></svg>
       لوحة التحليلات
     </a>
     {{-- <a class="nav-item {{ request()->routeIs('analytics.technicians') ? 'active' : '' }}" href="{{ route('analytics.technicians') }}">
@@ -184,7 +212,7 @@
       متابعة الأسعار
     </a>
     <a class="nav-item {{ request()->routeIs('suppliers.compare') ? 'active' : '' }}" href="{{ route('suppliers.compare') }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-scale"/></svg>
       مقارنة الموردين
     </a>
 
@@ -201,7 +229,7 @@
     @if(auth()->user()->isAdmin())
       <div class="nav-label">النظام</div>
       <a class="nav-item {{ request()->routeIs('settings.edit') ? 'active' : '' }}" href="{{ route('settings.edit') }}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-grid"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-settings"/></svg>
         الإعدادات
       </a>
     @endif
@@ -212,9 +240,47 @@
   </div>
 </aside>
 
+@php
+  // هوية لونية + أيقونة مميّزة لكل شاشة — بتتحدد من اسم الراوت. كل شاشة بتاخد
+  // لونها الخاص اللي بيتطبّق تلقائيًا على أزرارها وعناوينها وتاباتها ورأس
+  // جداولها (عن طريق متغيّرات CSS على .page-wrap)، وأيقونة جنب اسم الصفحة.
+  // الصيغة: [accent, accent-2 (فاتح للتدرّج), accent-soft (خلفية خفيفة), accent-ink (غامق للنص), icon]
+  $routeSeg = explode('.', request()->route()?->getName() ?? '')[0];
+  $pageThemes = [
+    'dashboard'     => ['#2563eb','#3b82f6','#e5edff','#1d4ed8','i-grid'],
+    'clients'       => ['#0891b2','#06b6d4','#e0f7fa','#0e7490','i-users'],
+    'suppliers'     => ['#ea7317','#f97316','#fff0e0','#c2560f','i-truck'],
+    'labor'         => ['#b45309','#d97706','#fdf1dd','#92400e','i-hardhat'],
+    'craftsmen'     => ['#a16207','#ca8a04','#fef7e0','#854d0e','i-tool'],
+    'projects'      => ['#4f46e5','#6366f1','#ececfe','#4338ca','i-building'],
+    'quotes'        => ['#7c3aed','#8b5cf6','#f2ecfe','#5b21b6','i-doc'],
+    'transactions'  => ['#475569','#64748b','#eef2f7','#334155','i-activity'],
+    'wallet'        => ['#b8842a','#d4a13d','#fbf1de','#8a631d','i-wallet'],
+    'installments'  => ['#0d9488','#14b8a6','#dcf7f2','#0f766e','i-calendar'],
+    'receivables'   => ['#12936a','#22b583','#e3f6ee','#0b6b49','i-coins'],
+    'debts'         => ['#d63b2c','#ef5a4a','#fdeae7','#b02419','i-credit-card'],
+    'materials'     => ['#ea580c','#f97316','#ffedd5','#c2410c','i-box'],
+    'expenses'      => ['#ea580c','#f97316','#ffedd5','#c2410c','i-box'],
+    'returns'       => ['#ea580c','#f97316','#ffedd5','#c2410c','i-box'],
+    'reports'       => ['#7c3aed','#8b5cf6','#f2ecfe','#5b21b6','i-bar-chart'],
+    'analytics'     => ['#4f46e5','#6366f1','#ececfe','#4338ca','i-pie-chart'],
+    'price-history' => ['#0891b2','#06b6d4','#e0f7fa','#0e7490','i-trending-up'],
+    'alerts'        => ['#dc2626','#ef4444','#fdeae7','#b91c1c','i-bell'],
+    'warranties'    => ['#059669','#10b981','#e3f6ee','#047857','i-shield'],
+    'settings'      => ['#475569','#64748b','#eef2f7','#334155','i-settings'],
+    'search'        => ['#2563eb','#3b82f6','#e5edff','#1d4ed8','i-search'],
+    'bands'         => ['#4f46e5','#6366f1','#ececfe','#4338ca','i-building'],
+    'workers'       => ['#a16207','#ca8a04','#fef7e0','#854d0e','i-tool'],
+  ];
+  $T = $pageThemes[$routeSeg] ?? $pageThemes['dashboard'];
+@endphp
+
 <div class="main">
   {{-- Sticky top bar with page title and user info --}}
   <div class="topbar">
+    <div class="page-ic" style="background:{{ $T[2] }};color:{{ $T[0] }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#{{ $T[4] }}"/></svg>
+    </div>
     <h2>@yield('page-title', 'لوحة التحكم')</h2>
     <form method="GET" action="{{ route('search.index') }}" class="topbar-search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-search"/></svg>
@@ -227,7 +293,7 @@
             onsubmit="return confirm('⚠️ تحذير: هيتم مسح كل بيانات المقاولات (المشاريع، الخامات، الحركات، العروض...) وتصفير المحفظة نهائيًا.\n\nالخطوة دي للتيست فقط ومش ممكن التراجع عنها.\n\nمتأكد إنك عايز تكمل؟');">
         @csrf
         <button type="submit" class="btn danger sm" title="تصفير كل بيانات المقاولات — للتيست فقط">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-x"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
           تصفير الداتا
         </button>
       </form>
@@ -236,7 +302,7 @@
       <form method="POST" action="{{ route('logout') }}" style="margin:0">
         @csrf
         <button type="submit" class="btn ghost sm">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-x"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-logout"/></svg>
           تسجيل الخروج
         </button>
       </form>
@@ -251,8 +317,8 @@
     </div>
   </div>
 
-  {{-- Page content --}}
-  <div class="page-wrap">
+  {{-- Page content — كل صفحة بتاخد لونها الخاص عن طريق المتغيّرات دي --}}
+  <div class="page-wrap" style="--accent:{{ $T[0] }};--accent-2:{{ $T[1] }};--accent-soft:{{ $T[2] }};--accent-ink:{{ $T[3] }}">
 
     {{-- Flash messages (success / error) from session --}}
     @if(session('success'))

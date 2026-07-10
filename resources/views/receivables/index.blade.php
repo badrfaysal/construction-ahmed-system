@@ -540,7 +540,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
           @if($proj->clientPayments->count())
           <table class="rv-hist" id="hist-tbl-{{ $proj->id }}">
             <thead>
-              <tr><th>التاريخ</th><th style="text-align:right">البيان</th><th>المبلغ</th><th class="no-print"></th></tr>
+              <tr><th>التاريخ</th><th style="text-align:right">البيان</th><th>المبلغ</th></tr>
             </thead>
             <tbody>
               @foreach($proj->clientPayments as $pay)
@@ -561,14 +561,6 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
                       <span style="color:var(--mut);font-size:10.5px">(خصم {{ \App\Support\Money::format($pay->discount) }})</span>
                     @endif
                   </td>
-                  <td class="no-print">
-                    <form method="POST" action="{{ route('receivables.payment.delete', $pay) }}"
-                          onsubmit="return confirm('حذف هذا التحصيل وإرجاع المبلغ للمحفظة؟')"
-                          onclick="event.stopPropagation()">
-                      @csrf @method('DELETE')
-                      <button type="submit" class="del" title="حذف"><i class="fa fa-trash-alt"></i></button>
-                    </form>
-                  </td>
                 </tr>
               @endforeach
             </tbody>
@@ -576,7 +568,6 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
               <tr>
                 <td colspan="2" style="text-align:right;font-size:.72rem;color:var(--mut)">إجمالي التحصيلات</td>
                 <td style="color:var(--ok)">{{ \App\Support\Money::format($proj->clientPayments->sum(fn($p) => (float) $p->amount + (float) $p->discount)) }} ج</td>
-                <td class="no-print"></td>
               </tr>
             </tfoot>
           </table>

@@ -17,6 +17,11 @@ use App\Models\Transaction;
 // wallet isn't double-counting it against the new payment entries.
 class ProjectBandObserver
 {
+    public function created(ProjectBand $band): void
+    {
+        $band->recalculateCachedTotals();
+    }
+
     public function updated(ProjectBand $band): void
     {
         $this->removeLegacyLaborTransaction($band);

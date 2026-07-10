@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BandWorker;
+use App\Models\Project;
 use App\Support\ItemNameMatcher;
 
 // Unified craftsmen (الصنايعية) directory: the same person shows up as a
@@ -14,7 +15,21 @@ class CraftsmanController extends Controller
 {
     public function index(\Illuminate\Http\Request $request)
     {
-        $workers = BandWorker::with(['payments', 'band.project'])->get();
+        $query = BandWorker::with(['payments', 'band.project']);
+
+        // فلتر بالمشروع (الشقة) — بيقصر كل الصفوف (وبالتالي الإجماليات) على
+        // شغل الصنايعي في المشروع ده بس، مش كل مشاريعه
+        if ($pid = $request->get('project_id')) {
+            $query->whereHas('band', fn ($q) => $q->where('project_id', $pid));
+        }
+
+        $workers = $query->get();
+
+        // فلتر بالتخصص — بعد الجلب عشان نقارن بالقيمة المدخلة يدويًا (مفيش
+        // enum ثابت للتخصصات)
+        if ($specialty = $request->get('specialty')) {
+            $workers = $workers->filter(fn ($w) => trim((string) $w->specialty) === $specialty);
+        }
 
         $ratings = \App\Models\CraftsmanRating::all()->keyBy('craftsman_name');
 
@@ -54,7 +69,11 @@ class CraftsmanController extends Controller
         $totalRemaining = $craftsmen->sum('remaining');
         $totalPaid      = $craftsmen->sum('paid');
 
-        return view('craftsmen.index', compact('craftsmen', 'totalRemaining', 'totalPaid'));
+        $projects    = Project::orderBy('name')->get(['id', 'name']);
+        $specialties = BandWorker::whereNotNull('specialty')->where('specialty', '!=', '')
+            ->distinct()->orderBy('specialty')->pluck('specialty');
+
+        return view('craftsmen.index', compact('craftsmen', 'totalRemaining', 'totalPaid', 'projects', 'specialties'));
     }
 
     public function rate(\Illuminate\Http\Request $request, string $name)

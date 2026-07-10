@@ -118,6 +118,15 @@
                 <div class="bar-track"><div class="bar-fill" style="width:{{ $prog }}%"></div></div>
                 <span class="pct">{{ $prog }}%</span>
               </div>
+              @if($p->bands->count())
+                <div class="pc-bands">
+                  @foreach($p->bands as $band)
+                    <span class="tag {{ $band->status === 'done' ? 'green' : ($band->status === 'active' ? 'blue' : 'gray') }} sm">
+                      @if($band->status === 'done') ✓ @endif{{ $band->name }}
+                    </span>
+                  @endforeach
+                </div>
+              @endif
               <div class="pc-fin">
                 <div>
                   <div class="l">قيمة التعاقد</div>

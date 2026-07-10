@@ -97,7 +97,7 @@
 
   {{-- Manual entries history --}}
   <div class="table-card">
-    <div class="section-label" style="margin:14px 18px 0">الحركات اليدوية</div>
+    <div class="section-label" style="margin:14px 18px 0">الحركات اليدوية <span class="muted" style="font-weight:400;font-size:11px">— التعديل والحذف من <a href="{{ route('transactions.index') }}">سجل الحركات</a></span></div>
     @if($manual->count())
       <div class="table-scroll">
         <table>
@@ -108,7 +108,6 @@
               <th>المحفظة</th>
               <th>الجهة</th>
               <th class="num">المبلغ</th>
-              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -128,12 +127,6 @@
                 </td>
                 <td class="num" style="color:{{ $tx->direction === 'in' ? 'var(--pos)' : 'var(--neg)' }}">
                   {{ $tx->direction === 'in' ? '+ ' : '− ' }}{{ \App\Support\Money::format($tx->amount) }}
-                </td>
-                <td>
-                  <form method="POST" action="{{ route('wallet.destroy', $tx) }}" onsubmit="return confirm('حذف هذه الحركة؟ هيتعدّل رصيد المحفظة.')">
-                    @csrf @method('DELETE')
-                    <button class="btn ghost sm" style="color:var(--neg)">حذف</button>
-                  </form>
                 </td>
               </tr>
             @endforeach
