@@ -172,9 +172,7 @@
                 @if($isOwner)
                   <a href="{{ route('bands.statement', $band) }}" class="btn ghost sm">كشف حساب</a>
                 @endif
-                @if(! $isDone)
-                  <a href="{{ route('bands.edit', $band) }}" class="btn ghost sm">تعديل</a>
-                @endif
+                <a href="{{ route('bands.edit', $band) }}" class="btn ghost sm">تعديل</a>
                 @if(auth()->user()->canManage() && ! $isDone)
                   <button type="button" class="btn ghost sm" style="color:var(--pos);border-color:var(--pos)"
                           onclick="openFinishBand({{ $band->id }}, '{{ addslashes($band->name) }}')">

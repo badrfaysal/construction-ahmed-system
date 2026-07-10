@@ -162,13 +162,6 @@ class ProjectBandController extends Controller
     // Show edit form for one band
     public function edit(ProjectBand $band)
     {
-        // بند منفذ بالكامل يتقفل من التعديل خالص — لو محتاج تصحيح، افتحه
-        // تاني من "إنهاء البند" مش من هنا
-        if ($band->status === 'done') {
-            return redirect()->route('projects.show', $band->project)
-                ->with('error', 'البند "' . $band->name . '" منفذ بالكامل — مقفول من التعديل.');
-        }
-
         $band->load('workers.payments');
         $legacySeed = $band->legacyWorkerSeed();
         return view('bands.edit', compact('band', 'legacySeed'));
@@ -177,11 +170,6 @@ class ProjectBandController extends Controller
     // Save edits to a band
     public function update(Request $request, ProjectBand $band)
     {
-        if ($band->status === 'done') {
-            return redirect()->route('projects.show', $band->project)
-                ->with('error', 'البند "' . $band->name . '" منفذ بالكامل — مقفول من التعديل.');
-        }
-
         $this->stripEmptyWorkers($request);
         $data = $this->validateData($request);
         $workers = $data['workers'] ?? [];
