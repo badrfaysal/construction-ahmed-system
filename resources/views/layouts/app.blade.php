@@ -129,10 +129,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg>
       الموردون
     </a>
-    <a class="nav-item {{ request()->routeIs('labor.*') ? 'active' : '' }}" href="{{ route('labor.index') }}">
+    {{-- <a class="nav-item {{ request()->routeIs('labor.*') ? 'active' : '' }}" href="{{ route('labor.index') }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg>
       الفنيين والعمال
-    </a>
+    </a> --}}
     <a class="nav-item {{ request()->routeIs('craftsmen.*') ? 'active' : '' }}" href="{{ route('craftsmen.index') }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-tool"/></svg>
       الصنايعية ومستحقاتهم
