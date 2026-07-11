@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'تسجيل خامات')
 @section('page-title', 'تسجيل خامات')
 
@@ -20,19 +20,225 @@
 @endif
 
 <style>
-  /* تخطيط شاشة الخامات: الفورم + كروت الإجماليات جنبه في عمود ثابت (sticky) */
-  .mat-layout{display:flex;gap:20px;align-items:flex-start}
+  /* تخطيط شاشة الخامات الأساسي */
+  .mat-layout {
+    --accent: #2563eb;
+    --accent-2: #3b82f6;
+    --accent-soft: #eff6ff;
+    --accent-ink: #1e3a8a;
+    display:flex; gap:32px; align-items:flex-start;
+  }
   .mat-layout .mat-form{flex:1;min-width:0}
-  .mat-totals{position:sticky;top:20px;width:250px;flex-shrink:0;
-    background:var(--surface,#fff);border:1px solid var(--line,#e6ebf3);
-    border-radius:14px;padding:16px;box-shadow:0 4px 20px rgba(15,23,42,.05)}
-  .mat-totals .section-label{margin:0 0 12px}
-  .mat-totals .card.stat{margin:0 0 10px;background:var(--bg,#f4f7fb)}
+  
+  /* الإجماليات العائمة (Glassmorphism Sidebar) */
+  .mat-totals {
+    position:sticky;top:24px;width:300px;flex-shrink:0;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 32px;
+    padding: 28px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.04), inset 0 2px 4px rgba(255,255,255,0.5);
+  }
+  .mat-totals .section-label{margin:0 0 20px; font-size: 1.3rem; color: var(--ink); font-weight: 800; text-align: center;}
+  .mat-totals .card.stat {
+    margin:0 0 16px;
+    background: linear-gradient(145deg, #ffffff, #f8fafc);
+    border: none;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+    padding: 16px 20px;
+    border-radius: 20px;
+    transition: transform 0.3s;
+  }
+  .mat-totals .card.stat:hover { transform: translateY(-3px); }
   .mat-totals .card.stat:last-child{margin-bottom:0}
-  /* على الشاشات الصغيرة الكروت تنزل تحت الفورم بعرض كامل */
-  @media (max-width:900px){
+  
+  /* البنية الأساسية للمجموعة (Fluid Group Card) */
+  .neo-group-card {
+    background: linear-gradient(145deg, #f8fafc, #f1f5f9);
+    border-radius: 36px;
+    padding: 32px;
+    margin-bottom: 32px;
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.8), 0 15px 35px rgba(0,0,0,0.03);
+    border: 1px solid rgba(255,255,255,0.6);
+  }
+  .neo-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+  .neo-group-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    background: linear-gradient(45deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  /* الفقاعات العائمة للأصناف (Floating Bubbles) */
+  .neo-item-bubble {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 14px 24px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.03), 0 2px 10px rgba(0,0,0,0.01);
+    margin-bottom: 16px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255,255,255,0.5);
+    flex-wrap: wrap;
+  }
+  .neo-item-bubble:focus-within {
+    box-shadow: 0 15px 40px rgba(99, 102, 241, 0.15), 0 4px 15px rgba(99, 102, 241, 0.1);
+    transform: translateY(-4px) scale(1.01);
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+  
+  .neo-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 100px;
+  }
+  .neo-col-main { flex: 2; min-width: 200px; }
+  .neo-col-sm { flex: 0.8; min-width: 80px; }
+  
+  .neo-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-inline-start: 4px;
+  }
+  .neo-input {
+    border: none !important;
+    background: transparent !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: var(--ink) !important;
+    padding: 8px 4px !important;
+    width: 100% !important;
+    transition: all 0.2s !important;
+    box-shadow: none !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    border-bottom: 2px solid transparent !important;
+  }
+  .neo-input:focus {
+    outline: none !important;
+    color: var(--accent) !important;
+    border-bottom: 2px solid var(--accent) !important;
+  }
+  .neo-input::placeholder {
+    color: #cbd5e1;
+    font-weight: 500;
+  }
+  
+  /* زر الحذف الدائري */
+  .neo-delete-btn {
+    background: #fef2f2;
+    color: #dc2626;
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    margin-top: 18px;
+  }
+  .neo-delete-btn:hover {
+    background: #dc2626;
+    color: #fff;
+    transform: scale(1.15) rotate(90deg);
+    box-shadow: 0 10px 20px rgba(220, 38, 38, 0.3);
+  }
+
+  /* زر الإضافة الأنيق */
+  .neo-add-btn {
+    background: linear-gradient(45deg, var(--accent), var(--accent-2));
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 32px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.35);
+    transition: all 0.3s;
+    margin-top: 12px;
+  }
+  .neo-add-btn:hover {
+    box-shadow: 0 15px 35px rgba(99, 102, 241, 0.5);
+    transform: translateY(-3px);
+  }
+
+  /* قسم الدفع الناعم */
+  .neo-pay-section {
+    background: #ffffff;
+    border-radius: 28px;
+    padding: 28px;
+    margin-top: 32px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.02);
+  }
+  .neo-radio-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 24px;
+    background: #f8fafc;
+    border: 2px solid transparent;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink-2);
+  }
+  .neo-radio-pill:hover { background: #f1f5f9; transform: translateY(-2px); }
+  .neo-radio-pill:has(input:checked) {
+    background: #ffffff;
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.15);
+  }
+  .neo-radio-pill input[type="radio"] { margin: 0; width:18px; height:18px; accent-color: var(--accent); }
+
+  /* الحقول الكبيرة (Select / Date) في الهيدر والدفع */
+  .neo-big-input {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    padding: 14px 20px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.01) !important;
+    transition: all 0.3s !important;
+    height: 54px !important;
+  }
+  .neo-big-input:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15) !important;
+  }
+
+  @media (max-width:1100px) {
     .mat-layout{flex-direction:column}
     .mat-totals{position:static;width:100%}
+    .neo-item-bubble { gap: 12px; }
   }
 </style>
 
@@ -187,40 +393,38 @@ function loadBandsForProject(projectId) {
 
 function itemRowHtml(g, i) {
   return `
-    <div class="item-row">
-      <div class="item-row-grid">
-        <div class="irf" style="flex:2.2">
-          <label>الصنف *</label>
-          <input type="text" name="groups[${g}][items][${i}][item]" placeholder="أسمنت، سيراميك..." required list="items-list">
-        </div>
-        <div class="irf" style="flex:1.6">
-          <label>المورد</label>
-          <select name="groups[${g}][items][${i}][supplier_id]">${supplierOptionsHtml}</select>
-        </div>
-        <div class="irf" style="flex:.9">
-          <label>الوحدة</label>
-          <input type="text" name="groups[${g}][items][${i}][unit]" value="وحدة" required list="units-list">
-        </div>
-        <div class="irf" style="flex:.9">
-          <label>الكمية</label>
-          <input type="number" name="groups[${g}][items][${i}][qty]" class="mat-qty" placeholder="0" min="0" step="0.1" required oninput="recalcTotals()">
-        </div>
-        <div class="irf" style="flex:1.3">
-          <label>سعر الشراء</label>
-          <input type="number" name="groups[${g}][items][${i}][unit_price]" class="mat-cost" placeholder="0.00" min="0" step="0.01" required oninput="recalcTotals()">
-        </div>
-        <div class="irf" style="flex:1.3">
-          <label>سعر البيع</label>
-          <input type="number" name="groups[${g}][items][${i}][sell_price]" class="mat-sell" placeholder="0.00" min="0" step="0.01" required oninput="recalcTotals()">
-        </div>
-        <div class="irf" style="flex:.8">
-          <label>إشراف %</label>
-          <input type="number" name="groups[${g}][items][${i}][supervision_pct]" class="mat-sup" placeholder="0" min="0" max="100" step="0.1" value="${defaultSupervisionPct}" oninput="this.dataset.touched='1'; recalcTotals()">
-        </div>
-        <button type="button" class="btn ghost sm ir-del" onclick="this.closest('.item-row').remove(); recalcTotals()" title="حذف">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"/></svg>
-        </button>
+    <div class="neo-item-bubble item-row">
+      <div class="neo-col neo-col-main">
+        <div class="neo-label">اسم الصنف</div>
+        <input type="text" name="groups[${g}][items][${i}][item]" class="neo-input" placeholder="أسمنت، سيراميك، دهانات..." required list="items-list">
       </div>
+      <div class="neo-col">
+        <div class="neo-label">المورد</div>
+        <select name="groups[${g}][items][${i}][supplier_id]" class="neo-input">${supplierOptionsHtml}</select>
+      </div>
+      <div class="neo-col neo-col-sm">
+        <div class="neo-label">الوحدة</div>
+        <input type="text" name="groups[${g}][items][${i}][unit]" class="neo-input" value="وحدة" required list="units-list">
+      </div>
+      <div class="neo-col neo-col-sm">
+        <div class="neo-label">الكمية</div>
+        <input type="number" name="groups[${g}][items][${i}][qty]" class="neo-input mat-qty" placeholder="0" min="0" step="0.1" required oninput="recalcTotals()">
+      </div>
+      <div class="neo-col">
+        <div class="neo-label">سعر الشراء</div>
+        <input type="number" name="groups[${g}][items][${i}][unit_price]" class="neo-input mat-cost" placeholder="0.00" min="0" step="0.01" required oninput="recalcTotals()">
+      </div>
+      <div class="neo-col">
+        <div class="neo-label">سعر البيع</div>
+        <input type="number" name="groups[${g}][items][${i}][sell_price]" class="neo-input mat-sell" placeholder="0.00" min="0" step="0.01" required oninput="recalcTotals()">
+      </div>
+      <div class="neo-col neo-col-sm">
+        <div class="neo-label">إشراف %</div>
+        <input type="number" name="groups[${g}][items][${i}][supervision_pct]" class="neo-input mat-sup" placeholder="0" min="0" max="100" step="0.1" value="${defaultSupervisionPct}" oninput="this.dataset.touched='1'; recalcTotals()">
+      </div>
+      <button type="button" class="neo-delete-btn" onclick="this.closest('.neo-item-bubble').remove(); recalcTotals()" title="حذف الصنف">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><use href="#i-x"/></svg>
+      </button>
     </div>`;
 }
 
@@ -267,59 +471,71 @@ function addGroup() {
   const g = groupCounter++;
   const today = new Date().toISOString().slice(0, 10);
   const html = `
-    <div class="band-group" data-group="${g}">
-      <div class="band-group-head">
-        <span class="lbl">بند رقم ${g + 1}</span>
-        <button type="button" class="btn ghost sm" onclick="this.closest('.band-group').remove()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-x"/></svg>
-          حذف البند
+    <div class="neo-group-card band-group" data-group="${g}">
+      <div class="neo-group-header">
+        <div class="neo-group-title">
+          <div style="background:var(--accent-soft); width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--accent);">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-box"/></svg>
+          </div>
+          مجموعة أصناف (${g + 1})
+        </div>
+        <button type="button" class="btn ghost danger" style="border-radius:50px; font-weight:700;" onclick="this.closest('.band-group').remove()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
+          إلغاء المجموعة
         </button>
       </div>
-      <div class="row2" style="margin-bottom:12px">
-        <div class="field">
-          <label>البند</label>
-          <select name="groups[${g}][band_id]" class="band-select">${bandOptionsHtml()}</select>
+      
+      <div class="row2" style="margin-bottom:32px; gap:24px;">
+        <div class="field" style="margin:0">
+          <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">البند التابع له هذه الأصناف</label>
+          <select name="groups[${g}][band_id]" class="neo-big-input band-select">${bandOptionsHtml()}</select>
         </div>
-        <div class="field">
-          <label>تاريخ الشراء *</label>
-          <input type="date" name="groups[${g}][date]" value="${today}" required>
+        <div class="field" style="margin:0">
+          <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">تاريخ الشراء *</label>
+          <input type="date" name="groups[${g}][date]" value="${today}" required class="neo-big-input">
         </div>
       </div>
-      <p class="muted" style="margin:0 0 8px;font-size:12px">كل صنف تقدر تختاره من مورد مختلف — المورد بقى جوه صف الصنف نفسه.</p>
+      
       <div class="items-container" id="items-${g}"></div>
-      <button type="button" class="btn ghost sm" style="margin:6px 0 14px" onclick="addItem(${g})">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
-        إضافة صنف
+      
+      <button type="button" class="neo-add-btn" onclick="addItem(${g})">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
+        إضافة صنف آخر
       </button>
-      {{-- طريقة الدفع — آخر حاجة في كل مجموعة --}}
-      <div class="pay-section-box">
-        <div class="pay-section-title">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-wallet"/></svg>
-          طريقة دفع هذا الشراء
+      
+      {{-- طريقة الدفع --}}
+      <div class="neo-pay-section">
+        <div style="font-size:1.15rem;font-weight:800;color:var(--ink);margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+          <div style="background:#f1f5f9; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--ink-2);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-credit-card"/></svg>
+          </div>
+          كيف سيتم سداد هذه المجموعة؟
         </div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+        
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px">
+          <label class="neo-radio-pill">
             <input type="radio" name="groups[${g}][payment_status]" value="paid" checked onchange="togglePaidAmt(${g}, this.value)">
-            <span>دفع بالكامل</span>
+            <span>دفع نقدي بالكامل</span>
           </label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <label class="neo-radio-pill">
             <input type="radio" name="groups[${g}][payment_status]" value="partial" onchange="togglePaidAmt(${g}, this.value)">
-            <span>جزئي (دفع جزء + باقي دين)</span>
+            <span>دفع جزء و تبقي دين</span>
           </label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <label class="neo-radio-pill">
             <input type="radio" name="groups[${g}][payment_status]" value="deferred" onchange="togglePaidAmt(${g}, this.value)">
             <span>آجل بالكامل (دين)</span>
           </label>
         </div>
-        <div class="row2" style="align-items:flex-end">
+        
+        <div class="row2" style="align-items:flex-start; gap:24px;">
           <div class="field" style="margin:0" id="wallet-row-${g}">
-            <label style="font-weight:600">المحفظة (الصرف منها) *</label>
-            <select name="groups[${g}][account_id]" id="wallet-${g}" required>${walletOptionsHtml}</select>
+            <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">المحفظة للصرف *</label>
+            <select name="groups[${g}][account_id]" id="wallet-${g}" required class="neo-big-input">${walletOptionsHtml}</select>
           </div>
           <div id="paid-amt-row-${g}" style="display:none">
             <div class="field" style="margin:0">
-              <label>المبلغ المدفوع الآن (ج.م) *</label>
-              <input type="number" name="groups[${g}][paid_amount]" id="paid-amt-${g}" min="0" step="0.01" placeholder="0">
+              <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">المبلغ المدفوع الآن (ج.م) *</label>
+              <input type="number" name="groups[${g}][paid_amount]" id="paid-amt-${g}" min="0" step="0.01" placeholder="مثال: 1500" class="neo-big-input">
             </div>
           </div>
         </div>
