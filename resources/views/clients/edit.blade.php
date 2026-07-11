@@ -14,7 +14,7 @@
       <div class="field"><label>الهاتف</label><input type="tel" name="phone" value="{{ old('phone', $client->phone) }}"></div>
     </div>
     <div class="row2">
-      <div class="field"><label>البريد الإلكتروني</label><input type="email" name="email" value="{{ old('email', $client->email) }}"></div>
+
       <div class="field"><label>العنوان</label><input type="text" name="address" value="{{ old('address', $client->address) }}"></div>
     </div>
     <div class="field"><label>ملاحظات</label><textarea name="notes" rows="3">{{ old('notes', $client->notes) }}</textarea></div>

@@ -15,7 +15,7 @@
       <div class="field"><label>الهاتف</label><input type="tel" name="phone" value="{{ old('phone') }}" placeholder="0100 000 0000"></div>
     </div>
     <div class="row2">
-      <div class="field"><label>البريد الإلكتروني</label><input type="email" name="email" value="{{ old('email') }}"></div>
+
       <div class="field"><label>العنوان</label><input type="text" name="address" value="{{ old('address') }}" placeholder="الحي — الشارع — الدور"></div>
     </div>
     <div class="field"><label>ملاحظات</label><textarea name="notes" rows="3">{{ old('notes') }}</textarea></div>

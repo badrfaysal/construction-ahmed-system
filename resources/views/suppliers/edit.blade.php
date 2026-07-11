@@ -12,7 +12,7 @@
     </div>
     <div class="row2">
       <div class="field"><label>الهاتف</label><input type="tel" name="phone" value="{{ old('phone', $supplier->phone) }}"></div>
-      <div class="field"><label>البريد الإلكتروني</label><input type="email" name="email" value="{{ old('email', $supplier->email) }}"></div>
+
     </div>
     <div class="field"><label>العنوان</label><input type="text" name="address" value="{{ old('address', $supplier->address) }}"></div>
     <div class="field"><label>ملاحظات</label><textarea name="notes" rows="3">{{ old('notes', $supplier->notes) }}</textarea></div>
