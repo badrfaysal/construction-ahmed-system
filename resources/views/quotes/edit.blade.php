@@ -71,6 +71,19 @@
                   'supervision_pct' => $i->supervision_pct,
               ];
           }),
+          'workers' => $b->workers->map(function ($w) {
+              return [
+                  'name'               => $w->name,
+                  'specialty'          => $w->specialty,
+                  'contract_type'      => $w->contract_type,
+                  'contract_qty'       => $w->contract_qty,
+                  'contract_unit_rate' => $w->contract_unit_rate,
+                  'sell_rate'          => $w->sell_rate,
+                  'amount'             => $w->amount,
+                  'sell_amount'        => $w->sell_amount,
+                  'supervision_pct'    => $w->supervision_pct,
+              ];
+          }),
       ];
   });
 @endphp
@@ -87,14 +100,108 @@ function bandRowHtml(g) {
         <div class="field" style="margin:0"><input type="number" name="bands[${g}][price]" class="band-price" placeholder="السعر الإجمالي التقريبي (ج.م)" min="0" step="0.01"></div>
       </div>
       <div class="band-items" id="band-items-${g}"></div>
+      <div class="band-workers" id="band-workers-${g}" style="margin-top:10px"></div>
       <div class="btn-row" style="margin-top:6px">
         <button type="button" class="btn ghost sm" onclick="addItem(${g})">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
           إضافة صنف تقريبي
         </button>
+        <button type="button" class="btn ghost sm" onclick="addWorker(${g})">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
+          إضافة فني/مصنعية
+        </button>
         <button type="button" class="btn ghost sm danger" onclick="this.closest('.band-card').remove()">حذف البند</button>
       </div>
     </div>`;
+}
+
+function workerRowHtml(g, w) {
+  return `
+    <div class="worker-row" data-worker="${w}" style="border:1px solid var(--line);border-radius:8px;padding:10px;margin:8px 0;background:#fafafa">
+      <div class="row2">
+        <div class="field" style="margin:0"><input type="text" name="bands[${g}][workers][${w}][name]" placeholder="اسم الفني *" required></div>
+        <div class="field" style="margin:0"><input type="text" name="bands[${g}][workers][${w}][specialty]" placeholder="التخصص (اختياري) مثل: كهربائي"></div>
+      </div>
+      <div class="field" style="margin:0 0 8px">
+        <select name="bands[${g}][workers][${w}][contract_type]" class="worker-contract-type" onchange="toggleWorkerQtyWrap(${g},${w},this.value)">
+          <option value="">— نوع التعاقد —</option>
+          <option value="lump_sum">مقاولة مقطوعة</option>
+          <option value="per_meter">بالمتر</option>
+          <option value="per_piece">بالقطعة</option>
+          <option value="daily">يومية</option>
+        </select>
+      </div>
+      <div class="worker-qty-wrap row2" style="margin-top:0;display:none">
+        <div class="field" style="margin:0"><input type="number" name="bands[${g}][workers][${w}][contract_qty]" class="worker-qty" placeholder="الكمية (متر/قطعة/يوم)" min="0" step="0.01" oninput="recalcWorker(${g},${w})"></div>
+        <div class="field" style="margin:0"><input type="number" name="bands[${g}][workers][${w}][contract_unit_rate]" class="worker-rate" placeholder="سعر الوحدة (تكلفة)" min="0" step="0.01" oninput="recalcWorker(${g},${w})"></div>
+      </div>
+      <div class="worker-qty-wrap row2" style="margin-top:8px;display:none">
+        <div class="field" style="margin:0"><input type="number" name="bands[${g}][workers][${w}][sell_rate]" class="worker-sell-rate" placeholder="سعر الوحدة للعميل" min="0" step="0.01" oninput="recalcWorker(${g},${w})"></div>
+      </div>
+      <div class="row2" style="margin-top:8px">
+        <div class="field" style="margin:0"><input type="number" name="bands[${g}][workers][${w}][amount]" class="worker-amount" placeholder="الأجر الإجمالي (تكلفة)" min="0" step="0.01" oninput="this.dataset.touched='1'; recalcBandPrice(${g})"></div>
+        <div class="field" style="margin:0"><input type="number" name="bands[${g}][workers][${w}][sell_amount]" class="worker-sell-amount" placeholder="سعره الإجمالي للعميل" min="0" step="0.01" oninput="this.dataset.touched='1'; recalcBandPrice(${g})"></div>
+      </div>
+      <div class="row2" style="margin-top:8px;align-items:end">
+        <div class="field" style="margin:0">
+          <label style="color:#7c3aed">إشراف %</label>
+          <input type="number" name="bands[${g}][workers][${w}][supervision_pct]" class="worker-sup" placeholder="0" min="0" max="100" step="0.1" value="{{ $settings->default_supervision_pct }}" oninput="recalcBandPrice(${g})" style="border-color:#c4b5fd">
+        </div>
+        <button type="button" class="btn ghost sm danger" onclick="this.closest('.worker-row').remove(); recalcBandPrice(${g})">حذف الفني</button>
+      </div>
+    </div>`;
+}
+
+function fillWorker(g, w, worker) {
+  const row = document.querySelector(`.band-card[data-band="${g}"] .worker-row[data-worker="${w}"]`);
+  row.querySelector('[name*="[name]"]').value = worker.name || '';
+  row.querySelector('[name*="[specialty]"]').value = worker.specialty || '';
+  row.querySelector('[name*="[contract_type]"]').value = worker.contract_type || '';
+  row.querySelector('.worker-qty').value = worker.contract_qty ?? '';
+  row.querySelector('.worker-rate').value = worker.contract_unit_rate ?? '';
+  row.querySelector('.worker-sell-rate').value = worker.sell_rate ?? '';
+  const amountField = row.querySelector('.worker-amount');
+  const sellField = row.querySelector('.worker-sell-amount');
+  amountField.value = worker.amount ?? 0;
+  sellField.value = worker.sell_amount ?? 0;
+  // القيمة المحفوظة تفضل زي ما هي وقت الفتح، مش تتحسب من جديد من الكمية×السعر
+  amountField.dataset.touched = '1';
+  sellField.dataset.touched = '1';
+  row.querySelector('.worker-sup').value = worker.supervision_pct ?? 0;
+  toggleWorkerQtyWrap(g, w, worker.contract_type || '');
+}
+
+// "مقاولة مقطوعة" = أجر إجمالي ثابت، مفيش كمية ولا سعر وحدة أصلاً — فاخفِ
+// حقول الكمية/السعر خالص لحد ما يختار نوع تعاقد بالكمية (متر/قطعة/يوم)
+function toggleWorkerQtyWrap(g, w, type) {
+  const row = document.querySelector(`.band-card[data-band="${g}"] .worker-row[data-worker="${w}"]`);
+  if (!row) return;
+  const show = (type === 'per_meter' || type === 'per_piece' || type === 'daily');
+  row.querySelectorAll('.worker-qty-wrap').forEach(wrap => { wrap.style.display = show ? '' : 'none'; });
+}
+
+// qty × rate يملي الأجر/سعر العميل تلقائيًا كبداية — لحد ما المستخدم يعدّل
+// المبلغ بإيده مباشرة (data-touched)، زي نفس فكرة recalcWorkerAmounts في
+// شاشات البنود الحقيقية (bands/_contract-scripts.blade.php)
+function recalcWorker(g, w) {
+  const row = document.querySelector(`.band-card[data-band="${g}"] .worker-row[data-worker="${w}"]`);
+  if (!row) return;
+  const qty = parseFloat(row.querySelector('.worker-qty').value) || 0;
+  const rate = parseFloat(row.querySelector('.worker-rate').value) || 0;
+  const sellRate = parseFloat(row.querySelector('.worker-sell-rate').value) || 0;
+  const amountField = row.querySelector('.worker-amount');
+  const sellField = row.querySelector('.worker-sell-amount');
+  if (amountField.dataset.touched !== '1') amountField.value = (qty * rate).toFixed(2);
+  if (sellField.dataset.touched !== '1' && sellRate > 0) sellField.value = (qty * sellRate).toFixed(2);
+  recalcBandPrice(g);
+}
+
+function addWorker(g, prefill = null) {
+  const container = document.getElementById('band-workers-' + g);
+  const w = container.children.length;
+  container.insertAdjacentHTML('beforeend', workerRowHtml(g, w));
+  if (prefill) fillWorker(g, w, prefill);
+  recalcBandPrice(g);
 }
 
 function itemRowHtml(g, i) {
@@ -125,14 +232,15 @@ function addItem(g, prefill = null) {
   recalcBandPrice(g);
 }
 
-// The band's total price is auto-computed from its items whenever any exist —
-// stays manually editable only for bands with no itemized breakdown
+// The band's total price is auto-computed from its items + workers whenever
+// any exist — stays manually editable only for bands with no breakdown
 function recalcBandPrice(g) {
   const card = document.querySelector(`.band-card[data-band="${g}"]`);
   const items = card.querySelectorAll('.item-row');
+  const workers = card.querySelectorAll('.worker-row');
   const priceField = card.querySelector('.band-price');
 
-  if (items.length === 0) {
+  if (items.length === 0 && workers.length === 0) {
     priceField.readOnly = false;
     return;
   }
@@ -143,6 +251,13 @@ function recalcBandPrice(g) {
     const price = parseFloat(row.querySelector('[name*="[unit_price]"]').value) || 0;
     const pct = parseFloat(row.querySelector('[name*="[supervision_pct]"]').value) || 0;
     sum += qty * price * (1 + pct / 100);
+  });
+  workers.forEach(row => {
+    const amount = parseFloat(row.querySelector('.worker-amount').value) || 0;
+    const sellAmount = parseFloat(row.querySelector('.worker-sell-amount').value) || 0;
+    const pct = parseFloat(row.querySelector('.worker-sup').value) || 0;
+    const base = sellAmount || amount;
+    sum += base * (1 + pct / 100);
   });
   priceField.value = sum.toFixed(2);
   priceField.readOnly = true;
@@ -156,6 +271,7 @@ function addBand(prefill = null) {
     card.querySelector('[name*="[name]"]').value = prefill.name;
     card.querySelector('.band-price').value = prefill.price;
     (prefill.items || []).forEach(item => addItem(g, item));
+    (prefill.workers || []).forEach(worker => addWorker(g, worker));
   }
 }
 

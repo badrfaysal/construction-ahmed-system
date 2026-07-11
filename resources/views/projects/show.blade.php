@@ -16,6 +16,12 @@
   $isOwner = auth()->user()->canSeeFinancials();
   $totalProfit = $project->bands->sum(fn ($b) => $b->profit());
   $actualValue  = $project->actualClientTotal();
+  // "قيمة المشروع" فوق = الفاتورة الفعلية الحية (خامات + مصنعية بسعرهم الحقيقي
+  // وقت التسجيل). "سعر العميل" في جدول البنود تحت = السعر المتفق عليه وقت
+  // إنشاء/تعديل البند (من عرض السعر أو اتكتب يدوي)، وده بيفضل زي ما هو حتى
+  // لو خامات جديدة اتسجلت على البند بعد كده — عشان كده بيختلفوا مع الوقت.
+  $bandsAgreedTotal = $project->bands->sum('client_price');
+  $valueGap = $actualValue - $bandsAgreedTotal;
   $owedWorkers  = $project->bands->flatMap(fn ($b) => $b->workers->map(fn ($w) => (object)[
     'name'      => $w->name,
     'band'      => $b->name,
@@ -87,6 +93,13 @@
       <span>سعر الشراء (تكلفة)</span>
       <strong class="price-cost">{{ \App\Support\Money::format($project->totalSpent()) }} ج.م</strong>
     </div>
+    @if(abs($valueGap) > 0.5)
+      <div class="note" style="margin-top:4px;font-size:11px;color:var(--ink-3)">
+        الفرق عن سعر البنود المتفق عليه ({{ \App\Support\Money::format($bandsAgreedTotal) }} ج.م):
+        {{ $valueGap > 0 ? '+' : '' }}{{ \App\Support\Money::format($valueGap) }} ج.م
+        — خامات/مصنعية اتسجلت فعليًا بعد تحديد سعر البند
+      </div>
+    @endif
   </div>
   <div class="card stat">
     <div class="top"><span class="label">محصّل من العميل</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span></div>
@@ -147,7 +160,8 @@
           <tr>
             <th>البند</th>
             <th>الفنيين</th>
-            <th class="num">سعر العميل</th>
+            <th class="num" title="السعر اللي اتحدد وقت إنشاء/تعديل البند — بيفضل زي ما هو حتى لو خامات جديدة اتسجلت بعد كده">السعر المتفق عليه</th>
+            <th class="num" title="خامات + مصنعية بسعر بيعهم الحقيقي للعميل + نسبة الإشراف — ده اللي بيتحسب منه الربح فعليًا">الفاتورة الفعلية</th>
             <th class="num">أجر المصنعية</th>
             <th class="num">المواد</th>
             <th class="num">الربح</th>
@@ -160,6 +174,7 @@
               $matCost = $band->materialCost();
               $profit  = $band->profit();
               $isDone  = $band->status === 'done';
+              $bandActual = $band->actualClientTotal();
             @endphp
             <tr class="{{ $isDone ? 'band-row-done' : '' }}">
               <td>
@@ -177,7 +192,8 @@
                   —
                 @endif
               </td>
-              <td class="num">{{ \App\Support\Money::format($band->client_price) }}</td>
+              <td class="num muted">{{ \App\Support\Money::format($band->client_price) }}</td>
+              <td class="num"><strong>{{ \App\Support\Money::format($bandActual) }}</strong></td>
               <td class="num">{{ \App\Support\Money::format($band->labor_amount) }}</td>
               <td class="num">{{ \App\Support\Money::format($matCost) }}</td>
               <td class="num" style="color:{{ $profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
@@ -202,7 +218,8 @@
         <tfoot>
           <tr>
             <td colspan="2"><strong>الإجماليات</strong></td>
-            <td class="num"><strong>{{ \App\Support\Money::format($project->bands->sum('client_price')) }}</strong><div class="muted" style="font-size:11px">سعر العميل</div></td>
+            <td class="num muted"><strong>{{ \App\Support\Money::format($project->bands->sum('client_price')) }}</strong><div class="muted" style="font-size:11px">متفق عليه</div></td>
+            <td class="num"><strong>{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->actualClientTotal())) }}</strong><div class="muted" style="font-size:11px">فاتورة فعلية</div></td>
             <td class="num"><strong>{{ \App\Support\Money::format($project->bands->sum('labor_amount')) }}</strong><div class="muted" style="font-size:11px">مصنعية</div></td>
             <td class="num"><strong>{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->materialCost())) }}</strong><div class="muted" style="font-size:11px">مواد</div></td>
             <td class="num" style="color:{{ $project->bands->sum(fn($b) => $b->profit()) >= 0 ? 'var(--pos)' : 'var(--neg)' }}">

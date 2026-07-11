@@ -17,7 +17,7 @@ class QuoteController extends Controller
     {
         $tab = $request->get('tab', 'all');
 
-        $query = Quote::with('bands.items');
+        $query = Quote::with('bands.items', 'bands.workers');
 
         match ($request->get('sort', 'newest')) {
             'oldest' => $query->orderBy('date')->orderBy('id'),
@@ -37,7 +37,7 @@ class QuoteController extends Controller
     // Show a single quote with its bands
     public function show(Quote $quote)
     {
-        $quote->load('bands.items');
+        $quote->load('bands.items', 'bands.workers');
         return view('quotes.show', compact('quote'));
     }
 
@@ -78,7 +78,7 @@ class QuoteController extends Controller
     {
         abort_unless($quote->status === 'draft', 403, 'لا يمكن تعديل عرض تم إرساله أو اعتماده.');
 
-        $quote->load('bands.items');
+        $quote->load('bands.items', 'bands.workers');
         $clients = Client::orderBy('name')->get();
 
         return view('quotes.edit', compact('quote', 'clients'));
@@ -110,7 +110,7 @@ class QuoteController extends Controller
     // Dedicated screen for approved quotes only — ready to be turned into projects/contracts
     public function approved()
     {
-        $quotes = Quote::with('bands.items')
+        $quotes = Quote::with('bands.items', 'bands.workers')
             ->where('status', 'approved')
             ->orderByDesc('date')
             ->get();
@@ -144,7 +144,7 @@ class QuoteController extends Controller
         abort_unless($quote->status === 'approved', 400, 'لازم اعتماد العرض الأول.');
         abort_if($quote->project_id, 400, 'تم تحويل هذا العرض لمشروع بالفعل.');
 
-        $quote->load('bands.items');
+        $quote->load('bands.items', 'bands.workers');
         $suppliers = Supplier::orderBy('name')->get(['id', 'name']);
         $wallets   = \App\Models\Account::selectable();
 
@@ -179,7 +179,7 @@ class QuoteController extends Controller
             'items.*.paid_amount'      => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $quote->load('bands');
+        $quote->load('bands.workers');
 
         $project = DB::transaction(function () use ($quote, $data) {
             $client = $quote->client_id
@@ -206,12 +206,35 @@ class QuoteController extends Controller
             // Create bands and remember which project band each quote band maps to
             $bandMap = [];
             foreach ($quote->bands as $i => $band) {
-                $bandMap[$band->id] = $project->bands()->create([
+                $projectBand = $project->bands()->create([
                     'name'         => $band->name,
                     'client_price' => $band->price,
                     'status'       => 'pending',
                     'sort_order'   => $i,
-                ])->id;
+                ]);
+                $bandMap[$band->id] = $projectBand->id;
+
+                // انسخ فنيي البند من العرض (لو موجودين) كما هم — نفس المصنعية
+                // المتفق عليها في العرض تبقى نقطة البداية الحقيقية للمشروع،
+                // بدل ما تتكتب يدوي تاني من الصفر
+                foreach ($band->workers as $j => $worker) {
+                    $projectBand->workers()->create([
+                        'name'               => $worker->name,
+                        'specialty'          => $worker->specialty,
+                        'contract_type'      => $worker->contract_type,
+                        'contract_qty'       => $worker->contract_qty,
+                        'contract_unit_rate' => $worker->contract_unit_rate,
+                        'sell_rate'          => $worker->sell_rate,
+                        'amount'             => $worker->amount,
+                        'sell_amount'        => $worker->sell_amount,
+                        'supervision_pct'    => $worker->supervision_pct,
+                        'notes'              => $worker->notes,
+                        'sort_order'         => $j,
+                    ]);
+                }
+                if ($band->workers->isNotEmpty()) {
+                    $projectBand->recomputeLaborTotals();
+                }
             }
 
             // Record the items marked "already purchased" as real purchases
@@ -289,6 +312,18 @@ class QuoteController extends Controller
             'bands.*.items.*.qty'          => ['required', 'numeric', 'min:0'],
             'bands.*.items.*.unit_price'   => ['required', 'numeric', 'min:0'],
             'bands.*.items.*.supervision_pct' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            // المصنعية والفنيين — تفصيلة اختيارية لكل بند، بنفس منطق sy2_band_workers
+            'bands.*.workers'                        => ['nullable', 'array'],
+            'bands.*.workers.*.name'                 => ['required', 'string', 'max:255'],
+            'bands.*.workers.*.specialty'             => ['nullable', 'string', 'max:255'],
+            'bands.*.workers.*.contract_type'         => ['nullable', 'in:lump_sum,daily,per_meter,per_piece'],
+            'bands.*.workers.*.contract_qty'          => ['nullable', 'numeric', 'min:0'],
+            'bands.*.workers.*.contract_unit_rate'    => ['nullable', 'numeric', 'min:0'],
+            'bands.*.workers.*.sell_rate'             => ['nullable', 'numeric', 'min:0'],
+            'bands.*.workers.*.amount'                => ['nullable', 'numeric', 'min:0'],
+            'bands.*.workers.*.sell_amount'           => ['nullable', 'numeric', 'min:0'],
+            'bands.*.workers.*.supervision_pct'       => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'bands.*.workers.*.notes'                 => ['nullable', 'string'],
         ]);
     }
 
@@ -314,8 +349,24 @@ class QuoteController extends Controller
                 ]);
             }
 
-            if (! empty($bandData['items'])) {
-                $band->load('items');
+            foreach ($bandData['workers'] ?? [] as $k => $worker) {
+                $band->workers()->create([
+                    'name'               => $worker['name'],
+                    'specialty'          => $worker['specialty'] ?? null,
+                    'contract_type'      => $worker['contract_type'] ?? null,
+                    'contract_qty'       => $worker['contract_qty'] ?? null,
+                    'contract_unit_rate' => $worker['contract_unit_rate'] ?? null,
+                    'sell_rate'          => $worker['sell_rate'] ?? null,
+                    'amount'             => $worker['amount'] ?? 0,
+                    'sell_amount'        => $worker['sell_amount'] ?? 0,
+                    'supervision_pct'    => $worker['supervision_pct'] ?? 0,
+                    'notes'              => $worker['notes'] ?? null,
+                    'sort_order'         => $k,
+                ]);
+            }
+
+            if (! empty($bandData['items']) || ! empty($bandData['workers'])) {
+                $band->load('items', 'workers');
                 $band->update(['price' => $band->itemsTotal()]);
             }
         }

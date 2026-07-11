@@ -164,14 +164,18 @@ function fillWorker(g, w) {
   amountField.value = w.amount ?? 0;
   sellField.value = w.sell_amount ?? 0;
   // بند/فني موجود بالفعل — القيمة المحفوظة تفضل زي ما هي بالظبط لما الفورم
-  // يتفتح، مش تتحسب من جديد من الكمية×السعر (اللي ممكن تكون اتغيّرت يدويًا
-  // قبل كده) — تعديل الكمية/السعر بعد كده لسه بيحدّثها زي العادة
+  // يتفتح، مش تتحسب من جديد من الكمية×السعر فورًا (اللي ممكن تكون اتغيّرت
+  // يدويًا قبل كده). ده قفل مؤقت لحد ما updateWorkerUI() تحته يخلص بس — لازم
+  // نفكّه بعد كده على طول، وإلا أي تعديل لاحق في الكمية/السعر (تعديل مقايسة
+  // عادي) هيفضل من غير أي تأثير على "الأجر" وهيبان للمستخدم إن حاجة متغيرتش.
   amountField.dataset.touched = '1';
   sellField.dataset.touched = '1';
   row.querySelector('.supervision-pct').value = w.supervision_pct ?? 0;
   row.querySelector('[name*="[start_date]"]').value = w.start_date || '';
   row.querySelector('[name*="[notes]"]').value = w.notes || '';
   updateWorkerUI(row);
+  amountField.dataset.touched = '';
+  sellField.dataset.touched = '';
 
   // فني اتدفعله جزء قبل كده؟ بياناته تفضل قابلة للتعديل زي أي فني تاني —
   // تعديل المقايسة (الكمية) بعد الدفع حاجة عادية جدًا وشائعة (زودت شغله من

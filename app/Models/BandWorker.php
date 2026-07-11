@@ -75,4 +75,23 @@ class BandWorker extends Model
     {
         return max($this->paidTotal() - (float) $this->amount, 0);
     }
+
+    // نفس base الاستخدام في clientPrice() — عشان tradeProfit()+percentageProfit()
+    // يفضلوا بالظبط بيساووا الفرق بين clientPrice() و amount (من غير drift)
+    private function baseSellAmount(): float
+    {
+        return (float) $this->sell_amount ?: (float) $this->amount;
+    }
+
+    // الربح التجاري = فرق سعره للعميل عن أجره الفعلي، من غير نسبة الإشراف
+    public function tradeProfit(): float
+    {
+        return $this->baseSellAmount() - (float) $this->amount;
+    }
+
+    // ربح النسبة = نسبة الإشراف المضافة فوق سعره للعميل
+    public function percentageProfit(): float
+    {
+        return $this->baseSellAmount() * ((float) $this->supervision_pct / 100);
+    }
 }

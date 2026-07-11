@@ -256,6 +256,51 @@ class ProjectBand extends Model
         return (float) $this->materials->sum(fn ($m) => $m->netClientCost());
     }
 
+    // الربح التجاري (فرق الشراء من البيع بس) على خامات البند
+    public function materialTradeProfit(): float
+    {
+        return (float) $this->materials->sum(fn ($m) => $m->tradeProfit());
+    }
+
+    // ربح نسبة الإشراف على خامات البند
+    public function materialPercentageProfit(): float
+    {
+        return (float) $this->materials->sum(fn ($m) => $m->percentageProfit());
+    }
+
+    // نفس فكرة الخامات لكن للمصنعية — لو فيه فنيين مقسّمين (workers)، ربح كل
+    // واحد فيهم محسوب بنفس منطق tradeProfit/percentageProfit بتاعته. لو مفيش
+    // (بند قديم من قبل ميزة "قائمة الفنيين")، بنرجع لحقول البند القديمة.
+    public function laborTradeProfit(): float
+    {
+        if ($this->workers->isNotEmpty()) {
+            return (float) $this->workers->sum(fn ($w) => $w->tradeProfit());
+        }
+        $base = (float) ($this->labor_sell_price ?? $this->labor_amount);
+        return $base - (float) $this->labor_amount;
+    }
+
+    public function laborPercentageProfit(): float
+    {
+        if ($this->workers->isNotEmpty()) {
+            return (float) $this->workers->sum(fn ($w) => $w->percentageProfit());
+        }
+        $base = (float) ($this->labor_sell_price ?? $this->labor_amount);
+        return $base * ((float) $this->labor_supervision_pct / 100);
+    }
+
+    // الربح التجاري الكلي للبند (خامات + مصنعية) — من غير نسبة الإشراف
+    public function tradeProfit(): float
+    {
+        return $this->materialTradeProfit() + $this->laborTradeProfit();
+    }
+
+    // ربح نسبة الإشراف الكلي للبند (خامات + مصنعية)
+    public function percentageProfit(): float
+    {
+        return $this->materialPercentageProfit() + $this->laborPercentageProfit();
+    }
+
     // Actual amount billed to the client for this band (materials + labor,
     // at their real sell prices) — this is what drives the client statement,
     // separate from the pre-agreed client_price from the quote

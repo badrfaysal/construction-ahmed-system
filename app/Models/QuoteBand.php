@@ -22,10 +22,16 @@ class QuoteBand extends Model
         return $this->hasMany(QuoteBandItem::class, 'quote_band_id')->orderBy('sort_order');
     }
 
-    // Sum of the itemized breakdown — this is what `price` gets synced to
-    // whenever the band has items (see QuoteController::store/update)
+    public function workers(): HasMany
+    {
+        return $this->hasMany(QuoteBandWorker::class, 'quote_band_id')->orderBy('sort_order');
+    }
+
+    // Sum of the itemized breakdown (materials + labor) — this is what `price`
+    // gets synced to whenever the band has items/workers (see QuoteController::store/update)
     public function itemsTotal(): float
     {
-        return (float) $this->items->sum(fn ($item) => $item->total());
+        return (float) $this->items->sum(fn ($item) => $item->total())
+            + (float) $this->workers->sum(fn ($w) => $w->clientPrice());
     }
 }

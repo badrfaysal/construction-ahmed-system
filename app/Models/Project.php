@@ -229,6 +229,23 @@ class Project extends Model
         return $materialCost + $laborCost;
     }
 
+    // الربح التجاري الكلي للمشروع (فرق الشراء من البيع بس، من غير نسبة
+    // الإشراف) — بنود + نثريات/خامات عامة مش تابعة لبند
+    public function tradeProfit(): float
+    {
+        $bandsTotal = (float) $this->bands->sum(fn ($band) => $band->tradeProfit());
+        $generalMaterials = (float) $this->generalMaterials()->sum(fn ($m) => $m->tradeProfit());
+        return $bandsTotal + $generalMaterials;
+    }
+
+    // ربح نسبة الإشراف الكلي للمشروع
+    public function percentageProfit(): float
+    {
+        $bandsTotal = (float) $this->bands->sum(fn ($band) => $band->percentageProfit());
+        $generalMaterials = (float) $this->generalMaterials()->sum(fn ($m) => $m->percentageProfit());
+        return $bandsTotal + $generalMaterials;
+    }
+
     // Updates cached values and saves
     public function recalculateCachedTotals(): void
     {

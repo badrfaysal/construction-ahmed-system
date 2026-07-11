@@ -91,11 +91,21 @@
               <td><b>{{ \App\Support\Money::format($item->total()) }}</b></td>
             </tr>
           @empty
-            <tr>
-              <td colspan="3" class="muted">سعر مقطوع — بدون تفصيل أصناف</td>
-              <td><b>{{ \App\Support\Money::format($band->price) }}</b></td>
-            </tr>
+            @if($band->workers->isEmpty())
+              <tr>
+                <td colspan="3" class="muted">سعر مقطوع — بدون تفصيل أصناف</td>
+                <td><b>{{ \App\Support\Money::format($band->price) }}</b></td>
+              </tr>
+            @endif
           @endforelse
+          @foreach($band->workers as $worker)
+            <tr>
+              <td>{{ $worker->name }} <span class="muted">(مصنعية@if($worker->specialty) — {{ $worker->specialty }}@endif)</span></td>
+              <td>{{ $worker->contract_qty ? rtrim(rtrim($worker->contract_qty, '0'), '.') : '—' }}</td>
+              <td>{{ $worker->contract_unit_rate ? \App\Support\Money::format($worker->contract_unit_rate) : '—' }}</td>
+              <td><b>{{ \App\Support\Money::format($worker->clientPrice()) }}</b></td>
+            </tr>
+          @endforeach
           <tr class="sub">
             <td colspan="3" style="text-align:left">إجمالي بند {{ $band->name }}</td>
             <td>{{ \App\Support\Money::format($band->price) }} ج.م</td>

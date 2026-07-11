@@ -342,13 +342,28 @@ function updateSupervisionDefault(select) {
   recalcTotals();
 }
 
-// Supplier <option> list is static (suppliers aren't tied to a project), built once
-const supplierOptionsHtml = `
-  <option value="">— بدون مورد —</option>
-  @foreach($suppliers as $s)
-    <option value="{{ $s->id }}">{{ $s->name }}@if($s->activity) — {{ $s->activity }}@endif</option>
-  @endforeach
-`;
+// Supplier list — built once, then rendered as <option> HTML per-call so we
+// can mark the group's chosen default as selected on every new item row
+// (بدل ما تختار نفس المورد يدويًا في كل صنف لو الـ 40 صنف كلهم من مورد واحد)
+const suppliersData = @json($suppliers->map(fn ($s) => ['id' => $s->id, 'label' => $s->name . ($s->activity ? ' — ' . $s->activity : '')]));
+
+function supplierOptionsHtml(selectedId = '') {
+  let html = `<option value="" ${String(selectedId) === '' ? 'selected' : ''}>— بدون مورد —</option>`;
+  suppliersData.forEach(s => {
+    html += `<option value="${s.id}" ${String(selectedId) === String(s.id) ? 'selected' : ''}>${s.label}</option>`;
+  });
+  return html;
+}
+
+// المورد الافتراضي المختار لكل مجموعة (بيتطبق على كل صنف جديد يتضاف للمجموعة
+// دي، ما لم يكن المستخدم غيّر مورد الصنف ده بنفسه — شايف mat-supplier/touched)
+const groupDefaultSupplier = {};
+function updateGroupSupplierDefault(g, supplierId) {
+  groupDefaultSupplier[g] = supplierId;
+  document.querySelectorAll('#items-' + g + ' .mat-supplier').forEach(sel => {
+    if (sel.dataset.touched !== '1') sel.value = supplierId;
+  });
+}
 
 // Wallet <option> list — أي محفظة بعد دمج السيستمين (إجباري الاختيار)
 const walletOptionsHtml = `
@@ -400,7 +415,7 @@ function itemRowHtml(g, i) {
       </div>
       <div class="neo-col">
         <div class="neo-label">المورد</div>
-        <select name="groups[${g}][items][${i}][supplier_id]" class="neo-input">${supplierOptionsHtml}</select>
+        <select name="groups[${g}][items][${i}][supplier_id]" class="neo-input mat-supplier" onchange="this.dataset.touched='1'">${supplierOptionsHtml(groupDefaultSupplier[g] || '')}</select>
       </div>
       <div class="neo-col neo-col-sm">
         <div class="neo-label">الوحدة</div>
@@ -485,7 +500,7 @@ function addGroup() {
         </button>
       </div>
       
-      <div class="row2" style="margin-bottom:32px; gap:24px;">
+      <div class="row3" style="margin-bottom:32px; gap:24px;">
         <div class="field" style="margin:0">
           <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">البند التابع له هذه الأصناف</label>
           <select name="groups[${g}][band_id]" class="neo-big-input band-select">${bandOptionsHtml()}</select>
@@ -493,6 +508,10 @@ function addGroup() {
         <div class="field" style="margin:0">
           <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">تاريخ الشراء *</label>
           <input type="date" name="groups[${g}][date]" value="${today}" required class="neo-big-input">
+        </div>
+        <div class="field" style="margin:0">
+          <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">المورد (يتطبق على كل الأصناف تلقائيًا)</label>
+          <select class="neo-big-input" onchange="updateGroupSupplierDefault(${g}, this.value)">${supplierOptionsHtml()}</select>
         </div>
       </div>
       

@@ -50,6 +50,18 @@ class ReportController extends Controller
                 $project->earned_profit    = $collected - $spent;
                 $project->book_margin      = $billed > 0 ? ($project->book_profit / $billed) * 100 : 0;
 
+                // تفصيل الربح الدفتري لمصدرين منفصلين:
+                //  - تجاري: فرق سعر الشراء عن سعر البيع بس (هامش تجاري بحت)
+                //  - نسبة: نسبة الإشراف المضافة فوق سعر البيع
+                // مجموعهم = book_profit بالظبط (نفس الأرقام، متقسّمة بس)
+                $trade = $project->tradeProfit();
+                $pct   = $project->percentageProfit();
+                $project->trade_profit      = $trade;
+                $project->percentage_profit = $pct;
+                $profitBase = $trade + $pct; // = book_profit، بنستخدمه كمقام للنسب عشان نتجنب قسمة مختلفة لو فيه فروق تقريب
+                $project->trade_profit_share = abs($profitBase) > 0.009 ? ($trade / $profitBase) * 100 : 0;
+                $project->percentage_profit_share = abs($profitBase) > 0.009 ? ($pct / $profitBase) * 100 : 0;
+
                 return $project;
             });
 
@@ -60,7 +72,12 @@ class ReportController extends Controller
             'total_collected' => $projects->sum('total_collected'),
             'book_profit'     => $projects->sum('book_profit'),
             'earned_profit'   => $projects->sum('earned_profit'),
+            'trade_profit'      => $projects->sum('trade_profit'),
+            'percentage_profit' => $projects->sum('percentage_profit'),
         ];
+        $totalProfitBase = $totals['trade_profit'] + $totals['percentage_profit'];
+        $totals['trade_profit_share'] = abs($totalProfitBase) > 0.009 ? ($totals['trade_profit'] / $totalProfitBase) * 100 : 0;
+        $totals['percentage_profit_share'] = abs($totalProfitBase) > 0.009 ? ($totals['percentage_profit'] / $totalProfitBase) * 100 : 0;
 
         return view('reports.profitability', compact('projects', 'totals'));
     }

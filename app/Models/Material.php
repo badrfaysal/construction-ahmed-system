@@ -112,4 +112,24 @@ class Material extends Model
     {
         return $this->netClientCost() - $this->netCost();
     }
+
+    // Sell price falls back to purchase price when not set — same base used
+    // by clientUnitPrice(), kept here so tradeProfit()/percentageProfit()
+    // split the exact same number profit() already returns (never drift apart)
+    private function baseSellUnit(): float
+    {
+        return (float) ($this->sell_price ?? $this->unit_price);
+    }
+
+    // الربح التجاري = فرق سعر البيع عن سعر الشراء بس، من غير نسبة الإشراف
+    public function tradeProfit(): float
+    {
+        return $this->netQty() * ($this->baseSellUnit() - (float) $this->unit_price);
+    }
+
+    // ربح النسبة = نسبة الإشراف المضافة فوق سعر البيع
+    public function percentageProfit(): float
+    {
+        return $this->netQty() * $this->baseSellUnit() * ((float) $this->supervision_pct / 100);
+    }
 }

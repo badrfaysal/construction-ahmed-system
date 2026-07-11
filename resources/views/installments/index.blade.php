@@ -326,7 +326,7 @@
               <input type="date" name="start_date" class="form-control" value="{{ today()->format('Y-m-d') }}" required></div>
             <div class="col-md-6"><label class="fw-bold mb-1 small">ملاحظات</label>
               <input type="text" name="notes" class="form-control" placeholder="اختياري"></div>
-            <div class="col-md-6"><label class="fw-bold mb-1 small"><i class="fa fa-wallet text-primary me-1"></i>المحفظة (تحصيل المقدم فيها)</label>
+            <div class="col-md-6"><label class="fw-bold mb-1 small"><i class="fa fa-wallet text-primary me-1"></i>المحفظة الافتراضية لتحصيل الأقساط القادمة</label>
               <select name="account_id" class="form-select">
                 <option value="">— المحفظة الافتراضية (المقاولات) —</option>
                 @foreach($wallets->groupBy(fn($w) => $w->categoryAr()) as $cat => $grp)
@@ -336,7 +336,8 @@
                     @endforeach
                   </optgroup>
                 @endforeach
-              </select></div>
+              </select>
+              <small class="text-muted d-block mt-1"><i class="fa fa-circle-info me-1"></i>المقدم نفسه مش هيتحرك في أي محفظة (اتحصّل فعليًا قبل كده) — ده بس اختيار المحفظة اللي هتتقترح افتراضيًا لما تحصّل قسط شهري لاحقًا.</small></div>
           </div>
 
           <div class="row g-3 mt-1">
