@@ -61,41 +61,50 @@ let bandIdx = 0;
 
 function bandRowHtml(g) {
   return `
-    <div class="band-card" data-band="${g}" style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px">
-      <div class="row2">
-        <div class="field" style="margin:0">
-          <label style="font-size:.76rem;color:var(--muted)">اسم البند *</label>
-          <input type="text" name="bands[${g}][name]" placeholder="مثل: محارة، سيراميك، دهانات..." required>
+    <div class="band-card" data-band="${g}">
+      <div class="band-card-head">
+        <div class="field" style="margin:0;flex:1">
+          <label>اسم البند *</label>
+          <input type="text" name="bands[${g}][name]" placeholder="محارة / سيراميك / دهانات..." required>
         </div>
-        <div class="field" style="margin:0">
-          <label style="font-size:.76rem;color:var(--muted)">سعر البيع للعميل — إجمالي البند (ج.م) <span style="color:#059669">يُحسب تلقائياً من الأصناف</span></label>
-          <input type="number" name="bands[${g}][price]" class="band-price" placeholder="0.00" min="0" step="0.01">
+        <div class="field" style="margin:0;width:200px">
+          <label>إجمالي البند للعميل (ج.م)</label>
+          <input type="number" name="bands[${g}][price]" class="band-price" placeholder="0.00" min="0" step="0.01" style="font-weight:800;color:var(--accent-ink)">
+          <small style="color:var(--pos);font-size:.68rem">يُحسب تلقائياً من الأصناف</small>
         </div>
+        <button type="button" class="btn ghost sm danger" onclick="this.closest('.band-card').remove()" style="align-self:flex-start;margin-top:22px">حذف البند</button>
       </div>
       <div class="band-items" id="band-items-${g}"></div>
-      <div class="btn-row" style="margin-top:6px">
-        <button type="button" class="btn ghost sm" onclick="addItem(${g})">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
-          إضافة صنف
-        </button>
-        <button type="button" class="btn ghost sm danger" onclick="this.closest('.band-card').remove()">حذف البند</button>
-      </div>
+      <button type="button" class="btn ghost sm" style="margin-top:6px" onclick="addItem(${g})">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
+        إضافة صنف
+      </button>
     </div>`;
 }
 
 function itemRowHtml(g, i) {
   return `
-    <div class="row4 item-row" data-item="${i}" style="margin:3px 0;align-items:end">
-      <div class="field" style="margin:0"><input type="text" name="bands[${g}][items][${i}][name]" placeholder="مثل: بلاط، جبس، دهان..." required oninput="recalcBandPrice(${g})"></div>
-      <div class="field" style="margin:0"><input type="number" name="bands[${g}][items][${i}][qty]" placeholder="الكمية" min="0" step="0.01" value="1" required oninput="recalcBandPrice(${g})"></div>
-      <div class="field" style="margin:0">
-        <input type="number" name="bands[${g}][items][${i}][unit_price]" placeholder="السعر للوحدة" min="0" step="0.01" required oninput="recalcBandPrice(${g})" style="border-color:#059669">
-        <small style="color:#059669;font-size:.68rem">سعر البيع للعميل (بدون إشراف)</small>
-      </div>
-      <div class="field" style="margin:0">
-        <input type="number" name="bands[${g}][items][${i}][supervision_pct]" placeholder="%" min="0" max="100" step="0.1" value="{{ $settings->default_supervision_pct }}" oninput="recalcBandPrice(${g})" style="border-color:#7c3aed">
-        <small style="color:#7c3aed;font-size:.68rem">نسبة الإشراف — تُضاف على السعر</small>
-        <button type="button" class="btn ghost sm" onclick="this.closest('.item-row').remove(); recalcBandPrice(${g})" style="margin-top:4px">حذف الصنف</button>
+    <div class="item-row" data-item="${i}">
+      <div class="item-row-grid">
+        <div class="irf" style="flex:2.5">
+          <label>اسم الصنف *</label>
+          <input type="text" name="bands[${g}][items][${i}][name]" placeholder="بلاط / جبس / دهان..." required oninput="recalcBandPrice(${g})">
+        </div>
+        <div class="irf" style="flex:1">
+          <label>الكمية</label>
+          <input type="number" name="bands[${g}][items][${i}][qty]" placeholder="0" min="0" step="0.01" value="1" required oninput="recalcBandPrice(${g})">
+        </div>
+        <div class="irf" style="flex:1.4">
+          <label class="price-sell">سعر البيع للوحدة</label>
+          <input type="number" name="bands[${g}][items][${i}][unit_price]" class="price-sell" placeholder="0.00" min="0" step="0.01" required oninput="recalcBandPrice(${g})">
+        </div>
+        <div class="irf" style="flex:1">
+          <label style="color:#7c3aed">إشراف %</label>
+          <input type="number" name="bands[${g}][items][${i}][supervision_pct]" placeholder="0" min="0" max="100" step="0.1" value="{{ $settings->default_supervision_pct }}" oninput="recalcBandPrice(${g})" style="border-color:#c4b5fd">
+        </div>
+        <button type="button" class="btn ghost sm ir-del" onclick="this.closest('.item-row').remove(); recalcBandPrice(${g})" title="حذف">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"/></svg>
+        </button>
       </div>
     </div>`;
 }
@@ -103,14 +112,14 @@ function itemRowHtml(g, i) {
 function addItem(g) {
   const container = document.getElementById('band-items-' + g);
   const i = container.querySelectorAll('.item-row').length;
-  // Only show headers if this is the first item in this band
-  if (i === 0 && !container.querySelector('.item-headers')) {
+  if (i === 0 && !container.querySelector('.items-header-row')) {
     container.insertAdjacentHTML('beforeend', `
-      <div class="item-headers" style="display:grid;grid-template-columns:2fr 1fr 1.2fr 1fr;gap:8px;margin:8px 0 2px;padding:0 2px">
-        <div style="font-size:.72rem;font-weight:700;color:#64748b">اسم الصنف</div>
-        <div style="font-size:.72rem;font-weight:700;color:#64748b">الكمية</div>
-        <div style="font-size:.72rem;font-weight:700;color:#059669">سعر البيع للعميل (ج.م)</div>
-        <div style="font-size:.72rem;font-weight:700;color:#7c3aed">نسبة الإشراف %</div>
+      <div class="items-header-row">
+        <span style="flex:2.5">اسم الصنف</span>
+        <span style="flex:1">الكمية</span>
+        <span style="flex:1.4" class="price-sell">سعر البيع للوحدة</span>
+        <span style="flex:1;color:#7c3aed">إشراف %</span>
+        <span style="width:34px"></span>
       </div>`);
   }
   container.insertAdjacentHTML('beforeend', itemRowHtml(g, i));

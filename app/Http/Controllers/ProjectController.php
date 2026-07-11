@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
 use App\Models\Client;
 use App\Models\Project;
 use App\Models\ProjectBand;
@@ -68,7 +69,9 @@ class ProjectController extends Controller
             'warranty',
         ]);
 
-        return view('projects.show', compact('project'));
+        $wallets = Account::selectable();
+
+        return view('projects.show', compact('project', 'wallets'));
     }
 
     // Show edit form

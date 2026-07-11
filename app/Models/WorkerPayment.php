@@ -14,7 +14,7 @@ class WorkerPayment extends Model
 
     protected $fillable = [
         'band_worker_id', 'project_id', 'project_band_id', 'account_id',
-        'amount', 'discount', 'date', 'method', 'notes',
+        'amount', 'discount', 'discount_reason', 'date', 'method', 'notes',
     ];
 
     protected function casts(): array

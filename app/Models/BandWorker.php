@@ -55,15 +55,24 @@ class BandWorker extends Model
         return $base * (1 + (float) $this->supervision_pct / 100);
     }
 
+    // كل ما اتسوّى من تعاقده = كاش مدفوع + خصومات. الخصم بيسوّي جزء من التعاقد
+    // زي الكاش بالظبط (بس من غير ما يطلع فلوس من المحفظة).
     public function paidTotal(): float
     {
         return (float) $this->payments->sum(fn ($p) => $p->amount + $p->discount);
     }
 
-    // What's still owed to this craftsman = his contracted amount minus what
-    // he's been paid so far (never negative — an overpayment reads as zero due)
+    // اللي لسه مستحق للصنايعي (علينا) = تعاقده ناقص اللي اتسوّى — never negative
     public function remaining(): float
     {
         return max((float) $this->amount - $this->paidTotal(), 0);
+    }
+
+    // اللي مستحق لينا عند الصنايعي (دين عليه): لو الخصومات اللي عملناها له
+    // زوّدت المسوّى فوق قيمة تعاقده (مثلاً خصمنا عليه غرامة أكبر من المتبقي)،
+    // الفرق ده بيبقى فلوس ليها عندنا الحق نستردها منه في تعاقد جاي.
+    public function owedToUs(): float
+    {
+        return max($this->paidTotal() - (float) $this->amount, 0);
     }
 }

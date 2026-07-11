@@ -36,6 +36,7 @@
           <div class="av">{{ mb_substr($s->name, 0, 1) }}</div>
           <div>
             <div class="nm">{{ $s->name }}</div>
+            @if($s->activity)<div class="muted" style="font-size:11.5px">{{ $s->activity }}</div>@endif
             @if($s->phone)<div class="ph">{{ $s->phone }}</div>@endif
           </div>
           <span class="tag blue" style="margin-inline-start:auto">{{ $s->materials_count }} صفقة</span>

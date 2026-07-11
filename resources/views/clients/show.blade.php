@@ -26,7 +26,7 @@
             <span class="tag {{ $p->status === 'done' ? 'green' : 'blue' }}">{{ $p->status === 'done' ? 'مكتمل' : 'جاري' }}</span>
           </div>
           <div class="pc-fin">
-            <div><div class="l">التعاقد</div><div class="v">{{ \App\Support\Money::format($p->initialContractValue()) }}</div></div>
+            <div><div class="l">قيمة المشروع</div><div class="v">{{ \App\Support\Money::format($p->actualClientTotal()) }}</div></div>
             <div><div class="l">محصّل</div><div class="v" style="color:var(--pos)">{{ \App\Support\Money::format($p->totalCollected()) }}</div></div>
           </div>
         </div>

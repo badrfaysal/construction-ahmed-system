@@ -93,15 +93,17 @@
 </aside>
 </div>{{-- /mat-layout --}}
 
-{{-- Shared item/unit suggestions used inside every item row --}}
+{{-- Shared item/unit suggestions used inside every item row — مبنية من كل
+     الأصناف والوحدات اللي سبق كتابتها فعلاً في النظام (autocomplete حقيقي) --}}
 <datalist id="items-list">
-  <option value="أسمنت"><option value="رمل"><option value="سيراميك أرضيات">
-  <option value="سيراميك حوائط"><option value="مواسير PPR"><option value="دهانات بلاستيك">
+  @foreach($itemNames as $name)
+    <option value="{{ $name }}">
+  @endforeach
 </datalist>
 <datalist id="units-list">
-  <option value="شيكارة"><option value="م²"><option value="نقلة">
-  <option value="ماسورة"><option value="لفة"><option value="طقم"><option value="طوبة">
-  <option value="بستلة"><option value="وحدة">
+  @foreach($unitNames as $unit)
+    <option value="{{ $unit }}">
+  @endforeach
 </datalist>
 
 @push('scripts')
@@ -138,7 +140,7 @@ function updateSupervisionDefault(select) {
 const supplierOptionsHtml = `
   <option value="">— بدون مورد —</option>
   @foreach($suppliers as $s)
-    <option value="{{ $s->id }}">{{ $s->name }}</option>
+    <option value="{{ $s->id }}">{{ $s->name }}@if($s->activity) — {{ $s->activity }}@endif</option>
   @endforeach
 `;
 

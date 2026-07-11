@@ -9,7 +9,7 @@ class Supplier extends Model
 {
     protected $table = 'sy2_suppliers';
 
-    protected $fillable = ['name', 'phone', 'email', 'address', 'notes'];
+    protected $fillable = ['name', 'activity', 'phone', 'email', 'address', 'notes'];
 
     // All material purchases from this supplier
     public function materials(): HasMany

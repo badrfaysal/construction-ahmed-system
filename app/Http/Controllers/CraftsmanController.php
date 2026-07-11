@@ -47,6 +47,7 @@ class CraftsmanController extends Controller
                     'contracted'     => (float) $rows->sum(fn ($w) => (float) $w->amount),
                     'paid'           => (float) $rows->sum(fn ($w) => $w->paidTotal()),
                     'remaining'      => (float) $rows->sum(fn ($w) => $w->remaining()),
+                    'owed_to_us'     => (float) $rows->sum(fn ($w) => $w->owedToUs()),
                     'payments_count' => $rows->sum(fn ($w) => $w->payments->count()),
                     'start_date'     => $rows->min('start_date'),
                     'rating'         => $ratingObj?->rating ?? 0,

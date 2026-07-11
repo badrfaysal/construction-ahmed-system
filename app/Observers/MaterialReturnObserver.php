@@ -15,7 +15,9 @@ use App\Models\Transaction;
 class MaterialReturnObserver
 {
     // Adding a return → refund the paid part to the wallet, drop the rest of
-    // the debt.
+    // the debt. لو رجّعنا بسعر أقل من الشراء، الاسترداد والخصم من الدين
+    // بيتحسبوا على سعر المرتجع الفعلي (مش سعر الشراء) — والفرق بيبقى خسارة
+    // محقّقة (شايف MaterialReturn::loss()، بتتعرض في الواجهة بس مش حركة مالية).
     public function created(MaterialReturn $return): void
     {
         $material = $return->material()->with('supplier')->first();
@@ -23,9 +25,10 @@ class MaterialReturnObserver
             return;
         }
 
-        $paidRatio  = $material->paidRatio();
-        $cashRefund = round($return->qty * (float) $material->unit_price * $paidRatio, 2);
-        $debtDrop   = round($return->qty * (float) $material->unit_price * (1 - $paidRatio), 2);
+        $paidRatio    = $material->paidRatio();
+        $returnPrice  = $return->effectivePrice();
+        $cashRefund = round($return->qty * $returnPrice * $paidRatio, 2);
+        $debtDrop   = round($return->qty * $returnPrice * (1 - $paidRatio), 2);
 
         if ($cashRefund > 0) {
             Transaction::create([
@@ -62,7 +65,7 @@ class MaterialReturnObserver
             return;
         }
 
-        $debtDrop = round($return->qty * (float) $material->unit_price * (1 - $material->paidRatio()), 2);
+        $debtDrop = round($return->qty * $return->effectivePrice() * (1 - $material->paidRatio()), 2);
         if ($debtDrop > 0) {
             $this->adjustDebt($material->id, $debtDrop);
         }

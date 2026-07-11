@@ -27,25 +27,51 @@ class WorkerPaymentController extends Controller
     public function store(Request $request, BandWorker $worker)
     {
         $data = $request->validate([
-            'amount'     => ['required', 'numeric', 'min:0.01'],
-            'discount'   => ['nullable', 'numeric', 'min:0'],
-            'account_id' => ['required', 'integer', 'exists:accounts,id'],
-            'date'       => ['required', 'date'],
-            'notes'      => ['nullable', 'string'],
+            // الكاش ممكن يكون صفر لو ده خصم بس (بدون فلوس بتتصرف من المحفظة)
+            'amount'          => ['nullable', 'numeric', 'min:0'],
+            'discount'        => ['nullable', 'numeric', 'min:0'],
+            'discount_reason' => [
+                'nullable', 'string', 'max:500',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ((float) $request->input('discount', 0) > 0 && trim((string) $value) === '') {
+                        $fail('لازم تكتب سبب الخصم.');
+                    }
+                },
+            ],
+            'account_id'      => ['nullable', 'integer', 'exists:accounts,id'],
+            'date'            => ['required', 'date'],
+            'notes'           => ['nullable', 'string'],
         ]);
 
-        // Can't pay a craftsman more than his contracted amount. If the
-        // contract amount isn't set yet, there's nothing to bound the
-        // payment by — block it instead of allowing an unlimited amount.
+        // لازم يكون فيه كاش أو خصم — مش الاتنين صفر
+        if ((float) $data['amount'] <= 0 && (float) ($data['discount'] ?? 0) <= 0) {
+            throw ValidationException::withMessages([
+                'amount' => 'اكتب مبلغ كاش أو خصم (مش ينفع الاتنين صفر).',
+            ]);
+        }
+
+        // فيه كاش بيتصرف؟ لازم تختار المحفظة. خصم بس (كاش صفر) مايحتاجش محفظة.
+        if ((float) $data['amount'] > 0 && empty($data['account_id'])) {
+            throw ValidationException::withMessages([
+                'account_id' => 'اختر المحفظة اللي هيتصرف منها الكاش.',
+            ]);
+        }
+
+        // لازم يكون فيه تعاقد الأول عشان نعرف نحسب المتبقي عليه
         if ((float) $worker->amount <= 0) {
             throw ValidationException::withMessages([
                 'amount' => 'لازم تحدد قيمة تعاقد الصنايعي الأول قبل ما تسجّل له أي دفعة.',
             ]);
         }
+
         $remaining = $worker->remaining();
-        if ($data['amount'] + ($data['discount'] ?? 0) > $remaining + 0.01) {
+
+        // الكاش (الفلوس اللي بتطلع فعلاً) ما ينفعش يتعدى المتبقي عليه — مش
+        // منطقي تدفعه كاش أكتر من مستحقه. الخصم بس هو اللي مسموح يتعدى
+        // المتبقي، وساعتها الفرق بيبقى "مستحق لينا عنده" (شايف تحت).
+        if ((float) $data['amount'] > $remaining + 0.01) {
             throw ValidationException::withMessages([
-                'amount' => 'إجمالي المبلغ والخصم أكبر من المتبقي للصنايعي (' . number_format($remaining, 2) . ' ج.م).',
+                'amount' => 'المبلغ الكاش أكبر من المتبقي للصنايعي (' . number_format($remaining, 2) . ' ج.م). الخصم بس هو اللي ممكن يتعدى المتبقي.',
             ]);
         }
 
@@ -56,8 +82,9 @@ class WorkerPaymentController extends Controller
             'project_id'      => $band->project_id,
             'project_band_id' => $band->id,
             'account_id'      => $data['account_id'] ?? null,
-            'amount'          => $data['amount'],
+            'amount'          => $data['amount'] ?? 0,
             'discount'        => $data['discount'] ?? 0,
+            'discount_reason' => $data['discount_reason'] ?? null,
             'date'            => $data['date'],
             'notes'           => $data['notes'] ?? null,
         ]));
@@ -130,15 +157,5 @@ class WorkerPaymentController extends Controller
         // نودّي المستخدم على صفحة دفعات الصنايعي الجديد ليسجّل دفعاته
         return redirect()->route('workers.payments', $newWorker)
             ->with('success', 'تم تبديل الفني: "' . $worker->name . '" اتثبّت على اللي استلمه، و"' . $data['new_name'] . '" هيكمّل الباقي.');
-    }
-
-    // Undo a payment recorded by mistake — credits the wallet back.
-    public function destroy(WorkerPayment $payment)
-    {
-        $worker = $payment->band_worker_id;
-        DB::transaction(fn () => $payment->delete());
-
-        return redirect()->route('workers.payments', $worker)
-            ->with('success', 'تم حذف الدفعة.');
     }
 }

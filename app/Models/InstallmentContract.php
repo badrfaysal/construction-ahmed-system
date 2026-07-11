@@ -20,6 +20,13 @@ class InstallmentContract extends Model
         'close_reason', 'notes',
     ];
 
+    // علم مؤقت (مش عمود DB) — بيتحط قبل save() لما المقدم يبقى إعادة تصنيف
+    // لفلوس اتحصّلت فعلاً من العميل قبل كده، عشان InstallmentContractObserver
+    // ميعملش حركة محفظة تانية بنفس المبلغ (شايف الملاحظة في الـ observer).
+    // خاصية PHP حقيقية على الكلاس (مش عن طريق __set السحري بتاع Eloquent)
+    // فمش بتتحفظ في قاعدة البيانات ولا بتتحسب attribute.
+    public bool $skipDownPaymentTransaction = false;
+
     protected function casts(): array
     {
         return [

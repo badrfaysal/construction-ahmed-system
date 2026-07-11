@@ -1,14 +1,20 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', $project->name)
 @section('page-title', $project->name)
 
 @section('content')
 
+@if($errors->any())
+  <div class="flash error" style="margin-bottom:16px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"/></svg>
+    <div>@foreach($errors->all() as $error)<div>{{ $error }}</div>@endforeach</div>
+  </div>
+@endif
+
 @php
   $isOwner = auth()->user()->canSeeFinancials();
   $totalProfit = $project->bands->sum(fn ($b) => $b->profit());
-  $initialValue = $project->initialContractValue();
   $actualValue  = $project->actualClientTotal();
   $owedWorkers  = $project->bands->flatMap(fn ($b) => $b->workers->map(fn ($w) => (object)[
     'name'      => $w->name,
@@ -75,9 +81,12 @@
 
 <div class="grid {{ $isOwner ? 'cols-4' : 'cols-3' }}" style="margin-bottom:20px">
   <div class="card stat">
-    <div class="top"><span class="label">قيمة التعاقد</span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span></div>
-    <div class="val tnum">{{ \App\Support\Money::format($initialValue) }} <small>ج.م</small></div>
-    @include('partials._actual-vs-initial', ['initial' => $initialValue, 'actual' => $actualValue])
+    <div class="top"><span class="label">قيمة المشروع</span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span></div>
+    <div class="val tnum price-sell">{{ \App\Support\Money::format($actualValue) }} <small>ج.م</small></div>
+    <div class="note" style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+      <span>سعر الشراء (تكلفة)</span>
+      <strong class="price-cost">{{ \App\Support\Money::format($project->totalSpent()) }} ج.م</strong>
+    </div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">محصّل من العميل</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span></div>
@@ -114,6 +123,12 @@
   <button type="button" class="tab" data-tab="workers" onclick="switchProjectTab('workers')">
     الفنيين <span class="cnt">{{ $project->bands->sum(fn($b) => $b->workers->count()) }}</span>
   </button>
+  @if($isOwner)
+    <button type="button" class="tab" data-tab="reports" onclick="switchProjectTab('reports')">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-inline-end:4px;vertical-align:-2px"><use href="#i-pie-chart"/></svg>
+      تقارير المشروع
+    </button>
+  @endif
 </div>
 
 <div class="tab-panel" data-panel="bands">
@@ -213,14 +228,14 @@
 
 {{-- اختيار طريقة الدفع: تحصيل جزء دلوقتي، أو عمل تقسيط بجدول سداد --}}
 <div class="pay-choice">
-  <a href="{{ route('receivables.index') }}" class="pay-opt">
+  <button type="button" class="pay-opt" style="cursor:pointer;text-align:start;background:var(--surface);border:1px solid var(--line);width:100%" onclick="document.getElementById('quick-pay-modal').classList.add('open')">
     <div class="pay-opt-ic in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></div>
     <div class="pay-opt-body">
       <div class="pay-opt-t">العميل يدفع دفعة / جزء</div>
-      <div class="pay-opt-s">سجّل تحصيل مبلغ من العميل من شاشة المستحقات</div>
+      <div class="pay-opt-s">سجّل تحصيل مبلغ من العميل دلوقتي من هنا مباشرة</div>
     </div>
     <svg class="pay-opt-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg>
-  </a>
+  </button>
   <a href="{{ route('installments.index') }}" class="pay-opt">
     <div class="pay-opt-ic amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></div>
     <div class="pay-opt-body">
@@ -229,6 +244,55 @@
     </div>
     <svg class="pay-opt-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg>
   </a>
+</div>
+
+{{-- مودال تحصيل دفعة سريعة من العميل — من غير ما تسيب صفحة المشروع --}}
+<div class="modal-overlay" id="quick-pay-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-head">
+      <h4 style="margin:0">تحصيل دفعة من العميل</h4>
+      <button class="btn ghost sm" onclick="document.getElementById('quick-pay-modal').classList.remove('open')">✕</button>
+    </div>
+    <form method="POST" action="{{ route('receivables.pay', $project) }}">
+      @csrf
+      <div class="modal-body">
+        <div class="row2">
+          <div class="field">
+            <label>المبلغ (ج.م) *</label>
+            <input type="number" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" required autofocus>
+          </div>
+          <div class="field">
+            <label>خصم (اختياري)</label>
+            <input type="number" name="discount" min="0" step="0.01" value="{{ old('discount', 0) }}">
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>التاريخ *</label>
+            <input type="date" name="date" value="{{ old('date', today()->format('Y-m-d')) }}" required>
+          </div>
+          <div class="field">
+            <label>البند (اختياري)</label>
+            <select name="band_id">
+              <option value="">— دفعة عامة للمشروع —</option>
+              @foreach($project->bands as $b)
+                <option value="{{ $b->id }}" {{ old('band_id') == $b->id ? 'selected' : '' }}>{{ $b->name }}</option>
+              @endforeach
+            </select>
+          </div>
+        </div>
+        @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true])
+        <div class="field">
+          <label>ملاحظات</label>
+          <input type="text" name="notes" value="{{ old('notes') }}" placeholder="اختياري">
+        </div>
+      </div>
+      <div class="btn-row" style="padding:0 20px 20px">
+        <button type="submit" class="btn pos">تسجيل التحصيل</button>
+        <button type="button" class="btn ghost" onclick="document.getElementById('quick-pay-modal').classList.remove('open')">إلغاء</button>
+      </div>
+    </form>
+  </div>
 </div>
 <div class="table-card" style="margin-bottom:24px">
   @php $contract = $project->contracts->first(); @endphp
@@ -339,7 +403,7 @@
     </button>
     <a href="{{ route('expenses.create', $project) }}" class="btn ghost sm">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
-      مصروف نثري
+      نثريات ومصروفات
     </a>
     <a href="{{ route('materials.create', ['project_id' => $project->id]) }}" class="btn sm">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
@@ -421,7 +485,7 @@
             <tr class="mat-row" data-band="{{ $m->band_id }}">
               <td>
                 <strong>{{ $m->item }}</strong>
-                @if($m->isMisc())<span class="tag gray sm" style="margin-right:6px">نثري</span>@endif
+                @if($m->isMisc())<span class="tag gray sm" style="margin-right:6px">نثريات ومصروفات</span>@endif
               </td>
               <td class="muted">{{ $m->supplier?->name ?? '—' }}</td>
               <td class="num">{{ number_format($m->qty, 1) }}</td>
@@ -469,6 +533,9 @@
             <th>تاريخ الإرجاع</th>
             <th>الصنف</th>
             <th class="num">الكمية المرتجعة</th>
+            <th class="num"><span class="price-cost">سعر الشراء</span></th>
+            <th class="num">سعر المرتجع</th>
+            <th class="num">الخسارة</th>
             <th>من عملية شراء بتاريخ</th>
             <th>ملاحظات</th>
             <th></th>
@@ -476,10 +543,14 @@
         </thead>
         <tbody>
           @foreach($allReturns as $r)
+            @php $rLoss = $r->loss(); @endphp
             <tr>
               <td class="muted">{{ $r->date->format('Y-m-d') }}</td>
               <td><strong>{{ $r->material->item }}</strong></td>
               <td class="num">{{ number_format($r->qty, 1) }} {{ $r->material->unit }}</td>
+              <td class="num price-cost">{{ \App\Support\Money::format($r->material->unit_price) }}</td>
+              <td class="num">{{ \App\Support\Money::format($r->effectivePrice()) }}</td>
+              <td class="num" style="{{ $rLoss > 0 ? 'color:var(--neg);font-weight:700' : '' }}">{{ $rLoss > 0 ? \App\Support\Money::format($rLoss) : '—' }}</td>
               <td class="muted">{{ $r->material->date->format('Y-m-d') }} @if($r->material->supplier) — {{ $r->material->supplier->name }} @endif</td>
               <td class="muted">{{ $r->notes ?: '—' }}</td>
               <td>
@@ -571,7 +642,10 @@
               <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }}</td>
               <td class="num" style="color:{{ $remaining > 0 ? 'var(--amber, #b45309)' : 'var(--pos)' }}">{{ \App\Support\Money::format($remaining) }}</td>
               <td>
-                <a href="{{ route('workers.payments', $row->worker) }}" class="btn ghost sm">الدفعات</a>
+                <div style="display:flex; gap:4px">
+                  <a href="{{ route('workers.payments', $row->worker) }}" class="btn ghost sm">الدفعات</a>
+                  <button type="button" class="btn ghost sm" style="color:var(--warn,#c9821a)" onclick="openDiscountModal({{ $row->worker->id }}, '{{ htmlspecialchars($row->worker->name, ENT_QUOTES) }}', {{ $remaining }})">خصم</button>
+                </div>
               </td>
             </tr>
           @endforeach
@@ -595,6 +669,259 @@
   @endif
 </div>
 </div>{{-- /tab-panel: workers --}}
+
+@if($isOwner)
+<div class="tab-panel" data-panel="reports" style="display:none">
+@php
+  $rptMatCost = $project->materials->sum(fn($m) => $m->netCost());
+  $rptLaborCost = (float) $project->bands->sum('labor_amount');
+  $rptTotalCost = $rptMatCost + $rptLaborCost;
+  $rptClientTotal = $actualValue;
+  $rptProfit = $rptClientTotal - $rptTotalCost;
+  $rptProfitPct = $rptClientTotal > 0 ? round($rptProfit / $rptClientTotal * 100, 1) : 0;
+  $rptCollected = $project->totalCollected();
+  $rptDue = max(0, $rptClientTotal - $rptCollected);
+  $rptCollectedPct = $rptClientTotal > 0 ? min(100, round($rptCollected / $rptClientTotal * 100)) : 0;
+
+  // دونات: توزيع خامات/مصنعية/ربح كنسبة من إجمالي قيمة المشروع
+  $donutSlices = collect([
+    ['label' => 'خامات', 'value' => $rptMatCost, 'color' => '#f59e0b'],
+    ['label' => 'مصنعية', 'value' => $rptLaborCost, 'color' => '#8b5cf6'],
+    ['label' => 'ربح', 'value' => max(0, $rptProfit), 'color' => '#16a34a'],
+  ])->filter(fn ($s) => $s['value'] > 0);
+  $donutTotal = $donutSlices->sum('value') ?: 1;
+  $circumference = 2 * M_PI * 40;
+  $donutOffset = 0;
+  $donutSlices = $donutSlices->map(function ($s) use ($donutTotal, $circumference, &$donutOffset) {
+    $frac = $s['value'] / $donutTotal;
+    $len  = $frac * $circumference;
+    $s['dash'] = round($len, 2) . ' ' . round($circumference - $len, 2);
+    $s['dashoffset'] = round(-$donutOffset, 2);
+    $donutOffset += $len;
+    $s['pct'] = round($frac * 100, 1);
+    return $s;
+  });
+
+  // مقارنة البنود: سعر العميل/التكلفة/الربح لكل بند، الأعلى قيمة أولًا
+  $rptBandRows = $project->bands->map(fn ($b) => (object) [
+    'name'   => $b->name,
+    'client' => $b->actualClientTotal(),
+    'cost'   => $b->totalCost(),
+    'profit' => $b->profit(),
+  ])->sortByDesc('client')->values();
+  $maxBandClient = $rptBandRows->max('client') ?: 1;
+
+  // الصنايعية: كل فني ونسبة تحصيله، الأعلى تعاقدًا أولًا
+  $rptWorkers = $project->bands->flatMap(fn ($b) => $b->workers)->sortByDesc('amount')->values();
+
+  // ── تحليل الخامات: أعلى الأصناف بالتكلفة (خامات حقيقية فقط، بدون نثريات) ──
+  $realMaterials = $project->materials->where('category', '!=', 'misc');
+  $rptTopMaterials = $realMaterials
+    ->groupBy('item')
+    ->map(fn ($g) => (object) [
+      'item' => $g->first()->item,
+      'unit' => $g->first()->unit,
+      'qty'  => $g->sum(fn ($m) => $m->netQty()),
+      'cost' => $g->sum(fn ($m) => $m->netCost()),
+    ])
+    ->sortByDesc('cost')->take(8)->values();
+  $rptMaxMatCost = $rptTopMaterials->max('cost') ?: 1;
+
+  // ── تحليل الموردين: توزيع المشتريات (الصافي) على الموردين ──
+  $rptBySupplier = $project->materials
+    ->groupBy(fn ($m) => $m->supplier?->name ?? 'بدون مورد')
+    ->map(fn ($g, $name) => (object) [
+      'name'  => $name,
+      'count' => $g->count(),
+      'cost'  => $g->sum(fn ($m) => $m->netCost()),
+    ])
+    ->sortByDesc('cost')->values();
+  $rptMaxSupplierCost = $rptBySupplier->max('cost') ?: 1;
+
+  // ── تحليل المرتجعات: الكمية والقيمة والخسائر ──
+  $rptReturns = $project->materials->flatMap->returns;
+  $rptReturnsCount = $rptReturns->count();
+  $rptReturnsValue = $rptReturns->sum(fn ($r) => (float) $r->qty * $r->effectivePrice());
+  $rptReturnsLoss  = $rptReturns->sum(fn ($r) => $r->loss());
+  $rptTopReturns = $project->materials
+    ->filter(fn ($m) => $m->returns->isNotEmpty())
+    ->map(fn ($m) => (object) [
+      'item' => $m->item,
+      'qty'  => $m->returnedQty(),
+      'unit' => $m->unit,
+      'value'=> $m->returns->sum(fn ($r) => (float) $r->qty * $r->effectivePrice()),
+      'loss' => $m->returns->sum(fn ($r) => $r->loss()),
+    ])
+    ->sortByDesc('value')->take(6)->values();
+@endphp
+
+<div class="section-label" style="margin-top:0">نظرة عامة</div>
+<div class="grid cols-4" style="margin-bottom:24px">
+  <div class="vstat vstat-blue">
+    <div class="top"><span class="label">إجمالي قيمة المشروع</span></div>
+    <div class="val tnum">{{ \App\Support\Money::format($rptClientTotal) }} <small>ج.م</small></div>
+  </div>
+  <div class="vstat vstat-amber">
+    <div class="top"><span class="label">إجمالي التكلفة</span></div>
+    <div class="val tnum">{{ \App\Support\Money::format($rptTotalCost) }} <small>ج.م</small></div>
+  </div>
+  <div class="vstat {{ $rptProfit >= 0 ? 'vstat-green' : 'vstat-red' }}">
+    <div class="top"><span class="label">الربح</span></div>
+    <div class="val tnum">{{ \App\Support\Money::format($rptProfit) }} <small>ج.م</small></div>
+  </div>
+  <div class="vstat vstat-navy">
+    <div class="top"><span class="label">نسبة الربح</span></div>
+    <div class="val tnum">{{ $rptProfitPct }}%</div>
+  </div>
+</div>
+
+<div class="grid cols-2" style="margin-bottom:24px;align-items:start">
+  <div class="table-card" style="padding:20px">
+    <div class="section-label" style="margin-top:0">توزيع تكلفة المشروع</div>
+    @if($donutSlices->isNotEmpty())
+      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center">
+        <svg width="140" height="140" viewBox="0 0 100 100" style="transform:rotate(-90deg);flex-shrink:0">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="var(--line)" stroke-width="16"/>
+          @foreach($donutSlices as $slice)
+            <circle cx="50" cy="50" r="40" fill="none" stroke="{{ $slice['color'] }}" stroke-width="16"
+              stroke-dasharray="{{ $slice['dash'] }}" stroke-dashoffset="{{ $slice['dashoffset'] }}" stroke-linecap="butt"/>
+          @endforeach
+        </svg>
+        <div style="display:flex;flex-direction:column;gap:8px;min-width:130px">
+          @foreach($donutSlices as $slice)
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+              <span style="width:10px;height:10px;border-radius:3px;background:{{ $slice['color'] }};flex-shrink:0"></span>
+              <span>{{ $slice['label'] }}</span>
+              <strong style="margin-inline-start:auto">{{ $slice['pct'] }}%</strong>
+            </div>
+          @endforeach
+        </div>
+      </div>
+    @else
+      <p class="muted">لا توجد بيانات كافية بعد</p>
+    @endif
+  </div>
+
+  <div class="table-card" style="padding:20px">
+    <div class="section-label" style="margin-top:0">نسبة التحصيل من العميل</div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px">
+      <span class="muted">محصّل: <strong style="color:var(--pos)">{{ \App\Support\Money::format($rptCollected) }}</strong></span>
+      <span class="muted">متبقي: <strong style="color:var(--warn)">{{ \App\Support\Money::format($rptDue) }}</strong></span>
+    </div>
+    <div class="bar-track" style="height:14px;border-radius:8px">
+      <div class="bar-fill {{ $rptCollectedPct >= 100 ? 'full' : '' }}" style="width:{{ $rptCollectedPct }}%;border-radius:8px"></div>
+    </div>
+    <div style="text-align:center;margin-top:10px;font-weight:800;font-size:22px;color:var(--accent)">{{ $rptCollectedPct }}%</div>
+  </div>
+</div>
+
+<div class="table-card" style="padding:20px;margin-bottom:24px">
+  <div class="section-label" style="margin-top:0">مقارنة البنود (سعر العميل مقابل التكلفة)</div>
+  @forelse($rptBandRows as $row)
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;flex-wrap:wrap;gap:4px">
+        <strong>{{ $row->name }}</strong>
+        <span class="muted">سعر العميل: {{ \App\Support\Money::format($row->client) }} · تكلفة: {{ \App\Support\Money::format($row->cost) }} · ربح:
+          <span style="color:{{ $row->profit >= 0 ? 'var(--pos)' : 'var(--neg)' }};font-weight:700">{{ \App\Support\Money::format($row->profit) }}</span>
+        </span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:{{ $maxBandClient > 0 ? round($row->client / $maxBandClient * 100) : 0 }}%;background:var(--accent)"></div>
+      </div>
+    </div>
+  @empty
+    <p class="muted">لا توجد بنود بعد</p>
+  @endforelse
+</div>
+
+<div class="table-card" style="padding:20px">
+  <div class="section-label" style="margin-top:0">حالة تحصيل الصنايعية</div>
+  @forelse($rptWorkers as $w)
+    @php $wPaid = $w->paidTotal(); $wRem = $w->remaining(); @endphp
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;flex-wrap:wrap;gap:4px">
+        <strong>{{ $w->name }}</strong>
+        <span class="muted">متعاقد: {{ \App\Support\Money::format($w->amount) }} · مدفوع:
+          <span style="color:var(--pos);font-weight:700">{{ \App\Support\Money::format($wPaid) }}</span> · متبقي:
+          <span style="color:{{ $wRem > 0 ? 'var(--warn)' : 'var(--pos)' }};font-weight:700">{{ \App\Support\Money::format($wRem) }}</span>
+        </span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill {{ $wRem <= 0 ? 'full' : '' }}" style="width:{{ (float) $w->amount > 0 ? round($wPaid / (float) $w->amount * 100) : 0 }}%;background:var(--pos)"></div>
+      </div>
+    </div>
+  @empty
+    <p class="muted">لا يوجد صنايعية بعد</p>
+  @endforelse
+</div>
+
+{{-- ═══ تحليل الخامات + الموردين ═══ --}}
+<div class="grid cols-2" style="margin-top:24px;align-items:start">
+  <div class="table-card" style="padding:20px">
+    <div class="section-label" style="margin-top:0">أعلى الخامات تكلفة</div>
+    @forelse($rptTopMaterials as $m)
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;flex-wrap:wrap;gap:4px">
+          <strong>{{ $m->item }}</strong>
+          <span class="muted">{{ number_format($m->qty, 1) }} {{ $m->unit }} · <span class="price-cost" style="font-weight:700">{{ \App\Support\Money::format($m->cost) }} ج.م</span></span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:{{ round($m->cost / $rptMaxMatCost * 100) }}%;background:var(--warn)"></div>
+        </div>
+      </div>
+    @empty
+      <p class="muted">لا توجد خامات مسجّلة</p>
+    @endforelse
+  </div>
+
+  <div class="table-card" style="padding:20px">
+    <div class="section-label" style="margin-top:0">توزيع المشتريات على الموردين</div>
+    @forelse($rptBySupplier as $s)
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;flex-wrap:wrap;gap:4px">
+          <strong>{{ $s->name }}</strong>
+          <span class="muted">{{ $s->count }} {{ $s->count === 1 ? 'صنف' : 'أصناف' }} · <span style="font-weight:700;color:var(--accent-ink)">{{ \App\Support\Money::format($s->cost) }} ج.م</span></span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:{{ round($s->cost / $rptMaxSupplierCost * 100) }}%;background:var(--accent)"></div>
+        </div>
+      </div>
+    @empty
+      <p class="muted">لا يوجد موردون مسجّلون</p>
+    @endforelse
+  </div>
+</div>
+
+{{-- ═══ تحليل المرتجعات ═══ --}}
+<div class="table-card" style="padding:20px;margin-top:24px">
+  <div class="section-label" style="margin-top:0">تحليل المرتجعات</div>
+  @if($rptReturnsCount > 0)
+    <div class="grid cols-3" style="margin-bottom:16px">
+      <div class="card stat"><div class="top"><span class="label">عدد المرتجعات</span></div><div class="val tnum">{{ $rptReturnsCount }}</div></div>
+      <div class="card stat"><div class="top"><span class="label">قيمة المرتجعات</span></div><div class="val tnum">{{ \App\Support\Money::format($rptReturnsValue) }} <small>ج.م</small></div></div>
+      <div class="card stat" style="{{ $rptReturnsLoss > 0 ? 'border:1.5px solid var(--neg)' : '' }}"><div class="top"><span class="label">خسائر المرتجعات</span></div><div class="val tnum" style="color:{{ $rptReturnsLoss > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($rptReturnsLoss) }} <small>ج.م</small></div></div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>الصنف</th><th class="num">الكمية المرتجعة</th><th class="num">القيمة</th><th class="num">الخسارة</th></tr></thead>
+        <tbody>
+          @foreach($rptTopReturns as $r)
+            <tr>
+              <td><strong>{{ $r->item }}</strong></td>
+              <td class="num">{{ number_format($r->qty, 1) }} {{ $r->unit }}</td>
+              <td class="num">{{ \App\Support\Money::format($r->value) }}</td>
+              <td class="num" style="{{ $r->loss > 0 ? 'color:var(--neg);font-weight:700' : '' }}">{{ $r->loss > 0 ? \App\Support\Money::format($r->loss) : '—' }}</td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+    </div>
+  @else
+    <p class="muted">لا توجد مرتجعات على هذا المشروع</p>
+  @endif
+</div>
+</div>{{-- /tab-panel: reports --}}
+@endif
 
 @if($isOwner)
   {{-- Profit breakdown modal — owner-only, explains exactly where the profit figure comes from --}}
@@ -707,6 +1034,11 @@ function switchProjectTab(name) {
   document.querySelectorAll('.tab-panel').forEach(p => p.style.display = p.dataset.panel === name ? '' : 'none');
 }
 
+@if($errors->any() && old('amount') !== null)
+  switchProjectTab('installments');
+  document.getElementById('quick-pay-modal').classList.add('open');
+@endif
+
 function openReturnDeleteModal(returnId) {
   document.getElementById('return-delete-form').action = '/returns/' + returnId;
   document.getElementById('return-delete-password').value = '';
@@ -739,6 +1071,24 @@ function shakeModal(box) {
   void box.offsetWidth;
   box.classList.add('shake-error');
 }
+
+async  function confirmBandDeletion(id) {
+    if(confirm('متأكد إنك عايز تحذف البند ده؟ كل الخامات ودفعات الصنايعية اللي فيه هتحذف!')) {
+      document.getElementById('delete-band-' + id).submit();
+    }
+  }
+
+  // --- Modal for direct discount ---
+  function openDiscountModal(workerId, workerName, remaining) {
+    document.getElementById('discModalWorkerName').textContent = workerName;
+    document.getElementById('discModalRemaining').textContent = remaining + ' ج.م';
+    // Update form action dynamically
+    document.getElementById('discountForm').action = "/workers/" + workerId + "/payments";
+    document.getElementById('discountModal').classList.add('open');
+  }
+  function closeDiscountModal() {
+    document.getElementById('discountModal').classList.remove('open');
+  }
 
 async function submitReturnDelete(evt) {
   evt.preventDefault();
@@ -792,5 +1142,45 @@ document.getElementById('materials-band-filter')?.addEventListener('change', fun
   });
 });
 </script>
+
+{{-- Modal for direct discount --}}
+<div class="rv-modal" id="discountModal" onclick="if(event.target===this) closeDiscountModal()">
+  <div class="rv-card" style="max-width:400px;margin:20px;background:#fff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.1);padding:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:1px solid #eee;padding-bottom:12px">
+      <h3 style="margin:0;font-size:1.1rem">تسجيل خصم للصنايعي</h3>
+      <button type="button" class="btn ghost sm" onclick="closeDiscountModal()" style="padding:4px 8px"><i class="fa fa-times"></i></button>
+    </div>
+    <form method="POST" action="" id="discountForm">
+      @csrf
+      <input type="hidden" name="amount" value="0">
+      <div style="margin-bottom:12px; font-size:13px">
+        <strong>الصنايعي:</strong> <span id="discModalWorkerName"></span><br>
+        <strong>المتبقي عليه:</strong> <span id="discModalRemaining" style="color:var(--warn,#c9821a); font-weight:bold"></span>
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label>قيمة الخصم (ج.م) *</label>
+        <input type="number" name="discount" step="0.01" min="0.01" required placeholder="مثال: 500" style="width:100%">
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label>سبب الخصم *</label>
+        <input type="text" name="discount_reason" required placeholder="مثال: غياب / تأخير / خطأ في الشغل" style="width:100%">
+      </div>
+      <div class="field" style="margin-bottom:16px">
+        <label>التاريخ *</label>
+        <input type="date" name="date" value="{{ today()->format('Y-m-d') }}" required style="width:100%">
+      </div>
+      <div style="text-align:left">
+        <button type="button" class="btn ghost" onclick="closeDiscountModal()">إلغاء</button>
+        <button type="submit" class="btn" style="background:var(--warn,#c9821a); border-color:var(--warn,#c9821a); color:#fff">تسجيل الخصم</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.rv-modal { position:fixed; inset:0; z-index:1060; display:none; align-items:center; justify-content:center; background:rgba(15,23,42,.55); }
+.rv-modal.open { display:flex; }
+</style>
+
 @endpush
 @endsection

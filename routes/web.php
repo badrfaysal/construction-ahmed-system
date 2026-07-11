@@ -66,7 +66,6 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::get('/materials', [MaterialController::class, 'index'])->name('materials.index');
     Route::get('/materials/create', [MaterialController::class, 'create'])->name('materials.create');
     Route::post('/materials', [MaterialController::class, 'store'])->name('materials.store');
-    Route::delete('/materials/{material}', [MaterialController::class, 'destroy'])->name('materials.destroy');
 
     // Miscellaneous expenses (المصروفات النثرية) — tips/transport/meals, billed like materials
     Route::get('/projects/{project}/expenses/create', [MaterialController::class, 'createExpense'])->name('expenses.create');
@@ -95,7 +94,6 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::get('/receivables', [ReceivablesController::class, 'index'])->name('receivables.index');
     // تسجيل تحصيل مباشر من العميل (جزئي/كامل) + حذف تحصيل
     Route::post('/receivables/{project}/pay', [ReceivablesController::class, 'pay'])->name('receivables.pay');
-    Route::delete('/receivables/payments/{transaction}', [ReceivablesController::class, 'deletePayment'])->name('receivables.payment.delete');
 
     // Supplier debts — what we owe suppliers (الديون)
     Route::get('/debts', [DebtController::class, 'index'])->name('debts.index');
@@ -126,7 +124,6 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::post('/workers/{worker}/payments', [WorkerPaymentController::class, 'store'])->name('workers.payments.store');
     // تبديل الفني — يثبّت الأول على المدفوع ويضيف فني جديد يكمّل الباقي
     Route::post('/workers/{worker}/swap', [WorkerPaymentController::class, 'swap'])->name('workers.swap');
-    Route::delete('/worker-payments/{payment}', [WorkerPaymentController::class, 'destroy'])->name('worker-payments.destroy');
 
     // Unified craftsmen directory (الصنايعية ومستحقاتهم) — one person across all
     // their bands/projects, with what they're still owed

@@ -158,13 +158,17 @@ class Project extends Model
 
     public function computeTotalCollected(): float
     {
-        $fromContracts = (float) $this->contracts->sum(
-            fn ($c) => (float) $c->down_payment + (float) $c->payments->sum('amount_paid')
-        );
+        // مقدم العقد (down_payment) مش بيتجمّع هنا — هو أصلاً إعادة تصنيف
+        // لفلوس اتحصّلت مباشرة من العميل قبل عمل العقد (موجودة بالفعل جوه
+        // clientPayments، شايف نموذج إنشاء العقد اللي بيملي المقدم تلقائيًا
+        // من already_paid/already_paid_total)، فجمعه هنا كان بيعمل ازدواج —
+        // نفس الفلوس بتتحسب مرتين. القسط الشهري (InstallmentPayment) هو
+        // الوحيد اللي بيمثّل فلوس جديدة فعلاً بتتحصّل بمرور الوقت.
+        $fromInstallments = (float) $this->contracts->sum(fn ($c) => (float) $c->payments->sum('amount_paid'));
 
         $fromDirect = (float) $this->clientPayments->sum(fn ($p) => (float) $p->amount + (float) $p->discount);
 
-        return $fromContracts + $fromDirect;
+        return $fromInstallments + $fromDirect;
     }
 
     // المشروع معموله عقد تقسيط؟ (عقد للمشروع كامل أو لأي بند)

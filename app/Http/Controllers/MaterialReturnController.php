@@ -25,11 +25,12 @@ class MaterialReturnController extends Controller
     public function store(Request $request, Project $project)
     {
         $data = $request->validate([
-            'date'                 => ['required', 'date'],
-            'notes'                => ['nullable', 'string'],
-            'returns'              => ['required', 'array', 'min:1'],
-            'returns.*.material_id'=> ['required', 'exists:sy2_materials,id'],
-            'returns.*.qty'        => ['required', 'numeric', 'min:0.01'],
+            'date'                    => ['required', 'date'],
+            'notes'                   => ['nullable', 'string'],
+            'returns'                 => ['required', 'array', 'min:1'],
+            'returns.*.material_id'   => ['required', 'exists:sy2_materials,id'],
+            'returns.*.qty'           => ['required', 'numeric', 'min:0.01'],
+            'returns.*.return_price'  => ['nullable', 'numeric', 'min:0'],
         ]);
 
         // Validate every row up-front so nothing is saved if any row over-returns
@@ -41,7 +42,7 @@ class MaterialReturnController extends Controller
                     "returns.$i.qty" => 'الكمية المرتجعة لـ"' . $material->item . '" أكبر من الصافي المتبقي (' . $material->netQty() . ').',
                 ]);
             }
-            $rows[] = ['material' => $material, 'qty' => $row['qty']];
+            $rows[] = ['material' => $material, 'qty' => $row['qty'], 'return_price' => $row['return_price'] ?? null];
         }
 
         // Creating each return fires MaterialReturnObserver, which re-syncs the
@@ -49,10 +50,11 @@ class MaterialReturnController extends Controller
         DB::transaction(function () use ($rows, $data) {
             foreach ($rows as $r) {
                 MaterialReturn::create([
-                    'material_id' => $r['material']->id,
-                    'qty'         => $r['qty'],
-                    'date'        => $data['date'],
-                    'notes'       => $data['notes'] ?? null,
+                    'material_id'  => $r['material']->id,
+                    'qty'          => $r['qty'],
+                    'return_price' => $r['return_price'],
+                    'date'         => $data['date'],
+                    'notes'        => $data['notes'] ?? null,
                 ]);
             }
         });

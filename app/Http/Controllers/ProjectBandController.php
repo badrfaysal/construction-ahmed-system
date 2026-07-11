@@ -24,9 +24,11 @@ class ProjectBandController extends Controller
         }
 
         $wallets   = Account::selectable();
-        $suppliers = Supplier::orderBy('name')->get(['id', 'name']);
+        $suppliers = Supplier::orderBy('name')->get(['id', 'name', 'activity']);
+        $itemNames = MaterialController::knownItemNames();
+        $unitNames = MaterialController::knownUnitNames();
 
-        return view('bands.create', compact('project', 'wallets', 'suppliers'));
+        return view('bands.create', compact('project', 'wallets', 'suppliers', 'itemNames', 'unitNames'));
     }
 
     // Save a new band under the given project — labor (workers), materials

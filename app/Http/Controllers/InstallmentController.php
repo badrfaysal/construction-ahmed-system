@@ -139,26 +139,34 @@ class InstallmentController extends Controller
             ]);
         }
 
-        DB::transaction(fn () => InstallmentContract::create([
-            'project_id'           => $project->id,
-            'band_id'              => $data['band_id'] ?? null,
-            'account_id'           => $data['account_id'] ?? null,
-            'customer_name'        => $project->client->name ?? 'عميل',
-            'customer_phone'       => $project->client->phone,
-            'product_name'         => $productName,
-            'cash_price'           => $cash,
-            'discount'             => $disc,
-            'down_payment'         => $down,
-            'interest_rate'        => $rate,
-            'installment_months'   => $months,
-            'total_after_interest' => round($totalAfterInt, 2),
-            'monthly_installment'  => round($monthly, 2),
-            'due_day'              => (int) $data['due_day'],
-            'remaining_balance'    => round($remaining, 2),
-            'start_date'           => $data['start_date'],
-            'status'               => 'active',
-            'notes'                => $data['notes'] ?? null,
-        ]));
+        DB::transaction(function () use ($project, $data, $productName, $cash, $disc, $down, $rate, $months, $totalAfterInt, $monthly, $remaining) {
+            $contract = new InstallmentContract([
+                'project_id'           => $project->id,
+                'band_id'              => $data['band_id'] ?? null,
+                'account_id'           => $data['account_id'] ?? null,
+                'customer_name'        => $project->client->name ?? 'عميل',
+                'customer_phone'       => $project->client->phone,
+                'product_name'         => $productName,
+                'cash_price'           => $cash,
+                'discount'             => $disc,
+                'down_payment'         => $down,
+                'interest_rate'        => $rate,
+                'installment_months'   => $months,
+                'total_after_interest' => round($totalAfterInt, 2),
+                'monthly_installment'  => round($monthly, 2),
+                'due_day'              => (int) $data['due_day'],
+                'remaining_balance'    => round($remaining, 2),
+                'start_date'           => $data['start_date'],
+                'status'               => 'active',
+                'notes'                => $data['notes'] ?? null,
+            ]);
+
+            // فورم إنشاء العقد بيملي المقدم دايمًا من فلوس اتحصّلت فعلاً من
+            // العميل قبل كده (مقفول readonly في الواجهة) — مش تحصيل جديد،
+            // فمفيش داعي لحركة محفظة تانية عليه (شايف ملاحظة الـ observer).
+            $contract->skipDownPaymentTransaction = true;
+            $contract->save();
+        });
 
         return redirect()->route('installments.index')
             ->with('success', 'تم إنشاء عقد التقسيط بنجاح.');

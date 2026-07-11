@@ -239,6 +239,48 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
 .band-group{border:1.5px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px;background:var(--surface)}
 .band-group-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .band-group-head .lbl{font-size:12.5px;font-weight:700;color:var(--ink-2)}
+
+/* ── عرض السعر: كارت البند برأس منظم وصفوف أصناف محاذية ── */
+.band-card{border:1.5px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px;background:var(--surface-2)}
+.band-card-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap}
+.band-card-head label{font-size:11px;color:var(--ink-3);font-weight:600;margin-bottom:4px;display:block}
+.band-card-head input{width:100%}
+.band-card .items-header-row{margin-top:4px}
+
+/* ── تقدير التكلفة: أداة الشقة الجديدة + تحليل الوحدة ── */
+.est-tool{background:linear-gradient(135deg,var(--accent-soft),#f0f9ff);border:2px solid var(--accent);border-radius:14px;padding:16px 20px;margin-bottom:18px}
+.est-tool-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.est-tool-head>svg{width:34px;height:34px;color:var(--accent);flex-shrink:0}
+.est-tool-title{font-size:16px;font-weight:800;color:var(--accent-ink)}
+.est-tool-sub{font-size:12px;color:var(--ink-2)}
+.est-tool-input{margin-inline-start:auto}
+.est-tool-input label{display:block;font-size:11px;font-weight:700;color:var(--accent-ink);margin-bottom:4px}
+.est-tool-input input{width:150px;font-size:18px;font-weight:800;text-align:center;padding:8px;border:2px solid var(--accent);border-radius:10px;background:#fff;color:var(--accent-ink)}
+.est-tool-result{text-align:center;padding-inline-start:16px;border-inline-start:2px solid var(--accent)}
+.est-tool-result .l{font-size:11px;color:var(--accent-ink);font-weight:600}
+.est-tool-result .v{font-size:22px;font-weight:900;color:var(--accent);line-height:1.2}
+
+.est-band-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.est-band-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.est-band-costs{display:flex;gap:18px;flex-wrap:wrap;align-items:center}
+.est-band-costs .ebc{text-align:center}
+.est-band-costs .ebc .l{display:block;font-size:10.5px;color:var(--ink-3);margin-bottom:2px}
+.est-band-costs .ebc .v{font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.est-band-costs .ebc-total{padding-inline-start:14px;border-inline-start:1px solid var(--line)}
+.est-band-costs .ebc-total .v{font-size:16px}
+
+.est-unit-bar{display:flex;gap:12px;flex-wrap:wrap;padding:14px 18px;background:var(--accent-soft);border-bottom:1px solid var(--line)}
+.est-unit-bar .euc{flex:1;min-width:120px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:center}
+.est-unit-bar .euc-lbl{font-size:11px;color:var(--ink-2);margin-bottom:4px;font-weight:600}
+.est-unit-bar .euc-val{font-size:17px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.est-unit-bar .euc-accent{border-color:var(--accent);background:var(--accent-soft)}
+.est-unit-bar .euc-accent .euc-val{color:var(--accent-ink)}
+.est-unit-bar .euc-proj{border:2px dashed var(--pos);background:var(--pos-soft,#e9f9f2)}
+.est-unit-bar .euc-proj .euc-val{color:var(--pos)}
+
+.est-sec-lbl{padding:8px 18px 4px;font-size:12px;font-weight:600;border-top:1px solid var(--line);display:flex;align-items:center;gap:5px}
+.est-sec-lbl svg{width:13px;height:13px}
+@media(max-width:640px){.est-tool-input,.est-tool-result{margin-inline-start:0}.est-band-costs{gap:12px}}
 .item-row{border:1px solid var(--line-2);border-radius:7px;padding:12px;margin-bottom:10px;background:var(--surface-2)}
 .item-row-top{display:flex;gap:10px;align-items:flex-end;margin-bottom:10px}
 .item-row-top .field{flex:1;margin-bottom:0}
@@ -695,9 +737,7 @@ tbody tr:hover{background:var(--accent-soft)}
 .band-form-card .item-row{position:relative;padding-inline-end:40px}
 
 /* ── فني اتدفعله فلوس: بياناته مقفولة بالكامل ── */
-.worker-row-locked{background:var(--warn-soft,#fef3e2);border-color:var(--warn,#c9821a);opacity:.92}
-.worker-row-locked input,.worker-row-locked select{background:var(--bg,#f4f7fb);cursor:not-allowed;color:var(--ink-2)}
-.worker-lock-note{margin-top:10px;padding:9px 12px;background:#fff;border:1px dashed var(--warn,#c9821a);border-radius:8px;font-size:12.5px;line-height:1.6;color:var(--warn,#c9821a)}
+.worker-paid-note{margin-top:10px;padding:9px 12px;background:var(--accent-soft);border:1px dashed var(--accent);border-radius:8px;font-size:12.5px;line-height:1.6;color:var(--accent-ink)}
 
 /* ── جرس إشعارات حقيقي (بدل بانر تحذير عريض) ── */
 .bell-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);cursor:pointer;transition:.15s;flex-shrink:0}

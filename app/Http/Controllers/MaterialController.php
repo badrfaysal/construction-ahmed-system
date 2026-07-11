@@ -84,8 +84,10 @@ class MaterialController extends Controller
     public function create(Request $request)
     {
         $projects  = Project::with('contracts')->orderBy('name')->get(['id', 'name', 'default_supervision_pct']);
-        $suppliers = Supplier::orderBy('name')->get(['id', 'name']);
+        $suppliers = Supplier::orderBy('name')->get(['id', 'name', 'activity']);
         $wallets   = Account::selectable();
+        $itemNames = $this->knownItemNames();
+        $unitNames = $this->knownUnitNames();
 
         // Pre-select a project if provided via query string (e.g. from a project page)
         $selectedProject = $request->get('project_id') ? Project::find($request->get('project_id')) : null;
@@ -94,7 +96,22 @@ class MaterialController extends Controller
                 ->map(fn ($b) => ['id' => $b->id, 'name' => $b->name, 'has_contract' => $b->hasInstallmentContract()])
             : collect();
 
-        return view('materials.create', compact('projects', 'suppliers', 'wallets', 'bands', 'selectedProject'));
+        return view('materials.create', compact('projects', 'suppliers', 'wallets', 'bands', 'selectedProject', 'itemNames', 'unitNames'));
+    }
+
+    // كل أسماء الأصناف/الوحدات اللي سبق كتابتها فعلاً — بتغذّي autocomplete
+    // حقيقي بدل قائمة ثابتة، مشتركة بين شاشة الخامات وفورم إضافة البند
+    public static function knownItemNames()
+    {
+        return Material::where('category', '!=', 'misc')
+            ->whereNotNull('item')->where('item', '!=', '')
+            ->distinct()->orderBy('item')->pluck('item');
+    }
+
+    public static function knownUnitNames()
+    {
+        return Material::whereNotNull('unit')->where('unit', '!=', '')
+            ->distinct()->orderBy('unit')->pluck('unit');
     }
 
     // Save every item from every band group in one go
@@ -207,12 +224,6 @@ class MaterialController extends Controller
             ->with('success', "تم تسجيل {$count} صنف بنجاح.");
     }
 
-    // Delete a material entry
-    public function destroy(Material $material)
-    {
-        DB::transaction(fn () => $material->delete());
-        return back()->with('success', 'تم حذف الخامة.');
-    }
 
     // Show form to add a miscellaneous expense (نثري) to a project — tips,
     // transport, meals, etc. Defaults the band to the one currently in progress.

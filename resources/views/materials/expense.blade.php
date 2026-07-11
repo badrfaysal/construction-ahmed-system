@@ -1,10 +1,10 @@
 @extends('layouts.app')
-@section('title', 'مصروف نثري')
-@section('page-title', 'مصروف نثري — ' . $project->name)
+@section('title', 'نثريات ومصروفات')
+@section('page-title', 'نثريات ومصروفات — ' . $project->name)
 
 @section('content')
 <div class="page-head">
-  <div><h3>إضافة مصروف نثري</h3><p>{{ $project->name }} — إكرامية، نقل، إفطار... (بيتحاسب على العميل زي الخامة)</p></div>
+  <div><h3>إضافة نثريات ومصروفات</h3><p>{{ $project->name }} — إكرامية، نقل، إفطار... (بيتحاسب على العميل زي الخامة)</p></div>
   <a href="{{ route('projects.show', $project) }}" class="btn ghost">رجوع</a>
 </div>
 

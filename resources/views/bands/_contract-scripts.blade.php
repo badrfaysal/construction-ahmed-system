@@ -173,41 +173,15 @@ function fillWorker(g, w) {
   row.querySelector('[name*="[notes]"]').value = w.notes || '';
   updateWorkerUI(row);
 
-  // اتدفعله أي جزء ولو قرش؟ بياناته تتقفل بالكامل من هنا — أي تغيير في
-  // شروط تعاقده لازم يعدي من "تبديل الفني" (يحافظ على سجل المدفوعات سليم
-  // ومربوط بنفس الشروط اللي اتدفعت بيها فعلًا)
+  // فني اتدفعله جزء قبل كده؟ بياناته تفضل قابلة للتعديل زي أي فني تاني —
+  // تعديل المقايسة (الكمية) بعد الدفع حاجة عادية جدًا وشائعة (زودت شغله من
+  // 30 لـ 40 متر مثلاً)، فمفيش أي قفل. بس نوضّح إنه اتدفعله حاجة قبل كده
+  // عشان المستخدم يبقى واعي وهو بيعدّل.
   if (w.has_payments) {
-    lockWorkerRow(row, w.id);
+    const note = document.createElement('div');
+    note.className = 'worker-paid-note';
+    note.innerHTML = 'ℹ️ اتدفعله جزء من مستحقاته قبل كده — أي تعديل هنا (خصوصًا لو قلّلت الأجر عن المدفوع بالفعل) ممكن يأثر على حساب المتبقي له.';
+    row.appendChild(note);
   }
-}
-
-function lockWorkerRow(row, workerId) {
-  row.classList.add('worker-row-locked');
-
-  row.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]').forEach(inp => {
-    inp.readOnly = true;
-  });
-
-  const typeSelect = row.querySelector('.contract-type-select');
-  const hiddenType = document.createElement('input');
-  hiddenType.type = 'hidden';
-  hiddenType.name = typeSelect.name;
-  hiddenType.value = typeSelect.value;
-  typeSelect.insertAdjacentElement('afterend', hiddenType);
-  typeSelect.removeAttribute('name');
-  typeSelect.disabled = true;
-
-  const delRow = row.querySelector('.worker-del-row');
-  if (delRow) {
-    delRow.innerHTML = `<a href="/workers/${workerId}/payments" class="btn ghost sm" target="_blank" rel="noopener">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg>
-      تبديل الفني من صفحة دفعاته
-    </a>`;
-  }
-
-  const note = document.createElement('div');
-  note.className = 'worker-lock-note';
-  note.innerHTML = '🔒 اتدفعله فلوس بالفعل — بياناته مقفولة عشان سجل الدفعات يفضل سليم. لو الشغل هيتغيّر أو التعاقد هيتعدّل، استخدم "تبديل الفني" بدل التعديل المباشر.';
-  row.appendChild(note);
 }
 </script>

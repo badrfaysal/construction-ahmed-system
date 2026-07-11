@@ -8,11 +8,19 @@ use App\Models\Transaction;
 // يزامن المحفظة مع العقد نفسه: المقدم المدفوع وقت الإنشاء = حركة "in"،
 // وعند حذف العقد بنعكس المقدم + كل دفعاته يدويًا (لأن حذف الـ DB cascade
 // مبيشغّلش أحداث Eloquent فالمحفظة مكانتش هتترجع).
+//
+// ملحوظة مهمة: فورم إنشاء العقد بيملي "المقدم" تلقائيًا من فلوس اتحصّلت
+// فعلاً من العميل قبل كده (مسجّلة أصلاً كـ client_payment) — مش فلوس جديدة.
+// لو خلقنا حركة "in" تانية بمبلغ المقدم، هيتضاعف نفس التحصيل في المحفظة
+// وفي إجمالي المحصّل. عشان كده InstallmentController::store() بيحط علامة
+// skipDownPaymentTransaction على العقد قبل الحفظ لو المقدم ده أصلاً معاد
+// تصنيفه من تحصيل سابق — الحركة الوحيدة اللي بتتعمل فعلاً هنا هي لمقدم
+// "جديد" حقيقي (نادر مع الفورم الحالي اللي بيقفل الحقل دايمًا على المحصّل).
 class InstallmentContractObserver
 {
     public function created(InstallmentContract $contract): void
     {
-        if ((float) $contract->down_payment > 0) {
+        if ((float) $contract->down_payment > 0 && empty($contract->skipDownPaymentTransaction)) {
             Transaction::create([
                 'project_id'  => $contract->project_id,
                 'account_id'  => $contract->account_id,

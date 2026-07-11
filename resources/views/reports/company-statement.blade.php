@@ -65,7 +65,7 @@
               <td>{{ $m->date->format('Y-m-d') }}</td>
               <td>
                 {{ $m->item }}
-                @if($m->isMisc())<span class="muted" style="font-size:10.5px">(نثري)</span>@endif
+                @if($m->isMisc())<span class="muted" style="font-size:10.5px">(نثريات ومصروفات)</span>@endif
                 @if($m->returnedQty() > 0)<span style="color:var(--neg);font-size:10.5px">(مرتجع {{ \App\Support\Money::format($m->returnedQty(), 1) }})</span>@endif
               </td>
               <td class="muted">{{ $m->supplier?->name ?? '—' }}</td>

@@ -6,7 +6,7 @@
 <div class="page-head">
   <div>
     <h3>{{ $supplier->name }}</h3>
-    <p>{{ $supplier->phone ?: 'بدون هاتف' }}</p>
+    <p>@if($supplier->activity){{ $supplier->activity }} — @endif{{ $supplier->phone ?: 'بدون هاتف' }}</p>
   </div>
   <div class="btn-row">
     <a href="{{ route('suppliers.edit', $supplier) }}" class="btn ghost">تعديل</a>

@@ -49,18 +49,27 @@ class SupplierController extends Controller
     // Show create form
     public function create()
     {
-        return view('suppliers.create');
+        $activities = $this->existingActivities();
+        return view('suppliers.create', compact('activities'));
+    }
+
+    // Distinct activities already entered — feeds the autocomplete datalist
+    private function existingActivities()
+    {
+        return Supplier::whereNotNull('activity')->where('activity', '!=', '')
+            ->distinct()->orderBy('activity')->pluck('activity');
     }
 
     // Save new supplier
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'    => ['required', 'string', 'max:255'],
-            'phone'   => ['nullable', 'string', 'max:30'],
-            'email'   => ['nullable', 'email'],
-            'address' => ['nullable', 'string'],
-            'notes'   => ['nullable', 'string'],
+            'name'     => ['required', 'string', 'max:255'],
+            'activity' => ['nullable', 'string', 'max:255'],
+            'phone'    => ['nullable', 'string', 'max:30'],
+            'email'    => ['nullable', 'email'],
+            'address'  => ['nullable', 'string'],
+            'notes'    => ['nullable', 'string'],
         ]);
 
         $supplier = Supplier::create($data);
@@ -102,18 +111,20 @@ class SupplierController extends Controller
     // Show edit form
     public function edit(Supplier $supplier)
     {
-        return view('suppliers.edit', compact('supplier'));
+        $activities = $this->existingActivities();
+        return view('suppliers.edit', compact('supplier', 'activities'));
     }
 
     // Save edits
     public function update(Request $request, Supplier $supplier)
     {
         $data = $request->validate([
-            'name'    => ['required', 'string', 'max:255'],
-            'phone'   => ['nullable', 'string', 'max:30'],
-            'email'   => ['nullable', 'email'],
-            'address' => ['nullable', 'string'],
-            'notes'   => ['nullable', 'string'],
+            'name'     => ['required', 'string', 'max:255'],
+            'activity' => ['nullable', 'string', 'max:255'],
+            'phone'    => ['nullable', 'string', 'max:30'],
+            'email'    => ['nullable', 'email'],
+            'address'  => ['nullable', 'string'],
+            'notes'    => ['nullable', 'string'],
         ]);
 
         $supplier->update($data);

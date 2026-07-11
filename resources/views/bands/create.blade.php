@@ -52,7 +52,7 @@
         إضافة خامة
       </button>
 
-      <div class="section-label" style="margin-top:10px">نثريات — اختياري (إكرامية / نقل / إفطار...)</div>
+      <div class="section-label" style="margin-top:10px">نثريات ومصروفات — اختياري (إكرامية / نقل / إفطار...)</div>
       <div id="band-misc-list"></div>
       <button type="button" class="btn ghost sm" style="margin:6px 0 18px" onclick="addBandMisc()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
@@ -127,13 +127,14 @@
 </form>
 
 <datalist id="items-list">
-  <option value="أسمنت"><option value="رمل"><option value="سيراميك أرضيات">
-  <option value="سيراميك حوائط"><option value="مواسير PPR"><option value="دهانات بلاستيك">
+  @foreach($itemNames as $name)
+    <option value="{{ $name }}">
+  @endforeach
 </datalist>
 <datalist id="units-list">
-  <option value="شيكارة"><option value="م²"><option value="نقلة">
-  <option value="ماسورة"><option value="لفة"><option value="طقم"><option value="طوبة">
-  <option value="بستلة"><option value="وحدة">
+  @foreach($unitNames as $unit)
+    <option value="{{ $unit }}">
+  @endforeach
 </datalist>
 <datalist id="misc-list">
   <option value="نقل"><option value="إكرامية"><option value="إفطار العمال"><option value="مواصلات"><option value="نثريات">
@@ -170,7 +171,7 @@ function addWorker(prefill = null) {
 const bandSupplierOptionsHtml = `
   <option value="">— بدون مورد —</option>
   @foreach($suppliers as $s)
-    <option value="{{ $s->id }}">{{ $s->name }}</option>
+    <option value="{{ $s->id }}">{{ $s->name }}@if($s->activity) — {{ $s->activity }}@endif</option>
   @endforeach
 `;
 let bmIdx = 0;

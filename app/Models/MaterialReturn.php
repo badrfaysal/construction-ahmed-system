@@ -11,7 +11,7 @@ class MaterialReturn extends Model
 {
     protected $table = 'sy2_material_returns';
 
-    protected $fillable = ['material_id', 'qty', 'date', 'notes'];
+    protected $fillable = ['material_id', 'qty', 'return_price', 'date', 'notes'];
 
     protected function casts(): array
     {
@@ -21,5 +21,21 @@ class MaterialReturn extends Model
     public function material(): BelongsTo
     {
         return $this->belongsTo(Material::class, 'material_id');
+    }
+
+    // السعر الفعلي اللي اترجعت بيه الوحدة — لو مش متحدد، بيفترض إنه نفس
+    // سعر الشراء الأصلي (مرتجع عادي بدون خسارة)
+    public function effectivePrice(): float
+    {
+        return (float) ($this->return_price ?? $this->material->unit_price);
+    }
+
+    // خسارة الإرجاع = لو رجّعنا بسعر أقل من اللي اشترينا بيه، الفرق ده
+    // خسارة محقّقة على الكمية المرتجعة كلها (المدفوع منها والآجل)
+    public function loss(): float
+    {
+        $orig = (float) $this->material->unit_price;
+        $ret  = $this->effectivePrice();
+        return $ret < $orig ? round((float) $this->qty * ($orig - $ret), 2) : 0.0;
     }
 }

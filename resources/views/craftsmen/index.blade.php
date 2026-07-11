@@ -111,8 +111,11 @@
       <div style="display:flex;flex-direction:column;gap:12px;align-items:flex-end">
         <div style="display:flex;gap:20px;text-align:center">
           <div><div class="muted" style="font-size:12px">متعاقد</div><div class="tnum" style="font-weight:700">{{ \App\Support\Money::format($c->contracted) }}</div></div>
-          <div><div class="muted" style="font-size:12px">مدفوع</div><div class="tnum" style="font-weight:700;color:var(--pos)">{{ \App\Support\Money::format($c->paid) }}</div></div>
+          <div><div class="muted" style="font-size:12px">مسوّى</div><div class="tnum" style="font-weight:700;color:var(--pos)">{{ \App\Support\Money::format($c->paid) }}</div></div>
           <div><div class="muted" style="font-size:12px">متبقي</div><div class="tnum" style="font-weight:700;color:{{ $c->remaining > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($c->remaining) }}</div></div>
+          @if($c->owed_to_us > 0)
+            <div><div class="muted" style="font-size:12px;color:var(--warn,#c9821a)">مستحق لينا</div><div class="tnum" style="font-weight:700;color:var(--warn,#c9821a)">{{ \App\Support\Money::format($c->owed_to_us) }}</div></div>
+          @endif
         </div>
         <form action="{{ route('craftsmen.rate', $c->name) }}" method="POST" class="craftsman-rate-form">
           @csrf
@@ -160,7 +163,12 @@
               <td class="num">{{ \App\Support\Money::format($a->amount) }}</td>
               <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }}</td>
               <td class="num" style="color:{{ $remaining > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($remaining) }}</td>
-              <td><a href="{{ route('workers.payments', $a) }}" class="btn ghost sm">الدفعات</a></td>
+              <td>
+                <div style="display:flex; gap:4px">
+                  <a href="{{ route('workers.payments', $a) }}" class="btn ghost sm">الدفعات</a>
+                  <button type="button" class="btn ghost sm" style="color:var(--warn,#c9821a)" onclick="openDiscountModal({{ $a->id }}, '{{ htmlspecialchars($a->name, ENT_QUOTES) }}', {{ $remaining }})">خصم</button>
+                </div>
+              </td>
             </tr>
           @endforeach
         </tbody>
@@ -184,6 +192,55 @@ function setRating(clickedBtn, val) {
   const btns = form.querySelectorAll('.rate-star-btn');
   btns.forEach((b, i) => b.classList.toggle('on', i < val));
 }
+
+// --- Modal for direct discount ---
+function openDiscountModal(workerId, workerName, remaining) {
+  document.getElementById('discModalWorkerName').textContent = workerName;
+  document.getElementById('discModalRemaining').textContent = remaining + ' ج.م';
+  document.getElementById('discountForm').action = "/workers/" + workerId + "/payments";
+  document.getElementById('discountModal').classList.add('open');
+}
+function closeDiscountModal() {
+  document.getElementById('discountModal').classList.remove('open');
+}
 </script>
+
+<div class="rv-modal" id="discountModal" onclick="if(event.target===this) closeDiscountModal()">
+  <div class="rv-card" style="max-width:400px;margin:20px;background:#fff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.1);padding:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:1px solid #eee;padding-bottom:12px">
+      <h3 style="margin:0;font-size:1.1rem">تسجيل خصم للصنايعي</h3>
+      <button type="button" class="btn ghost sm" onclick="closeDiscountModal()" style="padding:4px 8px"><i class="fa fa-times"></i></button>
+    </div>
+    <form method="POST" action="" id="discountForm">
+      @csrf
+      <input type="hidden" name="amount" value="0">
+      <div style="margin-bottom:12px; font-size:13px">
+        <strong>الصنايعي:</strong> <span id="discModalWorkerName"></span><br>
+        <strong>المتبقي عليه:</strong> <span id="discModalRemaining" style="color:var(--warn,#c9821a); font-weight:bold"></span>
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label>قيمة الخصم (ج.م) *</label>
+        <input type="number" name="discount" step="0.01" min="0.01" required placeholder="مثال: 500" style="width:100%">
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label>سبب الخصم *</label>
+        <input type="text" name="discount_reason" required placeholder="مثال: غياب / تأخير / خطأ في الشغل" style="width:100%">
+      </div>
+      <div class="field" style="margin-bottom:16px">
+        <label>التاريخ *</label>
+        <input type="date" name="date" value="{{ today()->format('Y-m-d') }}" required style="width:100%">
+      </div>
+      <div style="text-align:left">
+        <button type="button" class="btn ghost" onclick="closeDiscountModal()">إلغاء</button>
+        <button type="submit" class="btn" style="background:var(--warn,#c9821a); border-color:var(--warn,#c9821a); color:#fff">تسجيل الخصم</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.rv-modal { position:fixed; inset:0; z-index:1060; display:none; align-items:center; justify-content:center; background:rgba(15,23,42,.55); }
+.rv-modal.open { display:flex; }
+</style>
 @endpush
 @endsection

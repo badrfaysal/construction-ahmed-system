@@ -8,6 +8,7 @@
   $contract  = (float) $worker->amount;
   $paid      = $worker->paidTotal();
   $remaining = $worker->remaining();
+  $owedToUs  = $worker->owedToUs();
 @endphp
 
 <div class="page-head">
@@ -31,19 +32,26 @@
   </div>
 @endif
 
-<div class="grid cols-3" style="margin-bottom:20px">
+<div class="grid {{ $owedToUs > 0 ? 'cols-4' : 'cols-3' }}" style="margin-bottom:20px">
   <div class="card stat">
     <div class="top"><span class="label">المتعاقد عليه</span></div>
     <div class="val tnum">{{ \App\Support\Money::format($contract) }} <small>ج.م</small></div>
   </div>
   <div class="card stat">
-    <div class="top"><span class="label">المدفوع للصنايعي</span></div>
+    <div class="top"><span class="label">المسوّى (مدفوع + خصم)</span></div>
     <div class="val tnum" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }} <small>ج.م</small></div>
   </div>
   <div class="card stat">
-    <div class="top"><span class="label">المتبقي (مستحق)</span></div>
+    <div class="top"><span class="label">المتبقي (مستحق عليه)</span></div>
     <div class="val tnum" style="color:{{ $remaining > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($remaining) }} <small>ج.م</small></div>
   </div>
+  @if($owedToUs > 0)
+    <div class="card stat" style="border:1.5px solid var(--warn,#c9821a);background:var(--warn-soft,#fef3e2)">
+      <div class="top"><span class="label" style="color:var(--warn,#c9821a)">مستحق لينا عنده</span></div>
+      <div class="val tnum" style="color:var(--warn,#c9821a)">{{ \App\Support\Money::format($owedToUs) }} <small>ج.م</small></div>
+      <div class="note" style="font-size:11px">خصمنا عليه أكتر من مستحقه — الفرق ده دين علينا الحق نستردّه</div>
+    </div>
+  @endif
 </div>
 
 <div class="grid cols-2" style="align-items:start;gap:20px">
@@ -54,8 +62,8 @@
       <div class="section-label" style="margin-top:0">تسجيل دفعة جديدة</div>
       <div class="row2">
         <div class="field">
-          <label>المبلغ (ج.م) *</label>
-          <input type="number" id="pay_amt" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" placeholder="{{ number_format($remaining, 2, '.', '') }}" required>
+          <label>المبلغ (ج.م)</label>
+          <input type="number" id="pay_amt" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" placeholder="{{ number_format($remaining, 2, '.', '') }}">
           @if($remaining > 0)
           <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
             <button type="button" class="btn ghost sm pay-btn" id="btn-full" onclick="setPayAmount({{ $remaining }}, 'full')">سداد كلي</button>
@@ -72,11 +80,15 @@
       <div class="row2">
         <div class="field">
           <label>الخصم (ج.م)</label>
-          <input type="number" name="discount" step="0.01" min="0" value="{{ old('discount') }}" placeholder="0.00">
+          <input type="number" id="wp-discount" name="discount" step="0.01" min="0" value="{{ old('discount') }}" placeholder="0.00" oninput="toggleDiscountReason()">
         </div>
         <div class="field">
           @include('partials._wallet-select', ['wallets' => $wallets, 'label' => 'المحفظة (الصرف منها) *', 'required' => true, 'selectStyle' => 'width:100%'])
         </div>
+      </div>
+      <div class="field" id="wp-discount-reason-row" style="display:{{ old('discount') > 0 ? 'block' : 'none' }}">
+        <label style="color:var(--warn,#c9821a)">سبب الخصم *</label>
+        <input type="text" name="discount_reason" id="wp-discount-reason" value="{{ old('discount_reason') }}" placeholder="مثال: تأخير في التسليم / تلف في الشغل">
       </div>
       <div class="field">
         <label>ملاحظات</label>
@@ -108,10 +120,16 @@
                   data-date="{{ $p->date->format('Y-m-d') }}"
                   data-amount="{{ \App\Support\Money::format($p->amount) }}"
                   data-discount="{{ \App\Support\Money::format($p->discount) }}"
+                  data-discount-reason="{{ $p->discount_reason ?: '—' }}"
                   data-notes="{{ $p->notes ?: '—' }}">
                 <td class="muted">{{ $p->date->format('Y-m-d') }}</td>
                 <td class="num">{{ \App\Support\Money::format($p->amount) }}</td>
-                <td class="muted">{{ $p->discount > 0 ? \App\Support\Money::format($p->discount) : '—' }}</td>
+                <td class="muted">
+                  {{ $p->discount > 0 ? \App\Support\Money::format($p->discount) : '—' }}
+                  @if($p->discount > 0 && $p->discount_reason)
+                    <div style="font-size:11px;color:var(--warn,#c9821a)">{{ $p->discount_reason }}</div>
+                  @endif
+                </td>
                 <td class="muted">{{ $p->notes ?: '—' }}</td>
               </tr>
             @endforeach
@@ -191,6 +209,7 @@
       <div style="color:var(--muted);font-weight:600">التاريخ:</div><div id="pd-date" style="font-weight:700"></div>
       <div style="color:var(--muted);font-weight:600">المبلغ:</div><div id="pd-amount" style="font-weight:700;color:var(--pos)"></div>
       <div style="color:var(--muted);font-weight:600" id="pd-disc-lbl">الخصم:</div><div id="pd-discount" style="font-weight:700;color:var(--warning)"></div>
+      <div style="color:var(--muted);font-weight:600" id="pd-disc-reason-lbl">سبب الخصم:</div><div id="pd-discount-reason" style="font-weight:600;color:var(--warn,#c9821a)"></div>
       <div style="color:var(--muted);font-weight:600">ملاحظات:</div><div id="pd-notes" style="font-weight:600"></div>
     </div>
   </div>
@@ -214,19 +233,25 @@ function showPayDetail(row) {
   document.getElementById('pd-date').textContent = d.date;
   document.getElementById('pd-amount').textContent = d.amount + ' ج.م';
   const disc = parseFloat(d.discount);
-  if (disc > 0) {
-    document.getElementById('pd-discount').textContent = d.discount + ' ج.م';
-    document.getElementById('pd-disc-lbl').style.display = 'block';
-    document.getElementById('pd-discount').style.display = 'block';
-  } else {
-    document.getElementById('pd-disc-lbl').style.display = 'none';
-    document.getElementById('pd-discount').style.display = 'none';
-  }
+  const showDisc = disc > 0 ? 'block' : 'none';
+  document.getElementById('pd-discount').textContent = d.discount + ' ج.م';
+  document.getElementById('pd-disc-lbl').style.display = showDisc;
+  document.getElementById('pd-discount').style.display = showDisc;
+  document.getElementById('pd-disc-reason-lbl').style.display = showDisc;
+  document.getElementById('pd-discount-reason').style.display = showDisc;
+  document.getElementById('pd-discount-reason').textContent = d.discountReason || '—';
   document.getElementById('pd-notes').textContent = d.notes;
   document.getElementById('payDetailModal').classList.add('open');
 }
 function closePayDetail() {
   document.getElementById('payDetailModal').classList.remove('open');
+}
+function toggleDiscountReason() {
+  const val = parseFloat(document.getElementById('wp-discount').value) || 0;
+  const row = document.getElementById('wp-discount-reason-row');
+  const inp = document.getElementById('wp-discount-reason');
+  row.style.display = val > 0 ? 'block' : 'none';
+  inp.required = val > 0;
 }
 </script>
 @endsection

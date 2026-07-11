@@ -290,7 +290,10 @@ class ReportController extends Controller
 
         $area = (float) $project->area;
 
-        $bands = $project->bands->map(function ($band) use ($area) {
+        // تسمية الوحدة حسب نوع تعاقد العمال — منها بنعرف "متر/قطعة/يوم"
+        $unitLabels = ['per_meter' => 'متر', 'per_piece' => 'قطعة', 'daily' => 'يوم'];
+
+        $bands = $project->bands->map(function ($band) use ($area, $unitLabels) {
             // نفصل الخامات الحقيقية عن النثريات (المصاريف المتنوعة category=misc)
             // عشان يبان كل نوع لوحده في التقدير
             $realMats = $band->materials->where('category', '!=', 'misc');
@@ -330,6 +333,28 @@ class ReportController extends Controller
             $laborCost    = (float) $band->labor_amount;
             $totalCost    = $materialCost + $pettyCost + $laborCost;
 
+            // ── وحدة قياس البند وكميتها ─────────────────────────────────────
+            // بنشتق "وحدة العمل" (متر حوائط / قطعة نجارة / نقطة كهرباء) من عمال
+            // البند: بنجمع كمياتهم لكل نوع تعاقد، ولو فيه نوع واحد سايد نعتبره
+            // وحدة البند. منها نطلع:
+            //   • متوسط تكلفة الوحدة  = التكلفة الكلية للبند ÷ عدد الوحدات
+            //   • الكثافة لكل 100م²   = عدد الوحدات ÷ مساحة الشقة × 100
+            $qtyWorkers = $band->workers->filter(fn ($w) =>
+                in_array($w->contract_type, ['per_meter', 'per_piece', 'daily'], true)
+                && (float) $w->contract_qty > 0
+            );
+            $byType = $qtyWorkers->groupBy('contract_type');
+
+            $unitType = null;
+            $unitQty  = 0.0;
+            if ($byType->count() === 1) {
+                $unitType = $byType->keys()->first();
+                $unitQty  = (float) $qtyWorkers->sum(fn ($w) => (float) $w->contract_qty);
+            }
+            $unitLabel   = $unitType ? $unitLabels[$unitType] : null;
+            $costPerUnit = ($unitQty > 0) ? $totalCost / $unitQty : null;
+            $density100  = ($unitQty > 0 && $area > 0) ? $unitQty / $area * 100 : null;
+
             return (object) [
                 'band'           => $band,
                 'materials'      => $materials,
@@ -343,6 +368,11 @@ class ReportController extends Controller
                 'mat_per_sqm'    => $area > 0 ? $materialCost / $area : null,
                 'petty_per_sqm'  => $area > 0 ? $pettyCost / $area : null,
                 'labor_per_sqm'  => $area > 0 ? $laborCost / $area : null,
+                // تحليل الوحدة (لو البند شغال بوحدة قياس واضحة)
+                'unit_label'     => $unitLabel,
+                'unit_qty'       => $unitQty,
+                'cost_per_unit'  => $costPerUnit,
+                'density_100'    => $density100,
             ];
         });
 
