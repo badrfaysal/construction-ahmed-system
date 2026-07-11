@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'التقارير')
 @section('page-title', 'التقارير')
 
@@ -50,7 +50,7 @@
   </div>
 </form>
 
-{{-- Summary --}}
+{{-- Summary KPIs --}}
 <div class="grid cols-3" style="margin-bottom:20px">
   <div class="card stat">
     <div class="top"><span class="label">إجمالي الربح</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg></span></div>
@@ -66,30 +66,97 @@
   </div>
 </div>
 
-{{-- Charts --}}
-<div class="grid cols-2" style="margin-bottom:24px">
-  <div class="card card-pad">
-    <div class="section-label" style="margin-top:0">الوارد والصادر الشهري</div>
-    <canvas id="cashFlowChart" height="220"></canvas>
+{{-- ═══ Charts Grid: 4 compact cards ═══ --}}
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+
+  {{-- 1. Area line: cash flow --}}
+  <div class="card card-pad" style="padding:14px 16px">
+    <div style="font-size:11px;font-weight:700;color:var(--ink-2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">التدفق الشهري</div>
+    <canvas id="cashFlowChart" height="110"></canvas>
   </div>
-  <div class="card card-pad">
-    <div class="section-label" style="margin-top:0">أعلى 5 مشاريع ربحًا</div>
-    <canvas id="topProjectsChart" height="220"></canvas>
+
+  {{-- 2. Doughnut: spend distribution --}}
+  <div class="card card-pad" style="padding:14px 16px;display:flex;flex-direction:column;align-items:center">
+    <div style="font-size:11px;font-weight:700;color:var(--ink-2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;align-self:flex-start">توزيع المصروف</div>
+    <div style="position:relative;width:130px;height:130px;flex-shrink:0">
+      <canvas id="spendDonut"></canvas>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
+        <div style="font-size:9px;color:var(--ink-3)">إجمالي</div>
+        <div class="tnum" style="font-size:12px;font-weight:800">{{ number_format($totalSpent/1000,1) }}K</div>
+      </div>
+    </div>
+    <div id="donut-legend" style="margin-top:8px;display:flex;flex-direction:column;gap:4px;width:100%"></div>
   </div>
+
+  {{-- 3. Polar area: top bands --}}
+  <div class="card card-pad" style="padding:14px 16px;display:flex;flex-direction:column;align-items:center">
+    <div style="font-size:11px;font-weight:700;color:var(--ink-2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;align-self:flex-start">أكثر البنود</div>
+    <canvas id="topBandsChart" height="150" style="max-width:170px"></canvas>
+  </div>
+
+  {{-- 4. Horizontal bar: top projects --}}
+  <div class="card card-pad" style="padding:14px 16px">
+    <div style="font-size:11px;font-weight:700;color:var(--ink-2);margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em">أعلى مشاريع ربحًا</div>
+    <canvas id="topProjectsChart" height="110"></canvas>
+  </div>
+
 </div>
 
-{{-- Top projects --}}
+{{-- ═══ Materials Charts: purchased + returned ═══ --}}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+
+  <div class="card card-pad" style="padding:14px 16px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="width:28px;height:28px;border-radius:7px;background:#ececfe;display:grid;place-items:center;flex-shrink:0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><use href="#i-box"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:13px">أكثر الخامات شراءً</div>
+        <div style="font-size:10px;color:var(--ink-2)">حسب التكلفة الصافية</div>
+      </div>
+    </div>
+    @if(count($topPurchasedMaterials) > 0)
+      <canvas id="topPurchasedChart" height="180"></canvas>
+    @else
+      <div style="height:180px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:13px;background:var(--bg);border-radius:8px">لا توجد خامات مشتراة بعد</div>
+    @endif
+  </div>
+
+  <div class="card card-pad" style="padding:14px 16px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div style="width:28px;height:28px;border-radius:7px;background:#fdeae7;display:grid;place-items:center;flex-shrink:0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#c0392b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:13px">أكثر الخامات مرتجعاً</div>
+        <div style="font-size:10px;color:var(--ink-2)">حسب قيمة المرتجع</div>
+      </div>
+    </div>
+    @if(count($topReturnedMaterials) > 0)
+      <canvas id="topReturnedChart" height="180"></canvas>
+    @else
+      <div style="height:180px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:13px;background:var(--bg);border-radius:8px">لا توجد خامات مرتجعة بعد</div>
+    @endif
+  </div>
+
+</div>
+
+{{-- Top projects tables --}}
 <div class="grid cols-2" style="margin-bottom:24px">
   <div class="table-card">
     <div class="table-top"><h4>أكتر مشروع صرفت فيه</h4></div>
     <div class="table-scroll">
       <table>
-        <thead><tr><th>المشروع</th><th class="num">المصروف</th></tr></thead>
+        <thead><tr><th>#</th><th>المشروع</th><th class="num">المصروف</th></tr></thead>
         <tbody>
-          @forelse($topProjectsBySpend as $row)
-            <tr><td>{{ $row->name }}</td><td class="num">{{ \App\Support\Money::format($row->spent) }}</td></tr>
+          @forelse($topProjectsBySpend as $i => $row)
+            <tr>
+              <td><span style="width:22px;height:22px;border-radius:50%;background:{{ ['#4f46e5','#6366f1','#818cf8','#a5b4fc','#c7d2fe'][$i % 5] }};color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700">{{ $i+1 }}</span></td>
+              <td>{{ $row->name }}</td>
+              <td class="num" style="font-weight:700">{{ \App\Support\Money::format($row->spent) }}</td>
+            </tr>
           @empty
-            <tr><td colspan="2" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
+            <tr><td colspan="3" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
           @endforelse
         </tbody>
       </table>
@@ -99,12 +166,16 @@
     <div class="table-top"><h4>أكتر مشروع ربحت منه</h4></div>
     <div class="table-scroll">
       <table>
-        <thead><tr><th>المشروع</th><th class="num">الربح</th></tr></thead>
+        <thead><tr><th>#</th><th>المشروع</th><th class="num">الربح</th></tr></thead>
         <tbody>
-          @forelse($topProjectsByProfit as $row)
-            <tr><td>{{ $row->name }}</td><td class="num" style="color:{{ $row->profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($row->profit) }}</td></tr>
+          @forelse($topProjectsByProfit as $i => $row)
+            <tr>
+              <td><span style="width:22px;height:22px;border-radius:50%;background:{{ ['#0f8a5f','#16b87e','#4ade80','#86efac','#bbf7d0'][$i % 5] }};color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700">{{ $i+1 }}</span></td>
+              <td>{{ $row->name }}</td>
+              <td class="num" style="font-weight:700;color:{{ $row->profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($row->profit) }}</td>
+            </tr>
           @empty
-            <tr><td colspan="2" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
+            <tr><td colspan="3" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
           @endforelse
         </tbody>
       </table>
@@ -112,33 +183,39 @@
   </div>
 </div>
 
-{{-- Top bands by name across all projects --}}
+{{-- Top bands --}}
 <div class="grid cols-2" style="margin-bottom:24px">
   <div class="table-card">
-    <div class="table-top"><h4>أكتر بند صرفت منه (مجمّع بالاسم)</h4></div>
+    <div class="table-top"><h4>أكتر بند صرفت منه (مجمّع)</h4></div>
     <div class="table-scroll">
       <table>
-        <thead><tr><th>البند</th><th class="num">عدد المرات</th><th class="num">المصروف</th></tr></thead>
+        <thead><tr><th>#</th><th>البند</th><th class="num">المرات</th><th class="num">المصروف</th></tr></thead>
         <tbody>
-          @forelse($topBandNamesBySpend as $row)
-            <tr><td>{{ $row->name }}</td><td class="num">{{ $row->count }}</td><td class="num">{{ \App\Support\Money::format($row->spent) }}</td></tr>
+          @forelse($topBandNamesBySpend as $i => $row)
+            <tr>
+              <td><span style="width:22px;height:22px;border-radius:50%;background:{{ ['#ea580c','#f97316','#fb923c','#fdba74','#fed7aa'][$i % 5] }};color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700">{{ $i+1 }}</span></td>
+              <td>{{ $row->name }}</td><td class="num">{{ $row->count }}</td><td class="num" style="font-weight:700">{{ \App\Support\Money::format($row->spent) }}</td>
+            </tr>
           @empty
-            <tr><td colspan="3" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
+            <tr><td colspan="4" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
           @endforelse
         </tbody>
       </table>
     </div>
   </div>
   <div class="table-card">
-    <div class="table-top"><h4>أكتر بند كسبت منه (مجمّع بالاسم)</h4></div>
+    <div class="table-top"><h4>أكتر بند كسبت منه (مجمّع)</h4></div>
     <div class="table-scroll">
       <table>
-        <thead><tr><th>البند</th><th class="num">عدد المرات</th><th class="num">الربح</th></tr></thead>
+        <thead><tr><th>#</th><th>البند</th><th class="num">المرات</th><th class="num">الربح</th></tr></thead>
         <tbody>
-          @forelse($topBandNamesByProfit as $row)
-            <tr><td>{{ $row->name }}</td><td class="num">{{ $row->count }}</td><td class="num" style="color:{{ $row->profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($row->profit) }}</td></tr>
+          @forelse($topBandNamesByProfit as $i => $row)
+            <tr>
+              <td><span style="width:22px;height:22px;border-radius:50%;background:{{ ['#0f8a5f','#16b87e','#4ade80','#86efac','#bbf7d0'][$i % 5] }};color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700">{{ $i+1 }}</span></td>
+              <td>{{ $row->name }}</td><td class="num">{{ $row->count }}</td><td class="num" style="font-weight:700;color:{{ $row->profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($row->profit) }}</td>
+            </tr>
           @empty
-            <tr><td colspan="3" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
+            <tr><td colspan="4" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
           @endforelse
         </tbody>
       </table>
@@ -146,7 +223,7 @@
   </div>
 </div>
 
-{{-- Top individual bands (not grouped) --}}
+{{-- Top individual bands --}}
 <div class="grid cols-2" style="margin-bottom:24px">
   <div class="table-card">
     <div class="table-top"><h4>أعلى بند فردي صرفًا</h4></div>
@@ -185,49 +262,189 @@
   <div class="table-top"><h4>أكتر فني اتعاملت معاه</h4></div>
   <div class="table-scroll">
     <table>
-      <thead><tr><th>الفني</th><th class="num">عدد مرات العمل</th><th class="num">إجمالي المدفوع</th></tr></thead>
+      <thead><tr><th>#</th><th>الفني</th><th class="num">عدد مرات العمل</th><th class="num">إجمالي المدفوع</th></tr></thead>
       <tbody>
-        @forelse($technicians as $t)
-          <tr><td><strong>{{ $t->name }}</strong></td><td class="num">{{ $t->count }}</td><td class="num">{{ \App\Support\Money::format($t->total) }}</td></tr>
+        @forelse($technicians as $i => $t)
+          <tr>
+            <td><span style="width:22px;height:22px;border-radius:50%;background:{{ ['#b8842a','#d4a13d','#e8c06a','#f0d08e','#f8e8c0'][$i % 5] }};color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700">{{ $i+1 }}</span></td>
+            <td><strong>{{ $t->name }}</strong></td><td class="num">{{ $t->count }}</td><td class="num">{{ \App\Support\Money::format($t->total) }}</td>
+          </tr>
         @empty
-          <tr><td colspan="3" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
+          <tr><td colspan="4" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
         @endforelse
       </tbody>
     </table>
   </div>
 </div>
 
+
+
 @php
   $months = array_keys($cashFlow);
-  $inData = array_map(fn($m) => $cashFlow[$m]['in'] ?? 0, $months);
+  $inData  = array_map(fn($m) => $cashFlow[$m]['in']  ?? 0, $months);
   $outData = array_map(fn($m) => $cashFlow[$m]['out'] ?? 0, $months);
   $topProjectLabels = $topProjectsByProfit->pluck('name');
   $topProjectValues = $topProjectsByProfit->pluck('profit');
+  $topBandLabels    = $topBandNamesBySpend->take(6)->pluck('name');
+  $topBandValues    = $topBandNamesBySpend->take(6)->pluck('spent');
+  $purchasedLabels  = $topPurchasedMaterials->pluck('item')->values()->toArray();
+  $purchasedValues  = $topPurchasedMaterials->pluck('total_cost')->values()->toArray();
+  $returnedLabels   = $topReturnedMaterials->pluck('item')->values()->toArray();
+  $returnedValues   = $topReturnedMaterials->pluck('returned_value')->values()->toArray();
 @endphp
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <script>
-new Chart(document.getElementById('cashFlowChart'), {
-  type: 'bar',
-  data: {
-    labels: @json($months),
-    datasets: [
-      { label: 'وارد', data: @json($inData), backgroundColor: '#0f8a5f' },
-      { label: 'صادر', data: @json($outData), backgroundColor: '#c0392b' },
-    ]
-  },
-  options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+Chart.defaults.font.family = "'IBM Plex Sans Arabic', system-ui, sans-serif";
+Chart.defaults.font.size   = 11;
+const fmt = v => Number(v).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+
+// ── 1. Cash flow — Area chart (gradient fill) ─────────────────────────
+(function(){
+  const ctx = document.getElementById('cashFlowChart').getContext('2d');
+  const gIn  = ctx.createLinearGradient(0,0,0,160);
+  gIn.addColorStop(0,'rgba(15,138,95,.35)');
+  gIn.addColorStop(1,'rgba(15,138,95,.02)');
+  const gOut = ctx.createLinearGradient(0,0,0,160);
+  gOut.addColorStop(0,'rgba(192,57,43,.30)');
+  gOut.addColorStop(1,'rgba(192,57,43,.02)');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: @json($months),
+      datasets: [
+        { label:'وارد',  data:@json($inData),  borderColor:'#0f8a5f', backgroundColor:gIn,  fill:true, tension:.4, pointRadius:3, pointBackgroundColor:'#0f8a5f', borderWidth:2 },
+        { label:'صادر',  data:@json($outData), borderColor:'#c0392b', backgroundColor:gOut, fill:true, tension:.4, pointRadius:3, pointBackgroundColor:'#c0392b', borderWidth:2 },
+      ]
+    },
+    options:{
+      responsive:true,
+      plugins:{ legend:{ position:'bottom', labels:{ usePointStyle:true, boxWidth:8, padding:10, font:{size:10} } }, tooltip:{ callbacks:{ label: ctx => ' '+fmt(ctx.raw)+' ج.م' } } },
+      scales:{
+        x:{ grid:{display:false}, ticks:{font:{size:9}} },
+        y:{ grid:{color:'rgba(0,0,0,.05)'}, ticks:{callback:v=>fmt(v), font:{size:9}} }
+      }
+    }
+  });
+})();
+
+// ── 2. Doughnut — spend by band ───────────────────────────────────────
+const bandLabels = @json($topBandLabels);
+const bandVals   = @json($topBandValues);
+const donutColors = ['#4f46e5','#0891b2','#0f8a5f','#b8842a','#c0392b','#7c3aed'];
+new Chart(document.getElementById('spendDonut'), {
+  type: 'doughnut',
+  data: { labels:bandLabels, datasets:[{ data:bandVals, backgroundColor:donutColors, borderWidth:2, borderColor:'#fff', hoverOffset:6 }] },
+  options:{
+    cutout:'68%',
+    plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>' '+ctx.label+': '+fmt(ctx.raw)+' ج.م' } } }
+  }
+});
+const legend = document.getElementById('donut-legend');
+bandLabels.forEach((lbl,i)=>{
+  const d=document.createElement('div');
+  d.style.cssText='display:flex;align-items:center;gap:6px;font-size:10px';
+  d.innerHTML=`<span style="width:8px;height:8px;border-radius:2px;background:${donutColors[i%donutColors.length]};flex-shrink:0"></span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lbl}</span><strong>${fmt(bandVals[i])}</strong>`;
+  legend.appendChild(d);
 });
 
+// ── 3. Polar Area — top bands ─────────────────────────────────────────
+new Chart(document.getElementById('topBandsChart'), {
+  type: 'polarArea',
+  data: {
+    labels: @json($topBandLabels),
+    datasets:[{ data:@json($topBandValues),
+      backgroundColor:['rgba(234,88,12,.75)','rgba(249,115,22,.7)','rgba(251,146,60,.65)','rgba(253,186,116,.6)','rgba(254,215,170,.55)','rgba(255,237,213,.5)'],
+      borderWidth:0
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{ legend:{ position:'bottom', labels:{ font:{size:9}, padding:6, boxWidth:8 } }, tooltip:{ callbacks:{ label: ctx=>' '+ctx.label+': '+fmt(ctx.raw)+' ج.م' } } },
+    scales:{ r:{ ticks:{display:false}, grid:{color:'rgba(0,0,0,.06)'} } }
+  }
+});
+
+// ── 4. Horizontal bar — top projects profit ───────────────────────────
 new Chart(document.getElementById('topProjectsChart'), {
   type: 'bar',
   data: {
     labels: @json($topProjectLabels),
-    datasets: [{ label: 'الربح', data: @json($topProjectValues), backgroundColor: '#1f5fd6' }]
+    datasets:[{
+      label:'ربح',
+      data: @json($topProjectValues),
+      backgroundColor:['rgba(15,138,95,.85)','rgba(22,184,126,.8)','rgba(74,222,128,.75)','rgba(134,239,172,.7)','rgba(187,247,208,.65)'],
+      borderRadius:5, borderSkipped:false,
+    }]
   },
-  options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+  options:{
+    indexAxis:'y', responsive:true,
+    plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>' '+fmt(ctx.raw)+' ج.م' } } },
+    scales:{
+      x:{ grid:{color:'rgba(0,0,0,.05)'}, ticks:{callback:v=>fmt(v), font:{size:9}} },
+      y:{ grid:{display:false}, ticks:{font:{size:9}} }
+    }
+  }
 });
+
+// ── 5. Top purchased — horizontal bar with gradient colors ───────────
+if (document.getElementById('topPurchasedChart')) {
+  new Chart(document.getElementById('topPurchasedChart'), {
+    type: 'bar',
+    data: {
+      labels: @json($purchasedLabels),
+      datasets:[{
+        label:'التكلفة',
+        data: @json($purchasedValues),
+        backgroundColor: (() => {
+          const vals = @json($purchasedValues);
+          if(!vals || vals.length === 0) return [];
+          const max = Math.max(...vals);
+          return vals.map(v => `rgba(79,70,229,${0.35 + 0.65*(max > 0 ? v/max : 1)})`);
+        })(),
+        borderRadius:5, borderSkipped:false,
+      }]
+    },
+    options:{
+      indexAxis:'y', responsive:true,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>' '+fmt(ctx.raw)+' ج.م' } } },
+      scales:{
+        x:{ grid:{color:'rgba(0,0,0,.05)'}, ticks:{callback:v=>fmt(v), font:{size:9}} },
+        y:{ grid:{display:false}, ticks:{font:{size:9}} }
+      }
+    }
+  });
+}
+
+// ── 6. Top returned — horizontal bar red gradient ────────────────────
+if (document.getElementById('topReturnedChart')) {
+  new Chart(document.getElementById('topReturnedChart'), {
+    type: 'bar',
+    data: {
+      labels: @json($returnedLabels),
+      datasets:[{
+        label:'قيمة المرتجع',
+        data: @json($returnedValues),
+        backgroundColor: (() => {
+          const vals = @json($returnedValues);
+          const max  = Math.max(...vals, 1);
+          return vals.map(v => `rgba(192,57,43,${0.35 + 0.65*(v/max)})`);
+        })(),
+        borderRadius:5, borderSkipped:false,
+      }]
+    },
+    options:{
+      indexAxis:'y', responsive:true,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>' '+fmt(ctx.raw)+' ج.م' } } },
+      scales:{
+        x:{ grid:{color:'rgba(0,0,0,.05)'}, ticks:{callback:v=>fmt(v), font:{size:9}} },
+        y:{ grid:{display:false}, ticks:{font:{size:9}} }
+      }
+    }
+  });
+}
 </script>
+
 @endpush
 @endsection

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('css/sy2.css') }}">
+<link rel="stylesheet" href="{{ asset('css/sy2.css?v=1.2') }}">
 {{-- flatpickr — يخلّي كل حقول التاريخ تتعرض يوم/شهر/سنة (dd/mm/yyyy) وتتبعت Y-m-d --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
 @stack('styles')
@@ -101,7 +101,7 @@
 </defs></svg>
 
 <aside class="sidebar">
-  <div class="brand">
+  <div class="brand" style="position:relative">
     <div class="logo">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>
     </div>
@@ -110,127 +110,122 @@
       <p>نظام إدارة المشاريع</p>
     </div>
   </div>
+  <button type="button" id="sidebar-toggle" style="position:absolute; inset-inline-end:-14px; top:39px; transform:translateY(-50%); width:28px; height:28px; background:var(--accent); color:#fff; border-radius:50%; border:3px solid var(--bg); display:grid; place-items:center; cursor:pointer; z-index:50; padding:0; transition: transform 0.2s;">
+    <svg class="toggle-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;transition:transform 0.2s"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
 
   <nav class="nav">
     {{-- Each nav-item gets the "active" class when the current route matches --}}
     {{-- Order follows the real workflow: dashboard → add people (clients/suppliers/workers) → projects & quotes → money → reports/analytics → follow-up → system --}}
 
-    <a class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+    <a class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}" style="--ic:#3b82f6">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-grid"/></svg>
-      لوحة التحكم
+      <span>لوحة التحكم</span>
     </a>
 
     <div class="nav-label">العملاء والموردون</div>
-    <a class="nav-item {{ request()->routeIs('clients.*') ? 'active' : '' }}" href="{{ route('clients.index') }}">
+    <a class="nav-item {{ request()->routeIs('clients.*') ? 'active' : '' }}" href="{{ route('clients.index') }}" style="--ic:#06b6d4">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg>
-      العملاء
+      <span>العملاء</span>
     </a>
-    <a class="nav-item {{ request()->routeIs('suppliers.*') && !request()->routeIs('suppliers.compare') ? 'active' : '' }}" href="{{ route('suppliers.index') }}">
+    <a class="nav-item {{ request()->routeIs('suppliers.*') && !request()->routeIs('suppliers.compare') ? 'active' : '' }}" href="{{ route('suppliers.index') }}" style="--ic:#f97316">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg>
-      الموردون
+      <span>الموردون</span>
     </a>
-    {{-- <a class="nav-item {{ request()->routeIs('labor.*') ? 'active' : '' }}" href="{{ route('labor.index') }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg>
-      الفنيين والعمال
-    </a> --}}
-    <a class="nav-item {{ request()->routeIs('craftsmen.*') ? 'active' : '' }}" href="{{ route('craftsmen.index') }}">
+    <a class="nav-item {{ request()->routeIs('craftsmen.*') ? 'active' : '' }}" href="{{ route('craftsmen.index') }}" style="--ic:#ca8a04">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-tool"/></svg>
-      الصنايعية ومستحقاتهم
+      <span>الصنايعية ومستحقاتهم</span>
     </a>
 
     <div class="nav-label">المشاريع</div>
-    <a class="nav-item {{ request()->routeIs('projects.*') ? 'active' : '' }}" href="{{ route('projects.index') }}">
+    <a class="nav-item {{ request()->routeIs('projects.*') ? 'active' : '' }}" href="{{ route('projects.index') }}" style="--ic:#6366f1">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>
-      الشقق والمشاريع
+      <span>الشقق والمشاريع</span>
     </a>
-    <a class="nav-item {{ request()->routeIs('quotes.index') ? 'active' : '' }}" href="{{ route('quotes.index') }}">
+    <a class="nav-item {{ request()->routeIs('quotes.index') ? 'active' : '' }}" href="{{ route('quotes.index') }}" style="--ic:#8b5cf6">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg>
-      عروض الأسعار
+      <span>عروض الأسعار</span>
     </a>
-    <a class="nav-item {{ request()->routeIs('quotes.approved') ? 'active' : '' }}" href="{{ route('quotes.approved') }}">
+    <a class="nav-item {{ request()->routeIs('quotes.approved') ? 'active' : '' }}" href="{{ route('quotes.approved') }}" style="--ic:#10b981">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check-circle"/></svg>
-      العروض المعتمدة
+      <span>العروض المعتمدة</span>
     </a>
 
     <div class="nav-label">الحسابات</div>
-    <a class="nav-item {{ request()->routeIs('transactions.*') ? 'active' : '' }}" href="{{ route('transactions.index') }}">
+    <a class="nav-item {{ request()->routeIs('transactions.*') ? 'active' : '' }}" href="{{ route('transactions.index') }}" style="--ic:#64748b">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>
-      سجل الحركات
+      <span>سجل الحركات</span>
     </a>
     @if(auth()->user()->isAdmin())
-    <a class="nav-item {{ request()->routeIs('wallet.*') ? 'active' : '' }}" href="{{ route('wallet.index') }}">
+    <a class="nav-item {{ request()->routeIs('wallet.*') ? 'active' : '' }}" href="{{ route('wallet.index') }}" style="--ic:#d4a13d">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>
-      المحفظة
+      <span>المحفظة</span>
     </a>
     @endif
-    <a class="nav-item {{ request()->routeIs('installments.*') ? 'active' : '' }}" href="{{ route('installments.index') }}">
+    <a class="nav-item {{ request()->routeIs('installments.*') ? 'active' : '' }}" href="{{ route('installments.index') }}" style="--ic:#14b8a6">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-calendar"/></svg>
-      المدفوعات والأقساط
+      <span>المدفوعات والأقساط</span>
     </a>
-    <a class="nav-item {{ request()->routeIs('receivables.*') ? 'active' : '' }}" href="{{ route('receivables.index') }}">
+    <a class="nav-item {{ request()->routeIs('receivables.*') ? 'active' : '' }}" href="{{ route('receivables.index') }}" style="--ic:#22b583">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-coins"/></svg>
-      المستحقات
+      <span>المستحقات</span>
     </a>
-    <a class="nav-item {{ request()->routeIs('debts.*') ? 'active' : '' }}" href="{{ route('debts.index') }}">
+    <a class="nav-item {{ request()->routeIs('debts.*') ? 'active' : '' }}" href="{{ route('debts.index') }}" style="--ic:#ef5a4a">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-credit-card"/></svg>
-      الديون
+      <span>الديون</span>
     </a>
-    <a class="nav-item {{ request()->routeIs('materials.*') ? 'active' : '' }}" href="{{ route('materials.index') }}">
+    <a class="nav-item {{ request()->routeIs('materials.*') ? 'active' : '' }}" href="{{ route('materials.index') }}" style="--ic:#f97316">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg>
-      الخامات والمرتجعات
+      <span>الخامات والمرتجعات</span>
     </a>
 
     <div class="nav-label">التقارير والتحليلات</div>
-    <a class="nav-item {{ request()->routeIs('reports.dashboard') ? 'active' : '' }}" href="{{ route('reports.dashboard') }}">
+    <a class="nav-item {{ request()->routeIs('reports.dashboard') ? 'active' : '' }}" href="{{ route('reports.dashboard') }}" style="--ic:#8b5cf6">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bar-chart"/></svg>
-      التقارير
+      <span>التقارير</span>
     </a>
-    <a class="nav-item {{ request()->routeIs('reports.profitability') ? 'active' : '' }}" href="{{ route('reports.profitability') }}">
+    <a class="nav-item {{ request()->routeIs('reports.profitability') ? 'active' : '' }}" href="{{ route('reports.profitability') }}" style="--ic:#10b981">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-percent"/></svg>
-      ربحية المشاريع
+      <span>ربحية المشاريع</span>
     </a>
-    <a class="nav-item {{ request()->routeIs('reports.statement*') ? 'active' : '' }}" href="{{ route('reports.statement.index') }}">
+    <a class="nav-item {{ request()->routeIs('reports.statement*') ? 'active' : '' }}" href="{{ route('reports.statement.index') }}" style="--ic:#06b6d4">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
-      كشف حساب العميل
+      <span>كشف حساب العميل</span>
     </a>
     @if(auth()->user()->canSeeFinancials())
-    <a class="nav-item {{ request()->routeIs('reports.estimation.*') ? 'active' : '' }}" href="{{ route('reports.estimation.index') }}">
+    <a class="nav-item {{ request()->routeIs('reports.estimation.*') ? 'active' : '' }}" href="{{ route('reports.estimation.index') }}" style="--ic:#f59e0b">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-clipboard"/></svg>
-      تقدير تكلفة مشروع
+      <span>تقدير تكلفة مشروع</span>
     </a>
     @endif
-    <a class="nav-item {{ request()->routeIs('analytics.index') ? 'active' : '' }}" href="{{ route('analytics.index') }}">
+    {{-- <a class="nav-item {{ request()->routeIs('analytics.index') ? 'active' : '' }}" href="{{ route('analytics.index') }}" style="--ic:#3b82f6">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pie-chart"/></svg>
-      لوحة التحليلات
-    </a>
-    {{-- <a class="nav-item {{ request()->routeIs('analytics.technicians') ? 'active' : '' }}" href="{{ route('analytics.technicians') }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg>
-      تقرير الفنيين
+      <span>لوحة التحليلات</span>
     </a> --}}
-    <a class="nav-item {{ request()->routeIs('price-history.*') ? 'active' : '' }}" href="{{ route('price-history.index') }}">
+    <a class="nav-item {{ request()->routeIs('price-history.*') ? 'active' : '' }}" href="{{ route('price-history.index') }}" style="--ic:#0ea5e9">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg>
-      متابعة الأسعار
+      <span>متابعة الأسعار</span>
     </a>
-    <a class="nav-item {{ request()->routeIs('suppliers.compare') ? 'active' : '' }}" href="{{ route('suppliers.compare') }}">
+    <a class="nav-item {{ request()->routeIs('suppliers.compare') ? 'active' : '' }}" href="{{ route('suppliers.compare') }}" style="--ic:#8b5cf6">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-scale"/></svg>
-      مقارنة الموردين
+      <span>مقارنة الموردين</span>
     </a>
 
     <div class="nav-label">المتابعة</div>
-    <a class="nav-item {{ request()->routeIs('alerts.*') ? 'active' : '' }}" href="{{ route('alerts.index') }}">
+    <a class="nav-item {{ request()->routeIs('alerts.*') ? 'active' : '' }}" href="{{ route('alerts.index') }}" style="--ic:#ef4444">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bell"/></svg>
-      المتابعة والتنبيهات
+      <span>المتابعة والتنبيهات</span>
     </a>
-    <a class="nav-item {{ request()->routeIs('warranties.*') ? 'active' : '' }}" href="{{ route('warranties.index') }}">
+    {{-- <a class="nav-item {{ request()->routeIs('warranties.*') ? 'active' : '' }}" href="{{ route('warranties.index') }}" style="--ic:#10b981">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-shield"/></svg>
-      متابعة الضمانات
-    </a>
+      <span>متابعة الضمانات</span>
+    </a> --}}
 
     @if(auth()->user()->isAdmin())
       <div class="nav-label">النظام</div>
-      <a class="nav-item {{ request()->routeIs('settings.edit') ? 'active' : '' }}" href="{{ route('settings.edit') }}">
+      <a class="nav-item {{ request()->routeIs('settings.edit') ? 'active' : '' }}" href="{{ route('settings.edit') }}" style="--ic:#94a3b8">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-settings"/></svg>
-        الإعدادات
+        <span>الإعدادات</span>
       </a>
     @endif
   </nav>
@@ -418,6 +413,28 @@
   window.addEventListener('pageshow', function () { hide(); });
 })();
 </script>
+
+<script>
+  // Sidebar toggle logic
+  const toggleBtn = document.getElementById('sidebar-toggle');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('sidebar-collapsed');
+      localStorage.setItem('sy2-sidebar', document.body.classList.contains('sidebar-collapsed') ? '1' : '0');
+    });
+  }
+  // Restore state on load (add this script directly to prevent FOUC, but doing it here is fine since body is already parsing)
+  if (localStorage.getItem('sy2-sidebar') === '1') {
+    document.body.classList.add('sidebar-collapsed');
+  }
+</script>
+
+<style>
+  body.sidebar-collapsed #sidebar-toggle .toggle-ic {
+    transform: rotate(180deg);
+  }
+</style>
+
 @stack('scripts')
 </body>
 </html>

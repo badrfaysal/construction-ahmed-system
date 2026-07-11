@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\ProjectBand;
+use App\Models\Material;
+use App\Models\MaterialReturn;
 use App\Models\Transaction;
 use App\Support\ItemNameMatcher;
 use Illuminate\Http\Request;
@@ -165,13 +167,58 @@ class ReportController extends Controller
 
         $allProjects = Project::orderBy('name')->get(['id', 'name']);
 
+        // ---- Top purchased materials (grouped by item name) ----
+        $matQuery = Material::where('category', '!=', 'misc')
+            ->with('returns');
+        if ($projectId) {
+            $matQuery->where('project_id', $projectId);
+        }
+        if ($from) {
+            $matQuery->whereDate('date', '>=', $from);
+        }
+        if ($to) {
+            $matQuery->whereDate('date', '<=', $to);
+        }
+        $allMaterials = $matQuery->get();
+
+        $topPurchasedMaterials = $allMaterials
+            ->groupBy(fn ($m) => mb_strtolower(trim($m->item)))
+            ->map(fn ($group) => (object) [
+                'item'     => $group->first()->item,
+                'unit'     => $group->first()->unit,
+                'total_qty'  => $group->sum('qty'),
+                'net_qty'    => $group->sum(fn ($m) => $m->netQty()),
+                'total_cost' => $group->sum(fn ($m) => $m->netCost()),
+                'count'      => $group->count(),
+            ])
+            ->sortByDesc('total_cost')
+            ->take(10)
+            ->values();
+
+        // ---- Top returned materials ----
+        $topReturnedMaterials = $allMaterials
+            ->filter(fn ($m) => $m->returns->isNotEmpty())
+            ->groupBy(fn ($m) => mb_strtolower(trim($m->item)))
+            ->map(fn ($group) => (object) [
+                'item'          => $group->first()->item,
+                'unit'          => $group->first()->unit,
+                'returned_qty'  => $group->sum(fn ($m) => $m->returnedQty()),
+                'returned_value'=> $group->sum(fn ($m) => $m->returnedQty() * (float) $m->unit_price),
+                'return_count'  => $group->sum(fn ($m) => $m->returns->count()),
+            ])
+            ->filter(fn ($r) => $r->returned_qty > 0)
+            ->sortByDesc('returned_value')
+            ->take(10)
+            ->values();
+
         return view('reports.dashboard', compact(
             'from', 'to', 'projectId', 'allProjects',
             'totalProfit', 'totalSpent', 'totalCollected', 'cashFlow',
             'topProjectsBySpend', 'topProjectsByProfit',
             'topBandInstancesBySpend', 'topBandInstancesByProfit',
             'topBandNamesBySpend', 'topBandNamesByProfit',
-            'technicians'
+            'technicians',
+            'topPurchasedMaterials', 'topReturnedMaterials'
         ));
     }
 
