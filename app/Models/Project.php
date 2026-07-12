@@ -216,16 +216,22 @@ class Project extends Model
         return round($this->bands->where('status', 'done')->count() / $total * 100);
     }
 
-    // Total spent on materials + labor for non-pending bands
+    // Total spent on materials + labor
     public function totalSpent(): float
     {
         return (float) $this->cached_spent;
     }
 
+    // لازم ما نفلترش المصنعية بحالة البند هنا — المواد فوق بتتحسب لكل البنود
+    // مهما كانت حالتها، وactualClientTotal() (الفاتورة/الإيراد) كمان بتحسب
+    // سعر بيع المصنعية لأي بند مهما كانت حالته. فلترة التكلفة بس (زي ما كان
+    // قبل كده: whereIn('status', ['active','done'])) كانت بتسيب بند "لم يبدأ"
+    // بإيراده محسوب كامل من غير ما تتخصم تكلفته — ربح وهمي منتفخ لحد ما تحوّل
+    // حالة البند. التكلفة والإيراد لازم يتحسبوا بنفس التوقيت لنفس البند.
     public function computeTotalSpent(): float
     {
         $materialCost = $this->materials->sum(fn ($m) => $m->netCost());
-        $laborCost    = $this->bands->whereIn('status', ['active', 'done'])->sum('labor_amount');
+        $laborCost    = $this->bands->sum('labor_amount');
         return $materialCost + $laborCost;
     }
 
@@ -244,6 +250,15 @@ class Project extends Model
         $bandsTotal = (float) $this->bands->sum(fn ($band) => $band->percentageProfit());
         $generalMaterials = (float) $this->generalMaterials()->sum(fn ($m) => $m->percentageProfit());
         return $bandsTotal + $generalMaterials;
+    }
+
+    // الربح الكلي للمشروع = الفاتورة الفعلية − التكلفة الفعلية (= tradeProfit()
+    // + percentageProfit() بالظبط). استخدم الدالة دي بدل ما تجمع profit() على
+    // bands()->sum() في أي مكان — الجمع على البنود لوحدها بيسيب نثريات/خامات
+    // عامة (materials من غير بند) برا الحساب تمامًا، من غير ما يظهر أي تحذير.
+    public function profit(): float
+    {
+        return $this->actualClientTotal() - $this->totalSpent();
     }
 
     // Updates cached values and saves

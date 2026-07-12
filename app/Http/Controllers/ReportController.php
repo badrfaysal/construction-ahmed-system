@@ -99,7 +99,9 @@ class ReportController extends Controller
         $projects = $projectsQuery->get();
 
         // ---- Summary KPIs ----
-        $totalProfit    = $projects->sum(fn ($p) => $p->bands->sum(fn ($b) => $b->profit()));
+        // $p->profit() (مش bands->sum) عشان يشمل نثريات/خامات عامة (band_id
+        // null) — الجمع على البنود لوحدها كان بيسيبها برا الحساب تمامًا
+        $totalProfit    = $projects->sum(fn ($p) => $p->profit());
         $totalSpent     = $projects->sum(fn ($p) => $p->totalSpent());
         $totalCollected = $projects->sum(fn ($p) => $p->totalCollected());
 
@@ -130,7 +132,7 @@ class ReportController extends Controller
         $projectRanking = $projects->map(fn ($p) => (object) [
             'name'   => $p->name,
             'spent'  => $p->totalSpent(),
-            'profit' => $p->bands->sum(fn ($b) => $b->profit()),
+            'profit' => $p->profit(),
         ]);
         $topProjectsBySpend  = $projectRanking->sortByDesc('spent')->take(5)->values();
         $topProjectsByProfit = $projectRanking->sortByDesc('profit')->take(5)->values();
@@ -308,13 +310,19 @@ class ReportController extends Controller
             'installments',
         ]);
 
-        $totalCost      = $project->bands->sum(fn ($b) => $b->totalCost());
+        // $project->totalSpent()/profit() (مش bands->sum) عشان يشملوا
+        // نثريات/خامات عامة على المشروع (band_id null) — لو جمعنا على البنود
+        // بس، أي خامة مسجلة من غير بند بتختفي من التكلفة والربح خالص هنا،
+        // مع إن $totalBilled أصلاً بيحسبها (actualClientTotal يشملها)
+        $totalCost      = $project->totalSpent();
         $totalBilled    = $project->actualClientTotal();
         $totalCollected = $project->totalCollected();
-        $totalProfit    = $project->bands->sum(fn ($b) => $b->profit());
+        $totalProfit    = $project->profit();
+
+        $generalMaterials = $project->generalMaterials();
 
         return view('reports.company-statement', compact(
-            'project', 'totalCost', 'totalBilled', 'totalCollected', 'totalProfit'
+            'project', 'totalCost', 'totalBilled', 'totalCollected', 'totalProfit', 'generalMaterials'
         ));
     }
 

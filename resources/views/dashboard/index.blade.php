@@ -87,9 +87,8 @@
           @php
             $prog   = $p->progressPct();
             $paid   = $p->totalCollected();
-            $total  = $p->initialContractValue();
             $actual = $p->actualClientTotal();
-            $due    = $total - $paid;
+            $due    = max($actual - $paid, 0);
             $activeBand = $p->bands->where('status', 'active')->first();
             $paidWorkers = $p->bands->flatMap(fn($b) => $b->workers)->sum(fn($w) => $w->paidTotal());
           @endphp
@@ -129,16 +128,15 @@
               @endif
               <div class="pc-fin">
                 <div>
-                  <div class="l">قيمة التعاقد</div>
-                  <div class="v">{{ \App\Support\Money::format($total) }}</div>
-                  @include('partials._actual-vs-initial', ['initial' => $total, 'actual' => $actual])
+                  <div class="l">قيمة المشروع</div>
+                  <div class="v">{{ \App\Support\Money::format($actual) }}</div>
                 </div>
                 <div>
-                  <div class="l">محصّل</div>
+                  <div class="l">المدفوع</div>
                   <div class="v" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }}</div>
                 </div>
                 <div>
-                  <div class="l">متبقي</div>
+                  <div class="l">المتبقي</div>
                   <div class="v" style="color:var(--warn)">{{ \App\Support\Money::format($due) }}</div>
                 </div>
               </div>

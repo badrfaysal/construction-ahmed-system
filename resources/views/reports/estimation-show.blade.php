@@ -32,7 +32,7 @@
     </div>
     <div class="est-tool-input">
       <label>مساحة الشقة الجديدة (م²)</label>
-      <input type="number" id="new-area" min="0" step="1" value="{{ rtrim(rtrim($area, '0'), '.') }}" oninput="recalcEstimate()">
+      <input type="number" id="new-area" min="0" step="1" value="" autocomplete="off" oninput="recalcEstimate()">
     </div>
     <div class="est-tool-result">
       <div class="l">التكلفة المتوقعة</div>

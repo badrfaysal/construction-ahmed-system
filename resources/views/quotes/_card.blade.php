@@ -1,4 +1,4 @@
-﻿{{-- Single quote card — shared by quotes/index.blade.php and quotes/approved.blade.php --}}
+{{-- Single quote card — shared by quotes/index.blade.php and quotes/approved.blade.php --}}
 <div class="qcard {{ $q->status === 'approved' ? 'approved' : '' }}">
   <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
     <span class="tag {{ $q->statusTag() }}"><span class="dot"></span>{{ $q->statusAr() }}</span>
@@ -78,7 +78,7 @@
     @endif
     <a href="{{ route('quotes.show', $q) }}" class="btn ghost sm">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-print"/></svg>
-      طباعة العرض
+      طباعه وعرض
     </a>
   </div>
 </div>

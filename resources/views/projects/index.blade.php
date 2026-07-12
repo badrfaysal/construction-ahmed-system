@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'الشقق والمشاريع')
 @section('page-title', 'الشقق والمشاريع')
@@ -76,7 +76,7 @@
           @endif
           <div class="pc-fin">
             <div>
-              <div class="l">التعاقد</div>
+              <div class="l">قيمة المشروع</div>
               <div class="v">{{ \App\Support\Money::format($total) }}</div>
               @include('partials._actual-vs-initial', ['initial' => $total, 'actual' => $actual])
             </div>
