@@ -210,12 +210,12 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-scale"/></svg>
       <span>مقارنة الموردين</span>
     </a>
-
+{{-- 
     <div class="nav-label">المتابعة</div>
     <a class="nav-item {{ request()->routeIs('alerts.*') ? 'active' : '' }}" href="{{ route('alerts.index') }}" style="--ic:#ef4444">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bell"/></svg>
       <span>المتابعة والتنبيهات</span>
-    </a>
+    </a> --}}
     {{-- <a class="nav-item {{ request()->routeIs('warranties.*') ? 'active' : '' }}" href="{{ route('warranties.index') }}" style="--ic:#10b981">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-shield"/></svg>
       <span>متابعة الضمانات</span>
@@ -279,7 +279,7 @@
     <h2>@yield('page-title', 'لوحة التحكم')</h2>
     <form method="GET" action="{{ route('search.index') }}" class="topbar-search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-search"/></svg>
-      <input type="search" name="q" placeholder="ابحث عن صنف، مشروع، أو مورد..." value="{{ request('q') }}">
+      <input type="search" name="q" placeholder="ابحث عن مشروع، عميل، مورد، صنف، مرتجع، أو دين..." value="{{ request('q') }}">
     </form>
     <div class="right">
       @if(auth()->user()->isAdmin())
