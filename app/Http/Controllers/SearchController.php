@@ -23,17 +23,26 @@ class SearchController extends Controller
         $items = collect();
 
         if ($q !== '') {
+            // Fold Arabic letter variants (أإآ→ا, ى→ي, ة→ه) on BOTH the search
+            // term and the columns so e.g. "احمد" finds "أحمد" and "ليلى" finds
+            // "ليلي". sqlNormalizeLetters() rewrites the column in SQL so LIKE
+            // still runs in the DB instead of loading every row.
+            $needle    = ItemNameMatcher::normalizeLetters($q);
+            $like      = "%{$needle}%";
+            $nameExpr  = ItemNameMatcher::sqlNormalizeLetters('name');
+            $itemExpr  = ItemNameMatcher::sqlNormalizeLetters('item');
+
             $projects = Project::with('client')
-                ->where('name', 'like', "%{$q}%")
-                ->orWhereHas('client', fn ($c) => $c->where('name', 'like', "%{$q}%"))
+                ->whereRaw("$nameExpr LIKE ?", [$like])
+                ->orWhereHas('client', fn ($c) => $c->whereRaw("$nameExpr LIKE ?", [$like]))
                 ->orderBy('name')
                 ->get();
 
-            $suppliers = Supplier::where('name', 'like', "%{$q}%")
+            $suppliers = Supplier::whereRaw("$nameExpr LIKE ?", [$like])
                 ->orderBy('name')
                 ->get();
 
-            $materials = Material::where('item', 'like', "%{$q}%")->get();
+            $materials = Material::whereRaw("$itemExpr LIKE ?", [$like])->get();
             if ($materials->isEmpty()) {
                 // Fall back to normalized matching for misspelled/variant names
                 $materials = Material::all()->filter(fn ($m) => ItemNameMatcher::contains($m->item, $q));

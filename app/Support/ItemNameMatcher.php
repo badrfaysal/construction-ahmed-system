@@ -80,6 +80,37 @@ class ItemNameMatcher
         return $prev[$lb];
     }
 
+    // Arabic letter groups the team treats as identical when searching:
+    // أ/إ/آ = ا (any alef), ى = ي (ya with/without dots), ة = ه (ta-marbuta).
+    // Kept small and explicit so the SQL side (below) mirrors it exactly.
+    private const LETTER_MAP = [
+        'أ' => 'ا', 'إ' => 'ا', 'آ' => 'ا',
+        'ى' => 'ي',
+        'ة' => 'ه',
+    ];
+
+    // Folds only those letter variants in a search term (PHP side). Unlike
+    // normalize() it does NOT strip "ال"/diacritics or split words, so it can
+    // be paired symmetrically with a plain SQL LIKE for efficient searching.
+    public static function normalizeLetters(string $s): string
+    {
+        return strtr($s, self::LETTER_MAP);
+    }
+
+    // The column-side twin of normalizeLetters(): an SQL expression that folds
+    // the same letter variants directly in the query, so a LIKE ignores those
+    // spelling differences without pulling every row into PHP. $column must be
+    // a trusted identifier (never user input). Works on MySQL and SQLite.
+    public static function sqlNormalizeLetters(string $column): string
+    {
+        $expr = $column;
+        foreach (self::LETTER_MAP as $from => $to) {
+            $expr = "REPLACE($expr, '$from', '$to')";
+        }
+
+        return $expr;
+    }
+
     // Substring containment after normalizing both sides — used for search
     public static function contains(string $haystack, string $needle): bool
     {
