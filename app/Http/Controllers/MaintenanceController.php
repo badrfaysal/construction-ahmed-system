@@ -43,28 +43,24 @@ class MaintenanceController extends Controller
 
     public function resetDatabase()
     {
-        DB::transaction(function () {
-            // نقفل فحص الـ FK مؤقتًا عشان الـ truncate ما يقفش على العلاقات
-            DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        // نقفل فحص الـ FK مؤقتًا عشان الـ truncate ما يقفش على العلاقات
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
-            try {
-                foreach (self::TABLES as $table) {
-                    // تجاهل أي جدول اتشال من الـ schema (زي sy2_price_history
-                    // قديمًا) بدل ما تفشل العملية كلها بسببه
-                    if (Schema::hasTable($table)) {
-                        DB::table($table)->truncate();
-                    }
+        try {
+            foreach (self::TABLES as $table) {
+                // تجاهل أي جدول اتشال من الـ schema بدل ما تفشل العملية كلها بسببه
+                if (Schema::hasTable($table)) {
+                    DB::table($table)->truncate();
                 }
-            } finally {
-                DB::statement('SET FOREIGN_KEY_CHECKS=1');
             }
+        } finally {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        }
 
-            // نرجّع رصيد محفظة المقاولات (accounts id=37) لصفر — من غير ما
-            // نلمس أي صف تاني في الجدول المشترك.
-            DB::table((new Account)->getTable())
-                ->where('id', Account::WALLET_ID)
-                ->update(['balance' => 0]);
-        });
+        // نرجّع رصيد محفظة المقاولات لصفر
+        DB::table((new Account)->getTable())
+            ->where('id', Account::WALLET_ID)
+            ->update(['balance' => 0]);
 
         return back()->with('success', 'تم تصفير بيانات المقاولات بالكامل (المشاريع، الخامات، الحركات، المحفظة...). النظام جاهز لتيست جديد.');
     }
