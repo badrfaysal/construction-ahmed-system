@@ -261,9 +261,14 @@ class Project extends Model
         return $this->actualClientTotal() - $this->totalSpent();
     }
 
-    // Updates cached values and saves
     public function recalculateCachedTotals(): void
     {
+        $this->unsetRelation('bands');
+        $this->unsetRelation('materials');
+        $this->unsetRelation('contracts');
+        $this->unsetRelation('clientPayments');
+        $this->unsetRelation('supplierDebts');
+
         $this->updateQuietly([
             'cached_actual_total' => $this->computeActualClientTotal(),
             'cached_collected'    => $this->computeTotalCollected(),

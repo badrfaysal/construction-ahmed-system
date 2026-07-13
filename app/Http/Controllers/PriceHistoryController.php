@@ -31,6 +31,7 @@ class PriceHistoryController extends Controller
                 'purchase_count' => $purchases->count(),
                 'min_price'      => (float) $purchases->min('unit_price'),
                 'max_price'      => (float) $purchases->max('unit_price'),
+                'avg_price'      => (float) $purchases->average('unit_price'),
             ];
         });
 

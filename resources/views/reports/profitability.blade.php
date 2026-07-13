@@ -1,10 +1,10 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'ربحية المشاريع')
 @section('page-title', 'ربحية المشاريع')
 
 @section('content')
 <div class="page-head">
-  <div><h3>ربحية المشاريع</h3><p>ربح دفتري = سعر البيع + الإشراف − التكلفة | ربح محصل = المحصول فعلاً − التكلفة</p></div>
+  <div><h3>ربحية المشاريع</h3><p>ربح دفتري = سعر البيع + الإشراف − التكلفة | ربح محصل = المحصل فعلاً − التكلفة</p></div>
 </div>
 
 {{-- Summary KPIs --}}
@@ -21,7 +21,7 @@
   <div class="card stat">
     <div class="top"><span class="label">ربح محصل (قُبض فعلاً)</span></div>
     <div class="val tnum" style="color:{{ $totals['earned_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totals['earned_profit']) }} <small>ج.م</small></div>
-    <div class="sub">إجمالي المحصول: {{ \App\Support\Money::format($totals['total_collected']) }} ج.م</div>
+    <div class="sub">إجمالي المحصّل: {{ \App\Support\Money::format($totals['total_collected']) }} ج.م</div>
   </div>
 </div>
 
@@ -54,7 +54,7 @@
             <th class="num">هامش %</th>
             <th class="num">ربح تجاري</th>
             <th class="num">ربح نسبة</th>
-            <th class="num">المحصول</th>
+            <th class="num">المحصّل</th>
             <th class="num">ربح محصل</th>
           </tr>
         </thead>

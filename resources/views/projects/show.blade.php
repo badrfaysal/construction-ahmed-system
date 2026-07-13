@@ -719,6 +719,25 @@
     return $s;
   });
 
+  // دونات: توزيع أرباح المشروع (تجاري / إشراف)
+  $rptTradeProfit = max(0, $project->tradeProfit());
+  $rptPercentageProfit = max(0, $project->percentageProfit());
+  $profitDonutSlices = collect([
+    ['label' => 'ربح تجاري', 'value' => $rptTradeProfit, 'color' => '#3b82f6'],
+    ['label' => 'ربح إشراف', 'value' => $rptPercentageProfit, 'color' => '#ec4899'],
+  ])->filter(fn ($s) => $s['value'] > 0);
+  $profitDonutTotal = $profitDonutSlices->sum('value') ?: 1;
+  $profitDonutOffset = 0;
+  $profitDonutSlices = $profitDonutSlices->map(function ($s) use ($profitDonutTotal, $circumference, &$profitDonutOffset) {
+    $frac = $s['value'] / $profitDonutTotal;
+    $len  = $frac * $circumference;
+    $s['dash'] = round($len, 2) . ' ' . round($circumference - $len, 2);
+    $s['dashoffset'] = round(-$profitDonutOffset, 2);
+    $profitDonutOffset += $len;
+    $s['pct'] = round($frac * 100, 1);
+    return $s;
+  });
+
   // مقارنة البنود: سعر العميل/التكلفة/الربح لكل بند، الأعلى قيمة أولًا
   $rptBandRows = $project->bands->map(fn ($b) => (object) [
     'name'   => $b->name,
@@ -792,7 +811,7 @@
   </div>
 </div>
 
-<div class="grid cols-2" style="margin-bottom:24px;align-items:start">
+<div class="grid cols-3" style="margin-bottom:24px;align-items:start">
   <div class="table-card" style="padding:20px">
     <div class="section-label" style="margin-top:0">توزيع تكلفة المشروع</div>
     @if($donutSlices->isNotEmpty())
@@ -816,6 +835,32 @@
       </div>
     @else
       <p class="muted">لا توجد بيانات كافية بعد</p>
+    @endif
+  </div>
+
+  <div class="table-card" style="padding:20px">
+    <div class="section-label" style="margin-top:0">توزيع أرباح المشروع</div>
+    @if($profitDonutSlices->isNotEmpty())
+      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center">
+        <svg width="140" height="140" viewBox="0 0 100 100" style="transform:rotate(-90deg);flex-shrink:0">
+          <circle cx="50" cy="50" r="40" fill="none" stroke="var(--line)" stroke-width="16"/>
+          @foreach($profitDonutSlices as $slice)
+            <circle cx="50" cy="50" r="40" fill="none" stroke="{{ $slice['color'] }}" stroke-width="16"
+              stroke-dasharray="{{ $slice['dash'] }}" stroke-dashoffset="{{ $slice['dashoffset'] }}" stroke-linecap="butt"/>
+          @endforeach
+        </svg>
+        <div style="display:flex;flex-direction:column;gap:8px;min-width:130px">
+          @foreach($profitDonutSlices as $slice)
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+              <span style="width:10px;height:10px;border-radius:3px;background:{{ $slice['color'] }};flex-shrink:0"></span>
+              <span>{{ $slice['label'] }}</span>
+              <strong style="margin-inline-start:auto">{{ $slice['pct'] }}%</strong>
+            </div>
+          @endforeach
+        </div>
+      </div>
+    @else
+      <p class="muted">لا توجد أرباح مسجلة بعد</p>
     @endif
   </div>
 

@@ -15,7 +15,13 @@ class MaterialReturnController extends Controller
     // Show form to add a manual return against one specific purchase in this project
     public function create(Project $project)
     {
-        $materials = $project->materials()->with('returns')->orderByDesc('date')->get();
+        $materials = $project->materials()
+            ->where(function($q) {
+                $q->whereNull('category')->orWhere('category', '!=', 'misc');
+            })
+            ->with('returns')
+            ->orderByDesc('date')
+            ->get();
 
         return view('returns.create', compact('project', 'materials'));
     }
@@ -37,6 +43,11 @@ class MaterialReturnController extends Controller
         $rows = [];
         foreach ($data['returns'] as $i => $row) {
             $material = Material::where('project_id', $project->id)->findOrFail($row['material_id']);
+            if ($material->isMisc()) {
+                throw ValidationException::withMessages([
+                    "returns.$i.qty" => 'لا يمكن عمل مرتجع للنثريات (' . $material->item . ').',
+                ]);
+            }
             if ($row['qty'] > $material->netQty()) {
                 throw ValidationException::withMessages([
                     "returns.$i.qty" => 'الكمية المرتجعة لـ"' . $material->item . '" أكبر من الصافي المتبقي (' . $material->netQty() . ').',

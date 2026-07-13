@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'المستحقات')
 @section('page-title', 'المستحقات')
 
@@ -181,7 +181,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
 <div class="page-head">
   <div>
     <h3>المستحقات</h3>
-    <p>ما يستحقه العملاء تجاه مشاريعهم — المفوتر والمحصول والمتبقي</p>
+    <p>ما يستحقه العملاء تجاه مشاريعهم — المفوتر والمحصّل والمتبقي</p>
   </div>
   <div style="display:flex;gap:8px" class="no-print">
     <button onclick="window.print()" class="btn ghost"><i class="fa fa-print" style="font-size:.85rem"></i> طباعة القائمة</button>
@@ -201,7 +201,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
     <div class="val tnum">{{ \App\Support\Money::format($totals['total_billed']) }} <small>ج.م</small></div>
   </div>
   <div class="vstat vstat-green">
-    <div class="top"><span class="label">المحصول من العملاء</span>
+    <div class="top"><span class="label">المحصّل من العملاء</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span>
     </div>
     <div class="val tnum">{{ \App\Support\Money::format($totals['total_collected']) }} <small>ج.م</small></div>
@@ -250,7 +250,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
         <tr>
           <th style="text-align:right;padding-right:16px">المشروع / العميل</th>
           <th>المفوتر</th>
-          <th>المحصول</th>
+          <th>المحصّل</th>
           <th>المتبقي</th>
           <th>التحصيل</th>
           <th>ربح دفتري</th>

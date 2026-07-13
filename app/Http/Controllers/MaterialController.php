@@ -30,7 +30,7 @@ class MaterialController extends Controller
             $query->where('project_id', $pid);
         }
 
-        $materials = $query->paginate(60);
+        $materials = $query->paginate(15);
         $projects  = Project::orderBy('name')->get(['id', 'name']);
         $insights  = $this->buildInsights($pid ? (int) $pid : null);
 

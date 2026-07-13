@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'كشف حساب العميل')
 @section('page-title', 'كشف حساب العميل')
 
@@ -15,7 +15,7 @@
           <tr>
             <th>المشروع</th>
             <th>العميل</th>
-            <th class="num">قيمة التعاقد المبدئي</th>
+            <th class="num">إجمالي المستحق</th>
             <th class="num">المحصّل</th>
             <th class="num">المتبقي</th>
             <th></th>
@@ -26,7 +26,7 @@
             <tr>
               <td><strong>{{ $project->name }}</strong></td>
               <td class="muted">{{ $project->client->name }}</td>
-              <td class="num">{{ \App\Support\Money::format($project->contract_value) }}</td>
+              <td class="num">{{ \App\Support\Money::format($project->cached_actual_total) }}</td>
               <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($project->total_paid) }}</td>
               <td class="num" style="color:{{ $project->balance > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($project->balance) }}</td>
               <td style="white-space:nowrap">

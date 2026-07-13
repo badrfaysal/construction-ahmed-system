@@ -44,22 +44,34 @@
 </form>
 
 @push('scripts')
+<style>
+.ac-item { padding: 8px 12px; cursor: pointer; font-size: 13.5px; border-bottom: 1px solid #f0f0f0; color: var(--ink); line-height: 1.4; }
+.ac-item:last-child { border-bottom: none; }
+.ac-item:hover { background: #f8f9fa; }
+</style>
 <script>
-const MATERIAL_OPTIONS = `
-  <option value="">— اختر عملية الشراء —</option>
+const MATERIALS = [
   @foreach($materials as $m)
-    <option value="{{ $m->id }}" data-net="{{ $m->netQty() }}" data-unit="{{ $m->unit }}" data-price="{{ $m->unit_price }}">{{ $m->item }} — اشتُرى {{ rtrim(rtrim($m->qty, '0'), '.') }} {{ $m->unit }} بسعر {{ \App\Support\Money::format($m->unit_price) }} يوم {{ $m->date->format('Y-m-d') }}@if($m->supplier) من {{ $m->supplier->name }}@endif (المتبقي: {{ rtrim(rtrim($m->netQty(), '0'), '.') }})</option>
+  {
+    id: {{ $m->id }},
+    text: "{!! addslashes($m->item) !!} — اشتُرى {{ rtrim(rtrim($m->qty, '0'), '.') }} {{ $m->unit }} بسعر {{ \App\Support\Money::format($m->unit_price) }} يوم {{ $m->date->format('Y-m-d') }}@if($m->supplier) من {!! addslashes($m->supplier->name) !!}@endif (المتبقي: {{ rtrim(rtrim($m->netQty(), '0'), '.') }})",
+    net: "{{ $m->netQty() }}",
+    unit: "{{ $m->unit }}",
+    price: "{{ $m->unit_price }}"
+  },
   @endforeach
-`;
+];
 
 let returnIdx = 0;
 function addReturnRow() {
   const g = returnIdx++;
   const html = `
     <div class="worker-row" data-row="${g}" style="border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px">
-      <div class="field">
+      <div class="field" style="position:relative">
         <label style="margin-bottom:4px">العملية المطلوب الإرجاع منها *</label>
-        <select name="returns[${g}][material_id]" class="mat-select" required onchange="showNet(this)">${MATERIAL_OPTIONS}</select>
+        <input type="text" class="ac-input" placeholder="ابحث واختر الخـامة..." oninput="acSearch(this)" onfocus="acSearch(this)" autocomplete="off" required style="padding:8px 10px; border:1px solid #ccc; border-radius:6px; width:100%; box-sizing:border-box; font-size:14px;">
+        <input type="hidden" name="returns[${g}][material_id]" class="ac-hidden" required>
+        <div class="ac-list" style="display:none; position:absolute; top:100%; left:0; right:0; max-height:220px; overflow-y:auto; background:#fff; border:1px solid #ccc; z-index:100; border-radius:4px; box-shadow:0 4px 12px rgba(0,0,0,0.15)"></div>
         <p class="muted mat-net" style="margin-top:6px"></p>
       </div>
       <div class="row3" style="margin-top:10px">
@@ -84,15 +96,64 @@ function addReturnRow() {
   document.getElementById('returns-list').insertAdjacentHTML('beforeend', html);
 }
 
-function showNet(select) {
-  const row = select.closest('[data-row]');
-  const opt = select.options[select.selectedIndex];
-  const el = row.querySelector('.mat-net');
-  el.textContent = (opt && opt.value) ? ('الصافي المتاح للإرجاع: ' + opt.dataset.net + ' ' + opt.dataset.unit) : '';
-  row.querySelector('.ret-orig-price').value = (opt && opt.value) ? opt.dataset.price : '';
-  row.dataset.gIdx = row.dataset.row;
+function normalizeArabic(text) {
+  if (!text) return '';
+  return text
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/[ىي]/g, 'ي');
+}
+
+function acSearch(inp) {
+  const term = normalizeArabic(inp.value.toLowerCase());
+  const list = inp.parentElement.querySelector('.ac-list');
+  const hidden = inp.parentElement.querySelector('.ac-hidden');
+  
+  hidden.value = ''; // clear previous selection if they type again
+  inp.parentElement.querySelector('.mat-net').textContent = '';
+  inp.closest('[data-row]').querySelector('.ret-orig-price').value = '';
+  
+  let html = '';
+  let count = 0;
+  for (let i = 0; i < MATERIALS.length; i++) {
+    const textNorm = normalizeArabic(MATERIALS[i].text.toLowerCase());
+    if (textNorm.includes(term)) {
+      html += `<div class="ac-item" onclick="acSelect(this, ${i})">${MATERIALS[i].text}</div>`;
+      count++;
+    }
+  }
+  
+  if (count === 0) {
+    html = `<div style="padding:8px 12px; color:#888; font-size:13.5px">لا توجد خامات مطابقة...</div>`;
+  }
+  
+  list.innerHTML = html;
+  list.style.display = 'block';
+}
+
+function acSelect(itemEl, idx) {
+  const m = MATERIALS[idx];
+  const container = itemEl.parentElement.parentElement;
+  const inp = container.querySelector('.ac-input');
+  const hidden = container.querySelector('.ac-hidden');
+  const list = container.querySelector('.ac-list');
+  
+  inp.value = m.text;
+  hidden.value = m.id;
+  list.style.display = 'none';
+  
+  const row = container.closest('[data-row]');
+  row.querySelector('.mat-net').textContent = 'الصافي المتاح للإرجاع: ' + m.net + ' ' + m.unit;
+  row.querySelector('.ret-orig-price').value = m.price;
+  
   calcLoss(row.dataset.row);
 }
+
+document.addEventListener('click', function(e) {
+  if (!e.target.matches('.ac-input')) {
+    document.querySelectorAll('.ac-list').forEach(list => list.style.display = 'none');
+  }
+});
 
 function calcLoss(g) {
   const row = document.querySelector(`[data-row="${g}"]`);

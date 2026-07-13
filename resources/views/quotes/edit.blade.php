@@ -133,13 +133,11 @@ function workerRowHtml(g, w) {
       </div>
       <div class="worker-qty-wrap row2" style="margin-top:0;display:none">
         <div class="field" style="margin:0"><input type="number" name="bands[${g}][workers][${w}][contract_qty]" class="worker-qty" placeholder="الكمية (متر/قطعة/يوم)" min="0" step="0.01" oninput="recalcWorker(${g},${w})"></div>
-        <div class="field" style="margin:0"><input type="number" name="bands[${g}][workers][${w}][contract_unit_rate]" class="worker-rate" placeholder="سعر الوحدة (تكلفة)" min="0" step="0.01" oninput="recalcWorker(${g},${w})"></div>
-      </div>
-      <div class="worker-qty-wrap row2" style="margin-top:8px;display:none">
+        <div class="field" style="margin:0;display:none"><input type="number" name="bands[${g}][workers][${w}][contract_unit_rate]" class="worker-rate" placeholder="سعر الوحدة (تكلفة)" min="0" step="0.01" oninput="recalcWorker(${g},${w})"></div>
         <div class="field" style="margin:0"><input type="number" name="bands[${g}][workers][${w}][sell_rate]" class="worker-sell-rate" placeholder="سعر الوحدة للعميل" min="0" step="0.01" oninput="recalcWorker(${g},${w})"></div>
       </div>
       <div class="row2" style="margin-top:8px">
-        <div class="field" style="margin:0"><input type="number" name="bands[${g}][workers][${w}][amount]" class="worker-amount" placeholder="الأجر الإجمالي (تكلفة)" min="0" step="0.01" oninput="this.dataset.touched='1'; recalcBandPrice(${g})"></div>
+        <div class="field" style="margin:0;display:none"><input type="number" name="bands[${g}][workers][${w}][amount]" class="worker-amount" placeholder="الأجر الإجمالي (تكلفة)" min="0" step="0.01" oninput="this.dataset.touched='1'; recalcBandPrice(${g})"></div>
         <div class="field" style="margin:0"><input type="number" name="bands[${g}][workers][${w}][sell_amount]" class="worker-sell-amount" placeholder="سعره الإجمالي للعميل" min="0" step="0.01" oninput="this.dataset.touched='1'; recalcBandPrice(${g})"></div>
       </div>
       <div class="row2" style="margin-top:8px;align-items:end">

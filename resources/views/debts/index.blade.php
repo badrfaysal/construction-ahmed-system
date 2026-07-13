@@ -85,7 +85,7 @@
 
     <div class="supplier-debt-group" style="margin-bottom:20px">
       {{-- Supplier Header --}}
-      <div class="supplier-debt-head">
+      <div class="supplier-debt-head" style="cursor:pointer;transition:background 0.2s" onclick="toggleSupplierDebts('{{ $supplierId }}')" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background=''">
         <div style="display:flex;align-items:center;gap:12px;flex:1">
           <div class="supplier-ic">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-box"/></svg>
@@ -110,10 +110,10 @@
           </div>
           @if($hasUnpaid && $supplierId > 0)
             <div style="display:flex;gap:6px;margin-right:8px">
-              <button class="btn pos sm" onclick="openSupplierPay({{ $supplierId }}, {{ $sRemaining }}, '{{ addslashes($supplier?->name) }}', 'full')">
+              <button class="btn pos sm" onclick="event.stopPropagation(); openSupplierPay({{ $supplierId }}, {{ $sRemaining }}, '{{ addslashes($supplier?->name) }}', 'full')">
                 سداد كلي
               </button>
-              <button class="btn ghost sm" onclick="openSupplierPay({{ $supplierId }}, {{ $sRemaining }}, '{{ addslashes($supplier?->name) }}', 'partial')">
+              <button class="btn ghost sm" onclick="event.stopPropagation(); openSupplierPay({{ $supplierId }}, {{ $sRemaining }}, '{{ addslashes($supplier?->name) }}', 'partial')">
                 سداد جزئي
               </button>
             </div>
@@ -122,7 +122,7 @@
       </div>
 
       {{-- Supplier Debts Table --}}
-      <div class="table-scroll">
+      <div class="table-scroll" id="supplier-debts-{{ $supplierId }}" style="display:none;margin-top:-1px;border-top-left-radius:0;border-top-right-radius:0;">
         <table>
           <thead>
             <tr>
@@ -251,6 +251,15 @@ function openSupplierPay(supplierId, remaining, name, mode) {
   const walletSelect = document.querySelector('#supplier-pay-form select[name="account_id"]');
   if (walletSelect) walletSelect.selectedIndex = 0;
   document.getElementById('supplier-pay-modal').style.display = 'flex';
+}
+
+function toggleSupplierDebts(supplierId) {
+  const el = document.getElementById('supplier-debts-' + supplierId);
+  if (el.style.display === 'none') {
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
 }
 </script>
 @endpush

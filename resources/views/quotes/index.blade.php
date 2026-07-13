@@ -26,10 +26,23 @@
 
 <form method="GET" class="filter-bar">
   <input type="hidden" name="tab" value="{{ $tab }}">
+  <div class="f-field" style="flex:1">
+    <div style="position:relative">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;right:12px;top:9px;width:16px;height:16px;color:var(--ink-3)"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" name="q" class="f-input" placeholder="ابحث باسم الشقة أو العميل..." value="{{ request('q') }}" style="padding-inline-start:36px">
+    </div>
+  </div>
   @include('partials._sort-select', ['options' => [
     'newest' => 'الأحدث',
     'oldest' => 'الأقدم',
+    'project_asc' => 'الشقة (أ-ي)',
+    'project_desc' => 'الشقة (ي-أ)',
   ]])
+  @if(request()->hasAny(['q']) || request('sort', 'newest') !== 'newest')
+    <div class="f-actions">
+      <a href="{{ route('quotes.index', ['tab' => $tab]) }}" class="btn ghost sm">مسح الفلتر</a>
+    </div>
+  @endif
 </form>
 
 @if($quotes->count())

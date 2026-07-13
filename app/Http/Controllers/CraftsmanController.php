@@ -33,7 +33,50 @@ class CraftsmanController extends Controller
 
         $ratings = \App\Models\CraftsmanRating::all()->keyBy('craftsman_name');
 
-        $craftsmen = collect(ItemNameMatcher::group($workers, fn ($w) => $w->name))
+        $groups = [];
+        foreach ($workers as $w) {
+            $rawName = trim($w->name);
+            $phone = trim($w->phone ?? '');
+            
+            if ($rawName === '') continue;
+
+            $normalized = ItemNameMatcher::normalize($rawName);
+            $matchedIndex = null;
+
+            foreach ($groups as $i => $g) {
+                // 1. Exact phone match (if both have a phone)
+                if ($phone !== '' && in_array($phone, $g['phones'], true)) {
+                    $matchedIndex = $i;
+                    break;
+                }
+                
+                // 2. Fuzzy name match
+                if (ItemNameMatcher::similarity($g['normalized'], $normalized) >= 0.8) {
+                    $matchedIndex = $i;
+                    break;
+                }
+            }
+
+            if ($matchedIndex === null) {
+                $groups[] = [
+                    'canonical'  => $rawName,
+                    'normalized' => $normalized,
+                    'phones'     => $phone !== '' ? [$phone] : [],
+                    'items'      => [$w],
+                ];
+            } else {
+                $groups[$matchedIndex]['items'][] = $w;
+                if ($phone !== '' && ! in_array($phone, $groups[$matchedIndex]['phones'], true)) {
+                    $groups[$matchedIndex]['phones'][] = $phone;
+                }
+                // Keep the most descriptive name as canonical
+                if (mb_strlen($rawName) > mb_strlen($groups[$matchedIndex]['canonical'])) {
+                    $groups[$matchedIndex]['canonical'] = $rawName;
+                }
+            }
+        }
+
+        $craftsmen = collect($groups)
             ->map(function ($group) use ($ratings) {
                 $rows = collect($group['items']);
                 $ratingObj = $ratings->get($group['canonical']);

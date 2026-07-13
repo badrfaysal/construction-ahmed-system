@@ -19,9 +19,18 @@ class QuoteController extends Controller
 
         $query = Quote::with('bands.items', 'bands.workers');
 
+        if ($q = $request->get('q')) {
+            $query->where(function ($sq) use ($q) {
+                $sq->where('project_name', 'like', '%' . \App\Support\ItemNameMatcher::normalizeLetters($q) . '%')
+                   ->orWhere('client_name', 'like', '%' . \App\Support\ItemNameMatcher::normalizeLetters($q) . '%');
+            });
+        }
+
         match ($request->get('sort', 'newest')) {
-            'oldest' => $query->orderBy('date')->orderBy('id'),
-            default  => $query->orderByDesc('date')->orderByDesc('id'),
+            'oldest'       => $query->orderBy('date')->orderBy('id'),
+            'project_asc'  => $query->orderBy('project_name'),
+            'project_desc' => $query->orderByDesc('project_name'),
+            default        => $query->orderByDesc('date')->orderByDesc('id'),
         };
 
         if ($tab !== 'all') {

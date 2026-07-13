@@ -40,7 +40,7 @@
 
     {{-- Summary boxes --}}
     <div class="st-summary">
-      <div class="st-box tot"><div class="l">قيمة التعاقد المبدئي</div><div class="v">{{ \App\Support\Money::format($initialContractValue) }} ج.م</div></div>
+      <div class="st-box tot"><div class="l">إجمالي المستحق</div><div class="v">{{ \App\Support\Money::format($actualTotal) }} ج.م</div></div>
       <div class="st-box paid"><div class="l">المدفوع</div><div class="v">{{ \App\Support\Money::format($totalPaid) }} ج.م</div></div>
       <div class="st-box due"><div class="l">المتبقي</div><div class="v">{{ \App\Support\Money::format($balance) }} ج.م</div></div>
     </div>
@@ -92,7 +92,6 @@
     {{-- Final summary --}}
     <div class="st-final">
       <table>
-        <tr><td class="muted">قيمة التعاقد المبدئي</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($initialContractValue) }} ج.م</td></tr>
         <tr><td class="muted">إجمالي المستحق حتى الآن</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($actualTotal) }} ج.م</td></tr>
         <tr><td class="muted">إجمالي المدفوع</td><td style="text-align:left;font-weight:700;color:var(--pos)">{{ \App\Support\Money::format($totalPaid) }} ج.م</td></tr>
         <tr class="big"><td>المتبقي المطلوب</td><td style="text-align:left">{{ \App\Support\Money::format($balance) }} ج.م</td></tr>

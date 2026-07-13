@@ -144,8 +144,8 @@ class ProjectBand extends Model
             // since this feature shipped) — fall back to the old band-level
             // simple contract fields so nothing regresses to zero silently
             $laborAmount = static::computeContractAmount($this->contract_type, $this->contract_qty, $this->contract_unit_rate, $this->labor_amount);
-            $laborSellPrice = $this->labor_sell_price;
-            $laborSupervisionPct = $this->labor_supervision_pct;
+            $laborSellPrice = $this->labor_sell_price ?? 0;
+            $laborSupervisionPct = $this->labor_supervision_pct ?? 0;
         }
 
         $this->update([
@@ -314,9 +314,11 @@ class ProjectBand extends Model
         return $this->materialClientCost() + $this->laborClientPrice();
     }
 
-    // Updates cached values and cascades up to the parent project
     public function recalculateCachedTotals(): void
     {
+        $this->unsetRelation('materials');
+        $this->unsetRelation('workers');
+
         $this->updateQuietly([
             'cached_actual_total' => $this->computeActualClientTotal(),
             'cached_total_cost'   => $this->computeTotalCost(),
