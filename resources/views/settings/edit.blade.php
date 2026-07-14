@@ -55,4 +55,17 @@
     <button type="submit" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check"/></svg>حفظ الإعدادات</button>
   </div>
 </form>
+
+<div style="max-width:640px; margin-top:20px;">
+  <div class="form-card">
+    <div class="section-label">قاعدة البيانات</div>
+    <div class="field">
+      <p class="muted" style="margin-bottom:12px">يمكنك تحميل نسخة احتياطية من قاعدة البيانات (.sql) لضمان أمان البيانات. يرجى حفظ الملف في مكان آمن.</p>
+      <form method="POST" action="{{ route('settings.export_db') }}" style="display:inline">
+        @csrf
+        <button type="submit" class="btn ghost" style="color:var(--brand); border-color:var(--line);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="margin-inline-end:6px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> تصدير قاعدة البيانات</button>
+      </form>
+    </div>
+  </div>
+</div>
 @endsection

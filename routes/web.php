@@ -161,6 +161,7 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+        Route::post('/settings/export-db', [SettingsController::class, 'exportDatabase'])->name('settings.export_db');
 
         // محفظة المقاولات — balance + hand-entered money moves (capital in,
         // owner withdrawals, general overhead). Owner-level, hence admin-only.
