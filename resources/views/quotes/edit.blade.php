@@ -56,6 +56,12 @@
   </div>
 </form>
 
+<datalist id="band-names-list">
+  @foreach($bandNames as $name)
+    <option value="{{ $name }}">
+  @endforeach
+</datalist>
+
 @php
   // Pre-computed in PHP (not inline in @json()) so Blade's directive parser
   // doesn't have to untangle nested fn() closures inside the expression.
@@ -96,7 +102,7 @@ function bandRowHtml(g) {
   return `
     <div class="band-card" data-band="${g}" style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px">
       <div class="row2">
-        <div class="field" style="margin:0"><input type="text" name="bands[${g}][name]" placeholder="اسم البند مثل: تشطيبات" required></div>
+        <div class="field" style="margin:0"><input type="text" name="bands[${g}][name]" placeholder="اسم البند مثل: تشطيبات" required list="band-names-list"></div>
         <div class="field" style="margin:0"><input type="number" name="bands[${g}][price]" class="band-price" placeholder="السعر الإجمالي التقريبي (ج.م)" min="0" step="0.01"></div>
       </div>
       <div class="band-items" id="band-items-${g}"></div>

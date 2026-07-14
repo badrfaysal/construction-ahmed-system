@@ -20,7 +20,7 @@
   <div class="form-card band-form-card">
     <div class="field">
       <label>اسم البند *</label>
-      <input type="text" name="name" value="{{ old('name') }}" placeholder="محارة / سيراميك / دهانات..." required>
+      <input type="text" name="name" value="{{ old('name') }}" placeholder="محارة / سيراميك / دهانات..." required list="band-names-list">
     </div>
 
     {{-- تابات لتقليل السكرول — كل قسم كبير في تابة لوحده --}}
@@ -138,6 +138,11 @@
 </datalist>
 <datalist id="misc-list">
   <option value="نقل"><option value="إكرامية"><option value="إفطار العمال"><option value="مواصلات"><option value="نثريات">
+</datalist>
+<datalist id="band-names-list">
+  @foreach($bandNames as $name)
+    <option value="{{ $name }}">
+  @endforeach
 </datalist>
 
 @push('scripts')

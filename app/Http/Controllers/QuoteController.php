@@ -60,7 +60,11 @@ class QuoteController extends Controller
 
         $clients = Client::orderBy('name')->get();
 
-        return view('quotes.create', compact('nextRef', 'clients'));
+        $bandNames = \App\Models\ProjectBand::select('name')->distinct()->pluck('name')
+            ->merge(\App\Models\QuoteBand::select('name')->distinct()->pluck('name'))
+            ->unique()->sort()->values();
+
+        return view('quotes.create', compact('nextRef', 'clients', 'bandNames'));
     }
 
     // Save a new quote with its band line items
@@ -90,7 +94,11 @@ class QuoteController extends Controller
         $quote->load('bands.items', 'bands.workers');
         $clients = Client::orderBy('name')->get();
 
-        return view('quotes.edit', compact('quote', 'clients'));
+        $bandNames = \App\Models\ProjectBand::select('name')->distinct()->pluck('name')
+            ->merge(\App\Models\QuoteBand::select('name')->distinct()->pluck('name'))
+            ->unique()->sort()->values();
+
+        return view('quotes.edit', compact('quote', 'clients', 'bandNames'));
     }
 
     // Save edits — only while the quote is still a draft

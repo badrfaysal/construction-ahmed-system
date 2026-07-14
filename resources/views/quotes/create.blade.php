@@ -55,6 +55,12 @@
   </div>
 </form>
 
+<datalist id="band-names-list">
+  @foreach($bandNames as $name)
+    <option value="{{ $name }}">
+  @endforeach
+</datalist>
+
 @push('scripts')
 <script>
 let bandIdx = 0;
@@ -65,7 +71,7 @@ function bandRowHtml(g) {
       <div class="band-card-head">
         <div class="field" style="margin:0;flex:1">
           <label>اسم البند *</label>
-          <input type="text" name="bands[${g}][name]" placeholder="محارة / سيراميك / دهانات..." required>
+          <input type="text" name="bands[${g}][name]" placeholder="محارة / سيراميك / دهانات..." required list="band-names-list">
         </div>
         <div class="field" style="margin:0;width:200px">
           <label>إجمالي البند للعميل (ج.م)</label>
