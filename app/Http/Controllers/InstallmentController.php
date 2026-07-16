@@ -42,6 +42,16 @@ class InstallmentController extends Controller
             ->map(function ($p) {
                 $billed = $p->actualClientTotal();
 
+                $contractedBandsBilled = 0;
+                foreach ($p->bands as $b) {
+                    if ($p->contracts->where('band_id', $b->id)->count() > 0) {
+                        $contractedBandsBilled += $b->actualClientTotal();
+                    }
+                }
+                $billed -= $contractedBandsBilled;
+
+                $hasWholeContract = $p->contracts->whereNull('band_id')->count() > 0;
+
                 // فلوس اتحصّلت من العميل مباشرة (صفحة المستحقات) — بتتملى تلقائي
                 // في «المقدم المدفوع الآن» وقت إنشاء العقد، بمعياريْن:
                 //  - already_paid: نطاق ضيّق (تحت البند المختار بس، أو دفعات
@@ -65,18 +75,21 @@ class InstallmentController extends Controller
                     'billed'             => round($billed, 2),
                     'already_paid'       => round($totalUnclaimed, 2),
                     'already_paid_total' => round($totalUnclaimed, 2),
+                    'has_contract'       => $hasWholeContract,
                     // بنود المشروع مع قيمة كل بند للعميل — لتقسيط بند محدد
                     'bands'         => $p->bands->map(function ($b) use ($p, $paidSum, $totalUnclaimed) {
                         $bandPaid = max(0,
                             $paidSum($p->clientPayments->where('band_id', $b->id))
                             - (float) $p->contracts->where('band_id', $b->id)->sum('down_payment')
                         );
+                        $hasContract = $p->contracts->where('band_id', $b->id)->count() > 0;
                         return (object) [
                             'id'                 => $b->id,
                             'name'               => $b->name,
                             'billed'             => round($b->actualClientTotal(), 2),
                             'already_paid'       => round($bandPaid, 2),
                             'already_paid_total' => round($totalUnclaimed, 2),
+                            'has_contract'       => $hasContract,
                         ];
                     })->values(),
                 ];
@@ -110,6 +123,21 @@ class InstallmentController extends Controller
 
         $project = Project::with('client')->findOrFail($data['project_id']);
 
+        if (empty($data['band_id'])) {
+            if ($project->hasWholeProjectInstallmentContract()) {
+                throw ValidationException::withMessages([
+                    'project_id' => 'هذا المشروع له عقد تقسيط بالكامل مسبقاً ولا يمكن تقسيطه مرة أخرى.',
+                ]);
+            }
+        } else {
+            $band = $project->bands()->whereKey($data['band_id'])->first();
+            if ($band && $band->hasInstallmentContract()) {
+                throw ValidationException::withMessages([
+                    'band_id' => 'هذا البند له عقد تقسيط مسبقاً ولا يمكن تقسيطه مرة أخرى.',
+                ]);
+            }
+        }
+
         // اسم المتعاقد عليه: المشروع كامل، أو "المشروع — البند" لو اتقسّط بند محدد
         $productName = trim((string) ($data['product_name'] ?? '')) ?: $project->name;
         if (empty($data['product_name']) && ! empty($data['band_id'])) {
@@ -136,6 +164,17 @@ class InstallmentController extends Controller
         if ($down > $afterDisc + 0.01) {
             throw ValidationException::withMessages([
                 'down_payment' => 'المقدم أكبر من قيمة العقد بعد الخصم.',
+            ]);
+        }
+
+        $paidSum = fn ($payments) => (float) $payments->sum(fn ($t) => (float) $t->amount + (float) $t->discount);
+        $totalPaidSum = $paidSum($project->clientPayments);
+        $totalClaimed = (float) $project->contracts->sum('down_payment');
+        $absoluteMaxDown = max(0, $totalPaidSum - $totalClaimed);
+
+        if ($down > $absoluteMaxDown + 0.01) {
+            throw ValidationException::withMessages([
+                'down_payment' => 'المقدم (' . $down . ' ج) أكبر من الرصيد المدفوع المتاح للعميل ولم يُستخدم في تقسيط مسبق (' . round($absoluteMaxDown, 2) . ' ج).',
             ]);
         }
 

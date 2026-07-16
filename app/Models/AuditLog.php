@@ -65,13 +65,15 @@ class AuditLog extends Model
     public function refMeta(): array
     {
         return match ($this->ref_type) {
-            'material'       => ['label' => 'شراء خامة',       'color' => '#f59e0b', 'icon' => 'i-box'],
-            'return'         => ['label' => 'مرتجع خامة',       'color' => '#0d9488', 'icon' => 'i-box'],
+            'material'         => ['label' => 'شراء خامة',       'color' => '#f59e0b', 'icon' => 'i-box'],
+            'material_invoice' => ['label' => 'فاتورة خامات',    'color' => '#f59e0b', 'icon' => 'i-box'],
+            'return'           => ['label' => 'مرتجع خامة',       'color' => '#0d9488', 'icon' => 'i-box'],
             'debt'           => ['label' => 'سداد دين مورد',    'color' => '#dc2626', 'icon' => 'i-credit-card'],
             'worker_payment' => ['label' => 'دفعة صنايعي',       'color' => '#8b5cf6', 'icon' => 'i-hardhat'],
             'inst_payment'   => ['label' => 'تحصيل قسط',         'color' => '#2563eb', 'icon' => 'i-calendar'],
             'inst_down'      => ['label' => 'مقدم عقد تقسيط',    'color' => '#1d4ed8', 'icon' => 'i-receipt'],
             'client_payment' => ['label' => 'تحصيل من العميل',   'color' => '#16a34a', 'icon' => 'i-cash'],
+            'discount'       => ['label' => 'منح خصم للعميل',    'color' => '#f43f5e', 'icon' => 'i-percent'],
             'manual'         => ['label' => 'حركة محفظة يدوية',  'color' => '#c9821a', 'icon' => 'i-wallet'],
             'band'           => ['label' => 'أجور فنيين (قديم)', 'color' => '#8b5cf6', 'icon' => 'i-hardhat'],
             default          => ['label' => 'حركة عامة',         'color' => '#64748b', 'icon' => 'i-activity'],

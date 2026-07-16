@@ -247,14 +247,36 @@
   @csrf
 
   <div class="form-card" style="max-width:none;margin-bottom:16px">
-    <div class="field" style="margin-bottom:0">
-      <label>المشروع *</label>
-      <select name="project_id" id="project_select" required onchange="loadBandsForProject(this.value); updateSupervisionDefault(this); checkProjectLock(this)">
-        <option value="">— اختر المشروع —</option>
-        @foreach($projects as $p)
-          <option value="{{ $p->id }}" data-sup="{{ $p->default_supervision_pct > 0 ? $p->default_supervision_pct : $settings->default_supervision_pct }}" data-locked="{{ $p->hasWholeProjectInstallmentContract() ? 1 : 0 }}" {{ $selectedProject?->id == $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
-        @endforeach
-      </select>
+    <div class="row3" style="margin-bottom:16px; gap:24px;">
+      <div class="field" style="margin-bottom:0">
+        <label>المشروع *</label>
+        <select name="project_id" id="project_select" required class="neo-big-input" onchange="loadBandsForProject(this.value); updateSupervisionDefault(this); checkProjectLock(this)">
+          <option value="">— اختر المشروع —</option>
+          @foreach($projects as $p)
+            <option value="{{ $p->id }}" data-sup="{{ $p->default_supervision_pct > 0 ? $p->default_supervision_pct : $settings->default_supervision_pct }}" data-locked="{{ $p->hasWholeProjectInstallmentContract() ? 1 : 0 }}" {{ $selectedProject?->id == $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
+          @endforeach
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>اسم الفاتورة *</label>
+        <input type="text" name="invoice_name" id="invoice_name" class="neo-big-input" placeholder="مثال: فاتورة مشروع كذا..." required oninput="invoiceNameTouched = true">
+      </div>
+    </div>
+    
+    <div class="row2" style="margin-bottom:0; gap:24px;">
+      <div class="field" style="margin-bottom:0">
+        <label>تاريخ الفاتورة *</label>
+        <input type="date" name="date" id="invoice_date" required class="neo-big-input" onchange="suggestInvoiceName()">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>المورد *</label>
+        <select name="supplier_id" class="neo-big-input">
+          <option value="">— بدون مورد —</option>
+          @foreach($suppliers as $s)
+            <option value="{{ $s->id }}">{{ $s->name }} {{ $s->activity ? '— ' . $s->activity : '' }}</option>
+          @endforeach
+        </select>
+      </div>
     </div>
   </div>
 
@@ -267,10 +289,48 @@
 
   <button type="button" id="addGroupBtn" class="btn ghost" style="margin-bottom:20px" onclick="addGroup()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
-    إضافة بند آخر
+    إضافة بند آخر للفاتورة
   </button>
 
-  <div class="btn-row">
+  {{-- طريقة الدفع --}}
+  <div class="neo-pay-section" id="payment_section">
+    <div style="font-size:1.15rem;font-weight:800;color:var(--ink);margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+      <div style="background:#f1f5f9; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--ink-2);">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-credit-card"/></svg>
+      </div>
+      كيف سيتم سداد هذه الفاتورة؟
+    </div>
+    
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px">
+      <label class="neo-radio-pill">
+        <input type="radio" name="payment_status" value="paid" checked onchange="togglePaidAmt(this.value)">
+        <span>دفع نقدي بالكامل</span>
+      </label>
+      <label class="neo-radio-pill">
+        <input type="radio" name="payment_status" value="partial" onchange="togglePaidAmt(this.value)">
+        <span>دفع جزء و تبقي دين</span>
+      </label>
+      <label class="neo-radio-pill">
+        <input type="radio" name="payment_status" value="deferred" onchange="togglePaidAmt(this.value)">
+        <span>آجل بالكامل (دين)</span>
+      </label>
+    </div>
+    
+    <div class="row2" style="align-items:flex-start; gap:24px;">
+      <div class="field" style="margin:0" id="wallet-row">
+        <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">المحفظة للصرف *</label>
+        <select name="account_id" id="wallet_select" required class="neo-big-input"></select>
+      </div>
+      <div id="paid-amt-row" style="display:none">
+        <div class="field" style="margin:0">
+          <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">المبلغ المدفوع الآن (ج.م) *</label>
+          <input type="number" name="paid_amount" id="paid-amt" min="0" step="0.01" placeholder="مثال: 1500" class="neo-big-input">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row" style="margin-top: 32px">
     <button type="submit" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check"/></svg>حفظ كل الأصناف</button>
     <a href="{{ route('materials.index') }}" class="btn ghost">إلغاء</a>
   </div>
@@ -321,6 +381,27 @@
 // Bands of the currently selected project — refreshed whenever the project changes
 let bandsList = @json($bands);
 let groupCounter = 0;
+let invoiceNameTouched = false;
+
+function suggestInvoiceName() {
+  if (invoiceNameTouched) return;
+  const projSel = document.getElementById('project_select');
+  const projName = projSel && projSel.selectedIndex > 0 ? projSel.options[projSel.selectedIndex].text : '';
+  const dateInput = document.getElementById('invoice_date');
+  const dateVal = dateInput ? dateInput.value : '';
+  const bandSel = document.querySelector('.band-select');
+  const bandName = bandSel && bandSel.selectedIndex > 0 ? bandSel.options[bandSel.selectedIndex].text : '';
+
+  let nameParts = ['فاتورة'];
+  if (projName) nameParts.push(projName);
+  if (bandName) nameParts.push(bandName);
+  if (dateVal) nameParts.push(dateVal);
+
+  const invNameInput = document.getElementById('invoice_name');
+  if (invNameInput && nameParts.length > 1) {
+    invNameInput.value = nameParts.join(' - ');
+  }
+}
 
 // مشروع اتقسّط بالكامل يقفل الفورم كله (مفيش خامات جديدة تتضاف له)
 function checkProjectLock(sel) {
@@ -329,6 +410,7 @@ function checkProjectLock(sel) {
   document.getElementById('groups-container').style.display = locked ? 'none' : '';
   document.getElementById('addGroupBtn').disabled = locked;
   document.getElementById('wholeContractBanner').style.display = locked ? 'flex' : 'none';
+  suggestInvoiceName();
 }
 
 // Default supervision % for new item rows — follows the selected project's
@@ -417,10 +499,6 @@ function itemRowHtml(g, i) {
         <div class="neo-label">اسم الصنف</div>
         <input type="text" name="groups[${g}][items][${i}][item]" class="neo-input" placeholder="أسمنت، سيراميك، دهانات..." required list="items-list">
       </div>
-      <div class="neo-col">
-        <div class="neo-label">المورد</div>
-        <select name="groups[${g}][items][${i}][supplier_id]" class="neo-input mat-supplier" onchange="this.dataset.touched='1'">${supplierOptionsHtml(groupDefaultSupplier[g] || '')}</select>
-      </div>
       <input type="hidden" name="groups[${g}][items][${i}][unit]" value="وحدة">
       <div class="neo-col neo-col-sm">
         <div class="neo-label">الكمية</div>
@@ -429,6 +507,10 @@ function itemRowHtml(g, i) {
       <div class="neo-col">
         <div class="neo-label">سعر الشراء</div>
         <input type="number" name="groups[${g}][items][${i}][unit_price]" class="neo-input mat-cost" placeholder="0.00" min="0" step="0.01" required oninput="recalcTotals()">
+      </div>
+      <div class="neo-col" style="background:#f8fafc; border-radius:12px; padding:0 8px;">
+        <div class="neo-label">إجمالي الشراء</div>
+        <div class="neo-input item-total" style="color:var(--accent) !important; font-weight:800 !important; border:none !important; cursor:default; padding-top:10px !important;">0 ج.م</div>
       </div>
       <div class="neo-col">
         <div class="neo-label">سعر البيع</div>
@@ -463,6 +545,12 @@ function recalcTotals() {
     const cost = parseFloat(row.querySelector('.mat-cost')?.value) || 0;
     const sp   = parseFloat(row.querySelector('.mat-sell')?.value) || 0;
     const pct  = parseFloat(row.querySelector('.mat-sup')?.value)  || 0;
+    
+    const itemTotalEl = row.querySelector('.item-total');
+    if (itemTotalEl) {
+        itemTotalEl.textContent = Math.round(qty * cost).toLocaleString('en-US') + ' ج.م';
+    }
+
     purchase += qty * cost;
     sell     += qty * sp;
     client   += qty * sp * (1 + pct / 100);
@@ -485,10 +573,8 @@ function recalcTotals() {
 }
 function setTxt(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
 
-// Add a new band group, pre-filled with one item row
 function addGroup() {
   const g = groupCounter++;
-  const today = new Date().toISOString().slice(0, 10);
   const html = `
     <div class="neo-group-card band-group" data-group="${g}">
       <div class="neo-group-header">
@@ -498,24 +584,16 @@ function addGroup() {
           </div>
           مجموعة أصناف (${g + 1})
         </div>
-        <button type="button" class="btn ghost danger" style="border-radius:50px; font-weight:700;" onclick="this.closest('.band-group').remove()">
+        <button type="button" class="btn ghost danger" style="border-radius:50px; font-weight:700;" onclick="this.closest('.band-group').remove(); recalcTotals()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
-          إلغاء المجموعة
+          حذف المجموعة
         </button>
       </div>
       
       <div class="row3" style="margin-bottom:32px; gap:24px;">
-        <div class="field" style="margin:0">
+        <div class="field" style="margin:0; flex:2;">
           <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">البند التابع له هذه الأصناف</label>
-          <select name="groups[${g}][band_id]" class="neo-big-input band-select">${bandOptionsHtml()}</select>
-        </div>
-        <div class="field" style="margin:0">
-          <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">تاريخ الشراء *</label>
-          <input type="date" name="groups[${g}][date]" value="${today}" required class="neo-big-input">
-        </div>
-        <div class="field" style="margin:0">
-          <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">المورد (يتطبق على كل الأصناف تلقائيًا)</label>
-          <select class="neo-big-input" onchange="updateGroupSupplierDefault(${g}, this.value)">${supplierOptionsHtml()}</select>
+          <select name="groups[${g}][band_id]" class="neo-big-input band-select" onchange="suggestInvoiceName()">${bandOptionsHtml()}</select>
         </div>
       </div>
       
@@ -523,54 +601,16 @@ function addGroup() {
       
       <button type="button" class="neo-add-btn" onclick="addItem(${g})">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
-        إضافة صنف آخر
+        إضافة صنف آخر لهذا البند
       </button>
-      
-      {{-- طريقة الدفع --}}
-      <div class="neo-pay-section">
-        <div style="font-size:1.15rem;font-weight:800;color:var(--ink);margin-bottom:20px;display:flex;align-items:center;gap:10px;">
-          <div style="background:#f1f5f9; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--ink-2);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-credit-card"/></svg>
-          </div>
-          كيف سيتم سداد هذه المجموعة؟
-        </div>
-        
-        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px">
-          <label class="neo-radio-pill">
-            <input type="radio" name="groups[${g}][payment_status]" value="paid" checked onchange="togglePaidAmt(${g}, this.value)">
-            <span>دفع نقدي بالكامل</span>
-          </label>
-          <label class="neo-radio-pill">
-            <input type="radio" name="groups[${g}][payment_status]" value="partial" onchange="togglePaidAmt(${g}, this.value)">
-            <span>دفع جزء و تبقي دين</span>
-          </label>
-          <label class="neo-radio-pill">
-            <input type="radio" name="groups[${g}][payment_status]" value="deferred" onchange="togglePaidAmt(${g}, this.value)">
-            <span>آجل بالكامل (دين)</span>
-          </label>
-        </div>
-        
-        <div class="row2" style="align-items:flex-start; gap:24px;">
-          <div class="field" style="margin:0" id="wallet-row-${g}">
-            <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">المحفظة للصرف *</label>
-            <select name="groups[${g}][account_id]" id="wallet-${g}" required class="neo-big-input">${walletOptionsHtml}</select>
-          </div>
-          <div id="paid-amt-row-${g}" style="display:none">
-            <div class="field" style="margin:0">
-              <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">المبلغ المدفوع الآن (ج.م) *</label>
-              <input type="number" name="groups[${g}][paid_amount]" id="paid-amt-${g}" min="0" step="0.01" placeholder="مثال: 1500" class="neo-big-input">
-            </div>
-          </div>
-        </div>
-      </div>
     </div>`;
   document.getElementById('groups-container').insertAdjacentHTML('beforeend', html);
   addItem(g);
 }
 
-function togglePaidAmt(g, val) {
-  const row = document.getElementById('paid-amt-row-' + g);
-  const inp = document.getElementById('paid-amt-' + g);
+function togglePaidAmt(val) {
+  const row = document.getElementById('paid-amt-row');
+  const inp = document.getElementById('paid-amt');
   if (val === 'partial') {
     row.style.display = 'block';
     inp.required = true;
@@ -581,8 +621,8 @@ function togglePaidAmt(g, val) {
   }
 
   // آجل بالكامل = مفيش فلوس بتتصرف دلوقتي، فمفيش داعي تختار محفظة
-  const walletRow = document.getElementById('wallet-row-' + g);
-  const walletSel = document.getElementById('wallet-' + g);
+  const walletRow = document.getElementById('wallet-row');
+  const walletSel = document.getElementById('wallet_select');
   if (val === 'deferred') {
     walletRow.style.display = 'none';
     walletSel.required = false;
@@ -592,6 +632,12 @@ function togglePaidAmt(g, val) {
     walletSel.required = true;
   }
 }
+
+// init defaults
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('invoice_date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('wallet_select').innerHTML = walletOptionsHtml;
+});
 
 // Start with one band group ready to fill in
 addGroup();

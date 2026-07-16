@@ -174,6 +174,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-credit-card"/></svg>
       <span>الديون</span>
     </a>
+    <a class="nav-item {{ request()->routeIs('material_invoices.*') ? 'active' : '' }}" href="{{ route('material_invoices.index') }}" style="--ic:#d97706">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
+      <span>فواتير الشراء</span>
+    </a>
     <a class="nav-item {{ request()->routeIs('materials.*') ? 'active' : '' }}" href="{{ route('materials.index') }}" style="--ic:#f97316">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg>
       <span>الخامات والمرتجعات</span>

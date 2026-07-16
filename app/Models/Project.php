@@ -14,8 +14,7 @@ class Project extends Model
 
     protected $fillable = [
         'client_id', 'name', 'address', 'area', 'default_supervision_pct',
-        'initial_contract_value',
-        'start_date', 'deliver_date', 'delivered_date',
+        'initial_contract_value', 'discount', 'start_date', 'deliver_date', 'delivered_date',
         'current_stage', 'status', 'notes',
         'cached_actual_total', 'cached_collected', 'cached_spent',
     ];
@@ -78,6 +77,11 @@ class Project extends Model
             ->orderByDesc('date');
     }
 
+    public function discounts(): HasMany
+    {
+        return $this->hasMany(ProjectDiscount::class, 'project_id');
+    }
+
     public function warranty(): HasOne
     {
         return $this->hasOne(Warranty::class, 'project_id');
@@ -131,7 +135,8 @@ class Project extends Model
     {
         $bandsTotal = (float) $this->bands->sum(fn ($band) => $band->computeActualClientTotal());
         $generalMaterials = (float) $this->generalMaterials()->sum(fn ($m) => $m->netClientCost());
-        return $bandsTotal + $generalMaterials;
+        $totalDiscounts = (float) $this->discounts()->sum('amount');
+        return $bandsTotal + $generalMaterials - $totalDiscounts - (float) $this->discount;
     }
 
     // Materials/expenses registered directly on the project without a band

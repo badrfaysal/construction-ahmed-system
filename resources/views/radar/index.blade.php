@@ -118,7 +118,11 @@
             @endif
           </td>
           <td style="max-width:300px">
-            <div class="truncate" title="{{ $log->description }}">{{ $log->description ?: '—' }}</div>
+            @if($log->ref_type === 'material_invoice' && $log->ref_id)
+              <a href="{{ route('material_invoices.show', $log->ref_id) }}" class="truncate muted" style="text-decoration:underline; display:block" title="{{ $log->description }}">{{ $log->description ?: '—' }}</a>
+            @else
+              <div class="truncate" title="{{ $log->description }}">{{ $log->description ?: '—' }}</div>
+            @endif
           </td>
           <td class="num">
             @if($log->amount > 0)

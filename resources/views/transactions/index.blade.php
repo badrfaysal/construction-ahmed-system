@@ -166,7 +166,11 @@
                   <span class="muted">— {{ $log->performedBy->name }}</span>
                 @endif
                 @if($log->description)
-                  <span class="muted">{{ $log->description }}</span>
+                  @if($log->ref_type === 'material_invoice' && $log->ref_id)
+                    <a href="{{ route('material_invoices.show', $log->ref_id) }}" class="muted" style="text-decoration:underline">{{ $log->description }}</a>
+                  @else
+                    <span class="muted">{{ $log->description }}</span>
+                  @endif
                 @endif
               </div>
               @if($log->action === 'updated' && $log->old_values)

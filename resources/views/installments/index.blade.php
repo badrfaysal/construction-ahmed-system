@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'العقود والأقساط')
 @section('page-title', 'منظومة العقود والأقساط')
 
@@ -283,7 +283,7 @@
             <select name="project_id" id="nc_project" class="form-select" required onchange="ncProjectChanged(this)">
               <option value="">— اختر المشروع —</option>
               @foreach($projectsForContract as $p)
-                <option value="{{ $p->id }}" data-billed="{{ $p->billed }}" data-paid="{{ $p->already_paid }}" data-paid-total="{{ $p->already_paid_total }}" data-bands='@json($p->bands)'>
+                <option value="{{ $p->id }}" data-billed="{{ $p->billed }}" data-paid="{{ $p->already_paid }}" data-paid-total="{{ $p->already_paid_total }}" data-has-contract="{{ $p->has_contract ? '1' : '0' }}" data-bands='@json($p->bands)'>
                   {{ $p->name }} — {{ $p->client_name }} ({{ \App\Support\Money::format($p->billed) }} ج)
                 </option>
               @endforeach
@@ -308,7 +308,7 @@
             <div class="col-md-4"><label class="fw-bold mb-1 small" style="color:#0ea5e9">خصم</label>
               <input type="number" step="0.01" min="0" name="discount" id="nc_disc" class="form-control" value="0" oninput="ncCalc()"></div>
             <div class="col-md-4"><label class="fw-bold mb-1 small text-success">المقدم المدفوع الآن</label>
-              <input type="number" step="0.01" min="0" name="down_payment" id="nc_down" class="form-control text-success fw-bold" value="0" readonly oninput="ncCalc()">
+              <input type="number" step="0.01" min="0" name="down_payment" id="nc_down" class="form-control text-success fw-bold" value="0" oninput="ncCalc()">
               <div class="form-check mt-1">
                 <input class="form-check-input" type="checkbox" id="nc_use_paid" onchange="ncUsePaidToggled(this)">
                 <label class="form-check-label small text-muted" for="nc_use_paid">اعتبر كل المبلغ اللي اتحصّل فعليًا من العميل في المشروع مقدم (مش بس تحت البند ده)</label>
@@ -377,7 +377,7 @@ function ncApplyPaidToDown(){
   const downInput = document.getElementById('nc_down');
   const val = cb.checked ? ncAlreadyPaidTotal : ncAlreadyPaidScoped;
   downInput.value = val>0 ? val.toFixed(2) : 0;
-  downInput.readOnly = true;
+  // downInput.readOnly = true;
   ncCalc();
 }
 function ncUsePaidToggled(cb){
@@ -389,16 +389,38 @@ function ncProjectChanged(sel){
   ncAlreadyPaidScoped = parseFloat(opt?.dataset.paid)||0;
   ncAlreadyPaidTotal = parseFloat(opt?.dataset.paidTotal)||0;
   // املأ قائمة البنود من المشروع المختار
+  const hasContract = opt?.dataset.hasContract === '1';
   const bandSel = document.getElementById('nc_band');
-  bandSel.innerHTML = '<option value="">المشروع كامل ('+(billed?billed.toLocaleString('en-US'):'0')+' ج)</option>';
+  
+  bandSel.innerHTML = '';
+  const wholeProjectOpt = document.createElement('option');
+  wholeProjectOpt.value = '';
+  if (hasContract) {
+      wholeProjectOpt.textContent = 'المشروع كامل (مُقسّط مسبقاً)';
+      wholeProjectOpt.disabled = true;
+  } else {
+      wholeProjectOpt.textContent = 'المشروع كامل ('+(billed?billed.toLocaleString('en-US'):'0')+' ج)';
+  }
+  bandSel.appendChild(wholeProjectOpt);
+
   let bands = [];
   try { bands = JSON.parse(opt?.dataset.bands||'[]'); } catch(e){ bands = []; }
   bands.forEach(b=>{
     const o = document.createElement('option');
     o.value = b.id; o.dataset.billed = b.billed; o.dataset.paid = b.already_paid; o.dataset.paidTotal = b.already_paid_total;
-    o.textContent = b.name + ' (' + (Number(b.billed)||0).toLocaleString('en-US') + ' ج)';
+    if (b.has_contract) {
+        o.textContent = b.name + ' (مُقسّط مسبقاً)';
+        o.disabled = true;
+    } else {
+        o.textContent = b.name + ' (' + (Number(b.billed)||0).toLocaleString('en-US') + ' ج)';
+    }
     bandSel.appendChild(o);
   });
+
+  if (bandSel.options[bandSel.selectedIndex] && bandSel.options[bandSel.selectedIndex].disabled) {
+      const valid = Array.from(bandSel.options).find(x => !x.disabled);
+      if (valid) valid.selected = true;
+  }
   document.getElementById('nc_cash').value = billed>0 ? billed.toFixed(2) : '';
   // أي فلوس اتحصّلت من العميل قبل كده تتملى تلقائي كمقدم — على نطاق البند
   // المختار بالافتراض، أو كل فلوس المشروع لو الـ checkbox مفعّل
@@ -453,25 +475,29 @@ function validateContract(e,form){
   if(!pid){e.preventDefault();Swal.fire('بيانات ناقصة','اختر المشروع','warning');return false;}
   if(mos<=0){e.preventDefault();Swal.fire('بيانات ناقصة','اكتب عدد الشهور','warning');return false;}
 
-  // تقسيط "المشروع كامل" (من غير تحديد بند) بيقفل المشروع خالص عن أي بند أو
-  // خامة جديدة بعد كده — لازم تأكيد صريح من المستخدم قبل الحفظ
-  if(!form.band_id.value){
-    e.preventDefault();
-    Swal.fire({
-      icon:'warning',
-      title:'تقسيط المشروع بالكامل؟',
-      html:'لو أكّدت تقسيط المشروع بالكامل، مش هتقدر تضيف أي بنود جديدة أو تشتري أي خامات تانية لهذا المشروع بعد كده.<br><br>متأكد إنك عايز تكمل؟',
-      showCancelButton:true,
-      confirmButtonText:'أيوه، أكمل التقسيط',
-      cancelButtonText:'إلغاء',
-      confirmButtonColor:'#dc2626',
-      reverseButtons:true,
-    }).then(result=>{
-      if(result.isConfirmed) form.submit();
-    });
-    return false;
-  }
-  return true;
+  e.preventDefault();
+  
+  const isWholeProject = !form.band_id.value;
+  const title = isWholeProject ? 'تقسيط المشروع بالكامل؟' : 'تقسيط بند محدد؟';
+  const message = isWholeProject 
+    ? '<span style="color:#dc2626;font-weight:bold;">تحذير هام: هذا قرار نهائي!</span><br><br>لو أكدت تقسيط المشروع بالكامل، مش هتقدر تشتري أو تضيف خامات جديدة، ولا هتقدر تعمل أي مرتجعات لهذا المشروع، ولن تتمكن من إلغاء عقد التقسيط بعد إنشائه.<br><br>هل أنت متأكد؟'
+    : '<span style="color:#dc2626;font-weight:bold;">تحذير هام: هذا قرار نهائي!</span><br><br>لو أكدت تقسيط هذا البند، مش هتقدر تشتري أو تضيف خامات جديدة للبند ده، ولا هتقدر تعمل أي مرتجعات تخصه، ولن تتمكن من إلغاء عقد التقسيط بعد إنشائه.<br><br>هل أنت متأكد؟';
+
+  Swal.fire({
+    icon: 'warning',
+    title: title,
+    html: message,
+    showCancelButton: true,
+    confirmButtonText: 'أيوه، متأكد (قرار نهائي)',
+    cancelButtonText: 'تراجع',
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#6c757d',
+    reverseButtons: true,
+  }).then(result => {
+    if(result.isConfirmed) form.submit();
+  });
+  
+  return false;
 }
 
 // ═══ كشف الحساب (AJAX) ═══

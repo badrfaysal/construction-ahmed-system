@@ -119,16 +119,16 @@ class MaterialController extends Controller
     {
         $data = $request->validate([
             'project_id'                    => ['required', 'exists:sy2_projects,id'],
+            'invoice_name'                  => ['required', 'string', 'max:255', 'unique:sy2_material_invoices,name'],
+            'date'                          => ['required', 'date'],
+            'supplier_id'                   => ['nullable', 'exists:sy2_suppliers,id'],
+            'payment_status'                => ['nullable', 'in:paid,partial,deferred'],
+            'account_id'                    => ['required_unless:payment_status,deferred', 'nullable', 'integer', 'exists:accounts,id'],
+            'paid_amount'                   => ['nullable', 'numeric', 'min:0'],
             'groups'                        => ['required', 'array', 'min:1'],
             'groups.*.band_id'              => ['nullable', 'exists:sy2_project_bands,id'],
-            'groups.*.account_id'           => ['required_unless:groups.*.payment_status,deferred', 'nullable', 'integer', 'exists:accounts,id'],
-            'groups.*.date'                 => ['required', 'date'],
-            'groups.*.payment_status'       => ['nullable', 'in:paid,partial,deferred'],
-            'groups.*.paid_amount'          => ['nullable', 'numeric', 'min:0'],
             'groups.*.items'                => ['required', 'array', 'min:1'],
             'groups.*.items.*.item'         => ['required', 'string', 'max:255'],
-            // كل صنف بقى ليه مورده الخاص — ممكن تشتري نفس البند من موردين مختلفين
-            'groups.*.items.*.supplier_id'  => ['nullable', 'exists:sy2_suppliers,id'],
             'groups.*.items.*.unit'         => ['required', 'string', 'max:50'],
             'groups.*.items.*.qty'          => ['required', 'numeric', 'min:0'],
             'groups.*.items.*.unit_price'   => ['required', 'numeric', 'min:0'],
@@ -162,55 +162,63 @@ class MaterialController extends Controller
         // Can't pay more than the group's actual purchase cost — a partial
         // payment above the total would over-debit the wallet for more than
         // what was really bought.
-        foreach ($data['groups'] as $i => $group) {
-            if (($group['payment_status'] ?? 'paid') !== 'partial') {
-                continue;
+        // We now validate this against the total invoice cost
+        $totalCost = 0;
+        foreach ($data['groups'] as $group) {
+            foreach ($group['items'] as $item) {
+                $totalCost += (float)$item['qty'] * (float)$item['unit_price'];
             }
-            $groupTotalCost = array_sum(array_map(
-                fn ($item) => (float) $item['qty'] * (float) $item['unit_price'],
-                $group['items']
-            ));
-            $paidAmount = (float) ($group['paid_amount'] ?? 0);
-            if ($paidAmount > $groupTotalCost + 0.01) {
-                throw ValidationException::withMessages([
-                    "groups.{$i}.paid_amount" => 'المبلغ المدفوع أكبر من إجمالي تكلفة الشراء (' . number_format($groupTotalCost, 2) . ' ج.م).',
-                ]);
-            }
+        }
+
+        $paymentStatus = $data['payment_status'] ?? 'paid';
+        $paidAmount = (float) ($data['paid_amount'] ?? 0);
+
+        if ($paymentStatus === 'partial' && $paidAmount > $totalCost + 0.01) {
+            throw ValidationException::withMessages([
+                "paid_amount" => 'المبلغ المدفوع أكبر من إجمالي تكلفة الفاتورة (' . number_format($totalCost, 2) . ' ج.م).',
+            ]);
         }
 
         // Wrapped in one transaction so a purchase that would overdraw
         // محفظة المقاولات rolls back the whole batch, not just that one item.
-        $count = DB::transaction(function () use ($data) {
+        $count = DB::transaction(function () use ($data, $totalCost, $paidAmount, $paymentStatus) {
+            if ($paymentStatus === 'paid') {
+                $paidAmount = $totalCost;
+            } elseif ($paymentStatus === 'deferred') {
+                $paidAmount = 0;
+            }
+
+            $invoice = \App\Models\MaterialInvoice::create([
+                'project_id'   => $data['project_id'],
+                'supplier_id'  => $data['supplier_id'] ?? null,
+                'account_id'   => $data['account_id'] ?? null,
+                'date'         => $data['date'],
+                'name'         => $data['invoice_name'] ?? null,
+                'total_amount' => $totalCost,
+                'paid_amount'  => $paidAmount,
+            ]);
+
             $count = 0;
             foreach ($data['groups'] as $group) {
-                $paymentStatus = $group['payment_status'] ?? 'paid';
-                // For partial payment, distribute the paid_amount proportionally across items
-                $groupItems = $group['items'];
-                $groupTotalCost = array_sum(array_map(
-                    fn ($i) => (float)$i['qty'] * (float)$i['unit_price'],
-                    $groupItems
-                ));
-                $groupPaidAmount = (float) ($group['paid_amount'] ?? 0);
-
-                foreach ($groupItems as $item) {
+                foreach ($group['items'] as $item) {
                     $itemCost = (float)$item['qty'] * (float)$item['unit_price'];
-                    // Distribute partial payment proportionally across items in the group
-                    $itemPaidAmount = $paymentStatus === 'partial' && $groupTotalCost > 0
-                        ? round($groupPaidAmount * ($itemCost / $groupTotalCost), 2)
-                        : 0;
+                    $itemPaidAmount = $paymentStatus === 'partial' && $totalCost > 0
+                        ? round($paidAmount * ($itemCost / $totalCost), 2)
+                        : ($paymentStatus === 'paid' ? $itemCost : 0);
 
-                    Material::create([
+                    \App\Models\Material::create([
                         'project_id'      => $data['project_id'],
                         'band_id'         => $group['band_id'] ?? null,
-                        'account_id'      => $group['account_id'] ?? null,
-                        'supplier_id'     => $item['supplier_id'] ?? null,
+                        'account_id'      => $data['account_id'] ?? null,
+                        'supplier_id'     => $data['supplier_id'] ?? null,
+                        'invoice_id'      => $invoice->id,
                         'item'            => $item['item'],
                         'unit'            => $item['unit'],
                         'qty'             => $item['qty'],
                         'unit_price'      => $item['unit_price'],
                         'sell_price'      => $item['sell_price'],
                         'supervision_pct' => $item['supervision_pct'] ?? 0,
-                        'date'            => $group['date'],
+                        'date'            => $data['date'],
                         'payment_status'  => $paymentStatus,
                         'paid_amount'     => $itemPaidAmount,
                     ]);
@@ -284,5 +292,55 @@ class MaterialController extends Controller
 
         return redirect()->route('projects.show', $project)
             ->with('success', 'تم تسجيل المصروف النثري.');
+    }
+
+    public function destroy(Request $request, Material $material)
+    {
+        abort_unless(auth()->user()->isAdmin(), 403);
+
+        $data = $request->validate(['current_password' => ['required', 'string']]);
+        if (! \Illuminate\Support\Facades\Hash::check($data['current_password'], auth()->user()->password)) {
+            throw ValidationException::withMessages(['current_password' => 'كلمة مرور المشرف غير صحيحة.']);
+        }
+
+        $projectId = $material->project_id;
+        $invoice = $material->invoice;
+        $project = $material->project;
+
+        if ($project && $project->hasWholeProjectInstallmentContract()) {
+            throw ValidationException::withMessages([
+                'current_password' => 'تم تقسيط المشروع بالكامل — هذا قرار نهائي ولا يمكن عكس أي حركة أو إرجاع خامات تخص هذا المشروع.',
+            ]);
+        }
+
+        if ($material->band_id) {
+            $band = \App\Models\ProjectBand::find($material->band_id);
+            if ($band && $band->hasInstallmentContract()) {
+                throw ValidationException::withMessages([
+                    'current_password' => 'البند التابع له هذه الخامة داخل في عقد تقسيط — هذا قرار نهائي ولا يمكن عكس الحركة أو إرجاع الخامات.',
+                ]);
+            }
+        }
+
+        DB::transaction(function() use ($material, $invoice) {
+            $material->delete();
+
+            // If it belonged to an invoice, check if it's the last material
+            if ($invoice) {
+                if ($invoice->materials()->count() === 0) {
+                    $invoice->delete();
+                } else {
+                    // Update invoice total amount
+                    $invoice->total_amount = $invoice->materials()->get()->sum(fn($m) => $m->qty * $m->unit_price);
+                    // Pro-rate paid amount down if it exceeds the new total
+                    if ($invoice->paid_amount > $invoice->total_amount) {
+                        $invoice->paid_amount = $invoice->total_amount;
+                    }
+                    $invoice->save(); // This triggers MaterialInvoiceObserver to sync debt and transaction
+                }
+            }
+        });
+
+        return back()->with('success', 'تم حذف الصنف بنجاح وتحديث التكاليف والديون المتعلقة به.');
     }
 }

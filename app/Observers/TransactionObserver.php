@@ -26,8 +26,10 @@ class TransactionObserver
 {
     public function created(Transaction $transaction): void
     {
-        $this->apply($transaction->direction, (float) $transaction->amount, $transaction->account_id, block: true);
-        $this->mirrorUpsert($transaction);
+        if ($transaction->type !== 'client_discount') {
+            $this->apply($transaction->direction, (float) $transaction->amount, $transaction->account_id, block: true);
+            $this->mirrorUpsert($transaction);
+        }
         $this->recalculateProjectTotals($transaction);
     }
 
@@ -41,17 +43,20 @@ class TransactionObserver
         // is always allowed — it never gets blocked), then apply the new one
         // (only the new "out" side can be blocked for insufficient funds). This
         // correctly moves money between wallets when account_id itself changed.
-        $this->apply($oldDirection, $oldAmount, $oldAccount, block: false, reverse: true);
-        $this->apply($transaction->direction, (float) $transaction->amount, $transaction->account_id, block: true);
-
-        $this->mirrorUpsert($transaction);
+        if ($transaction->type !== 'client_discount') {
+            $this->apply($oldDirection, $oldAmount, $oldAccount, block: false, reverse: true);
+            $this->apply($transaction->direction, (float) $transaction->amount, $transaction->account_id, block: true);
+            $this->mirrorUpsert($transaction);
+        }
         $this->recalculateProjectTotals($transaction);
     }
 
     public function deleted(Transaction $transaction): void
     {
-        $this->apply($transaction->direction, (float) $transaction->amount, $transaction->account_id, block: false, reverse: true);
-        $this->mirrorDelete($transaction);
+        if ($transaction->type !== 'client_discount') {
+            $this->apply($transaction->direction, (float) $transaction->amount, $transaction->account_id, block: false, reverse: true);
+            $this->mirrorDelete($transaction);
+        }
         $this->recalculateProjectTotals($transaction);
     }
 

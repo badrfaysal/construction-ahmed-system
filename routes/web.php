@@ -67,6 +67,12 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::get('/materials', [MaterialController::class, 'index'])->name('materials.index');
     Route::get('/materials/create', [MaterialController::class, 'create'])->name('materials.create');
     Route::post('/materials', [MaterialController::class, 'store'])->name('materials.store');
+    Route::delete('/materials/{material}', [MaterialController::class, 'destroy'])->name('materials.destroy');
+    
+    // Material Invoices
+    Route::get('/material-invoices', [\App\Http\Controllers\MaterialInvoiceController::class, 'index'])->name('material_invoices.index');
+    Route::get('/material-invoices/{invoice}', [\App\Http\Controllers\MaterialInvoiceController::class, 'show'])->name('material_invoices.show');
+    Route::delete('/material-invoices/{invoice}', [\App\Http\Controllers\MaterialInvoiceController::class, 'destroy'])->name('material_invoices.destroy');
 
     // Miscellaneous expenses (المصروفات النثرية) — tips/transport/meals, billed like materials
     Route::get('/projects/{project}/expenses/create', [MaterialController::class, 'createExpense'])->name('expenses.create');
@@ -95,6 +101,8 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::get('/receivables', [ReceivablesController::class, 'index'])->name('receivables.index');
     // تسجيل تحصيل مباشر من العميل (جزئي/كامل) + حذف تحصيل
     Route::post('/receivables/{project}/pay', [ReceivablesController::class, 'pay'])->name('receivables.pay');
+    // منح خصم على إجمالي المشروع
+    Route::post('/projects/{project}/discount', \App\Http\Controllers\ProjectDiscountController::class)->name('projects.discount');
 
     // Supplier debts — what we owe suppliers (الديون)
     Route::get('/debts', [DebtController::class, 'index'])->name('debts.index');

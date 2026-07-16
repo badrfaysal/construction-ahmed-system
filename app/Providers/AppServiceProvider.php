@@ -5,16 +5,20 @@ namespace App\Providers;
 use App\Models\InstallmentContract;
 use App\Models\InstallmentPayment;
 use App\Models\Material;
+use App\Models\MaterialInvoice;
 use App\Models\MaterialReturn;
 use App\Models\ProjectBand;
+use App\Models\ProjectDiscount;
 use App\Models\Settings;
 use App\Models\Transaction;
 use App\Models\WorkerPayment;
 use App\Observers\InstallmentContractObserver;
 use App\Observers\InstallmentPaymentObserver;
+use App\Observers\MaterialInvoiceObserver;
 use App\Observers\MaterialObserver;
 use App\Observers\MaterialReturnObserver;
 use App\Observers\ProjectBandObserver;
+use App\Observers\ProjectDiscountObserver;
 use App\Observers\TransactionAuditObserver;
 use App\Observers\TransactionObserver;
 use App\Observers\WorkerPaymentObserver;
@@ -39,9 +43,11 @@ class AppServiceProvider extends ServiceProvider
         // سجل الحركات (transactions) is never entered by hand — these observers
         // keep it in sync automatically whenever materials, payments, or wages happen
         Material::observe(MaterialObserver::class);
+        MaterialInvoice::observe(MaterialInvoiceObserver::class);
         MaterialReturn::observe(MaterialReturnObserver::class);
         ProjectBand::observe(ProjectBandObserver::class);
         WorkerPayment::observe(WorkerPaymentObserver::class);
+        ProjectDiscount::observe(ProjectDiscountObserver::class);
 
         // نظام العقود والأقساط الجديد (بديل الأقساط القديمة المربوطة بالمشاريع)
         InstallmentContract::observe(InstallmentContractObserver::class);

@@ -413,6 +413,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
           @elseif(!$hasCont && $isPaid)
             <span class="rv-act done" style="grid-column:span 2"><i class="fa fa-check-circle"></i> تم السداد الكامل</span>
           @endif
+          <button class="rv-act" onclick="openDiscountPanel({{ $proj->id }})"><i class="fa fa-percent"></i> منح خصم</button>
           <button class="rv-act" onclick="waRecv('{{ $clientPhone }}','{{ addslashes($proj->name) }}',{{ $row->remaining }})"><i class="fa-brands fa-whatsapp"></i> واتساب</button>
           <button class="rv-act" onclick='printInvoice({{ $proj->id }}, @json($invoiceData))'><i class="fa fa-print"></i> طباعة فاتورة</button>
         </div>
@@ -447,6 +448,35 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
               <span style="flex:1;height:1px;background:var(--ln)"></span>
             </div>
           @endif
+
+          {{-- فورم منح الخصم --}}
+          <div class="rv-pay no-print" id="disc-panel-{{ $proj->id }}" style="display:none;margin-bottom:12px;border-color:var(--ink)">
+            <div class="hd" style="color:var(--ink)">
+              <span><i class="fa fa-percent"></i> منح خصم للمشروع</span>
+              <button type="button" class="rv-x" style="color:var(--soft);font-size:1rem" onclick="hideDiscountPanel({{ $proj->id }})">×</button>
+            </div>
+            <form method="POST" action="{{ route('projects.discount', $proj) }}">
+              @csrf
+              <div style="font-size:.75rem;color:var(--mut);margin-bottom:10px">
+                إجمالي الخصومات الحالية: <strong>{{ \App\Support\Money::format($proj->discounts->sum('amount')) }} ج.م</strong>
+              </div>
+              <div class="rv-row2">
+                <div>
+                  <label>مبلغ الخصم الإضافي (ج.م) *</label>
+                  <input type="number" step="0.01" min="0.01" name="amount" placeholder="0.00" required>
+                </div>
+                <div>
+                  <label>تاريخ الخصم *</label>
+                  <input type="date" name="date" value="{{ today()->format('Y-m-d') }}" required>
+                </div>
+              </div>
+              <div style="margin-top:8px">
+                <label>ملاحظات/سبب الخصم</label>
+                <input type="text" name="notes" placeholder="اختياري" style="width:100%;padding:8px 10px;border:1px solid var(--ln);border-radius:8px;font-size:.84rem;">
+              </div>
+              <button type="submit" class="rv-submit" style="background:var(--ink)">تحديث الخصم</button>
+            </form>
+          </div>
 
           {{-- فورم التحصيل --}}
           <div class="rv-pay no-print" id="pay-panel-{{ $proj->id }}" style="display:none">
@@ -788,7 +818,17 @@ function filterStatus(status, btn) {
   activeStatus = status;
   document.querySelectorAll('.rv-pill').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
+  if (btn) btn.classList.add('active');
   filterMain();
+}
+
+/* ── الخصم ────────────────────────────────── */
+function openDiscountPanel(id) {
+  document.getElementById('pay-panel-' + id).style.display = 'none';
+  document.getElementById('disc-panel-' + id).style.display = 'block';
+}
+function hideDiscountPanel(id) {
+  document.getElementById('disc-panel-' + id).style.display = 'none';
 }
 
 /* ── واتساب ────────────────────────────────── */

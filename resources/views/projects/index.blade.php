@@ -77,8 +77,12 @@
           <div class="pc-fin">
             <div>
               <div class="l">قيمة المشروع</div>
-              <div class="v">{{ \App\Support\Money::format($total) }}</div>
-              @include('partials._actual-vs-initial', ['initial' => $total, 'actual' => $actual])
+              <div class="v" style="color:var(--brand)">{{ \App\Support\Money::format($actual) }}</div>
+              @if($actual > $total + 1)
+                <div style="font-size:11px;color:var(--muted);margin-top:3px;font-weight:600">
+                  المتفق عليه: {{ \App\Support\Money::format($total) }} ج.م
+                </div>
+              @endif
             </div>
             <div>
               <div class="l">محصّل من العميل</div>

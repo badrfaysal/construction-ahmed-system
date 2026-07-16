@@ -70,12 +70,35 @@ class TransactionAuditObserver
 
         $project = $log->project ? $log->project->name : 'عام / غير محدد';
         $user = $log->performedBy ? $log->performedBy->name : 'النظام';
-        $amount = number_format($log->amount, 2);
+        $amountStr = number_format($log->amount, 2) . ' ج.م';
+
+        if ($log->ref_type === 'material_invoice') {
+            $invoice = \App\Models\MaterialInvoice::find($log->ref_id);
+            if ($invoice && $invoice->total_amount > 0) {
+                if ($log->amount == 0) {
+                    $amountStr = number_format($invoice->total_amount, 2) . " ج.م (آجل بالكامل)";
+                } elseif ($log->amount < $invoice->total_amount) {
+                    $amountStr = number_format($log->amount, 2) . " ج.م (من أصل " . number_format($invoice->total_amount, 2) . ")";
+                }
+            }
+        } elseif ($log->ref_type === 'material') {
+            $material = \App\Models\Material::find($log->ref_id);
+            if ($material) {
+                $total = $material->qty * $material->unit_price;
+                if ($total > 0) {
+                    if ($log->amount == 0) {
+                        $amountStr = number_format($total, 2) . " ج.م (آجل بالكامل)";
+                    } elseif ($log->amount < $total) {
+                        $amountStr = number_format($log->amount, 2) . " ج.م (من أصل " . number_format($total, 2) . ")";
+                    }
+                }
+            }
+        }
 
         $text = "<b>🏢 مـقـاولات 🏢</b>\n\n";
         $text .= "<b>العملية:</b> {$actionName}\n";
         $text .= "<b>النوع:</b> {$log->type}\n";
-        $text .= "<b>المبلغ:</b> {$amount} ج.م\n";
+        $text .= "<b>المبلغ:</b> {$amountStr}\n";
         if ($log->party) {
             $text .= "<b>الطرف:</b> {$log->party}\n";
         }

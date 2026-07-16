@@ -57,7 +57,7 @@
     {{-- Per-band expense breakdown --}}
     <div class="st-sec">تفاصيل المصروفات لكل بند</div>
     <table class="st-table">
-      <thead><tr><th>التاريخ</th><th>البيان</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة</th><th class="col-sup">إشراف %</th><th>الإجمالي</th></tr></thead>
+      <thead><tr><th>التاريخ</th><th>البيان</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة</th><th class="col-sup">الإشراف (% ومبلغ)</th><th>الإجمالي</th></tr></thead>
       <tbody>
         @forelse($spentBands as $band)
           <tr class="grp">
@@ -70,7 +70,12 @@
               <td>{{ \App\Support\Money::format($m->netQty(), 1) }}</td>
               <td>{{ $m->unit }}</td>
               <td>{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
-              <td class="col-sup">{{ (float) $m->supervision_pct }}%</td>
+              <td class="col-sup">
+                {{ (float) $m->supervision_pct }}%
+                @if((float) $m->supervision_pct > 0)
+                  <br><small class="muted" style="font-size:12.5px;font-weight:600">({{ \App\Support\Money::format($m->percentageProfit()) }} ج.م)</small>
+                @endif
+              </td>
               <td><b>{{ \App\Support\Money::format($m->netClientCost()) }}</b></td>
             </tr>
           @endforeach
@@ -79,7 +84,16 @@
               <td>{{ $band->labor_date?->format('Y-m-d') ?? '—' }}</td>
               <td>مصنعية وتنفيذ — {{ $band->team_name ?: '—' }} ({{ $band->contract_type ?: '—' }})</td>
               <td>—</td><td>—</td><td>—</td>
-              <td class="col-sup">{{ $band->workers->isNotEmpty() ? 'متفاوتة' : (float) $band->labor_supervision_pct . '%' }}</td>
+              <td class="col-sup">
+                @if($band->workers->isNotEmpty())
+                  متفاوتة
+                @else
+                  {{ (float) $band->labor_supervision_pct }}%
+                @endif
+                @if($band->laborPercentageProfit() > 0)
+                  <br><small class="muted" style="font-size:12.5px;font-weight:600">({{ \App\Support\Money::format($band->laborPercentageProfit()) }} ج.م)</small>
+                @endif
+              </td>
               <td><b>{{ \App\Support\Money::format($band->laborClientPrice()) }}</b></td>
             </tr>
           @endif
@@ -101,7 +115,12 @@
               <td>{{ $m->category === 'misc' ? '—' : \App\Support\Money::format($m->netQty(), 1) }}</td>
               <td>{{ $m->category === 'misc' ? '—' : $m->unit }}</td>
               <td>{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
-              <td class="col-sup">{{ (float) $m->supervision_pct }}%</td>
+              <td class="col-sup">
+                {{ (float) $m->supervision_pct }}%
+                @if((float) $m->supervision_pct > 0)
+                  <br><small class="muted" style="font-size:12.5px;font-weight:600">({{ \App\Support\Money::format($m->percentageProfit()) }} ج.م)</small>
+                @endif
+              </td>
               <td><b>{{ \App\Support\Money::format($m->netClientCost()) }}</b></td>
             </tr>
           @endforeach

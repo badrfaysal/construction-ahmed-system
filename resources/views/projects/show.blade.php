@@ -261,6 +261,14 @@
     </div>
     <svg class="pay-opt-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg>
   </a>
+  <button type="button" class="pay-opt" style="cursor:pointer;text-align:start;background:var(--surface);border:1px solid var(--line);width:100%" onclick="document.getElementById('discount-modal').classList.add('open')">
+    <div class="pay-opt-ic" style="color:#e11d48;background:#ffe4e6"><i class="fa fa-percent"></i></div>
+    <div class="pay-opt-body">
+      <div class="pay-opt-t">إضافة خصم للعميل</div>
+      <div class="pay-opt-s">تقليل المديونية بمنح خصم جديد على المشروع</div>
+    </div>
+    <svg class="pay-opt-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg>
+  </button>
 </div>
 
 {{-- مودال تحصيل دفعة سريعة من العميل — من غير ما تسيب صفحة المشروع --}}
@@ -382,7 +390,36 @@
   }
   $allClientPays = $directPays->concat($contractPays)->sortByDesc(fn ($p) => $p->date)->values();
 @endphp
-<div class="section-label" style="margin-top:0">سجل دفعات العميل بالتفصيل</div>
+@if($project->discounts->count())
+  <div class="section-label" style="margin-top:0;color:var(--ink)">
+    الخصومات الممنوحة للعميل
+  </div>
+  <div class="table-card" style="margin-bottom:24px;overflow:hidden">
+    <div class="feed">
+      @foreach($project->discounts->sortByDesc('date') as $disc)
+        <div class="tx in" style="background:#fef2f2;border-color:#fecaca">
+          <div class="tx-ic" style="color:var(--bad)"><i class="fa fa-percent"></i></div>
+          <div class="tx-main">
+            <div class="t" style="color:var(--bad)">خصم على إجمالي المشروع</div>
+            <div class="s">
+              <span>{{ $disc->date->format('Y-m-d') }}</span>
+              @if($disc->notes)<span>— {{ $disc->notes }}</span>@endif
+            </div>
+          </div>
+          <div class="tx-amt" style="color:var(--bad)">{{ \App\Support\Money::format($disc->amount) }} ج.م</div>
+        </div>
+      @endforeach
+    </div>
+    <div style="padding:12px 18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;background:var(--bg)">
+      <strong>إجمالي الخصومات</strong>
+      <strong class="tnum" style="color:var(--bad)">{{ \App\Support\Money::format($project->discounts->sum('amount')) }} ج.م</strong>
+    </div>
+  </div>
+@endif
+
+<div class="section-label" style="margin-top:0;">
+  <span>سجل دفعات العميل بالتفصيل</span>
+</div>
 <div class="table-card" style="margin-bottom:24px;overflow:hidden">
   @if($allClientPays->isNotEmpty())
     <div class="feed">
@@ -494,6 +531,7 @@
             <th class="num">المرتجع</th>
             <th class="num">الإجمالي الصافي</th>
             <th>التاريخ</th>
+            <th class="no-print"></th>
           </tr>
         </thead>
         <tbody>
@@ -509,7 +547,19 @@
               <td class="num price-sell">{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
               <td class="num {{ $m->returnedQty() > 0 ? '' : 'muted' }}">{{ \App\Support\Money::format($m->returnedQty(), 1) }}</td>
               <td class="num"><strong>{{ \App\Support\Money::format($m->netCost()) }}</strong></td>
-              <td class="muted">{{ $m->date->format('Y-m-d') }}</td>
+              <td class="muted">
+                {{ $m->date->format('Y-m-d') }}
+                @if($m->invoice_id)
+                  <a href="{{ route('material_invoices.show', $m->invoice_id) }}" class="tag sm" style="margin-right:4px">فاتورة</a>
+                @endif
+              </td>
+              <td class="no-print">
+                @if(auth()->user()->isAdmin())
+                  <button type="button" class="btn ghost danger sm" title="عكس الحركة" onclick="openItemDeleteModal('{{ route('materials.destroy', $m->id) }}')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-trash"/></svg>
+                  </button>
+                @endif
+              </td>
             </tr>
           @endforeach
         </tbody>
@@ -570,7 +620,7 @@
               <td class="muted">{{ $r->notes ?: '—' }}</td>
               <td>
                 @if(auth()->user()->isAdmin())
-                  <button type="button" class="btn ghost sm" style="color:var(--neg)" onclick="openReturnDeleteModal({{ $r->id }})">حذف</button>
+                  <button type="button" class="btn ghost sm" style="color:var(--neg)" onclick="openItemDeleteModal('{{ route('returns.destroy', $r->id) }}')">عكس الحركة</button>
                 @endif
               </td>
             </tr>
@@ -585,36 +635,37 @@
     </div>
   @endif
 </div>
+</div>{{-- /tab-panel: returns --}}
 
 @if(auth()->user()->isAdmin())
-<div class="modal-overlay" id="return-delete-modal" onclick="if(event.target===this)this.classList.remove('open')">
+<div class="modal-overlay" id="item-delete-modal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal-box" style="max-width:400px">
     <div class="modal-head">
-      <h4 style="margin:0;color:var(--neg)">حذف المرتجع</h4>
-      <button class="btn ghost sm" onclick="document.getElementById('return-delete-modal').classList.remove('open')">✕</button>
+      <h4 style="margin:0;color:var(--neg)">عكس الحركة</h4>
+      <button class="btn ghost sm" onclick="document.getElementById('item-delete-modal').classList.remove('open')">✕</button>
     </div>
-    <form id="return-delete-form" method="POST" onsubmit="return submitReturnDelete(event)">
+    <form id="item-delete-form" method="POST" onsubmit="return submitItemDelete(event)">
       @csrf @method('DELETE')
       <div class="modal-body">
-        <p style="margin:0 0 14px">هيتم عكس أثر هذا المرتجع بالكامل (رجوع الكمية للصافي المتاح، وأي مبلغ اترد للمحفظة هيتخصم تاني).</p>
+        <p style="margin:0 0 14px">سيتم عكس أثر هذه الحركة بالكامل من التكاليف، المحفظة، والمديونيات.</p>
         <div class="field">
-          <label style="color:var(--neg)">كلمة مرور الأدمن للتأكيد *</label>
-          <input type="password" name="current_password" id="return-delete-password" required autocomplete="current-password">
-          <div id="return-delete-error" class="txn-pw-error" style="display:none">
+          <label style="color:var(--neg)">كلمة مرور المشرف للتأكيد *</label>
+          <input type="password" name="current_password" id="item-delete-password" required autocomplete="current-password">
+          <div id="item-delete-error" class="txn-pw-error" style="display:none">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"/></svg>
             <span></span>
           </div>
         </div>
       </div>
       <div class="btn-row" style="padding:0 20px 20px">
-        <button type="submit" class="btn danger" id="return-delete-submit">تأكيد الحذف</button>
-        <button type="button" class="btn ghost" onclick="document.getElementById('return-delete-modal').classList.remove('open')">إلغاء</button>
+        <button type="submit" class="btn danger" id="item-delete-submit">تأكيد عكس الحركة</button>
+        <button type="button" class="btn ghost" onclick="document.getElementById('item-delete-modal').classList.remove('open')">إلغاء</button>
       </div>
     </form>
   </div>
 </div>
+</div>
 @endif
-</div>{{-- /tab-panel: returns --}}
 
 <div class="tab-panel" data-panel="workers" style="display:none">
 <div class="section-label" style="margin-top:0">الصنايعية الشغالين في المشروع</div>
@@ -1097,11 +1148,11 @@ function switchProjectTab(name) {
   document.getElementById('quick-pay-modal').classList.add('open');
 @endif
 
-function openReturnDeleteModal(returnId) {
-  document.getElementById('return-delete-form').action = '/returns/' + returnId;
-  document.getElementById('return-delete-password').value = '';
-  document.getElementById('return-delete-error').style.display = 'none';
-  document.getElementById('return-delete-modal').classList.add('open');
+function openItemDeleteModal(actionUrl) {
+  document.getElementById('item-delete-form').action = actionUrl;
+  document.getElementById('item-delete-password').value = '';
+  document.getElementById('item-delete-error').style.display = 'none';
+  document.getElementById('item-delete-modal').classList.add('open');
 }
 
 function playAlarmSound() {
@@ -1148,13 +1199,13 @@ async  function confirmBandDeletion(id) {
     document.getElementById('discountModal').classList.remove('open');
   }
 
-async function submitReturnDelete(evt) {
+async function submitItemDelete(evt) {
   evt.preventDefault();
   const form = evt.target;
-  const submitBtn = document.getElementById('return-delete-submit');
-  const errorBox = document.getElementById('return-delete-error');
+  const submitBtn = document.getElementById('item-delete-submit');
+  const errorBox = document.getElementById('item-delete-error');
   const errorSpan = errorBox.querySelector('span');
-  const passwordInput = document.getElementById('return-delete-password');
+  const passwordInput = document.getElementById('item-delete-password');
 
   errorBox.style.display = 'none';
   submitBtn.disabled = true;
@@ -1200,6 +1251,38 @@ document.getElementById('materials-band-filter')?.addEventListener('change', fun
   });
 });
 </script>
+
+{{-- Modal for Project Discount --}}
+<div class="modal-overlay" id="discount-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box" style="max-width:400px">
+    <div class="modal-head">
+      <h4 style="margin:0">منح خصم للعميل</h4>
+      <button class="btn ghost sm" onclick="document.getElementById('discount-modal').classList.remove('open')">✕</button>
+    </div>
+    <form method="POST" action="{{ route('projects.discount', $project) }}">
+      @csrf
+      <div class="modal-body">
+        <p style="margin:0 0 14px;color:var(--mut);font-size:.85rem">الخصم هيتسجل في حساب العميل ويقلل المتبقي عليه على طول.</p>
+        <div class="field">
+          <label>مبلغ الخصم (ج.م) *</label>
+          <input type="number" step="0.01" min="0.01" name="amount" required>
+        </div>
+        <div class="field">
+          <label>تاريخ الخصم *</label>
+          <input type="date" name="date" value="{{ today()->format('Y-m-d') }}" required>
+        </div>
+        <div class="field">
+          <label>ملاحظات</label>
+          <input type="text" name="notes">
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn ghost" onclick="document.getElementById('discount-modal').classList.remove('open')">إلغاء</button>
+        <button type="submit" class="btn">إضافة الخصم</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 {{-- Modal for direct discount --}}
 <div class="rv-modal" id="discountModal" onclick="if(event.target===this) closeDiscountModal()">

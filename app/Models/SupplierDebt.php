@@ -39,7 +39,12 @@ class SupplierDebt extends Model
         return $this->belongsTo(Material::class, 'material_id');
     }
 
-    // Remaining amount to pay
+    public function invoice(): BelongsTo
+    {
+        return $this->belongsTo(MaterialInvoice::class, 'invoice_id');
+    }
+
+    // Remaining debt
     public function remaining(): float
     {
         return (float) $this->total_amount - (float) $this->paid_amount;

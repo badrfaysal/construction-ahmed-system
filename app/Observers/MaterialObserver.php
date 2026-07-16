@@ -16,6 +16,12 @@ class MaterialObserver
 {
     public function created(Material $material): void
     {
+        if ($material->invoice_id) {
+            $material->band?->recalculateCachedTotals();
+            $material->project?->recalculateCachedTotals();
+            return;
+        }
+
         $walletAmount = $this->walletAmount($material);
 
         // Create a transaction so it always appears in the Radar/Audit Log.
@@ -57,6 +63,14 @@ class MaterialObserver
 
     public function updated(Material $material): void
     {
+        if ($material->invoice_id) {
+            $material->band?->recalculateCachedTotals();
+            $material->project?->recalculateCachedTotals();
+            // Tell the invoice to update its totals
+            $material->invoice->syncTotalAmount();
+            return;
+        }
+
         $walletAmount = $this->walletAmount($material);
 
         $tx = Transaction::where('ref_type', 'material')->where('ref_id', $material->id)->first();
