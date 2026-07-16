@@ -30,20 +30,18 @@ class MaterialReturnObserver
         $cashRefund = round($return->qty * $returnPrice * $paidRatio, 2);
         $debtDrop   = round($return->qty * $returnPrice * (1 - $paidRatio), 2);
 
-        if ($cashRefund > 0) {
-            Transaction::create([
-                'project_id'  => $material->project_id,
-                'band_id'     => $material->band_id,
-                'direction'   => 'in',
-                'type'        => 'مرتجع خامات',
-                'party'       => $material->supplier?->name ?? $material->item,
-                'amount'      => $cashRefund,
-                'date'        => $return->date,
-                'description' => 'مرتجع ' . $material->item . ' — ' . number_format($return->qty, 1) . ' ' . $material->unit,
-                'ref_type'    => 'return',
-                'ref_id'      => $return->id,
-            ]);
-        }
+        Transaction::create([
+            'project_id'  => $material->project_id,
+            'band_id'     => $material->band_id,
+            'direction'   => 'in',
+            'type'        => 'مرتجع خامات',
+            'party'       => $material->supplier?->name ?? $material->item,
+            'amount'      => $cashRefund,
+            'date'        => $return->date,
+            'description' => 'مرتجع ' . $material->item . ' — ' . number_format($return->qty, 1) . ' ' . $material->unit,
+            'ref_type'    => 'return',
+            'ref_id'      => $return->id,
+        ]);
 
         if ($debtDrop > 0) {
             $this->adjustDebt($material->id, -$debtDrop);

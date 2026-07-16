@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'الخامات')
 @section('page-title', 'الخامات والمرتجعات')
 
@@ -21,7 +21,7 @@
     </div>
     @if($insights['topMaterial'])
       <div class="val">{{ $insights['topMaterial']->item }}</div>
-      <div class="note">{{ number_format($insights['topMaterial']->total_qty, 1) }} {{ $insights['topMaterial']->unit }} — بتكلفة {{ \App\Support\Money::format($insights['topMaterial']->total_cost) }} ج.م ({{ $insights['topMaterial']->purchase_count }} عملية شراء)</div>
+      <div class="note">{{ number_format($insights['topMaterial']->total_qty, 1) }} — بتكلفة {{ \App\Support\Money::format($insights['topMaterial']->total_cost) }} ج.م ({{ $insights['topMaterial']->purchase_count }} عملية شراء)</div>
     @else
       <div class="val">—</div>
       <div class="note">لا توجد بيانات كافية بعد</div>
@@ -34,7 +34,7 @@
     </div>
     @if($insights['topReturned'])
       <div class="val">{{ $insights['topReturned']->item }}</div>
-      <div class="note">{{ number_format($insights['topReturned']->total_qty, 1) }} {{ $insights['topReturned']->unit }} مرتجعة — بقيمة {{ \App\Support\Money::format($insights['topReturned']->total_value) }} ج.م ({{ $insights['topReturned']->return_count }} مرتجع)</div>
+      <div class="note">{{ number_format($insights['topReturned']->total_qty, 1) }} مرتجعة — بقيمة {{ \App\Support\Money::format($insights['topReturned']->total_value) }} ج.م ({{ $insights['topReturned']->return_count }} مرتجع)</div>
     @else
       <div class="val">—</div>
       <div class="note">لا توجد مرتجعات مسجّلة بعد</div>
@@ -98,7 +98,6 @@
             <th>البند</th>
             <th>المورد</th>
             <th class="num">الكمية</th>
-            <th>الوحدة</th>
             <th class="num"><span class="price-cost">سعر الشراء (تكلفة)</span></th>
             <th class="num"><span class="price-sell">سعر البيع للعميل</span></th>
             <th class="num">المرتجع</th>
@@ -114,7 +113,6 @@
               <td class="muted">{{ $m->band?->name ?? '—' }}</td>
               <td class="muted">{{ $m->supplier?->name ?? '—' }}</td>
               <td class="num">{{ number_format($m->qty, 1) }}</td>
-              <td class="muted">{{ $m->unit }}</td>
               <td class="num price-cost">{{ \App\Support\Money::format($m->unit_price) }}</td>
               <td class="num price-sell">{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
               <td class="num {{ $m->returnedQty() > 0 ? '' : 'muted' }}">{{ \App\Support\Money::format($m->returnedQty(), 1) }}</td>

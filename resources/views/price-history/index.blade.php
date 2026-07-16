@@ -20,7 +20,7 @@
   @if($items->count())
     <div class="table-scroll">
       <table>
-        <thead><tr><th>الصنف</th><th>الوحدة</th><th class="num">عدد مرات الشراء</th><th class="num">أقل سعر</th><th class="num">متوسط السعر</th><th class="num">أعلى سعر</th><th class="num">آخر سعر</th><th class="num">نسبة التغير</th><th></th></tr></thead>
+        <thead><tr><th>الصنف</th><th class="num">عدد مرات الشراء</th><th class="num">أقل سعر</th><th class="num">متوسط السعر</th><th class="num">أعلى سعر</th><th class="num">آخر سعر</th><th class="num">نسبة التغير</th><th></th></tr></thead>
         <tbody>
           @foreach($items as $item)
             <tr class="row-click" onclick="location.href='{{ route('price-history.show', $item->name) }}'">
@@ -30,7 +30,6 @@
                   <div class="muted" style="font-size:11px">صيغ مطابقة: {{ implode('، ', array_diff($item->variants, [$item->name])) }}</div>
                 @endif
               </td>
-              <td class="muted">{{ $item->unit }}</td>
               <td class="num">{{ $item->purchase_count }}</td>
               <td class="num">{{ number_format($item->min_price, 2) }}</td>
               <td class="num">{{ number_format($item->avg_price, 2) }}</td>

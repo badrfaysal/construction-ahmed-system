@@ -6,6 +6,10 @@
 <div class="page-head no-print">
   <div><h3>كشف حساب — {{ $project->name }}</h3><p>{{ $project->client->name }}</p></div>
   <div class="btn-row">
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-inline-end:10px;font-size:13px;font-weight:600">
+      <input type="checkbox" id="toggle-supervision" onchange="document.body.classList.toggle('show-supervision', this.checked)">
+      إظهار نسبة الإشراف
+    </label>
     <a href="{{ route('reports.statement.summary', $project) }}" class="btn ghost">الكشف المختصر</a>
     <button onclick="window.print()" class="btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg>
@@ -14,6 +18,11 @@
     <a href="{{ route('projects.show', $project) }}" class="btn ghost">رجوع</a>
   </div>
 </div>
+
+<style>
+  .col-sup { display: none; }
+  body.show-supervision .col-sup { display: table-cell; }
+</style>
 
 <div class="statement">
   {{-- Company header --}}
@@ -48,11 +57,11 @@
     {{-- Per-band expense breakdown --}}
     <div class="st-sec">تفاصيل المصروفات لكل بند</div>
     <table class="st-table">
-      <thead><tr><th>التاريخ</th><th>البيان</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة</th><th>الإجمالي</th></tr></thead>
+      <thead><tr><th>التاريخ</th><th>البيان</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة</th><th class="col-sup">إشراف %</th><th>الإجمالي</th></tr></thead>
       <tbody>
         @forelse($spentBands as $band)
           <tr class="grp">
-            <td colspan="6">بند: {{ $band->name }} <span class="bt">إجمالي البند: {{ \App\Support\Money::format($band->actualClientTotal()) }} ج.م</span></td>
+            <td colspan="7">بند: {{ $band->name }} <span class="bt">إجمالي البند: {{ \App\Support\Money::format($band->actualClientTotal()) }} ج.م</span></td>
           </tr>
           @foreach($band->materials->sortBy('date') as $m)
             <tr>
@@ -61,6 +70,7 @@
               <td>{{ \App\Support\Money::format($m->netQty(), 1) }}</td>
               <td>{{ $m->unit }}</td>
               <td>{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
+              <td class="col-sup">{{ (float) $m->supervision_pct }}%</td>
               <td><b>{{ \App\Support\Money::format($m->netClientCost()) }}</b></td>
             </tr>
           @endforeach
@@ -69,19 +79,20 @@
               <td>{{ $band->labor_date?->format('Y-m-d') ?? '—' }}</td>
               <td>مصنعية وتنفيذ — {{ $band->team_name ?: '—' }} ({{ $band->contract_type ?: '—' }})</td>
               <td>—</td><td>—</td><td>—</td>
+              <td class="col-sup">{{ $band->workers->isNotEmpty() ? 'متفاوتة' : (float) $band->labor_supervision_pct . '%' }}</td>
               <td><b>{{ \App\Support\Money::format($band->laborClientPrice()) }}</b></td>
             </tr>
           @endif
           <tr class="sub">
-            <td colspan="5" style="text-align:left">إجمالي بند {{ $band->name }}</td>
+            <td colspan="6" style="text-align:left">إجمالي بند {{ $band->name }}</td>
             <td>{{ \App\Support\Money::format($band->actualClientTotal()) }} ج.م</td>
           </tr>
         @empty
-          <tr><td colspan="6" class="muted" style="text-align:center;padding:20px">لا توجد بنود بدأ العمل بها بعد</td></tr>
+          <tr><td colspan="7" class="muted" style="text-align:center;padding:20px">لا توجد بنود بدأ العمل بها بعد</td></tr>
         @endforelse
         @if($generalMaterials->count())
           <tr class="grp">
-            <td colspan="6">مصروفات عامة على المشروع <span class="bt">الإجمالي: {{ \App\Support\Money::format($generalMaterials->sum(fn($m) => $m->netClientCost())) }} ج.م</span></td>
+            <td colspan="7">مصروفات عامة على المشروع <span class="bt">الإجمالي: {{ \App\Support\Money::format($generalMaterials->sum(fn($m) => $m->netClientCost())) }} ج.م</span></td>
           </tr>
           @foreach($generalMaterials as $m)
             <tr>
@@ -90,12 +101,13 @@
               <td>{{ $m->category === 'misc' ? '—' : \App\Support\Money::format($m->netQty(), 1) }}</td>
               <td>{{ $m->category === 'misc' ? '—' : $m->unit }}</td>
               <td>{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
+              <td class="col-sup">{{ (float) $m->supervision_pct }}%</td>
               <td><b>{{ \App\Support\Money::format($m->netClientCost()) }}</b></td>
             </tr>
           @endforeach
         @endif
         <tr class="sub" style="background:var(--accent-soft)">
-          <td colspan="5" style="text-align:left;color:var(--accent-ink)">إجمالي المستحق حتى الآن</td>
+          <td colspan="6" style="text-align:left;color:var(--accent-ink)">إجمالي المستحق حتى الآن</td>
           <td style="color:var(--accent-ink)">{{ \App\Support\Money::format($actualTotal) }} ج.م</td>
         </tr>
       </tbody>

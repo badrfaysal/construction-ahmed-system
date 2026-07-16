@@ -280,6 +280,10 @@
 <aside class="mat-totals">
   <div class="section-label">الإجماليات</div>
   <div class="card stat">
+    <div class="top"><span class="label">عدد الأصناف</span></div>
+    <div class="val tnum"><span id="tot-items-count">0</span></div>
+  </div>
+  <div class="card stat">
     <div class="top"><span class="label">إجمالي الشراء (تكلفة)</span></div>
     <div class="val tnum"><span id="tot-purchase">0</span> <small>ج.م</small></div>
   </div>
@@ -417,10 +421,7 @@ function itemRowHtml(g, i) {
         <div class="neo-label">المورد</div>
         <select name="groups[${g}][items][${i}][supplier_id]" class="neo-input mat-supplier" onchange="this.dataset.touched='1'">${supplierOptionsHtml(groupDefaultSupplier[g] || '')}</select>
       </div>
-      <div class="neo-col neo-col-sm">
-        <div class="neo-label">الوحدة</div>
-        <input type="text" name="groups[${g}][items][${i}][unit]" class="neo-input" value="وحدة" required list="units-list">
-      </div>
+      <input type="hidden" name="groups[${g}][items][${i}][unit]" value="وحدة">
       <div class="neo-col neo-col-sm">
         <div class="neo-label">الكمية</div>
         <input type="number" name="groups[${g}][items][${i}][qty]" class="neo-input mat-qty" placeholder="0" min="0" step="0.1" required oninput="recalcTotals()">
@@ -467,11 +468,14 @@ function recalcTotals() {
     client   += qty * sp * (1 + pct / 100);
   });
 
+  const itemsCount = document.querySelectorAll('.item-row').length;
+
   const priceDiff = sell - purchase;   // فرق السعر
   const supMarkup = client - sell;     // ربح الإشراف
   const profit    = client - purchase; // إجمالي الربح
 
   const fmt = n => Math.round(n).toLocaleString('en-US');
+  setTxt('tot-items-count', itemsCount);
   setTxt('tot-purchase', fmt(purchase));
   setTxt('tot-sell',     fmt(sell));
   setTxt('tot-client',   fmt(client));

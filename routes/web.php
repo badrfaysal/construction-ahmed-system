@@ -16,6 +16,7 @@ use App\Http\Controllers\PriceHistoryController;
 use App\Http\Controllers\ProjectBandController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\RadarController;
 use App\Http\Controllers\ReceivablesController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SearchController;
@@ -183,6 +184,9 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
         // تعديل/حذف مركزي لأي حركة مالية — من سجل الحركات بس، محمي بباسورد الأدمن
         Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
         Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
+        
+        // الرادار - سجل الحركات الشامل
+        Route::get('/radar', [RadarController::class, 'index'])->name('radar.index');
     });
 
     // Global search (بحث) — available from the topbar on every screen

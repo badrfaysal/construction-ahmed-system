@@ -20,7 +20,7 @@
   @if($purchases->count())
     <div class="table-scroll">
       <table>
-        <thead><tr><th>التاريخ</th><th>المشروع</th><th>المورد</th><th class="num">الكمية</th><th>الوحدة</th><th class="num">سعر الوحدة</th><th class="num">التغير</th></tr></thead>
+        <thead><tr><th>التاريخ</th><th>المشروع</th><th>المورد</th><th class="num">الكمية</th><th class="num">سعر الوحدة</th><th class="num">التغير</th></tr></thead>
         <tbody>
           @php $prev = null; @endphp
           @foreach($purchases as $m)
@@ -33,7 +33,6 @@
               <td>{{ $m->project?->name ?? '—' }}</td>
               <td class="muted">{{ $m->supplier?->name ?? '—' }}</td>
               <td class="num">{{ number_format($m->qty, 1) }}</td>
-              <td class="muted">{{ $m->unit }}</td>
               <td class="num"><strong>{{ number_format($m->unit_price, 2) }}</strong></td>
               <td class="num">
                 @if(is_null($change))

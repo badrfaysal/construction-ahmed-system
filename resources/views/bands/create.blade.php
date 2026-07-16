@@ -192,10 +192,7 @@ function bandMaterialRowHtml(i) {
           <label>المورد</label>
           <select name="materials[${i}][supplier_id]">${bandSupplierOptionsHtml}</select>
         </div>
-        <div class="irf">
-          <label>الوحدة</label>
-          <input type="text" name="materials[${i}][unit]" value="وحدة" required list="units-list">
-        </div>
+        <input type="hidden" name="materials[${i}][unit]" value="وحدة">
         <div class="irf">
           <label>الكمية</label>
           <input type="number" name="materials[${i}][qty]" class="bm-qty" placeholder="0" min="0" step="0.1" required oninput="updateClientPrice()">

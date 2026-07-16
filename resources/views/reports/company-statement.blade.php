@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'كشف حساب الشركة: ' . $project->name)
 @section('page-title', 'كشف حساب الشركة')
 
@@ -58,7 +58,7 @@
 
       {{-- Purchases (materials + misc expenses) --}}
       <table class="st-table">
-        <thead><tr><th>التاريخ</th><th>البيان</th><th>المورد</th><th class="num">الكمية</th><th class="num">سعر الشراء</th><th class="num">التكلفة</th></tr></thead>
+        <thead><tr><th>التاريخ</th><th>البيان</th><th>المورد</th><th class="num">الكمية</th><th class="num">سعر الشراء</th><th class="num">التكلفة</th><th class="num">سعر البيع</th><th class="num">إشراف %</th><th class="num">إشراف (ج.م)</th></tr></thead>
         <tbody>
           @forelse($band->materials->sortBy('date') as $m)
             <tr>
@@ -72,20 +72,24 @@
               <td class="num">{{ \App\Support\Money::format($m->netQty(), 1) }} {{ $m->unit }}</td>
               <td class="num">{{ \App\Support\Money::format($m->unit_price) }}</td>
               <td class="num"><b>{{ \App\Support\Money::format($m->netCost()) }}</b></td>
+              <td class="num">{{ \App\Support\Money::format($m->netQty() * (float)($m->sell_price ?? $m->unit_price)) }}</td>
+              <td class="num">{{ (float) $m->supervision_pct }}%</td>
+              <td class="num" style="color:var(--pos)"><b>{{ \App\Support\Money::format($m->percentageProfit()) }}</b></td>
             </tr>
           @empty
-            <tr><td colspan="6" class="muted" style="text-align:center;padding:12px">لا مشتريات لهذا البند</td></tr>
+            <tr><td colspan="9" class="muted" style="text-align:center;padding:12px">لا مشتريات لهذا البند</td></tr>
           @endforelse
           <tr class="sub">
             <td colspan="5" style="text-align:left">إجمالي تكلفة المشتريات</td>
             <td class="num">{{ \App\Support\Money::format($bMaterialCost) }} ج.م</td>
+            <td colspan="3"></td>
           </tr>
         </tbody>
       </table>
 
       {{-- Labor / technicians --}}
       <table class="st-table" style="margin-top:8px">
-        <thead><tr><th>الفني</th><th>التخصص</th><th>نوع التعاقد</th><th>بداية العمل</th><th class="num">الأجر (التكلفة)</th></tr></thead>
+        <thead><tr><th>الفني</th><th>التخصص</th><th>نوع التعاقد</th><th>بداية العمل</th><th class="num">الأجر (التكلفة)</th><th class="num">سعر البيع</th><th class="num">إشراف %</th><th class="num">إشراف (ج.م)</th></tr></thead>
         <tbody>
           @forelse($band->workers as $w)
             <tr>
@@ -94,6 +98,9 @@
               <td class="muted">{{ $w->contractTypeAr() }}</td>
               <td class="muted">{{ $w->start_date?->format('Y-m-d') ?? '—' }}</td>
               <td class="num"><b>{{ \App\Support\Money::format($w->amount) }}</b></td>
+              <td class="num">{{ \App\Support\Money::format((float) ($w->sell_amount ?: $w->amount)) }}</td>
+              <td class="num">{{ (float) $w->supervision_pct }}%</td>
+              <td class="num" style="color:var(--pos)"><b>{{ \App\Support\Money::format($w->percentageProfit()) }}</b></td>
             </tr>
           @empty
             @if($band->labor_amount > 0)
@@ -103,14 +110,18 @@
                 <td class="muted">{{ $band->contract_type ? $band->contractTypeAr() : '—' }}</td>
                 <td class="muted">—</td>
                 <td class="num"><b>{{ \App\Support\Money::format($band->labor_amount) }}</b></td>
+                <td class="num">{{ \App\Support\Money::format((float) ($band->labor_sell_price ?? $band->labor_amount)) }}</td>
+                <td class="num">{{ (float) $band->labor_supervision_pct }}%</td>
+                <td class="num" style="color:var(--pos)"><b>{{ \App\Support\Money::format(((float) ($band->labor_sell_price ?? $band->labor_amount)) * ((float) $band->labor_supervision_pct / 100)) }}</b></td>
               </tr>
             @else
-              <tr><td colspan="5" class="muted" style="text-align:center;padding:12px">لا مصنعية لهذا البند</td></tr>
+              <tr><td colspan="8" class="muted" style="text-align:center;padding:12px">لا مصنعية لهذا البند</td></tr>
             @endif
           @endforelse
           <tr class="sub">
             <td colspan="4" style="text-align:left">إجمالي المصنعية</td>
             <td class="num">{{ \App\Support\Money::format($bLaborCost) }} ج.م</td>
+            <td colspan="3"></td>
           </tr>
         </tbody>
       </table>

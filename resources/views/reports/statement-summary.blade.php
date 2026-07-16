@@ -6,6 +6,10 @@
 <div class="page-head no-print">
   <div><h3>كشف حساب مختصر — {{ $project->name }}</h3><p>{{ $project->client->name }}</p></div>
   <div class="btn-row">
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-inline-end:10px;font-size:13px;font-weight:600">
+      <input type="checkbox" id="toggle-supervision" onchange="document.body.classList.toggle('show-supervision', this.checked)">
+      إظهار الإشراف
+    </label>
     <a href="{{ route('reports.statement', $project) }}" class="btn ghost">الكشف التفصيلي</a>
     <button onclick="window.print()" class="btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg>
@@ -14,6 +18,11 @@
     <a href="{{ route('projects.show', $project) }}" class="btn ghost">رجوع</a>
   </div>
 </div>
+
+<style>
+  .col-sup { display: none; }
+  body.show-supervision .col-sup { display: table-cell; }
+</style>
 
 <div class="statement">
   {{-- Company header --}}
@@ -48,26 +57,29 @@
     {{-- Per-band totals only — no material/quantity detail --}}
     <div class="st-sec">تكلفة كل بند</div>
     <table class="st-table">
-      <thead><tr><th>البند</th><th>الحالة</th><th class="num">التكلفة الإجمالية</th></tr></thead>
+      <thead><tr><th>البند</th><th>الحالة</th><th class="col-sup">الإشراف (ج.م)</th><th class="num">التكلفة الإجمالية</th></tr></thead>
       <tbody>
         @forelse($spentBands as $band)
           <tr>
             <td><strong>{{ $band->name }}</strong></td>
             <td><span class="tag {{ $band->status === 'done' ? 'green' : ($band->status === 'active' ? 'blue' : 'gray') }}">{{ $band->status === 'done' ? 'مكتمل' : ($band->status === 'active' ? 'جاري' : 'معلق') }}</span></td>
+            <td class="col-sup">{{ \App\Support\Money::format($band->percentageProfit()) }}</td>
             <td class="num"><b>{{ \App\Support\Money::format($band->actualClientTotal()) }} ج.م</b></td>
           </tr>
         @empty
-          <tr><td colspan="3" class="muted" style="text-align:center;padding:20px">لا توجد بنود بدأ العمل بها بعد</td></tr>
+          <tr><td colspan="4" class="muted" style="text-align:center;padding:20px">لا توجد بنود بدأ العمل بها بعد</td></tr>
         @endforelse
         @if($generalTotal > 0)
           <tr>
             <td><strong>مصروفات عامة على المشروع</strong></td>
             <td>—</td>
+            <td class="col-sup">{{ \App\Support\Money::format($project->generalMaterials()->sum(fn($m) => $m->percentageProfit())) }}</td>
             <td class="num"><b>{{ \App\Support\Money::format($generalTotal) }} ج.م</b></td>
           </tr>
         @endif
         <tr class="sub" style="background:var(--accent-soft)">
           <td colspan="2" style="text-align:left;color:var(--accent-ink)">إجمالي المستحق حتى الآن</td>
+          <td class="col-sup" style="color:var(--accent-ink)">{{ \App\Support\Money::format($project->percentageProfit()) }}</td>
           <td class="num" style="color:var(--accent-ink)">{{ \App\Support\Money::format($actualTotal) }} ج.م</td>
         </tr>
       </tbody>

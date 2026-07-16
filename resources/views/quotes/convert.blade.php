@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'تحويل عرض لمشروع')
 @section('page-title', 'تحويل عرض ' . $quote->ref . ' لمشروع')
 
@@ -59,7 +59,6 @@
                 <th style="width:50px">تم شراؤه؟</th>
                 <th>الصنف</th>
                 <th class="num">الكمية</th>
-                <th>الوحدة</th>
                 <th class="num">سعر الشراء</th>
                 <th class="num">سعر البيع</th>
                 <th class="num">إشراف %</th>
@@ -76,9 +75,11 @@
                     <input type="hidden" name="items[{{ $idx }}][quote_band_id]" value="{{ $band->id }}">
                     <input type="checkbox" name="items[{{ $idx }}][purchased]" value="1" style="width:18px;height:18px">
                   </td>
-                  <td><strong>{{ $item->name }}</strong></td>
+                  <td>
+                    <strong>{{ $item->name }}</strong>
+                    <input type="hidden" name="items[{{ $idx }}][unit]" value="وحدة">
+                  </td>
                   <td class="num"><input type="number" name="items[{{ $idx }}][qty]" value="{{ rtrim(rtrim($item->qty, '0'), '.') }}" min="0" step="0.01" style="width:80px"></td>
-                  <td><input type="text" name="items[{{ $idx }}][unit]" value="وحدة" style="width:80px"></td>
                   <td class="num"><input type="number" name="items[{{ $idx }}][unit_price]" value="{{ $item->unit_price }}" min="0" step="0.01" style="width:100px"></td>
                   <td class="num"><input type="number" name="items[{{ $idx }}][sell_price]" value="{{ $item->unit_price }}" min="0" step="0.01" style="width:100px"></td>
                   <td class="num"><input type="number" name="items[{{ $idx }}][supervision_pct]" value="{{ $item->supervision_pct }}" min="0" max="100" step="0.1" style="width:70px"></td>

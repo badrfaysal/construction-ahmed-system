@@ -223,6 +223,10 @@
 
     @if(auth()->user()->isAdmin())
       <div class="nav-label">النظام</div>
+      <a class="nav-item {{ request()->routeIs('radar.index') ? 'active' : '' }}" href="{{ route('radar.index') }}" style="--ic:#eab308">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>
+        <span>الرادار (سجل العمليات)</span>
+      </a>
       <a class="nav-item {{ request()->routeIs('settings.edit') ? 'active' : '' }}" href="{{ route('settings.edit') }}" style="--ic:#94a3b8">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-settings"/></svg>
         <span>الإعدادات</span>

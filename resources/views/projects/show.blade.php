@@ -489,8 +489,7 @@
             <th>الصنف</th>
             <th>المورد</th>
             <th class="num">الكمية</th>
-            <th>الوحدة</th>
-            <th class="num"><span class="price-cost">سعر الشراء</span></th>
+            <th class="num"><span class="price-cost">سعر الشراء (تكلفة)</span></th>
             <th class="num"><span class="price-sell">سعر البيع</span></th>
             <th class="num">المرتجع</th>
             <th class="num">الإجمالي الصافي</th>
@@ -506,7 +505,6 @@
               </td>
               <td class="muted">{{ $m->supplier?->name ?? '—' }}</td>
               <td class="num">{{ number_format($m->qty, 1) }}</td>
-              <td class="muted">{{ $m->unit }}</td>
               <td class="num price-cost">{{ \App\Support\Money::format($m->unit_price) }}</td>
               <td class="num price-sell">{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
               <td class="num {{ $m->returnedQty() > 0 ? '' : 'muted' }}">{{ \App\Support\Money::format($m->returnedQty(), 1) }}</td>
@@ -564,7 +562,7 @@
             <tr>
               <td class="muted">{{ $r->date->format('Y-m-d') }}</td>
               <td><strong>{{ $r->material->item }}</strong></td>
-              <td class="num">{{ number_format($r->qty, 1) }} {{ $r->material->unit }}</td>
+              <td class="num">{{ number_format($r->qty, 1) }}</td>
               <td class="num price-cost">{{ \App\Support\Money::format($r->material->unit_price) }}</td>
               <td class="num">{{ \App\Support\Money::format($r->effectivePrice()) }}</td>
               <td class="num" style="{{ $rLoss > 0 ? 'color:var(--neg);font-weight:700' : '' }}">{{ $rLoss > 0 ? \App\Support\Money::format($rLoss) : '—' }}</td>
@@ -756,7 +754,6 @@
     ->groupBy('item')
     ->map(fn ($g) => (object) [
       'item' => $g->first()->item,
-      'unit' => $g->first()->unit,
       'qty'  => $g->sum(fn ($m) => $m->netQty()),
       'cost' => $g->sum(fn ($m) => $m->netCost()),
     ])
@@ -784,7 +781,6 @@
     ->map(fn ($m) => (object) [
       'item' => $m->item,
       'qty'  => $m->returnedQty(),
-      'unit' => $m->unit,
       'value'=> $m->returns->sum(fn ($r) => (float) $r->qty * $r->effectivePrice()),
       'loss' => $m->returns->sum(fn ($r) => $r->loss()),
     ])
@@ -925,7 +921,7 @@
       <div style="margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;flex-wrap:wrap;gap:4px">
           <strong>{{ $m->item }}</strong>
-          <span class="muted">{{ number_format($m->qty, 1) }} {{ $m->unit }} · <span class="price-cost" style="font-weight:700">{{ \App\Support\Money::format($m->cost) }} ج.م</span></span>
+          <span class="muted">{{ number_format($m->qty, 1) }} · <span class="price-cost" style="font-weight:700">{{ \App\Support\Money::format($m->cost) }} ج.م</span></span>
         </div>
         <div class="bar-track">
           <div class="bar-fill" style="width:{{ round($m->cost / $rptMaxMatCost * 100) }}%;background:var(--warn)"></div>
@@ -970,7 +966,7 @@
           @foreach($rptTopReturns as $r)
             <tr>
               <td><strong>{{ $r->item }}</strong></td>
-              <td class="num">{{ number_format($r->qty, 1) }} {{ $r->unit }}</td>
+              <td class="num">{{ number_format($r->qty, 1) }}</td>
               <td class="num">{{ \App\Support\Money::format($r->value) }}</td>
               <td class="num" style="{{ $r->loss > 0 ? 'color:var(--neg);font-weight:700' : '' }}">{{ $r->loss > 0 ? \App\Support\Money::format($r->loss) : '—' }}</td>
             </tr>
