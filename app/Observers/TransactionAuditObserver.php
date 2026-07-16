@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\AuditLog;
 use App\Models\Transaction;
+use App\Jobs\SendTelegramNotification;
 
 // يكتب صف تدقيق ثابت (لا يُعدَّل ولا يُحذف أبداً) لكل إنشاء/تعديل/حذف لأي حركة
 // في سy2_transactions — عشان "سجل الحركات" يفضل يعرض كل حاجة حصلت فعلاً، حتى
@@ -14,7 +15,8 @@ class TransactionAuditObserver
 {
     public function created(Transaction $transaction): void
     {
-        AuditLog::create($this->snapshot($transaction, 'created'));
+        $log = AuditLog::create($this->snapshot($transaction, 'created'));
+        $this->dispatchTelegram($log);
     }
 
     public function updated(Transaction $transaction): void
@@ -26,12 +28,14 @@ class TransactionAuditObserver
             }
         }
 
-        AuditLog::create($this->snapshot($transaction, 'updated') + ['old_values' => $old ?: null]);
+        $log = AuditLog::create($this->snapshot($transaction, 'updated') + ['old_values' => $old ?: null]);
+        $this->dispatchTelegram($log);
     }
 
     public function deleted(Transaction $transaction): void
     {
-        AuditLog::create($this->snapshot($transaction, 'deleted'));
+        $log = AuditLog::create($this->snapshot($transaction, 'deleted'));
+        $this->dispatchTelegram($log);
     }
 
     private function snapshot(Transaction $transaction, string $action): array
@@ -53,5 +57,34 @@ class TransactionAuditObserver
             'performed_by'   => auth()->check() ? auth()->id() : null,
             'happened_at'    => now(),
         ];
+    }
+
+    private function dispatchTelegram(AuditLog $log): void
+    {
+        $actionName = match ($log->action) {
+            'created' => '✨ إضافة جديدة',
+            'updated' => '📝 تعديل حركة',
+            'deleted' => '❌ عكس/إلغاء حركة',
+            default => $log->action,
+        };
+
+        $project = $log->project ? $log->project->name : 'عام / غير محدد';
+        $user = $log->performedBy ? $log->performedBy->name : 'النظام';
+        $amount = number_format($log->amount, 2);
+
+        $text = "<b>🏢 مـقـاولات 🏢</b>\n\n";
+        $text .= "<b>العملية:</b> {$actionName}\n";
+        $text .= "<b>النوع:</b> {$log->type}\n";
+        $text .= "<b>المبلغ:</b> {$amount} ج.م\n";
+        if ($log->party) {
+            $text .= "<b>الطرف:</b> {$log->party}\n";
+        }
+        $text .= "<b>المشروع:</b> {$project}\n";
+        if ($log->description) {
+            $text .= "<b>الوصف:</b> {$log->description}\n";
+        }
+        $text .= "<b>بواسطة:</b> {$user}\n";
+
+        SendTelegramNotification::dispatchSync($text);
     }
 }
