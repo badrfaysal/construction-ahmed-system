@@ -10,8 +10,8 @@
   @csrf @method('PUT')
   <div class="form-card">
     <div class="row2">
-      <div class="field"><label>الاسم *</label><input type="text" name="name" value="{{ old('name', $client->name) }}" required></div>
-      <div class="field"><label>الهاتف</label><input type="tel" name="phone" value="{{ old('phone', $client->phone) }}"></div>
+      <div class="field custom-autocomplete"><label>الموبايل</label><input type="tel" name="phone" value="{{ old('phone', $client->phone) }}" autocomplete="off" oninput="autocompleteContactByPhone(this)" onfocus="autocompleteContactByPhone(this)"></div>
+      <div class="field custom-autocomplete"><label>الاسم *</label><input type="text" name="name" value="{{ old('name', $client->name) }}" required autocomplete="off" oninput="autocompleteContactByName(this)" onfocus="autocompleteContactByName(this)"></div>
     </div>
     <div class="row2">
 
@@ -24,4 +24,7 @@
     </div>
   </div>
 </form>
+
+@include('partials.contact-autocomplete')
+
 @endsection

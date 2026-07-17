@@ -11,8 +11,8 @@
   @csrf
   <div class="form-card">
     <div class="row2">
-      <div class="field"><label>الاسم *</label><input type="text" name="name" value="{{ old('name') }}" required></div>
-      <div class="field"><label>الهاتف</label><input type="tel" name="phone" value="{{ old('phone') }}" placeholder="0100 000 0000"></div>
+      <div class="field custom-autocomplete"><label>الموبايل</label><input type="tel" name="phone" value="{{ old('phone') }}" placeholder="0100 000 0000" autocomplete="off" oninput="autocompleteContactByPhone(this)" onfocus="autocompleteContactByPhone(this)"></div>
+      <div class="field custom-autocomplete"><label>الاسم *</label><input type="text" name="name" value="{{ old('name') }}" required autocomplete="off" oninput="autocompleteContactByName(this)" onfocus="autocompleteContactByName(this)"></div>
     </div>
     <div class="row2">
 
@@ -25,4 +25,7 @@
     </div>
   </div>
 </form>
+
+@include('partials.contact-autocomplete')
+
 @endsection

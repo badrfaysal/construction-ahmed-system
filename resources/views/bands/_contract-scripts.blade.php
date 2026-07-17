@@ -2,6 +2,23 @@
      bands/edit.blade.php and labor/create.blade.php. Every band's labor is
      always a list of one-or-more workers — each with their own contract type
      (بالمتر أو مقاولة مقطوعة), cost, client price, and supervision %. --}}
+<style>
+.custom-autocomplete { position: relative; }
+.custom-autocomplete-dropdown {
+  position: absolute; top: 100%; left: 0; right: 0; max-height: 200px; overflow-y: auto;
+  background: var(--bg-card, #fff); border: 1px solid var(--line, #e2e8f0);
+  border-top: none; border-radius: 0 0 6px 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  z-index: 50; margin: 0; padding: 0; list-style: none; display: none;
+}
+.custom-autocomplete-dropdown.show { display: block; }
+.custom-autocomplete-dropdown li {
+  padding: 10px 15px; cursor: pointer; border-bottom: 1px solid var(--line, #e2e8f0);
+  color: var(--text, #1e293b); display: flex; justify-content: space-between;
+}
+.custom-autocomplete-dropdown li:last-child { border-bottom: none; }
+.custom-autocomplete-dropdown li:hover { background: var(--bg-hover, #f8fafc); }
+.custom-autocomplete-dropdown li .sub { font-size: 12px; color: var(--muted, #64748b); }
+</style>
 <script>
 const CONTRACT_DESC = {
   lump_sum: 'مبلغ إجمالي ثابت مقابل تنفيذ الشغل بالكامل.',
@@ -85,15 +102,90 @@ function updateClientPrice() {
 
 const knownWorkersList = {!! $knownWorkersJson ?? '[]' !!};
 
-function autocompleteWorker(inputEl) {
+function renderDropdown(inputEl, type) {
+  const wrap = inputEl.closest('.custom-autocomplete');
+  let dropdown = wrap.querySelector('.custom-autocomplete-dropdown');
+  if (!dropdown) {
+    dropdown = document.createElement('ul');
+    dropdown.className = 'custom-autocomplete-dropdown';
+    wrap.appendChild(dropdown);
+    
+    // Hide when clicking outside
+    document.addEventListener('click', e => {
+      if (!wrap.contains(e.target)) dropdown.classList.remove('show');
+    });
+  }
+
+  const val = inputEl.value.trim().toLowerCase();
+  let matches = [];
+  if (type === 'name') {
+    matches = knownWorkersList.filter(w => w.name && w.name.toLowerCase().includes(val));
+  } else {
+    matches = knownWorkersList.filter(w => w.phone && w.phone.includes(val));
+  }
+
+  if (matches.length === 0) {
+    dropdown.classList.remove('show');
+    return;
+  }
+
+  dropdown.innerHTML = matches.map(w => {
+    const main = type === 'name' ? w.name : w.phone;
+    const sub = type === 'name' ? (w.phone || '') : (w.name || '');
+    return `<li data-name="${w.name}" data-phone="${w.phone || ''}" data-spec="${w.specialty || ''}">
+      <span>${main}</span>
+      <span class="sub">${sub}</span>
+    </li>`;
+  }).join('');
+  
+  dropdown.querySelectorAll('li').forEach(li => {
+    li.addEventListener('click', () => {
+      if (type === 'name') {
+        inputEl.value = li.dataset.name;
+        autocompleteWorkerByName(inputEl);
+      } else {
+        inputEl.value = li.dataset.phone;
+        autocompleteWorkerByPhone(inputEl);
+      }
+      dropdown.classList.remove('show');
+    });
+  });
+
+  dropdown.classList.add('show');
+}
+
+function autocompleteWorkerByName(inputEl) {
+  renderDropdown(inputEl, 'name');
   const name = inputEl.value.trim();
   const worker = knownWorkersList.find(w => w.name === name);
+  const row = inputEl.closest('.worker-row');
+  const phoneInput = row.querySelector('.worker-phone-input');
+  const specInput = row.querySelector('input[name*="[specialty]"]');
+  
   if (worker) {
-    const row = inputEl.closest('.worker-row');
-    const phoneInput = row.querySelector('input[name*="[phone]"]');
-    const specInput = row.querySelector('input[name*="[specialty]"]');
     if (phoneInput && !phoneInput.value) phoneInput.value = worker.phone || '';
     if (specInput && !specInput.value) specInput.value = worker.specialty || '';
+  }
+}
+
+function autocompleteWorkerByPhone(inputEl) {
+  renderDropdown(inputEl, 'phone');
+  const phone = inputEl.value.trim();
+  const worker = knownWorkersList.find(w => w.phone === phone);
+  const row = inputEl.closest('.worker-row');
+  const nameInput = row.querySelector('.worker-name-input');
+  const specInput = row.querySelector('input[name*="[specialty]"]');
+  
+  if (worker) {
+    if (nameInput && !nameInput.value) {
+      nameInput.value = worker.name || '';
+      nameInput.setAttribute('readonly', 'readonly');
+    } else if (nameInput && nameInput.value === worker.name) {
+      nameInput.setAttribute('readonly', 'readonly');
+    }
+    if (specInput && !specInput.value) specInput.value = worker.specialty || '';
+  } else {
+    if (nameInput) nameInput.removeAttribute('readonly');
   }
 }
 
@@ -103,8 +195,8 @@ function workerRowHtml(g) {
       {{-- Existing worker's id — keeps his دفعات attached when the band is re-saved --}}
       <input type="hidden" name="workers[${g}][id]" class="worker-id">
       <div class="row2">
-        <div class="field" style="margin:0"><input type="text" name="workers[${g}][name]" class="worker-name-input" placeholder="اسم الفني" required list="known-workers-list" oninput="autocompleteWorker(this)"></div>
-        <div class="field" style="margin:0"><input type="text" name="workers[${g}][phone]" placeholder="رقم الموبايل"></div>
+        <div class="field custom-autocomplete" style="margin:0"><input type="text" name="workers[${g}][phone]" autocomplete="off" class="worker-phone-input" placeholder="رقم الموبايل" oninput="autocompleteWorkerByPhone(this)" onfocus="autocompleteWorkerByPhone(this)"></div>
+        <div class="field custom-autocomplete" style="margin:0"><input type="text" name="workers[${g}][name]" autocomplete="off" class="worker-name-input" placeholder="اسم الفني" required oninput="autocompleteWorkerByName(this)" onfocus="autocompleteWorkerByName(this)"></div>
       </div>
       <div class="row2" style="margin-top:10px">
         <div class="field" style="margin:0"><input type="text" name="workers[${g}][specialty]" placeholder="التخصص (اختياري) مثل: كهربائي"></div>
@@ -204,8 +296,3 @@ function fillWorker(g, w) {
 }
 </script>
 
-<datalist id="known-workers-list">
-  <script>
-    document.write(knownWorkersList.map(w => `<option value="${w.name}">`).join(''));
-  </script>
-</datalist>

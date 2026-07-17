@@ -7,12 +7,11 @@
   @csrf @method('PUT')
   <div class="form-card">
     <div class="row2">
-      <div class="field"><label>اسم المورد *</label><input type="text" name="name" value="{{ old('name', $supplier->name) }}" required></div>
-      <div class="field"><label>النشاط</label><input type="text" name="activity" value="{{ old('activity', $supplier->activity) }}" placeholder="كهربائي / بتاع بويات / سيراميك..." list="supplier-activities"></div>
+      <div class="field custom-autocomplete"><label>الموبايل</label><input type="tel" name="phone" value="{{ old('phone', $supplier->phone) }}" autocomplete="off" oninput="autocompleteContactByPhone(this)" onfocus="autocompleteContactByPhone(this)"></div>
+      <div class="field custom-autocomplete"><label>اسم المورد *</label><input type="text" name="name" value="{{ old('name', $supplier->name) }}" required autocomplete="off" oninput="autocompleteContactByName(this)" onfocus="autocompleteContactByName(this)"></div>
     </div>
     <div class="row2">
-      <div class="field"><label>الهاتف</label><input type="tel" name="phone" value="{{ old('phone', $supplier->phone) }}"></div>
-
+      <div class="field"><label>النشاط</label><input type="text" name="activity" value="{{ old('activity', $supplier->activity) }}" placeholder="كهربائي / بائع أسمنت / سيراميك..." list="supplier-activities"></div>
     </div>
     <div class="field"><label>العنوان</label><input type="text" name="address" value="{{ old('address', $supplier->address) }}"></div>
     <div class="field"><label>ملاحظات</label><textarea name="notes" rows="3">{{ old('notes', $supplier->notes) }}</textarea></div>
@@ -27,4 +26,7 @@
     </div>
   </div>
 </form>
+
+@include('partials.contact-autocomplete')
+
 @endsection
