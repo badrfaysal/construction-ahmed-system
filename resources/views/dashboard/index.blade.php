@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'لوحة التحكم')
 @section('page-title', 'لوحة التحكم')
@@ -102,8 +102,6 @@
                 </div>
                 @if($activeBand)
                   <span class="tag blue"><span class="dot"></span>{{ $activeBand->name }}</span>
-                @else
-                  <span class="tag gray">قيد الإعداد</span>
                 @endif
               </div>
               @if($p->address)

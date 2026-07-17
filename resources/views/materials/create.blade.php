@@ -266,7 +266,7 @@
     <div class="row2" style="margin-bottom:0; gap:24px;">
       <div class="field" style="margin-bottom:0">
         <label>تاريخ الفاتورة *</label>
-        <input type="date" name="date" id="invoice_date" required class="neo-big-input" onchange="suggestInvoiceName()">
+        <input type="date" name="date" id="invoice_date" required class="neo-big-input" onchange="suggestInvoiceName()" value="{{ today()->format('Y-m-d') }}">
       </div>
       <div class="field" style="margin-bottom:0">
         <label>المورد *</label>

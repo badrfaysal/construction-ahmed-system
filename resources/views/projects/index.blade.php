@@ -50,8 +50,6 @@
               <span class="tag green"><span class="dot"></span>مكتمل ومسلّم</span>
             @elseif($activeBand)
               <span class="tag blue"><span class="dot"></span>{{ $activeBand->name }}</span>
-            @else
-              <span class="tag gray">قيد الإعداد</span>
             @endif
           </div>
           @if($p->address)

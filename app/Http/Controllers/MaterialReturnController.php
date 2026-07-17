@@ -39,10 +39,26 @@ class MaterialReturnController extends Controller
             'returns.*.return_price'  => ['nullable', 'numeric', 'min:0'],
         ]);
 
+        if ($project->hasWholeProjectInstallmentContract()) {
+            throw ValidationException::withMessages([
+                'date' => 'لا يمكن عمل مرتجع لمشروع له عقد تقسيط بالكامل. يجب إلغاء عقد التقسيط أولاً.',
+            ]);
+        }
+
         // Validate every row up-front so nothing is saved if any row over-returns
         $rows = [];
         foreach ($data['returns'] as $i => $row) {
             $material = Material::where('project_id', $project->id)->findOrFail($row['material_id']);
+            
+            if ($material->band_id) {
+                $band = \App\Models\ProjectBand::find($material->band_id);
+                if ($band && $band->hasInstallmentContract()) {
+                    throw ValidationException::withMessages([
+                        "returns.$i.qty" => 'هذا البند له عقد تقسيط ولا يمكن عمل مرتجع لخاماته. قم بإلغاء التقسيط أولاً.',
+                    ]);
+                }
+            }
+
             if ($material->isMisc()) {
                 throw ValidationException::withMessages([
                     "returns.$i.qty" => 'لا يمكن عمل مرتجع للنثريات (' . $material->item . ').',

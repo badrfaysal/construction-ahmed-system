@@ -371,14 +371,6 @@
   ]);
   $contractPays = collect();
   foreach ($project->contracts as $c) {
-    if ((float) $c->down_payment > 0) {
-      $contractPays->push((object) [
-        'date'   => $c->start_date ?? $c->created_at,
-        'amount' => (float) $c->down_payment,
-        'type'   => 'مقدم عقد تقسيط',
-        'note'   => $c->product_name,
-      ]);
-    }
     foreach ($c->payments as $p) {
       $contractPays->push((object) [
         'date'   => $p->payment_date,

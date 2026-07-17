@@ -62,7 +62,7 @@
         @forelse($spentBands as $band)
           @php
             $bandProfit = $band->percentageProfit();
-            $bandCost = $band->netCost();
+            $bandCost = $band->totalCost();
             $bandPct = $bandCost > 0 ? ($bandProfit / $bandCost) * 100 : 0;
           @endphp
           <tr>
@@ -81,8 +81,8 @@
         @endforelse
         @if($generalTotal > 0)
           @php
-            $genProfit = $project->generalMaterials()->get()->sum(fn($m) => $m->percentageProfit());
-            $genCost = $project->generalMaterials()->get()->sum(fn($m) => $m->netCost());
+            $genProfit = $project->generalMaterials()->sum(fn($m) => $m->percentageProfit());
+            $genCost = $project->generalMaterials()->sum(fn($m) => $m->netCost());
             $genPct = $genCost > 0 ? ($genProfit / $genCost) * 100 : 0;
           @endphp
           <tr>
