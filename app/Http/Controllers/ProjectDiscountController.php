@@ -15,6 +15,12 @@ class ProjectDiscountController extends Controller
             'notes'  => 'nullable|string|max:255',
         ]);
 
+        if ($project->contracts()->exists()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'amount' => 'لا يمكن إضافة خصم إجمالي للمشروع لأنه يحتوي على عقود تقسيط. قم بإلغاء التقسيط أولاً.',
+            ]);
+        }
+
         $project->discounts()->create([
             'amount' => $request->amount,
             'date'   => $request->date,

@@ -30,7 +30,12 @@ class LaborController extends Controller
     public function create()
     {
         $projects = Project::orderBy('name')->get(['id', 'name']);
-        return view('labor.create', compact('projects'));
+        
+        $knownWorkersJson = \App\Models\BandWorker::select('name', 'phone', 'specialty')
+            ->groupBy('name', 'phone', 'specialty')
+            ->get()->unique('name')->values()->toJson();
+
+        return view('labor.create', compact('projects', 'knownWorkersJson'));
     }
 
     // Save the new work record under the chosen project

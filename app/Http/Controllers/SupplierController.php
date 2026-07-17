@@ -66,7 +66,7 @@ class SupplierController extends Controller
         $data = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
             'activity' => ['nullable', 'string', 'max:255'],
-            'phone'    => ['nullable', 'string', 'max:30'],
+            'phone'    => ['nullable', 'string', 'max:30', new \App\Rules\UniquePhone('sy2_suppliers')],
             'email'    => ['nullable', 'email'],
             'address'  => ['nullable', 'string'],
             'notes'    => ['nullable', 'string'],
@@ -121,7 +121,7 @@ class SupplierController extends Controller
         $data = $request->validate([
             'name'     => ['required', 'string', 'max:255'],
             'activity' => ['nullable', 'string', 'max:255'],
-            'phone'    => ['nullable', 'string', 'max:30'],
+            'phone'    => ['nullable', 'string', 'max:30', new \App\Rules\UniquePhone('sy2_suppliers', $supplier->id)],
             'email'    => ['nullable', 'email'],
             'address'  => ['nullable', 'string'],
             'notes'    => ['nullable', 'string'],

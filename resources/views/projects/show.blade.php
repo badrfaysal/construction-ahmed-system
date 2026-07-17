@@ -281,16 +281,10 @@
     <form method="POST" action="{{ route('receivables.pay', $project) }}">
       @csrf
       <div class="modal-body">
-        <div class="row2">
           <div class="field">
             <label>المبلغ (ج.م) *</label>
             <input type="number" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" required autofocus>
           </div>
-          <div class="field">
-            <label>خصم (اختياري)</label>
-            <input type="number" name="discount" min="0" step="0.01" value="{{ old('discount', 0) }}">
-          </div>
-        </div>
         <div class="row2">
           <div class="field">
             <label>التاريخ *</label>

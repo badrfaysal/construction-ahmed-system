@@ -334,6 +334,23 @@
       </div>
     @endif
 
+    @if($errors->any())
+      @php
+        $errStr = implode(' | ', $errors->all());
+        $isPhoneErr = str_contains($errStr, 'رقم الموبايل مسجل مسبقاً');
+      @endphp
+      @if($isPhoneErr)
+        <div class="modal-overlay open" id="global-error-modal" style="z-index:9999" onclick="if(event.target===this)this.classList.remove('open')">
+          <div class="modal-box" style="max-width:400px; text-align:center; padding: 30px;">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--danger, #e53e3e)" stroke-width="2" style="margin-bottom: 15px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <h3 style="color:var(--danger, #e53e3e); margin:0 0 10px;">عذراً، لا يمكن الحفظ</h3>
+            <p style="font-size: 16px; font-weight: bold; color: var(--text)">{{ $errStr }}</p>
+            <button class="btn" style="background:var(--danger, #e53e3e); border-color:var(--danger, #e53e3e); margin-top: 20px; width: 100%" onclick="document.getElementById('global-error-modal').classList.remove('open')">حسناً، فهمت</button>
+          </div>
+        </div>
+      @endif
+    @endif
+
     @yield('content')
   </div>
 </div>

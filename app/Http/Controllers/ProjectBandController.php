@@ -32,7 +32,11 @@ class ProjectBandController extends Controller
             ->merge(\App\Models\QuoteBand::select('name')->distinct()->pluck('name'))
             ->unique()->sort()->values();
 
-        return view('bands.create', compact('project', 'wallets', 'suppliers', 'itemNames', 'unitNames', 'bandNames'));
+        $knownWorkersJson = \App\Models\BandWorker::select('name', 'phone', 'specialty')
+            ->groupBy('name', 'phone', 'specialty')
+            ->get()->unique('name')->values()->toJson();
+
+        return view('bands.create', compact('project', 'wallets', 'suppliers', 'itemNames', 'unitNames', 'bandNames', 'knownWorkersJson'));
     }
 
     // Save a new band under the given project — labor (workers), materials
@@ -170,12 +174,23 @@ class ProjectBandController extends Controller
     {
         $band->load('workers.payments');
         $legacySeed = $band->legacyWorkerSeed();
-        return view('bands.edit', compact('band', 'legacySeed'));
+        
+        $knownWorkersJson = \App\Models\BandWorker::select('name', 'phone', 'specialty')
+            ->groupBy('name', 'phone', 'specialty')
+            ->get()->unique('name')->values()->toJson();
+
+        return view('bands.edit', compact('band', 'legacySeed', 'knownWorkersJson'));
     }
 
     // Save edits to a band
     public function update(Request $request, ProjectBand $band)
     {
+        if ($band->hasInstallmentContract() || $band->project->hasWholeProjectInstallmentContract()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'name' => 'لا يمكن تعديل هذا البند لأنه مرتبط بعقد تقسيط. قم بإلغاء عقد التقسيط أولاً.',
+            ]);
+        }
+
         $this->stripEmptyWorkers($request);
         $data = $this->validateData($request);
         $workers = $data['workers'] ?? [];
@@ -207,6 +222,10 @@ class ProjectBandController extends Controller
     // Delete a band (its materials lose the band link, see migration nullOnDelete)
     public function destroy(ProjectBand $band)
     {
+        if ($band->hasInstallmentContract() || $band->project->hasWholeProjectInstallmentContract()) {
+            return back()->with('error', 'لا يمكن حذف هذا البند لأنه مرتبط بعقد تقسيط. قم بإلغاء التقسيط أولاً.');
+        }
+
         $project = $band->project;
 
         // Deleting a band DB-cascades its workers AND their recorded دفعات —
@@ -278,7 +297,18 @@ class ProjectBandController extends Controller
             // syncLabor() scopes the lookup to the band's own workers
             'workers.*.id'                 => ['nullable', 'integer'],
             'workers.*.name'               => ['required', 'string', 'max:255'],
-            'workers.*.phone'              => ['nullable', 'string', 'max:30'],
+            'workers.*.phone'              => [
+                'nullable', 
+                'string', 
+                'max:30', 
+                function ($attribute, $value, $fail) use ($request) {
+                    $index = explode('.', $attribute)[1];
+                    $id = $request->input("workers.$index.id");
+                    $name = $request->input("workers.$index.name");
+                    $rule = new \App\Rules\UniquePhone('sy2_band_workers', $id, $name);
+                    $rule->validate($attribute, $value, $fail);
+                }
+            ],
             'workers.*.specialty'          => ['nullable', 'string', 'max:255'],
             'workers.*.contract_type'      => ['nullable', 'in:lump_sum,daily,per_meter,per_piece'],
             'workers.*.contract_qty'       => ['nullable', 'numeric', 'min:0'],

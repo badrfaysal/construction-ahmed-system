@@ -36,7 +36,7 @@ class ClientController extends Controller
     {
         $data = $request->validate([
             'name'    => ['required', 'string', 'max:255'],
-            'phone'   => ['nullable', 'string', 'max:30'],
+            'phone'   => ['nullable', 'string', 'max:30', new \App\Rules\UniquePhone('sy2_clients')],
             'email'   => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string'],
             'notes'   => ['nullable', 'string'],
@@ -59,7 +59,7 @@ class ClientController extends Controller
     {
         $data = $request->validate([
             'name'    => ['required', 'string', 'max:255'],
-            'phone'   => ['nullable', 'string', 'max:30'],
+            'phone'   => ['nullable', 'string', 'max:30', new \App\Rules\UniquePhone('sy2_clients', $client->id)],
             'email'   => ['nullable', 'email', 'max:255'],
             'address' => ['nullable', 'string'],
             'notes'   => ['nullable', 'string'],

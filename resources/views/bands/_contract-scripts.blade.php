@@ -83,13 +83,27 @@ function updateClientPrice() {
   clientField.value = total.toFixed(2);
 }
 
+const knownWorkersList = {!! $knownWorkersJson ?? '[]' !!};
+
+function autocompleteWorker(inputEl) {
+  const name = inputEl.value.trim();
+  const worker = knownWorkersList.find(w => w.name === name);
+  if (worker) {
+    const row = inputEl.closest('.worker-row');
+    const phoneInput = row.querySelector('input[name*="[phone]"]');
+    const specInput = row.querySelector('input[name*="[specialty]"]');
+    if (phoneInput && !phoneInput.value) phoneInput.value = worker.phone || '';
+    if (specInput && !specInput.value) specInput.value = worker.specialty || '';
+  }
+}
+
 function workerRowHtml(g) {
   return `
     <div class="worker-row" data-worker="${g}" style="border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px">
       {{-- Existing worker's id — keeps his دفعات attached when the band is re-saved --}}
       <input type="hidden" name="workers[${g}][id]" class="worker-id">
       <div class="row2">
-        <div class="field" style="margin:0"><input type="text" name="workers[${g}][name]" placeholder="اسم الفني" required></div>
+        <div class="field" style="margin:0"><input type="text" name="workers[${g}][name]" class="worker-name-input" placeholder="اسم الفني" required list="known-workers-list" oninput="autocompleteWorker(this)"></div>
         <div class="field" style="margin:0"><input type="text" name="workers[${g}][phone]" placeholder="رقم الموبايل"></div>
       </div>
       <div class="row2" style="margin-top:10px">
@@ -189,3 +203,9 @@ function fillWorker(g, w) {
   }
 }
 </script>
+
+<datalist id="known-workers-list">
+  <script>
+    document.write(knownWorkersList.map(w => `<option value="${w.name}">`).join(''));
+  </script>
+</datalist>
