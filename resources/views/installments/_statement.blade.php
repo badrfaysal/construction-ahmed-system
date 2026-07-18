@@ -142,7 +142,7 @@
                       <!-- المتبقي المطلوب -->
                       <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:16px;text-align:center;margin-bottom:20px;">
                          <div style="color:#dc2626;font-weight:bold;font-size:18px;margin-bottom:4px;">المتبقي المطلوب:</div>
-                         <div style="color:#dc2626;font-weight:900;font-size:28px;" dir="ltr">{{ \App\Support\Money::format($instRemain) }} ج</div>
+                         <div style="color:#dc2626;font-weight:900;font-size:28px;" dir="ltr"><span id="pay_remain_lbl_{{ $c->id }}">{{ \App\Support\Money::format($instRemain) }}</span> ج</div>
                       </div>
 
                       <!-- خصم / تسوية -->
@@ -150,7 +150,7 @@
                          <label style="color:#d97706;font-weight:bold;display:block;margin-bottom:12px;">
                             <i class="fa fa-tag"></i> خصم / تسوية (يُطرح تلقائياً من المتبقي)
                          </label>
-                         <input type="number" step="0.01" min="0" name="discount_applied" id="pay_disc_{{ $c->id }}" class="form-control text-center mx-auto" value="0" style="font-size:24px;font-weight:bold;color:#d97706;border-color:#fbbf24;padding:10px;max-width:300px;">
+                         <input type="number" step="0.01" min="0" name="discount_applied" id="pay_disc_{{ $c->id }}" class="form-control text-center mx-auto" value="0" style="font-size:24px;font-weight:bold;color:#d97706;border-color:#fbbf24;padding:10px;max-width:300px;" oninput="stmtCalcRemain({{ $c->id }}, {{ $instRemain }}, {{ (float)$c->monthly_installment }})">
                       </div>
 
                       <!-- نظام السداد -->

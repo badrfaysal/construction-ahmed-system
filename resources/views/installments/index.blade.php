@@ -309,7 +309,7 @@
             <div class="col-md-4"><label class="fw-bold mb-1 small" style="color:#0ea5e9">خصم</label>
               <input type="number" step="0.01" min="0" name="discount" id="nc_disc" class="form-control" value="0" oninput="ncCalc()"></div>
             <div class="col-md-4"><label class="fw-bold mb-1 small text-success">المقدم المدفوع الآن</label>
-              <input type="number" step="0.01" min="0" name="down_payment" id="nc_down" class="form-control text-success fw-bold" value="0" oninput="ncCalc()">
+              <input type="number" step="0.01" min="0" name="down_payment" id="nc_down" class="form-control text-success fw-bold" value="0" readonly oninput="ncCalc()">
               <div class="form-check mt-1">
                 <input class="form-check-input" type="checkbox" id="nc_use_paid" onchange="ncUsePaidToggled(this)">
                 <label class="form-check-label small text-muted" for="nc_use_paid">اعتبر كل المبلغ اللي اتحصّل فعليًا من العميل في المشروع مقدم (مش بس تحت البند ده)</label>
@@ -567,11 +567,45 @@ function stmtSetPay(cid, monthly, remaining, type){
   else { inp.value=''; inp.focus(); }
 }
 
-function stmtSetPayStyle(cid, type, monthly, remaining) {
+function stmtCalcRemain(cid, totalRemain, monthly) {
+  const discEl = document.getElementById('pay_disc_'+cid);
+  const disc = parseFloat(discEl.value) || 0;
+  let newRemain = totalRemain - disc;
+  if(newRemain < 0) newRemain = 0;
+  
+  const lbl = document.getElementById('pay_remain_lbl_'+cid);
+  if(lbl) lbl.textContent = newRemain.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  
+  const inp = document.getElementById('pay_amt_'+cid);
+  if(!inp) return;
+  
+  const selectedType = document.querySelector('input[name="pay_type_'+cid+'"]:checked');
+  if(selectedType) {
+    const type = selectedType.value;
+    if(type === 'monthly') {
+      inp.value = Math.min(monthly, newRemain).toFixed(2);
+    } else if(type === 'full') {
+      inp.value = newRemain.toFixed(2);
+    }
+  }
+}
+
+function stmtSetPayStyle(cid, type, monthly, totalRemain) {
   const inp=document.getElementById('pay_amt_'+cid);
   const notes=document.getElementById('pay_notes_'+cid);
-  const disc=document.getElementById('pay_disc_'+cid);
+  const discEl=document.getElementById('pay_disc_'+cid);
   if(!inp)return;
+
+  let disc = parseFloat(discEl.value) || 0;
+  if(type === 'none') {
+      discEl.value = '0';
+      disc = 0;
+  }
+  let newRemain = totalRemain - disc;
+  if(newRemain < 0) newRemain = 0;
+  
+  const lbl = document.getElementById('pay_remain_lbl_'+cid);
+  if(lbl) lbl.textContent = newRemain.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
   // Reset styles
   ['monthly', 'full', 'custom', 'none'].forEach(t => {
@@ -591,17 +625,16 @@ function stmtSetPayStyle(cid, type, monthly, remaining) {
 
   // Handle value
   inp.readOnly = false;
-  disc.readOnly = false;
+  discEl.readOnly = false;
   notes.value = '';
   if(type==='monthly') {
-      inp.value=Math.min(monthly,remaining).toFixed(2);
+      inp.value=Math.min(monthly,newRemain).toFixed(2);
   } else if(type==='full') {
-      inp.value=remaining.toFixed(2);
+      inp.value=newRemain.toFixed(2);
   } else if(type==='none') {
       inp.value='0';
-      disc.value='0';
       inp.readOnly = true;
-      disc.readOnly = true;
+      discEl.readOnly = true;
       notes.value = 'تعثر سداد';
   } else {
       inp.value=''; 
