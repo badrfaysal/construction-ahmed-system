@@ -369,12 +369,14 @@ class ProjectBandController extends Controller
             'misc.*.supervision_pct'       => ['nullable', 'numeric', 'min:0', 'max:100'],
 
             // طريقة دفع مشتركة للخامات والنثريات (لو اتضافوا)
-            'invoice_name'   => ['nullable', 'string', 'max:255'],
+            'invoice_name'   => ['nullable', 'string', 'max:255', 'unique:sy2_material_invoices,name'],
             'supplier_id'    => ['nullable', 'exists:sy2_suppliers,id'],
             'purchase_date'  => ['nullable', 'date'],
             'payment_status' => ['nullable', 'in:paid,partial,deferred'],
             'account_id'     => ['nullable', 'integer', 'exists:accounts,id'],
             'paid_amount'    => ['nullable', 'numeric', 'min:0'],
+        ], [
+            'invoice_name.unique' => 'اسم الفاتورة مسجل مسبقاً، يرجى تغييره لعدم التكرار.',
         ]);
     }
 }

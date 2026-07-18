@@ -134,6 +134,8 @@ class MaterialController extends Controller
             'groups.*.items.*.unit_price'   => ['required', 'numeric', 'min:0'],
             'groups.*.items.*.sell_price'   => ['required', 'numeric', 'min:0'],
             'groups.*.items.*.supervision_pct' => ['nullable', 'numeric', 'min:0', 'max:100'],
+        ], [
+            'invoice_name.unique' => 'اسم الفاتورة مسجل مسبقاً، يرجى تغييره لعدم التكرار.',
         ]);
 
         // عقد تقسيط للمشروع كامل بيقفل أي فوترة جديدة على المشروع خالص — مفيش

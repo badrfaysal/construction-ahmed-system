@@ -397,6 +397,9 @@ function suggestInvoiceName() {
   if (bandName) nameParts.push(bandName);
   if (dateVal) nameParts.push(dateVal);
 
+  const timeStr = new Date().toLocaleTimeString('en-US', { hour12: false }).replace(/:/g, '').substring(0, 4);
+  nameParts.push(timeStr);
+
   const invNameInput = document.getElementById('invoice_name');
   if (invNameInput && nameParts.length > 1) {
     invNameInput.value = nameParts.join(' - ');
