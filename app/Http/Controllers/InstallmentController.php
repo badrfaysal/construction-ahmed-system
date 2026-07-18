@@ -36,7 +36,18 @@ class InstallmentController extends Controller
 
         // كل المشاريع متاحة لعمل عقد جديد (يُسمح بعقد للمشروع كامل أو لبند محدد،
         // وبأكثر من عقد للمشروع الواحد) + قيمة فاتورة كل مشروع/بند للعميل
-        $projectsForContract = Project::with(['client', 'bands', 'clientPayments', 'contracts'])
+        $projectsForContract = Project::with(['client', 'bands' => function($q) {
+                $q->withSum('clientPayments as payments_sum_amount', 'amount')
+                  ->withSum('clientPayments as payments_sum_discount', 'discount')
+                  ->withSum('installmentContracts as contracts_sum_down_payment', 'down_payment')
+                  ->withExists('installmentContracts as has_contract');
+            }])
+            ->withSum('clientPayments as payments_sum_amount', 'amount')
+            ->withSum('clientPayments as payments_sum_discount', 'discount')
+            ->withSum('contracts as contracts_sum_down_payment', 'down_payment')
+            ->withExists(['contracts as has_whole_contract' => function ($query) {
+                $query->whereNull('band_id');
+            }])
             ->orderByDesc('id')
             ->get()
             ->map(function ($p) {
@@ -44,27 +55,16 @@ class InstallmentController extends Controller
 
                 $contractedBandsBilled = 0;
                 foreach ($p->bands as $b) {
-                    if ($p->contracts->where('band_id', $b->id)->count() > 0) {
+                    if ($b->has_contract) {
                         $contractedBandsBilled += $b->actualClientTotal();
                     }
                 }
                 $billed -= $contractedBandsBilled;
 
-                $hasWholeContract = $p->contracts->whereNull('band_id')->count() > 0;
+                $hasWholeContract = $p->has_whole_contract;
 
-                // فلوس اتحصّلت من العميل مباشرة (صفحة المستحقات) — بتتملى تلقائي
-                // في «المقدم المدفوع الآن» وقت إنشاء العقد، بمعياريْن:
-                //  - already_paid: نطاق ضيّق (تحت البند المختار بس، أو دفعات
-                //    عامة لو المشروع كامل)، ده الافتراضي.
-                //  - already_paid_total: كل فلوس المشروع مهما كان البند —
-                //    بيتفعّل لما المستخدم يحدد checkbox «اعتبر كل المبلغ...».
-                // في الحالتين ناقص أي مقدم اتسجّل بالفعل لعقود سابقة (عشان
-                // مايتحسبش مرتين). كل دفعة = amount + discount (الخصم بيتحسب
-                // كأنه اتحصّل برضو، بروح Project::totalCollected()).
-                $paidSum = fn ($payments) => (float) $payments->sum(fn ($t) => (float) $t->amount + (float) $t->discount);
-
-                $totalPaidAll = $paidSum($p->clientPayments);
-                $totalClaimed = (float) $p->contracts->sum('down_payment');
+                $totalPaidAll = (float) $p->payments_sum_amount + (float) $p->payments_sum_discount;
+                $totalClaimed = (float) $p->contracts_sum_down_payment;
                 $totalUnclaimed = max(0, $totalPaidAll - $totalClaimed);
 
                 return (object) [
@@ -78,19 +78,19 @@ class InstallmentController extends Controller
                     'has_contract'       => $hasWholeContract,
                     'has_contracted_bands' => $contractedBandsBilled > 0,
                     // بنود المشروع مع قيمة كل بند للعميل — لتقسيط بند محدد
-                    'bands'         => $p->bands->map(function ($b) use ($p, $paidSum, $totalUnclaimed) {
+                    'bands'         => $p->bands->map(function ($b) use ($p, $totalUnclaimed) {
                         $bandPaid = max(0,
-                            $paidSum($p->clientPayments->where('band_id', $b->id))
-                            - (float) $p->contracts->where('band_id', $b->id)->sum('down_payment')
+                            (float) $b->payments_sum_amount + (float) $b->payments_sum_discount
+                            - (float) $b->contracts_sum_down_payment
                         );
-                        $hasContract = $p->contracts->where('band_id', $b->id)->count() > 0;
+                        
                         return (object) [
                             'id'                 => $b->id,
                             'name'               => $b->name,
                             'billed'             => round($b->actualClientTotal(), 2),
                             'already_paid'       => round($bandPaid, 2),
                             'already_paid_total' => round($totalUnclaimed, 2),
-                            'has_contract'       => $hasContract,
+                            'has_contract'       => $b->has_contract,
                         ];
                     })->values(),
                 ];

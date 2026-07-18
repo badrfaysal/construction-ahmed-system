@@ -41,6 +41,12 @@ class ProjectBand extends Model
         return $this->hasMany(BandWorker::class, 'project_band_id')->orderBy('sort_order');
     }
 
+    public function clientPayments(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'band_id')
+            ->where('ref_type', 'client_payment');
+    }
+
     public function installmentContracts(): HasMany
     {
         return $this->hasMany(InstallmentContract::class, 'band_id');

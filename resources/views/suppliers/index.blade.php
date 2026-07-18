@@ -31,7 +31,7 @@
 @if($suppliers->count())
   <div class="sup-grid">
     @foreach($suppliers as $s)
-      <a class="card sup" href="{{ route('suppliers.show', $s) }}" style="display:block;transition:.16s;cursor:pointer" onmouseover="this.style.boxShadow='var(--shadow)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='';this.style.transform=''">
+      <div class="card sup" style="display:block;">
         <div class="h">
           <div class="av">{{ mb_substr($s->name, 0, 1) }}</div>
           <div>
@@ -53,7 +53,7 @@
           <span class="k">الصافي</span>
           <span class="v tnum">{{ \App\Support\Money::format($s->total_spent - $s->total_returns) }} ج.م</span>
         </div>
-      </a>
+      </div>
     @endforeach
   </div>
 @else
