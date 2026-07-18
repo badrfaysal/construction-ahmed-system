@@ -405,17 +405,18 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
         {{-- الأزرار --}}
         <div class="rv-acts no-print">
           @if($hasCont)
-            <a href="{{ route('installments.index') }}" class="rv-act main" style="{{ $hasExcess ? '' : 'grid-column:span 2' }}"><i class="fa fa-file-contract"></i> فتح صفحة الأقساط</a>
+            <a href="{{ route('installments.index') }}" class="rv-act main" style="grid-column:span 2"><i class="fa fa-file-contract"></i> فتح صفحة الأقساط</a>
           @endif
           @if($hasExcess || (!$hasCont && !$isPaid))
-            <button class="rv-act" id="rv-full-{{ $proj->id }}" onclick="recvFull({{ $proj->id }}, {{ $payAmount }})"><i class="fa fa-check-double"></i> سداد {{ $hasCont ? 'المستحق الإضافي' : 'كلي' }}</button>
-            <button class="rv-act" id="rv-partial-{{ $proj->id }}" onclick="recvPartial({{ $proj->id }})"><i class="fa fa-money-bill"></i> سداد جزئي</button>
+            <button class="rv-act" id="rv-full-{{ $proj->id }}" onclick="recvFull({{ $proj->id }}, {{ $payAmount }})" style="grid-column:span 2; border-color:var(--ink)"><i class="fa fa-check-double"></i> سداد {{ $hasCont ? 'المستحق الإضافي' : 'كلي' }}</button>
+            <button class="rv-act" id="rv-partial-{{ $proj->id }}" onclick="recvPartial({{ $proj->id }})" style="grid-column:span 2"><i class="fa fa-money-bill"></i> سداد جزئي</button>
+
           @elseif(!$hasCont && $isPaid)
             <span class="rv-act done" style="grid-column:span 2"><i class="fa fa-check-circle"></i> تم السداد الكامل</span>
           @endif
           <button class="rv-act" onclick="openDiscountPanel({{ $proj->id }})"><i class="fa fa-percent"></i> منح خصم</button>
           <button class="rv-act" onclick="waRecv('{{ $clientPhone }}','{{ addslashes($proj->name) }}',{{ $row->remaining }})"><i class="fa-brands fa-whatsapp"></i> واتساب</button>
-          <button class="rv-act" onclick='printInvoice({{ $proj->id }}, @json($invoiceData))'><i class="fa fa-print"></i> طباعة فاتورة</button>
+          <button class="rv-act" onclick='printInvoice({{ $proj->id }}, @json($invoiceData))' style="grid-column:span 2"><i class="fa fa-print"></i> طباعة فاتورة</button>
         </div>
 
         @if($hasCont)

@@ -82,8 +82,8 @@
               @endif
             </td>
             <td>
-              <a href="{{ route('projects.show', $inv->project_id) }}" class="tag" style="text-decoration:none">
-                {{ $inv->project->name }}
+              <a href="{{ route('projects.show', $inv->project_id ?? 0) }}" class="tag" style="text-decoration:none">
+                {{ $inv->project?->name ?? '—' }}
               </a>
             </td>
             <td class="muted">{{ $inv->supplier?->name ?? '—' }}</td>
