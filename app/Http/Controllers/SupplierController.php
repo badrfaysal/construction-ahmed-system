@@ -13,7 +13,7 @@ class SupplierController extends Controller
     public function index(Request $request)
     {
         // Load each supplier with a summary of their total deals
-        $suppliers = Supplier::withCount('materials')
+        $suppliers = Supplier::withCount('invoices')
             ->with('materials.returns')
             ->orderBy('name')
             ->get();

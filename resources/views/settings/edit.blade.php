@@ -12,15 +12,6 @@
   @method('PUT')
 
   <div class="form-card">
-    <div class="section-label">التسعير</div>
-    <div class="field">
-      <label>نسبة الإشراف الافتراضية % *</label>
-      <input type="number" name="default_supervision_pct" value="{{ old('default_supervision_pct', $settings->default_supervision_pct) }}" min="0" max="100" step="0.1" required>
-      <p class="muted" style="margin-top:6px">القيمة اللي بتتملى تلقائياً لما تسجل خامة أو مصنعية جديدة — مش بتغيّر أي سجل موجود بالفعل.</p>
-    </div>
-  </div>
-
-  <div class="form-card">
     <div class="section-label">بيانات الشركة (تظهر في عروض الأسعار وكشوف الحساب المطبوعة)</div>
     <div class="field">
       <label>اسم الشركة *</label>

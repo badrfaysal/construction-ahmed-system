@@ -50,6 +50,9 @@
     {{-- Summary boxes --}}
     <div class="st-summary">
       <div class="st-box tot"><div class="l">إجمالي المستحق</div><div class="v">{{ \App\Support\Money::format($actualTotal) }} ج.م</div></div>
+      @if($discountAmount > 0)
+      <div class="st-box" style="background: #fee2e2; border-color: #fca5a5"><div class="l" style="color:#b91c1c">الخصم</div><div class="v" style="color:#b91c1c">{{ \App\Support\Money::format($discountAmount) }} ج.م</div></div>
+      @endif
       <div class="st-box paid"><div class="l">المدفوع</div><div class="v">{{ \App\Support\Money::format($totalPaid) }} ج.م</div></div>
       <div class="st-box due"><div class="l">المتبقي</div><div class="v">{{ \App\Support\Money::format($balance) }} ج.م</div></div>
     </div>
@@ -100,18 +103,28 @@
         <tr class="sub" style="background:var(--accent-soft)">
           @php
             $projProfit = $project->percentageProfit();
-            $projCost = $actualTotal - $projProfit;
+            $projCost = $subTotal - $projProfit;
             $projPct = $projCost > 0 ? ($projProfit / $projCost) * 100 : 0;
           @endphp
-          <td colspan="2" style="text-align:left;color:var(--accent-ink)">إجمالي المستحق حتى الآن</td>
+          <td colspan="2" style="text-align:left;color:var(--accent-ink)">{{ $discountAmount > 0 ? 'إجمالي المستحق قبل الخصم' : 'إجمالي المستحق حتى الآن' }}</td>
           <td class="col-sup" style="color:var(--accent-ink)">
             {{ (float) number_format($projPct, 1) }}%
             @if($projProfit > 0)
               <br><small style="font-size:12.5px;font-weight:600;opacity:0.9">({{ \App\Support\Money::format($projProfit) }} ج.م)</small>
             @endif
           </td>
+          <td class="num" style="color:var(--accent-ink)">{{ \App\Support\Money::format($subTotal) }} ج.م</td>
+        </tr>
+        @if($discountAmount > 0)
+        <tr class="sub" style="background: #fee2e2;">
+          <td colspan="3" style="text-align:left;color: #b91c1c;">الخصم</td>
+          <td class="num" style="color: #b91c1c;">{{ \App\Support\Money::format($discountAmount) }} ج.م</td>
+        </tr>
+        <tr class="sub" style="background:var(--accent-soft)">
+          <td colspan="3" style="text-align:left;color:var(--accent-ink)">إجمالي المستحق بعد الخصم</td>
           <td class="num" style="color:var(--accent-ink)">{{ \App\Support\Money::format($actualTotal) }} ج.م</td>
         </tr>
+        @endif
       </tbody>
     </table>
 
@@ -134,7 +147,13 @@
     {{-- Final summary --}}
     <div class="st-final">
       <table>
+        @if($discountAmount > 0)
+        <tr><td class="muted">إجمالي المستحق قبل الخصم</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($subTotal) }} ج.م</td></tr>
+        <tr><td class="muted">الخصم</td><td style="text-align:left;font-weight:700;color:#b91c1c">{{ \App\Support\Money::format($discountAmount) }} ج.م</td></tr>
+        <tr><td class="muted">إجمالي المستحق بعد الخصم</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($actualTotal) }} ج.م</td></tr>
+        @else
         <tr><td class="muted">إجمالي المستحق حتى الآن</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($actualTotal) }} ج.م</td></tr>
+        @endif
         <tr><td class="muted">إجمالي المدفوع</td><td style="text-align:left;font-weight:700;color:var(--pos)">{{ \App\Support\Money::format($totalPaid) }} ج.م</td></tr>
         <tr class="big"><td>المتبقي المطلوب</td><td style="text-align:left">{{ \App\Support\Money::format($balance) }} ج.م</td></tr>
       </table>

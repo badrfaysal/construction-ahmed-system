@@ -1,4 +1,4 @@
-﻿@php
+@php
     // مطابق لكشف حساب العقد في السيستم الأول — بس بداتا العقود المربوطة بالمشاريع.
     if (!function_exists('fmtMoney')) {
         function fmtMoney($val) {
@@ -127,30 +127,85 @@
 
           {{-- ── نموذج سداد (مخفي) ── --}}
           @if($instRemain > 0.009)
-          <div id="stmtPay_{{ $c->id }}" class="no-print" style="display:none;background:#f0fdf4;border-bottom:1px solid #bbf7d0;padding:12px;">
-            <form method="POST" action="{{ route('installments.pay', $c) }}">
-              @csrf
-              <div class="d-flex gap-1 mb-2 flex-wrap">
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="stmtSetPay({{ $c->id }},{{ (float)$c->monthly_installment }},{{ $instRemain }},'monthly')">قسط شهري</button>
-                <button type="button" class="btn btn-sm btn-outline-success" onclick="stmtSetPay({{ $c->id }},{{ (float)$c->monthly_installment }},{{ $instRemain }},'full')">سداد كامل</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="stmtSetPay({{ $c->id }},{{ (float)$c->monthly_installment }},{{ $instRemain }},'partial')">مبلغ مخصص</button>
-              </div>
-              <div class="d-flex align-items-end gap-2 flex-wrap">
-                <div><label class="small fw-bold d-block">المبلغ</label><input type="number" step="0.01" min="0" max="{{ $instRemain }}" name="amount_paid" id="pay_amt_{{ $c->id }}" class="form-control form-control-sm fw-bold" required></div>
-                <div><label class="small fw-bold d-block">خصم</label><input type="number" step="0.01" min="0" name="discount_applied" class="form-control form-control-sm" value="0" style="max-width:90px"></div>
-                <div><label class="small fw-bold d-block">تاريخ</label><input type="date" name="payment_date" class="form-control form-control-sm" value="{{ today()->format('Y-m-d') }}" required></div>
-                <div><label class="small fw-bold d-block">الطريقة</label><input type="text" name="method" class="form-control form-control-sm" placeholder="كاش/تحويل" style="max-width:110px"></div>
-                <div style="min-width:150px"><label class="small fw-bold d-block"><i class="fa fa-wallet text-primary"></i> المحفظة *</label>
-                  <select name="account_id" class="form-select form-select-sm" required>
-                    <option value="" disabled {{ $c->account_id ? '' : 'selected' }}>— اختر المحفظة —</option>
-                    @foreach(($wallets ?? collect()) as $w)
-                      <option value="{{ $w->id }}" @selected($c->account_id == $w->id)>{{ $w->account_name }} — {{ \App\Support\Money::format($w->balance) }} ج</option>
-                    @endforeach
-                  </select></div>
-                <div style="flex:1;min-width:110px"><label class="small fw-bold d-block">ملاحظات</label><input type="text" name="notes" class="form-control form-control-sm" placeholder="اختياري"></div>
-                <button class="btn btn-success btn-sm fw-bold"><i class="fa fa-check me-1"></i>تحصيل</button>
-              </div>
-            </form>
+          <div id="stmtPay_{{ $c->id }}" class="no-print" style="display:none;position:fixed;inset:0;z-index:1060;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);">
+            <div style="background:#fff;border-radius:12px;width:100%;max-width:500px;box-shadow:0 10px 25px rgba(0,0,0,0.2);overflow:hidden;display:flex;flex-direction:column;max-height:90vh;margin:auto;">
+                <div style="background:#059669;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
+                    <div style="font-weight:bold;font-size:18px;display:flex;align-items:center;gap:10px;">
+                        <i class="fa fa-cash-register"></i> سداد قسط: {{ $cName }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" onclick="toggleStmtForm({{ $c->id }},'pay')" style="opacity:0.8;"></button>
+                </div>
+                <div style="padding:20px;overflow-y:auto;">
+                    <form method="POST" action="{{ route('installments.pay', $c) }}" id="formPay_{{ $c->id }}">
+                      @csrf
+                      
+                      <!-- المتبقي المطلوب -->
+                      <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:16px;text-align:center;margin-bottom:20px;">
+                         <div style="color:#dc2626;font-weight:bold;font-size:18px;margin-bottom:4px;">المتبقي المطلوب:</div>
+                         <div style="color:#dc2626;font-weight:900;font-size:28px;" dir="ltr">{{ \App\Support\Money::format($instRemain) }} ج</div>
+                      </div>
+
+                      <!-- خصم / تسوية -->
+                      <div style="border:1px solid #fbbf24;border-radius:8px;padding:16px;margin-bottom:20px;text-align:center;">
+                         <label style="color:#d97706;font-weight:bold;display:block;margin-bottom:12px;">
+                            <i class="fa fa-tag"></i> خصم / تسوية (يُطرح تلقائياً من المتبقي)
+                         </label>
+                         <input type="number" step="0.01" min="0" name="discount_applied" id="pay_disc_{{ $c->id }}" class="form-control text-center mx-auto" value="0" style="font-size:24px;font-weight:bold;color:#d97706;border-color:#fbbf24;padding:10px;max-width:300px;">
+                      </div>
+
+                      <!-- نظام السداد -->
+                      <div style="margin-bottom:20px;">
+                         <label style="font-weight:bold;display:block;margin-bottom:10px;text-align:center;">نظام السداد للمبلغ (بعد الخصم):</label>
+                         <div style="display:flex;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;flex-wrap:wrap;">
+                            <label style="flex:1;min-width:25%;text-align:center;padding:10px;cursor:pointer;border-inline-end:1px solid #e2e8f0;margin:0;" onclick="stmtSetPayStyle({{ $c->id }},'monthly', {{ (float)$c->monthly_installment }}, {{ $instRemain }})">
+                               <input type="radio" name="pay_type_{{ $c->id }}" style="display:none;" value="monthly" checked>
+                               <div id="ptl_monthly_{{ $c->id }}" style="font-weight:bold;color:#0369a1;background:#e0f2fe;padding:8px;border-radius:6px;font-size:13px;">قسط شهري ثابت</div>
+                            </label>
+                            <label style="flex:1;min-width:25%;text-align:center;padding:10px;cursor:pointer;border-inline-end:1px solid #e2e8f0;margin:0;" onclick="stmtSetPayStyle({{ $c->id }},'full', {{ (float)$c->monthly_installment }}, {{ $instRemain }})">
+                               <input type="radio" name="pay_type_{{ $c->id }}" style="display:none;" value="full">
+                               <div id="ptl_full_{{ $c->id }}" style="font-weight:bold;color:#475569;padding:8px;border-radius:6px;font-size:13px;">سداد كامل المتبقي</div>
+                            </label>
+                            <label style="flex:1;min-width:25%;text-align:center;padding:10px;cursor:pointer;border-inline-end:1px solid #e2e8f0;margin:0;" onclick="stmtSetPayStyle({{ $c->id }},'custom', {{ (float)$c->monthly_installment }}, {{ $instRemain }})">
+                               <input type="radio" name="pay_type_{{ $c->id }}" style="display:none;" value="custom">
+                               <div id="ptl_custom_{{ $c->id }}" style="font-weight:bold;color:#0284c7;padding:8px;border-radius:6px;font-size:13px;">مبلغ مخصص</div>
+                            </label>
+                            <label style="flex:1;min-width:25%;text-align:center;padding:10px;cursor:pointer;margin:0;" onclick="stmtSetPayStyle({{ $c->id }},'none', {{ (float)$c->monthly_installment }}, {{ $instRemain }})">
+                               <input type="radio" name="pay_type_{{ $c->id }}" style="display:none;" value="none">
+                               <div id="ptl_none_{{ $c->id }}" style="font-weight:bold;color:#dc2626;padding:8px;border-radius:6px;font-size:13px;"><i class="fa fa-triangle-exclamation"></i> تعثر (بدون دفع)</div>
+                            </label>
+                         </div>
+                      </div>
+
+                      <!-- المبلغ المطلوب -->
+                      <div style="margin-bottom:20px;text-align:center;">
+                         <label style="color:#059669;font-weight:bold;display:block;margin-bottom:12px;font-size:16px;">المبلغ المطلوب سداده كاش الآن <span style="color:red">*</span></label>
+                         <input type="number" step="0.01" min="0" max="{{ $instRemain }}" name="amount_paid" id="pay_amt_{{ $c->id }}" class="form-control text-center mx-auto" required style="font-size:32px;font-weight:900;color:#059669;border:2px solid #059669;border-radius:8px;padding:12px;" value="{{ min((float)$c->monthly_installment, $instRemain) }}">
+                      </div>
+
+                      <div class="row g-3 mb-4">
+                         <div class="col-6">
+                            <label style="font-weight:bold;display:block;margin-bottom:8px;font-size:14px;">إيداع في خزنة <span style="color:red">*</span></label>
+                            <select name="account_id" id="pay_acc_{{ $c->id }}" class="form-select" required style="border-color:#3b82f6;color:#1d4ed8;font-weight:bold;">
+                              <option value="" disabled {{ $c->account_id ? '' : 'selected' }}>— اختر الخزنة —</option>
+                              @foreach(($wallets ?? collect()) as $w)
+                                <option value="{{ $w->id }}" @selected($c->account_id == $w->id)>{{ $w->account_name }} — {{ \App\Support\Money::format($w->balance) }} ج</option>
+                              @endforeach
+                            </select>
+                         </div>
+                         <div class="col-6">
+                            <label style="font-weight:bold;display:block;margin-bottom:8px;font-size:14px;">تاريخ العملية / التعثر <span style="color:red">*</span></label>
+                            <input type="date" name="payment_date" class="form-control" value="{{ today()->format('Y-m-d') }}" required style="font-weight:bold;">
+                         </div>
+                      </div>
+                      
+                      <!-- مخفي -->
+                      <input type="hidden" name="method" value="">
+                      <input type="hidden" name="notes" id="pay_notes_{{ $c->id }}" value="">
+
+                      <button type="submit" class="btn w-100" style="background:#059669;color:#fff;font-size:20px;font-weight:bold;padding:14px;border-radius:30px;"><i class="fa fa-check-circle me-2"></i> تأكيد التحصيل</button>
+                    </form>
+                </div>
+            </div>
           </div>
           @endif
 
@@ -159,23 +214,14 @@
             <form method="POST" action="{{ route('installments.update', $c) }}">
               @csrf @method('PUT')
               <div class="row g-2">
-                <div class="col-6"><label class="small fw-bold">اسم العميل</label><input name="customer_name" class="form-control form-control-sm" value="{{ $c->customer_name }}" required></div>
-                <div class="col-6"><label class="small fw-bold">الموبايل</label><input name="customer_phone" class="form-control form-control-sm" value="{{ $c->customer_phone }}"></div>
-                <div class="col-12"><label class="small fw-bold">المتعاقد عليه</label><input name="product_name" class="form-control form-control-sm" value="{{ $c->product_name }}"></div>
-                <div class="col-4"><label class="small fw-bold">قيمة العقد (كاش)</label><input type="number" step="0.01" min="0" name="cash_price" class="form-control form-control-sm" value="{{ (float)$c->cash_price }}" required></div>
-                <div class="col-4"><label class="small fw-bold">خصم</label><input type="number" step="0.01" min="0" name="discount" class="form-control form-control-sm" value="{{ (float)$c->discount }}"></div>
-                <div class="col-4"><label class="small fw-bold">المقدم</label><input type="number" step="0.01" min="0" name="down_payment" class="form-control form-control-sm" value="{{ (float)$c->down_payment }}"></div>
-                <div class="col-4"><label class="small fw-bold">نسبة الفائدة %</label><input type="number" step="0.1" min="0" name="interest_rate" class="form-control form-control-sm" value="{{ (float)$c->interest_rate }}"></div>
-                <div class="col-4"><label class="small fw-bold">عدد الشهور</label><input type="number" step="1" min="1" name="installment_months" class="form-control form-control-sm" value="{{ (int)$c->installment_months }}" required></div>
+                <div class="col-4"><label class="small fw-bold">اسم العميل</label><input name="customer_name" class="form-control form-control-sm" value="{{ $c->customer_name }}" required></div>
+                <div class="col-4"><label class="small fw-bold">الموبايل</label><input name="customer_phone" class="form-control form-control-sm" value="{{ $c->customer_phone }}"></div>
                 <div class="col-4"><label class="small fw-bold">يوم السداد</label><input type="number" step="1" min="1" max="31" name="due_day" class="form-control form-control-sm" value="{{ (int)$c->due_day }}" required></div>
-                <div class="col-6"><label class="small fw-bold">تاريخ العقد</label><input type="date" name="start_date" class="form-control form-control-sm" value="{{ optional($c->start_date)->format('Y-m-d') ?? $c->created_at->format('Y-m-d') }}" required></div>
-                <div class="col-6"><label class="small fw-bold">ملاحظات</label><input name="notes" class="form-control form-control-sm" value="{{ $c->notes }}"></div>
               </div>
-              <div class="d-flex gap-2 mt-2">
+              <div class="d-flex gap-2 mt-3">
                 <button class="btn btn-primary btn-sm fw-bold"><i class="fa fa-save me-1"></i>حفظ التعديل</button>
                 <button type="button" class="btn btn-light btn-sm fw-bold" onclick="toggleStmtForm({{ $c->id }},'edit')">إلغاء</button>
               </div>
-              <div class="small text-muted mt-1">ملاحظة: تعديل المقدم بيعدّل حركته في المحفظة تلقائيًا، والمتبقي بيتعاد حسابه مع مراعاة الدفعات المسجّلة.</div>
             </form>
           </div>
 

@@ -71,7 +71,7 @@ class AuditLog extends Model
             'debt'           => ['label' => 'سداد دين مورد',    'color' => '#dc2626', 'icon' => 'i-credit-card'],
             'worker_payment' => ['label' => 'دفعة صنايعي',       'color' => '#8b5cf6', 'icon' => 'i-hardhat'],
             'inst_payment'   => ['label' => 'تحصيل قسط',         'color' => '#2563eb', 'icon' => 'i-calendar'],
-            'inst_down'      => ['label' => 'مقدم عقد تقسيط',    'color' => '#1d4ed8', 'icon' => 'i-receipt'],
+            'inst_down'      => ['label' => 'عقد تقسيط جديد',    'color' => '#1d4ed8', 'icon' => 'i-receipt'],
             'client_payment' => ['label' => 'تحصيل من العميل',   'color' => '#16a34a', 'icon' => 'i-cash'],
             'discount'       => ['label' => 'منح خصم للعميل',    'color' => '#f43f5e', 'icon' => 'i-percent'],
             'manual'         => ['label' => 'حركة محفظة يدوية',  'color' => '#c9821a', 'icon' => 'i-wallet'],

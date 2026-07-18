@@ -126,11 +126,11 @@
     <div class="nav-label">العملاء والموردون</div>
     <a class="nav-item {{ request()->routeIs('clients.*') ? 'active' : '' }}" href="{{ route('clients.index') }}" style="--ic:#06b6d4">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg>
-      <span>العملاء</span>
+      <span>سجل العملاء</span>
     </a>
     <a class="nav-item {{ request()->routeIs('suppliers.*') && !request()->routeIs('suppliers.compare') ? 'active' : '' }}" href="{{ route('suppliers.index') }}" style="--ic:#f97316">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg>
-      <span>الموردون</span>
+      <span>سجل الموردين</span>
     </a>
     <a class="nav-item {{ request()->routeIs('craftsmen.*') ? 'active' : '' }}" href="{{ route('craftsmen.index') }}" style="--ic:#ca8a04">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-tool"/></svg>

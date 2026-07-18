@@ -215,10 +215,7 @@ class QuoteController extends Controller
                 'default_supervision_pct' => $data['default_supervision_pct'],
             ]);
 
-            // تبقى دي النسبة الافتراضية للنظام كله بعد كده (زي ما طلب المستخدم)
-            \App\Models\Settings::current()->update([
-                'default_supervision_pct' => $data['default_supervision_pct'],
-            ]);
+
 
             // Create bands and remember which project band each quote band maps to
             $bandMap = [];

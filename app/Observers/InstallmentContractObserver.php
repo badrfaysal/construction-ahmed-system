@@ -20,20 +20,20 @@ class InstallmentContractObserver
 {
     public function created(InstallmentContract $contract): void
     {
-        if ((float) $contract->down_payment > 0 && empty($contract->skipDownPaymentTransaction)) {
-            Transaction::create([
-                'project_id'  => $contract->project_id,
-                'account_id'  => $contract->account_id,
-                'direction'   => 'in',
-                'type'        => 'تحصيل مقدم',
-                'party'       => $contract->customer_name,
-                'amount'      => $contract->down_payment,
-                'date'        => $contract->start_date ?? now(),
-                'description' => 'مقدم عقد تقسيط — ' . $contract->product_name,
-                'ref_type'    => 'inst_down',
-                'ref_id'      => $contract->id,
-            ]);
-        }
+        $actualAmount = (empty($contract->skipDownPaymentTransaction)) ? (float) $contract->down_payment : 0;
+        
+        Transaction::create([
+            'project_id'  => $contract->project_id,
+            'account_id'  => $contract->account_id,
+            'direction'   => 'in',
+            'type'        => 'إنشاء عقد تقسيط',
+            'party'       => $contract->customer_name,
+            'amount'      => $actualAmount,
+            'date'        => $contract->start_date ?? now(),
+            'description' => 'عقد تقسيط — ' . $contract->product_name . ($contract->down_payment > 0 && $actualAmount == 0 ? ' (المقدم ' . (float)$contract->down_payment . ' مسجل مسبقاً)' : ''),
+            'ref_type'    => 'inst_down',
+            'ref_id'      => $contract->id,
+        ]);
 
         $contract->project?->recalculateCachedTotals();
     }

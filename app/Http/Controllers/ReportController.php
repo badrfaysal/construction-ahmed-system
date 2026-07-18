@@ -260,12 +260,15 @@ class ReportController extends Controller
 
         $initialContractValue = $project->initialContractValue();
         $totalPaid            = $project->totalCollected();
-        $actualTotal          = $spentBands->sum(fn ($band) => $band->actualClientTotal())
+        $subTotal             = $spentBands->sum(fn ($band) => $band->actualClientTotal())
             + $generalMaterials->sum(fn ($m) => $m->netClientCost());
+            
+        $discountAmount       = (float) $project->discount + (float) $project->discounts()->sum('amount');
+        $actualTotal          = $subTotal - $discountAmount;
         $balance              = $actualTotal - $totalPaid;
 
         return view('reports.statement', compact(
-            'project', 'spentBands', 'generalMaterials', 'initialContractValue', 'totalPaid', 'actualTotal', 'balance'
+            'project', 'spentBands', 'generalMaterials', 'initialContractValue', 'totalPaid', 'subTotal', 'discountAmount', 'actualTotal', 'balance'
         ));
     }
 
@@ -286,11 +289,13 @@ class ReportController extends Controller
 
         $initialContractValue = $project->initialContractValue();
         $totalPaid            = $project->totalCollected();
-        $actualTotal          = $spentBands->sum(fn ($band) => $band->actualClientTotal()) + $generalTotal;
+        $subTotal             = $spentBands->sum(fn ($band) => $band->actualClientTotal()) + $generalTotal;
+        $discountAmount       = (float) $project->discount + (float) $project->discounts()->sum('amount');
+        $actualTotal          = $subTotal - $discountAmount;
         $balance              = $actualTotal - $totalPaid;
 
         return view('reports.statement-summary', compact(
-            'project', 'spentBands', 'generalTotal', 'initialContractValue', 'totalPaid', 'actualTotal', 'balance'
+            'project', 'spentBands', 'generalTotal', 'initialContractValue', 'totalPaid', 'subTotal', 'discountAmount', 'actualTotal', 'balance'
         ));
     }
 

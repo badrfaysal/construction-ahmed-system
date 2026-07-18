@@ -44,8 +44,8 @@
         <input type="number" name="area" value="{{ old('area') }}" placeholder="150" step="0.5" min="0">
       </div>
       <div class="field">
-        <label>نسبة الإشراف الافتراضية %</label>
-        <input type="number" name="default_supervision_pct" value="{{ old('default_supervision_pct', $settings->default_supervision_pct) }}" min="0" max="100" step="0.1">
+        <label>نسبة الإشراف الافتراضية % *</label>
+        <input type="number" name="default_supervision_pct" value="{{ old('default_supervision_pct', 0) }}" min="0" max="100" step="0.1" required>
         <p class="muted" style="margin-top:4px;font-size:11px">تتطبق تلقائيًا على كل بند وخامة وفني في المشروع (وتقدر تعدّلها في أي حتة).</p>
       </div>
       <div class="field">

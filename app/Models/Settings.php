@@ -10,7 +10,7 @@ class Settings extends Model
     protected $table = 'sy2_settings';
 
     protected $fillable = [
-        'default_supervision_pct', 'company_name', 'company_tagline',
+        'company_name', 'company_tagline',
         'company_phone', 'company_registration', 'whatsapp_country_code',
     ];
 
@@ -21,7 +21,6 @@ class Settings extends Model
         }
 
         $settings = new static([
-            'default_supervision_pct' => 0,
             'company_name'            => 'شركة الضبع للتجارة والتوريدات',
             'company_tagline'         => 'مقاولات وتشطيبات · القاهرة',
             'company_phone'           => '0100 000 0000',

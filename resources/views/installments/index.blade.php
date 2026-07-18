@@ -54,7 +54,7 @@
   .inst-wrap .btn-filter-print{border:1px solid #16a34a;background:#16a34a;color:#fff;padding:8px 16px;border-radius:9px;font-weight:700;font-size:.82rem;cursor:pointer;}
   .inst-wrap .btn-filter-reset{border:1px solid var(--i-border);background:var(--i-surface);color:var(--i-muted);padding:8px 16px;border-radius:9px;font-weight:700;font-size:.82rem;cursor:pointer;}
 
-  .inst-wrap .kpi-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;}
+  .inst-wrap .kpi-strip{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;}
   .inst-wrap .kpi-item{background:var(--i-surface);border:1px solid var(--i-border);border-radius:10px;padding:10px 8px;text-align:center;}
   .inst-wrap .kpi-label{font-size:.72rem;font-weight:700;color:var(--i-soft);margin-bottom:3px;}
   .inst-wrap .kpi-val{font-size:1.2rem;font-weight:900;line-height:1.1;}
@@ -182,7 +182,8 @@
         </div>
 
         <div id="dueStatsBar" class="kpi-strip mb-3">
-          <div class="kpi-item"><div class="kpi-label">العملاء</div><div class="kpi-val" style="color:#0369a1" id="statTotal">0</div></div>
+          <div class="kpi-item"><div class="kpi-label">العملاء</div><div class="kpi-val" style="color:#0369a1" id="statClients">0</div></div>
+          <div class="kpi-item"><div class="kpi-label">عدد العقود</div><div class="kpi-val" style="color:#4f46e5" id="statTotal">0</div></div>
           <div class="kpi-item"><div class="kpi-label">إجمالي القسط الشهري</div><div class="kpi-val" style="color:#b45309" id="statDue">0 ج</div></div>
           <div class="kpi-item"><div class="kpi-label">دفع كامل</div><div class="kpi-val" style="color:#15803d" id="statFullPaid">0</div></div>
           <div class="kpi-item"><div class="kpi-label">جزئي</div><div class="kpi-val" style="color:#1d4ed8" id="statPartialPaid">0</div></div>
@@ -283,7 +284,7 @@
             <select name="project_id" id="nc_project" class="form-select" required onchange="ncProjectChanged(this)">
               <option value="">— اختر المشروع —</option>
               @foreach($projectsForContract as $p)
-                <option value="{{ $p->id }}" data-billed="{{ $p->billed }}" data-paid="{{ $p->already_paid }}" data-paid-total="{{ $p->already_paid_total }}" data-has-contract="{{ $p->has_contract ? '1' : '0' }}" data-bands='@json($p->bands)'>
+                <option value="{{ $p->id }}" data-billed="{{ $p->billed }}" data-paid="{{ $p->already_paid }}" data-paid-total="{{ $p->already_paid_total }}" data-has-contract="{{ $p->has_contract ? '1' : '0' }}" data-has-contracted-bands="{{ $p->has_contracted_bands ? '1' : '0' }}" data-bands='{{ json_encode($p->bands) }}'>
                   {{ $p->name }} — {{ $p->client_name }} ({{ \App\Support\Money::format($p->billed) }} ج)
                 </option>
               @endforeach
@@ -390,6 +391,7 @@ function ncProjectChanged(sel){
   ncAlreadyPaidTotal = parseFloat(opt?.dataset.paidTotal)||0;
   // املأ قائمة البنود من المشروع المختار
   const hasContract = opt?.dataset.hasContract === '1';
+  const hasContractedBands = opt?.dataset.hasContractedBands === '1';
   const bandSel = document.getElementById('nc_band');
   
   bandSel.innerHTML = '';
@@ -399,7 +401,8 @@ function ncProjectChanged(sel){
       wholeProjectOpt.textContent = 'المشروع كامل (مُقسّط مسبقاً)';
       wholeProjectOpt.disabled = true;
   } else {
-      wholeProjectOpt.textContent = 'المشروع كامل ('+(billed?billed.toLocaleString('en-US'):'0')+' ج)';
+      const label = hasContractedBands ? 'باقي بنود المشروع' : 'المشروع كامل';
+      wholeProjectOpt.textContent = label + ' ('+(billed?billed.toLocaleString('en-US'):'0')+' ج)';
   }
   bandSel.appendChild(wholeProjectOpt);
 
@@ -408,7 +411,10 @@ function ncProjectChanged(sel){
   bands.forEach(b=>{
     const o = document.createElement('option');
     o.value = b.id; o.dataset.billed = b.billed; o.dataset.paid = b.already_paid; o.dataset.paidTotal = b.already_paid_total;
-    if (b.has_contract) {
+    if (hasContract) {
+        o.textContent = b.name + ' (مُقسّط ضمن المشروع كامل)';
+        o.disabled = true;
+    } else if (b.has_contract) {
         o.textContent = b.name + ' (مُقسّط مسبقاً)';
         o.disabled = true;
     } else {
@@ -561,6 +567,48 @@ function stmtSetPay(cid, monthly, remaining, type){
   else { inp.value=''; inp.focus(); }
 }
 
+function stmtSetPayStyle(cid, type, monthly, remaining) {
+  const inp=document.getElementById('pay_amt_'+cid);
+  const notes=document.getElementById('pay_notes_'+cid);
+  const disc=document.getElementById('pay_disc_'+cid);
+  if(!inp)return;
+
+  // Reset styles
+  ['monthly', 'full', 'custom', 'none'].forEach(t => {
+      const el = document.getElementById('ptl_' + t + '_' + cid);
+      if(el) {
+          el.style.background = 'transparent';
+          el.style.color = (t==='none'?'#dc2626':(t==='custom'?'#0284c7':'#475569'));
+      }
+  });
+
+  // Active style
+  const activeEl = document.getElementById('ptl_' + type + '_' + cid);
+  if(activeEl) {
+      activeEl.style.background = (type==='none' ? '#fecaca' : '#e0f2fe');
+      activeEl.style.color = (type==='none' ? '#dc2626' : '#0369a1');
+  }
+
+  // Handle value
+  inp.readOnly = false;
+  disc.readOnly = false;
+  notes.value = '';
+  if(type==='monthly') {
+      inp.value=Math.min(monthly,remaining).toFixed(2);
+  } else if(type==='full') {
+      inp.value=remaining.toFixed(2);
+  } else if(type==='none') {
+      inp.value='0';
+      disc.value='0';
+      inp.readOnly = true;
+      disc.readOnly = true;
+      notes.value = 'تعثر سداد';
+  } else {
+      inp.value=''; 
+      inp.focus();
+  }
+}
+
 // ═══ كشف الحساب: تبديل التابات + إظهار فورم السداد/التعديل + طباعة/تحميل/واتساب ═══
 function switchTab(group, pane){
   const root=document.getElementById('captureCustomer_'+group);
@@ -580,7 +628,13 @@ function toggleStmtForm(id, which){
   const el =document.getElementById('stmt'+(which==='pay'?'Pay':'Edit')+'_'+id);
   const oth=document.getElementById('stmt'+(which==='pay'?'Edit':'Pay')+'_'+id);
   if(oth)oth.style.display='none';
-  if(el)el.style.display=(el.style.display==='none'||!el.style.display)?'block':'none';
+  if(el){
+    if(el.style.display==='none'||!el.style.display){
+      el.style.display = (which==='pay' ? 'flex' : 'block');
+    } else {
+      el.style.display = 'none';
+    }
+  }
 }
 function _activePane(group){
   const root=document.getElementById('captureCustomer_'+group);
@@ -658,11 +712,13 @@ function setTodayDueFilter(){const t=new Date().getDate();document.getElementByI
 function resetActiveFilters(){document.getElementById('activeSearch').value='';document.getElementById('dueRangeFrom').value='0';document.getElementById('dueRangeTo').value='0';currentStatusFilter='all';document.querySelectorAll('#statusPills .status-pill').forEach(p=>p.classList.toggle('active',p.dataset.status==='all'));applyActiveFilters();}
 
 function updateDueStats(range){
+  const uniqueClients = new Set(range.map(custKey)).size;
   const totalAmt=range.reduce((s,i)=>s+i.monthly_installment,0);
   const full=range.filter(i=>i._isPaid).length;
   const partial=range.filter(i=>!i._isPaid&&i._collected>0).length;
   const unpaid=range.filter(i=>i._collected===0).length;
   const collected=range.reduce((s,i)=>s+i._collected,0);
+  document.getElementById('statClients').innerText=uniqueClients;
   document.getElementById('statTotal').innerText=range.length;
   document.getElementById('statDue').innerText=totalAmt.toLocaleString('en-US')+' ج';
   document.getElementById('statFullPaid').innerText=full;

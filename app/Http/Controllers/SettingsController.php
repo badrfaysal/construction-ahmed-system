@@ -16,7 +16,6 @@ class SettingsController extends Controller
     public function update(Request $request)
     {
         $data = $request->validate([
-            'default_supervision_pct' => ['required', 'numeric', 'min:0', 'max:100'],
             'company_name'            => ['required', 'string', 'max:255'],
             'company_tagline'         => ['nullable', 'string', 'max:255'],
             'company_phone'           => ['nullable', 'string', 'max:100'],

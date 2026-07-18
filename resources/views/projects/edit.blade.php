@@ -41,8 +41,8 @@
         <input type="number" name="area" value="{{ old('area', $project->area) }}" step="0.5" min="0">
       </div>
       <div class="field">
-        <label>نسبة الإشراف الافتراضية %</label>
-        <input type="number" name="default_supervision_pct" value="{{ old('default_supervision_pct', $project->default_supervision_pct) }}" min="0" max="100" step="0.1">
+        <label>نسبة الإشراف الافتراضية % *</label>
+        <input type="number" name="default_supervision_pct" value="{{ old('default_supervision_pct', $project->default_supervision_pct) }}" min="0" max="100" step="0.1" required>
       </div>
       <div class="field">
         <label>تاريخ البدء</label>

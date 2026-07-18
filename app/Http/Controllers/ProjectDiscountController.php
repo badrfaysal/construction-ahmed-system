@@ -15,9 +15,23 @@ class ProjectDiscountController extends Controller
             'notes'  => 'nullable|string|max:255',
         ]);
 
-        if ($project->contracts()->exists()) {
+        if ($project->hasWholeProjectInstallmentContract()) {
             throw \Illuminate\Validation\ValidationException::withMessages([
-                'amount' => 'لا يمكن إضافة خصم إجمالي للمشروع لأنه يحتوي على عقود تقسيط. قم بإلغاء التقسيط أولاً.',
+                'amount' => 'لا يمكن إضافة خصم إجمالي للمشروع لأنه يحتوي على عقد تقسيط إجمالي. قم بإلغاء التقسيط أولاً.',
+            ]);
+        }
+
+        $contractedBandsBilled = 0;
+        foreach ($project->bands as $b) {
+            if ($project->contracts()->where('band_id', $b->id)->exists()) {
+                $contractedBandsBilled += $b->actualClientTotal();
+            }
+        }
+        $uncontractedBilled = $project->actualClientTotal() - $contractedBandsBilled;
+
+        if ($request->amount > $uncontractedBilled) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'amount' => 'مبلغ الخصم (' . $request->amount . ') أكبر من القيمة المتبقية غير المقسطة من المشروع (' . number_format(max(0, $uncontractedBilled), 2) . ' ج).',
             ]);
         }
 

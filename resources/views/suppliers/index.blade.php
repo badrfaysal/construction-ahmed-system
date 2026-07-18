@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'الموردون')
 @section('page-title', 'الموردون')
 
@@ -39,7 +39,7 @@
             @if($s->activity)<div class="muted" style="font-size:11.5px">{{ $s->activity }}</div>@endif
             @if($s->phone)<div class="ph">{{ $s->phone }}</div>@endif
           </div>
-          <span class="tag blue" style="margin-inline-start:auto">{{ $s->materials_count }} صفقة</span>
+          <span class="tag blue" style="margin-inline-start:auto">{{ $s->invoices_count }} فاتورة</span>
         </div>
         <div class="kv">
           <span class="k">إجمالي المشتريات</span>

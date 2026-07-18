@@ -100,12 +100,10 @@ class Project extends Model
             ->sum(fn ($d) => $d->remaining());
     }
 
-    // Default supervision % for this project's bands/materials/workers —
-    // falls back to the global Settings default when not set (zero)
+    // Default supervision % for this project's bands/materials/workers
     public function defaultSupervisionPct(): float
     {
-        $own = (float) $this->default_supervision_pct;
-        return $own > 0 ? $own : (float) Settings::current()->default_supervision_pct;
+        return (float) $this->default_supervision_pct;
     }
 
     // Total agreed price = sum of all band client prices

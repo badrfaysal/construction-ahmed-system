@@ -76,6 +76,7 @@ class InstallmentController extends Controller
                     'already_paid'       => round($totalUnclaimed, 2),
                     'already_paid_total' => round($totalUnclaimed, 2),
                     'has_contract'       => $hasWholeContract,
+                    'has_contracted_bands' => $contractedBandsBilled > 0,
                     // بنود المشروع مع قيمة كل بند للعميل — لتقسيط بند محدد
                     'bands'         => $p->bands->map(function ($b) use ($p, $paidSum, $totalUnclaimed) {
                         $bandPaid = max(0,
@@ -130,6 +131,11 @@ class InstallmentController extends Controller
                 ]);
             }
         } else {
+            if ($project->hasWholeProjectInstallmentContract()) {
+                throw ValidationException::withMessages([
+                    'band_id' => 'هذا المشروع تم تقسيطه بالكامل مسبقاً، ولا يمكن تقسيط بنوده بشكل منفرد.',
+                ]);
+            }
             $band = $project->bands()->whereKey($data['band_id'])->first();
             if ($band && $band->hasInstallmentContract()) {
                 throw ValidationException::withMessages([
@@ -240,14 +246,6 @@ class InstallmentController extends Controller
         $amount   = (float) $data['amount_paid'];
         $discount = (float) ($data['discount_applied'] ?? 0);
 
-        if ($amount <= 0 && $discount <= 0) {
-            return back()->withErrors(['amount_paid' => 'أدخل مبلغ تحصيل أو خصم.'])->withInput()
-                ->with('reopen_phone', $contract->customer_phone)
-                ->with('reopen_name', $contract->customer_name)
-                ->with('reopen_contract_id', $contract->id)
-                ->with('reopen_form', 'pay');
-        }
-
         try {
             // Lock the contract row for the duration of the check + insert so
             // two concurrent/double-click submissions can't both pass the
@@ -332,15 +330,7 @@ class InstallmentController extends Controller
         $validator = Validator::make($request->all(), [
             'customer_name'      => ['required', 'string', 'max:255'],
             'customer_phone'     => ['nullable', 'string', 'max:30'],
-            'product_name'       => ['nullable', 'string', 'max:255'],
-            'cash_price'         => ['required', 'numeric', 'min:0'],
-            'discount'           => ['nullable', 'numeric', 'min:0'],
-            'down_payment'       => ['nullable', 'numeric', 'min:0'],
-            'interest_rate'      => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'installment_months' => ['required', 'integer', 'min:1', 'max:240'],
             'due_day'            => ['required', 'integer', 'min:1', 'max:31'],
-            'start_date'         => ['required', 'date'],
-            'notes'              => ['nullable', 'string'],
         ]);
 
         if ($validator->fails()) {
@@ -352,70 +342,12 @@ class InstallmentController extends Controller
         }
 
         $data = $validator->validated();
-        $cash   = (float) $data['cash_price'];
-        $disc   = (float) ($data['discount'] ?? 0);
-        $down   = (float) ($data['down_payment'] ?? 0);
-        $rate   = (float) ($data['interest_rate'] ?? 0);
-        $months = (int) $data['installment_months'];
 
-        $afterDisc     = max(0, $cash - $disc);
-        $baseForInt    = max(0, $afterDisc - $down);
-        $totalAfterInt = $afterDisc + $baseForInt * ($rate / 100);
-        $monthly       = $months > 0 ? ($totalAfterInt - $down) / $months : 0;
-
-        if ($down > $afterDisc + 0.01) {
-            return back()->withErrors(['down_payment' => 'المقدم أكبر من قيمة العقد بعد الخصم.'])->withInput()
-                ->with('reopen_phone', $contract->customer_phone)
-                ->with('reopen_name', $contract->customer_name)
-                ->with('reopen_contract_id', $contract->id)
-                ->with('reopen_form', 'edit');
-        }
-
-        // المتبقي بعد التعديل = (الإجمالي − المقدم) − اللي اتحصّل فعلاً على العقد
-        $paid      = (float) $contract->payments()->sum('amount_paid') + (float) $contract->payments()->sum('discount_applied');
-        $remaining = max(0, $totalAfterInt - $down - $paid);
-
-        DB::transaction(function () use ($contract, $data, $down, $totalAfterInt, $monthly, $remaining) {
-            $oldDown = (float) $contract->down_payment;
-
-            $contract->update([
-                'customer_name'        => $data['customer_name'],
-                'customer_phone'       => $data['customer_phone'] ?? null,
-                'product_name'         => $data['product_name'] ?: $contract->product_name,
-                'cash_price'           => $data['cash_price'],
-                'discount'             => $data['discount'] ?? 0,
-                'down_payment'         => $down,
-                'interest_rate'        => $data['interest_rate'] ?? 0,
-                'installment_months'   => $data['installment_months'],
-                'total_after_interest' => round($totalAfterInt, 2),
-                'monthly_installment'  => round($monthly, 2),
-                'due_day'              => (int) $data['due_day'],
-                'remaining_balance'    => round($remaining, 2),
-                'start_date'           => $data['start_date'],
-                'notes'                => $data['notes'] ?? null,
-            ]);
-
-            // زامن حركة المقدم في المحفظة لو المقدم اتغيّر (Model instance عشان
-            // TransactionObserver يعدّل المحفظة)
-            if (abs($down - $oldDown) > 0.001) {
-                $tx = Transaction::where('ref_type', 'inst_down')->where('ref_id', $contract->id)->first();
-                if ($down > 0) {
-                    if ($tx) {
-                        $tx->update(['amount' => $down, 'date' => $data['start_date'], 'party' => $data['customer_name'], 'account_id' => $contract->account_id]);
-                    } else {
-                        Transaction::create([
-                            'project_id' => $contract->project_id, 'account_id' => $contract->account_id, 'direction' => 'in',
-                            'type' => 'تحصيل مقدم', 'party' => $data['customer_name'],
-                            'amount' => $down, 'date' => $data['start_date'],
-                            'description' => 'مقدم عقد تقسيط — ' . $contract->product_name,
-                            'ref_type' => 'inst_down', 'ref_id' => $contract->id,
-                        ]);
-                    }
-                } elseif ($tx) {
-                    $tx->delete();
-                }
-            }
-        });
+        $contract->update([
+            'customer_name'  => $data['customer_name'],
+            'customer_phone' => $data['customer_phone'] ?? null,
+            'due_day'        => (int) $data['due_day'],
+        ]);
 
         return redirect()->route('installments.index')
             ->with('success', 'تم تعديل العقد.')

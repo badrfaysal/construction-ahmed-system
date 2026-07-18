@@ -16,4 +16,9 @@ class Supplier extends Model
     {
         return $this->hasMany(Material::class, 'supplier_id');
     }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(MaterialInvoice::class, 'supplier_id');
+    }
 }
