@@ -63,8 +63,10 @@ class ProjectBandController extends Controller
             'payment_status'  => $data['payment_status'] ?? 'paid',
             'account_id'      => $data['account_id'] ?? null,
             'paid_amount'     => $data['paid_amount'] ?? 0,
+            'invoice_name'    => $data['invoice_name'] ?? null,
+            'supplier_id'     => $data['supplier_id'] ?? null,
         ];
-        unset($data['purchase_date'], $data['payment_status'], $data['account_id'], $data['paid_amount']);
+        unset($data['purchase_date'], $data['payment_status'], $data['account_id'], $data['paid_amount'], $data['invoice_name'], $data['supplier_id']);
 
         // الحالة بقت ثنائية بس: كل بند بيتسجل "جاري" تلقائيًا، ويتحول "منفذ" لاحقًا
         // من زرار "إنهاء البند" في صفحة المشروع — مفيش خيار حالة وقت الإنشاء
@@ -95,7 +97,33 @@ class ProjectBandController extends Controller
         DB::transaction(function () use ($project, $data, $workers, $materials, $misc, $payment) {
             $band = $project->bands()->create($data);
             $band->syncLabor($workers);
-            $this->createBandItems($band, $materials, $misc, $payment);
+            
+            $invoiceId = null;
+            if (count($materials) > 0 && !empty($payment['invoice_name'])) {
+                $matCost = $this->itemsCost($materials);
+                $miscCost = $this->itemsCost($misc, true);
+                $totalCost = $matCost + $miscCost;
+                
+                $matPaid = 0;
+                if ($payment['payment_status'] === 'paid') {
+                    $matPaid = $matCost;
+                } elseif ($payment['payment_status'] === 'partial' && $totalCost > 0) {
+                    $matPaid = round($payment['paid_amount'] * ($matCost / $totalCost), 2);
+                }
+
+                $invoice = \App\Models\MaterialInvoice::create([
+                    'project_id'   => $project->id,
+                    'supplier_id'  => $payment['supplier_id'] ?? null,
+                    'account_id'   => $payment['payment_status'] === 'deferred' ? null : $payment['account_id'],
+                    'date'         => $payment['purchase_date'],
+                    'name'         => $payment['invoice_name'],
+                    'total_amount' => $matCost,
+                    'paid_amount'  => $matPaid,
+                ]);
+                $invoiceId = $invoice->id;
+            }
+
+            $this->createBandItems($band, $materials, $misc, $payment, $invoiceId);
         });
 
         return redirect()->route('projects.show', $project)
@@ -115,7 +143,7 @@ class ProjectBandController extends Controller
     // Creates Material rows (real خامات + نثري misc expenses) for a
     // freshly-created band, sharing one payment method across all of them —
     // mirrors MaterialController::store()'s proportional partial-payment split.
-    private function createBandItems(ProjectBand $band, array $materials, array $misc, array $payment): void
+    private function createBandItems(ProjectBand $band, array $materials, array $misc, array $payment, ?int $invoiceId = null): void
     {
         $rows = collect($materials)->map(fn ($m) => [
             'category'        => 'material',
@@ -154,7 +182,8 @@ class ProjectBandController extends Controller
                 'project_id'      => $band->project_id,
                 'band_id'         => $band->id,
                 'account_id'      => $payment['payment_status'] === 'deferred' ? null : $payment['account_id'],
-                'supplier_id'     => $row['supplier_id'],
+                'invoice_id'      => $invoiceId,
+                'supplier_id'     => $payment['supplier_id'] ?? null,
                 'category'        => $row['category'],
                 'item'            => $row['item'],
                 'unit'            => $row['unit'],
@@ -179,7 +208,9 @@ class ProjectBandController extends Controller
             ->groupBy('name', 'phone', 'specialty')
             ->get()->unique('name')->values()->toJson();
 
-        return view('bands.edit', compact('band', 'legacySeed', 'knownWorkersJson'));
+        $invoices = \App\Models\MaterialInvoice::with('supplier')->orderByDesc('date')->get(['id', 'supplier_id', 'name', 'date']);
+
+        return view('bands.edit', compact('band', 'legacySeed', 'knownWorkersJson', 'invoices'));
     }
 
     // Save edits to a band
@@ -324,7 +355,6 @@ class ProjectBandController extends Controller
             // كل خامة ممكن تتشترى من مورد مختلف
             'materials'                    => ['nullable', 'array'],
             'materials.*.item'             => ['required', 'string', 'max:255'],
-            'materials.*.supplier_id'      => ['nullable', 'exists:sy2_suppliers,id'],
             'materials.*.unit'             => ['required', 'string', 'max:50'],
             'materials.*.qty'              => ['required', 'numeric', 'min:0'],
             'materials.*.unit_price'       => ['required', 'numeric', 'min:0'],
@@ -339,6 +369,8 @@ class ProjectBandController extends Controller
             'misc.*.supervision_pct'       => ['nullable', 'numeric', 'min:0', 'max:100'],
 
             // طريقة دفع مشتركة للخامات والنثريات (لو اتضافوا)
+            'invoice_name'   => ['nullable', 'string', 'max:255'],
+            'supplier_id'    => ['nullable', 'exists:sy2_suppliers,id'],
             'purchase_date'  => ['nullable', 'date'],
             'payment_status' => ['nullable', 'in:paid,partial,deferred'],
             'account_id'     => ['nullable', 'integer', 'exists:accounts,id'],

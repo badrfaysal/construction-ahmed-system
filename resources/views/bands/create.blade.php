@@ -44,7 +44,24 @@
 
     <div class="band-tab-panel" data-band-panel="materials" style="display:none">
       <div class="section-label" style="margin-top:14px">الخامات — اختياري، لو هتشتري خامات مع بداية البند</div>
-      <p class="muted" style="margin-bottom:6px">هتتضاف لسعر البند الكلي تلقائيًا زي المصنعية بالظبط.</p>
+      <p class="muted" style="margin-bottom:16px">سيتم إنشاء فاتورة جديدة تشمل جميع الخامات المُضافة في هذا البند بناءً على البيانات التالية:</p>
+
+      <div class="row2" style="margin-bottom:12px; max-width:800px">
+        <div class="field" style="margin:0">
+          <label style="font-weight:700">اسم الفاتورة (رقم أو وصف)</label>
+          <input type="text" name="invoice_name" value="{{ old('invoice_name') }}" placeholder="مثال: فاتورة توريد سيراميك">
+        </div>
+        <div class="field" style="margin:0">
+          <label style="font-weight:700">المورد</label>
+          <select name="supplier_id">
+            <option value="">— بدون مورد —</option>
+            @foreach($suppliers as $s)
+              <option value="{{ $s->id }}" {{ old('supplier_id') == $s->id ? 'selected' : '' }}>{{ $s->name }}@if($s->activity) — {{ $s->activity }}@endif</option>
+            @endforeach
+          </select>
+        </div>
+      </div>
+
 
       <div id="band-materials-list"></div>
       <button type="button" class="btn ghost sm" style="margin:6px 0 18px" onclick="addBandMaterial()">
@@ -65,9 +82,9 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-wallet"/></svg>
           طريقة دفع الخامات والنثريات
         </div>
-        <p class="muted" style="margin:0 0 10px;font-size:12px">المورد بقى يُختار لكل خامة لوحدها (جوه صف الصنف) — هنا بس تاريخ الشراء وطريقة الدفع.</p>
+        <p class="muted" style="margin:0 0 10px;font-size:12px">حدد هنا تفاصيل الدفع لتسجيل الحركات المالية الصحيحة.</p>
         <div class="field" style="max-width:260px;margin-bottom:12px">
-          <label>تاريخ الشراء</label>
+          <label>تاريخ الشراء / الدفع</label>
           <input type="date" name="purchase_date" value="{{ old('purchase_date', today()->format('Y-m-d')) }}">
         </div>
         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
@@ -173,12 +190,6 @@ function addWorker(prefill = null) {
 @endif
 
 // ── خامات البند ──────────────────────────────────────────────────
-const bandSupplierOptionsHtml = `
-  <option value="">— بدون مورد —</option>
-  @foreach($suppliers as $s)
-    <option value="{{ $s->id }}">{{ $s->name }}@if($s->activity) — {{ $s->activity }}@endif</option>
-  @endforeach
-`;
 let bmIdx = 0;
 function bandMaterialRowHtml(i) {
   return `
@@ -188,10 +199,7 @@ function bandMaterialRowHtml(i) {
           <label>الصنف *</label>
           <input type="text" name="materials[${i}][item]" placeholder="أسمنت، سيراميك..." required list="items-list" oninput="recalcBandItemsVisibility()">
         </div>
-        <div class="irf">
-          <label>المورد</label>
-          <select name="materials[${i}][supplier_id]">${bandSupplierOptionsHtml}</select>
-        </div>
+
         <input type="hidden" name="materials[${i}][unit]" value="وحدة">
         <div class="irf">
           <label>الكمية</label>
@@ -221,7 +229,6 @@ function addBandMaterial(prefill = null) {
   if (prefill) {
     const row = document.getElementById('band-materials-list').lastElementChild;
     row.querySelector(`[name="materials[${i}][item]"]`).value = prefill.item || '';
-    row.querySelector(`[name="materials[${i}][supplier_id]"]`).value = prefill.supplier_id || '';
     row.querySelector(`[name="materials[${i}][unit]"]`).value = prefill.unit || 'وحدة';
     row.querySelector('.bm-qty').value = prefill.qty || '';
     row.querySelector('.bm-cost').value = prefill.unit_price || '';
