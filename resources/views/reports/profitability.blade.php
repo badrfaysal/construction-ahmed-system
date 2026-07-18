@@ -50,6 +50,7 @@
             <th>الحالة</th>
             <th class="num">التكلفة</th>
             <th class="num">المفوتر للعميل</th>
+            <th class="num">الخصم</th>
             <th class="num">ربح دفتري</th>
             <th class="num">هامش %</th>
             <th class="num">ربح تجاري</th>
@@ -72,6 +73,7 @@
               </td>
               <td class="num">{{ \App\Support\Money::format($project->total_spent) }}</td>
               <td class="num">{{ \App\Support\Money::format($project->total_billed) }}</td>
+              <td class="num" style="color:var(--amber)">{{ \App\Support\Money::format($project->total_discount) }}</td>
               <td class="num" style="color:{{ $project->book_profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
                 {{ \App\Support\Money::format($project->book_profit) }}
               </td>
@@ -98,6 +100,7 @@
             <td colspan="3"><strong>الإجماليات</strong></td>
             <td class="num">{{ \App\Support\Money::format($totals['total_spent']) }}</td>
             <td class="num">{{ \App\Support\Money::format($totals['total_billed']) }}</td>
+            <td class="num" style="color:var(--amber)">{{ \App\Support\Money::format($totals['total_discount']) }}</td>
             <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($totals['book_profit']) }}</td>
             <td></td>
             <td class="num" style="color:var(--pos)">

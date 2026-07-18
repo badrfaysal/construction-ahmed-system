@@ -133,8 +133,27 @@ class Project extends Model
     {
         $bandsTotal = (float) $this->bands->sum(fn ($band) => $band->computeActualClientTotal());
         $generalMaterials = (float) $this->generalMaterials()->sum(fn ($m) => $m->netClientCost());
-        $totalDiscounts = (float) $this->discounts()->sum('amount');
-        return $bandsTotal + $generalMaterials - $totalDiscounts - (float) $this->discount;
+        
+        $interest = (float) $this->contracts()->get()->sum(fn ($c) => $c->interestAmount());
+
+        $projectDiscounts = (float) $this->discounts()->sum('amount') + (float) $this->discount;
+        $contractDiscounts = (float) $this->contracts()->get()->sum('discount');
+
+        return $bandsTotal + $generalMaterials + $interest - $projectDiscounts - $contractDiscounts;
+    }
+
+    // الفاتورة قبل أي خصومات عامة على المشروع وعقود التقسيط (إجمالي ما تم فوترته + فوائد)
+    public function grossClientTotal(): float
+    {
+        $projectLevel = (float) $this->discounts()->sum('amount') + (float) $this->discount;
+        $contractLevel = (float) $this->contracts->sum('discount');
+        return $this->actualClientTotal() + $projectLevel + $contractLevel;
+    }
+
+    // إجمالي الفائدة/الربح من كل عقود التقسيط في المشروع
+    public function totalInstallmentInterest(): float
+    {
+        return (float) $this->contracts->sum(fn ($c) => $c->interestAmount());
     }
 
     // Materials/expenses registered directly on the project without a band
@@ -146,10 +165,11 @@ class Project extends Model
 
     // What's still owed by the client right now = actual billed total minus
     // what's already been collected (not the initial quote value — that's
-    // just the reference point, real costs can drift from the estimate)
+    // What's still owed by the client right now = actual billed total minus
+    // what's already been collected and any discounts applied at payment time
     public function amountDue(): float
     {
-        return $this->actualClientTotal() - $this->totalCollected();
+        return max(0, $this->actualClientTotal() - $this->totalCollected() - $this->paymentDiscounts());
     }
 
     // Total collected from client = مقدمات + دفعات عقود التقسيط + التحصيلات
@@ -169,7 +189,7 @@ class Project extends Model
         // الوحيد اللي بيمثّل فلوس جديدة فعلاً بتتحصّل بمرور الوقت.
         $fromInstallments = (float) $this->contracts->sum(fn ($c) => (float) $c->payments->sum('amount_paid'));
 
-        $fromDirect = (float) $this->clientPayments->sum(fn ($p) => (float) $p->amount + (float) $p->discount);
+        $fromDirect = (float) $this->clientPayments->sum(fn ($p) => (float) $p->amount);
 
         return $fromInstallments + $fromDirect;
     }
@@ -188,13 +208,11 @@ class Project extends Model
         return $this->contracts()->whereNull('band_id')->exists();
     }
 
-    // النطاق (قيمة الفوترة) اللي اتغطى بعقود التقسيط وقت إنشائها — مجموع
-    // cash_price لكل عقود المشروع. أي فوترة تحصل بعد كده (خامة جديدة أو بند
-    // جديد) بتزوّد actualClientTotal() من غير ما تزوّد النطاق ده، فتبقى مستحق
-    // منفصل عن العقد (مش بيتلخبط مع خطة السداد بتاعته).
+    // النطاق (قيمة الفوترة) اللي اتغطى بعقود التقسيط وقت إنشائها — يشمل رأس المال
+    // وأي فوائد انضافت عليه، عشان ميتحسبش كـ excess.
     public function contractedScope(): float
     {
-        return (float) $this->contracts->sum(fn ($c) => (float) $c->cash_price);
+        return (float) $this->contracts->sum(fn ($c) => (float) $c->cash_price + $c->interestAmount());
     }
 
     // مستحق زيادة عن نطاق عقد/عقود التقسيط — فوترة جديدة اتسجّلت بعد العقد
@@ -235,7 +253,8 @@ class Project extends Model
     {
         $materialCost = $this->materials->sum(fn ($m) => $m->netCost());
         $laborCost    = $this->bands->sum('labor_amount');
-        return $materialCost + $laborCost;
+        $marketersCost = (float) $this->transactions()->where('ref_type', 'marketer_commission')->sum('amount');
+        return $materialCost + $laborCost + $marketersCost;
     }
 
     // الربح التجاري الكلي للمشروع (فرق الشراء من البيع بس، من غير نسبة
@@ -255,13 +274,27 @@ class Project extends Model
         return $bandsTotal + $generalMaterials;
     }
 
-    // الربح الكلي للمشروع = الفاتورة الفعلية − التكلفة الفعلية (= tradeProfit()
-    // + percentageProfit() بالظبط). استخدم الدالة دي بدل ما تجمع profit() على
+    public function paymentDiscounts(): float
+    {
+        $directDiscount = (float) $this->clientPayments->sum('discount');
+        $installmentDiscount = (float) \App\Models\InstallmentPayment::where('project_id', $this->id)->sum('discount_applied');
+        return $directDiscount + $installmentDiscount;
+    }
+
+    public function totalDiscount(): float
+    {
+        $projectLevel = (float) $this->discount + (float) $this->discounts()->sum('amount');
+        $contractDiscounts = (float) $this->contracts->sum('discount');
+        return $projectLevel + $contractDiscounts + $this->paymentDiscounts();
+    }
+
+    // الربح الكلي للمشروع = الفاتورة الفعلية − التكلفة الفعلية − خصومات السداد
+    // استخدم الدالة دي بدل ما تجمع profit() على
     // bands()->sum() في أي مكان — الجمع على البنود لوحدها بيسيب نثريات/خامات
     // عامة (materials من غير بند) برا الحساب تمامًا، من غير ما يظهر أي تحذير.
     public function profit(): float
     {
-        return $this->actualClientTotal() - $this->totalSpent();
+        return $this->actualClientTotal() - $this->totalSpent() - $this->paymentDiscounts();
     }
 
     public function recalculateCachedTotals(): void

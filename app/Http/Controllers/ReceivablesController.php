@@ -22,14 +22,16 @@ class ReceivablesController extends Controller
         ])->orderByDesc('created_at')->get();
 
         $rows = $projects->map(function ($project) {
-            $billed    = $project->actualClientTotal();
+            $billed    = $project->grossClientTotal();
             $collected = $project->totalCollected();
-            $remaining = $billed - $collected;
+            $discount  = $project->totalDiscount();
+            $remaining = $billed - $collected - $discount;
 
             return (object) [
                 'project'       => $project,
                 'billed'        => $billed,
                 'collected'     => $collected,
+                'discount'      => $discount,
                 'remaining'     => $remaining,
                 // مستحق زيادة عن نطاق عقد التقسيط (لو فيه عقد) — قابل للتحصيل
                 // المباشر من هنا برضو، منفصل تمامًا عن جدول سداد العقد

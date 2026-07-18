@@ -4,56 +4,281 @@
 
 @section('content')
 <div class="page-head"><div><h3>عرض سعر جديد</h3></div><a href="{{ route('quotes.index') }}" class="btn ghost">رجوع</a></div>
-<form method="POST" action="{{ route('quotes.store') }}">
+<style>
+  /* تخطيط الشاشة الأساسي */
+  .mat-layout {
+    --accent: #2563eb;
+    --accent-2: #3b82f6;
+    --accent-soft: #eff6ff;
+    --accent-ink: #1e3a8a;
+    display:flex; gap:32px; align-items:flex-start;
+  }
+  .mat-layout .mat-form{flex:1;min-width:0}
+  
+  /* الإجماليات العائمة */
+  .mat-totals {
+    position:sticky;top:24px;width:300px;flex-shrink:0;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 32px;
+    padding: 28px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.04), inset 0 2px 4px rgba(255,255,255,0.5);
+  }
+  .mat-totals .section-label{margin:0 0 20px; font-size: 1.3rem; color: var(--ink); font-weight: 800; text-align: center;}
+  .mat-totals .card.stat {
+    margin:0 0 16px;
+    background: linear-gradient(145deg, #ffffff, #f8fafc);
+    border: none;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+    padding: 16px 20px;
+    border-radius: 20px;
+    transition: transform 0.3s;
+  }
+  .mat-totals .card.stat:hover { transform: translateY(-3px); }
+  .mat-totals .card.stat:last-child{margin-bottom:0}
+  
+  /* البنية الأساسية للمجموعة (Fluid Group Card) */
+  .neo-group-card {
+    background: linear-gradient(145deg, #f8fafc, #f1f5f9);
+    border-radius: 36px;
+    padding: 32px;
+    margin-bottom: 32px;
+    box-shadow: inset 0 2px 4px rgba(255,255,255,0.8), 0 15px 35px rgba(0,0,0,0.03);
+    border: 1px solid rgba(255,255,255,0.6);
+  }
+  .neo-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+  .neo-group-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    background: linear-gradient(45deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  /* الفقاعات العائمة للأصناف (Floating Bubbles) */
+  .neo-item-bubble {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 14px 24px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.03), 0 2px 10px rgba(0,0,0,0.01);
+    margin-bottom: 16px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255,255,255,0.5);
+    flex-wrap: wrap;
+  }
+  .neo-item-bubble:focus-within {
+    box-shadow: 0 15px 40px rgba(99, 102, 241, 0.15), 0 4px 15px rgba(99, 102, 241, 0.1);
+    transform: translateY(-4px) scale(1.01);
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+  
+  .neo-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 100px;
+  }
+  .neo-col-main { flex: 2; min-width: 200px; }
+  .neo-col-sm { flex: 0.8; min-width: 80px; }
+  
+  .neo-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-inline-start: 4px;
+  }
+  .neo-input {
+    border: none !important;
+    background: transparent !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: var(--ink) !important;
+    padding: 8px 4px !important;
+    width: 100% !important;
+    transition: all 0.2s !important;
+    box-shadow: none !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    border-bottom: 2px solid transparent !important;
+  }
+  .neo-input:focus {
+    outline: none !important;
+    color: var(--accent) !important;
+    border-bottom: 2px solid var(--accent) !important;
+  }
+  .neo-input::placeholder {
+    color: #cbd5e1;
+    font-weight: 500;
+  }
+  
+  /* زر الحذف الدائري */
+  .neo-delete-btn {
+    background: #fef2f2;
+    color: #dc2626;
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+    margin-top: 18px;
+  }
+  .neo-delete-btn:hover {
+    background: #dc2626;
+    color: #fff;
+    transform: scale(1.15) rotate(90deg);
+    box-shadow: 0 10px 20px rgba(220, 38, 38, 0.3);
+  }
+
+  /* الحقول الكبيرة */
+  .neo-big-input {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    padding: 14px 20px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.01) !important;
+    transition: all 0.3s !important;
+    height: 54px !important;
+  }
+  .neo-big-input:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.15) !important;
+  }
+
+  .neo-add-btn {
+    background: linear-gradient(45deg, var(--accent), var(--accent-2));
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 10px 25px rgba(99, 102, 241, 0.2);
+    transition: all 0.3s;
+    margin-top: 8px;
+  }
+  .neo-add-btn:hover {
+    box-shadow: 0 15px 35px rgba(99, 102, 241, 0.4);
+    transform: translateY(-2px);
+  }
+
+  @media (max-width:1100px) {
+    .mat-layout{flex-direction:column}
+    .mat-totals{position:static;width:100%}
+    .neo-item-bubble { gap: 12px; }
+  }
+</style>
+
+<div class="mat-layout">
+<form method="POST" action="{{ route('quotes.store') }}" class="mat-form">
   @csrf
-  <div class="form-card">
-    <div class="row2">
-      <div class="field"><label>رقم المرجع *</label><input type="text" name="ref" value="{{ old('ref', $nextRef) }}" required></div>
-      <div class="field">
-        <label>الحالة</label>
-        <select name="status">
-          <option value="draft">قيد المراجعة</option>
-          <option value="sent">تم الإرسال</option>
-          <option value="approved">معتمد</option>
-        </select>
-      </div>
-    </div>
-    <div class="row2">
-      <div class="field">
+  <div class="form-card" style="max-width:none;margin-bottom:16px; border-radius: 28px; padding: 32px">
+    <div class="row2" style="margin-bottom:16px; gap:24px;">
+      <div class="field" style="margin-bottom:0">
         <label>العميل *</label>
-        <select name="client_id" required>
+        <select name="client_id" required class="neo-big-input">
           <option value="">— اختر العميل —</option>
           @foreach($clients as $c)
             <option value="{{ $c->id }}" {{ old('client_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}@if($c->phone) — {{ $c->phone }}@endif</option>
           @endforeach
         </select>
       </div>
-      <div class="field">
-        <label>التاريخ *</label>
-        <input type="date" name="date" value="{{ old('date', today()->format('Y-m-d')) }}" required>
+      <div class="field" style="margin-bottom:0">
+        <label>رقم المرجع *</label>
+        <input type="text" name="ref" value="{{ old('ref', $nextRef) }}" required class="neo-big-input">
       </div>
     </div>
-    <div class="row2">
-      <div class="field"><label>العنوان</label><input type="text" name="address" value="{{ old('address') }}"></div>
-      <div class="field"><label>المساحة (م²)</label><input type="number" name="area" value="{{ old('area') }}" min="0" step="0.5"></div>
+    
+    <div class="row3" style="margin-bottom:16px; gap:24px;">
+      <div class="field" style="margin-bottom:0">
+        <label>التاريخ *</label>
+        <input type="date" name="date" value="{{ old('date', today()->format('Y-m-d')) }}" required class="neo-big-input">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>الحالة</label>
+        <select name="status" class="neo-big-input">
+          <option value="draft">قيد المراجعة</option>
+          <option value="sent">تم الإرسال</option>
+          <option value="approved">معتمد</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>المساحة (م²)</label>
+        <input type="number" name="area" value="{{ old('area') }}" min="0" step="0.5" class="neo-big-input" placeholder="0">
+      </div>
     </div>
 
-    {{-- Band line items, each optionally broken down into itemized rows --}}
-    <div class="section-label" style="margin-top:10px">البنود (بنود العمل)</div>
-    <div id="bands-list"></div>
-    <button type="button" class="btn ghost sm" style="margin-bottom:18px" onclick="addBand()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><use href="#i-plus"/></svg>
-      إضافة بند
-    </button>
-
-    <div class="field"><label>ملاحظات</label><textarea name="note" rows="2" placeholder="أي ملاحظات خاصة...">{{ old('note') }}</textarea></div>
-
-    <div class="btn-row" style="margin-top:8px">
-      <button type="submit" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check"/></svg>حفظ العرض</button>
-      <a href="{{ route('quotes.index') }}" class="btn ghost">إلغاء</a>
+    <div class="row2" style="margin-bottom:0; gap:24px;">
+      <div class="field" style="margin-bottom:0">
+        <label>العنوان</label>
+        <input type="text" name="address" value="{{ old('address') }}" class="neo-big-input" placeholder="عنوان المشروع...">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>ملاحظات</label>
+        <input type="text" name="note" value="{{ old('note') }}" class="neo-big-input" placeholder="أي ملاحظات إضافية...">
+      </div>
     </div>
   </div>
+
+  <div id="bands-list"></div>
+  
+  <button type="button" class="btn ghost" style="margin-bottom:20px; font-size: 15px; font-weight: 700" onclick="addBand()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><use href="#i-plus"/></svg>
+    إضافة بند جديد لعرض السعر
+  </button>
+
+  <div class="btn-row" style="margin-top: 32px">
+    <button type="submit" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check"/></svg>حفظ عرض السعر</button>
+    <a href="{{ route('quotes.index') }}" class="btn ghost">إلغاء</a>
+  </div>
 </form>
+
+<aside class="mat-totals">
+  <div class="section-label">الإجماليات</div>
+  <div class="card stat">
+    <div class="top"><span class="label">عدد البنود</span></div>
+    <div class="val tnum"><span id="tot-bands-count">0</span></div>
+  </div>
+  <div class="card stat">
+    <div class="top"><span class="label">عدد الخامات المُضافة</span></div>
+    <div class="val tnum"><span id="tot-items-count">0</span></div>
+  </div>
+  <div class="card stat">
+    <div class="top"><span class="label">عدد مصنعيات/فنيين</span></div>
+    <div class="val tnum"><span id="tot-workers-count">0</span></div>
+  </div>
+  <div class="card stat">
+    <div class="top"><span class="label">الإجمالي النهائي للعميل</span></div>
+    <div class="val tnum" style="color: var(--pos); font-size: 1.8rem"><span id="tot-quote-price">0</span> <small style="font-size: 1rem">ج.م</small></div>
+  </div>
+</aside>
+</div>
 
 <datalist id="band-names-list">
   @foreach($bandNames as $name)
@@ -65,82 +290,174 @@
 <script>
 let bandIdx = 0;
 
+function updateGlobalTotals() {
+  let bandsCount = 0;
+  let itemsCount = 0;
+  let workersCount = 0;
+  let totalPrice = 0;
+
+  document.querySelectorAll('.band-card').forEach(card => {
+    bandsCount++;
+    itemsCount += card.querySelectorAll('.item-row').length;
+    workersCount += card.querySelectorAll('.worker-row').length;
+    totalPrice += parseFloat(card.querySelector('.band-price').value) || 0;
+  });
+
+  document.getElementById('tot-bands-count').innerText = bandsCount;
+  document.getElementById('tot-items-count').innerText = itemsCount;
+  document.getElementById('tot-workers-count').innerText = workersCount;
+  document.getElementById('tot-quote-price').innerText = totalPrice.toFixed(2);
+}
+
 function bandRowHtml(g) {
   return `
-    <div class="band-card" data-band="${g}">
-      <div class="band-card-head">
-        <div class="field" style="margin:0;flex:1">
-          <label>اسم البند *</label>
-          <input type="text" name="bands[${g}][name]" placeholder="محارة / سيراميك / دهانات..." required list="band-names-list">
+    <div class="neo-group-card band-card" data-band="${g}">
+      <div class="neo-group-header">
+        <div class="neo-group-title">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-layers"/></svg>
+          بند #${g + 1}
         </div>
-        <div class="field" style="margin:0;width:200px">
-          <label>إجمالي البند للعميل (ج.م)</label>
-          <input type="number" name="bands[${g}][price]" class="band-price" placeholder="0.00" min="0" step="0.01" style="font-weight:800;color:var(--accent-ink)">
-          <small style="color:var(--pos);font-size:.68rem">يُحسب تلقائياً من الأصناف</small>
-        </div>
-        <button type="button" class="btn ghost sm danger" onclick="this.closest('.band-card').remove()" style="align-self:flex-start;margin-top:22px">حذف البند</button>
+        <button type="button" class="btn ghost sm danger" onclick="this.closest('.band-card').remove(); updateGlobalTotals()" style="border:1px solid rgba(220,38,38,0.2)">
+          حذف البند بالكامل
+        </button>
       </div>
-      <div class="band-items" id="band-items-${g}"></div>
-      <button type="button" class="btn ghost sm" style="margin-top:6px" onclick="addItem(${g})">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
-        إضافة صنف
-      </button>
 
-      <div class="band-workers" id="band-workers-${g}" style="margin-top:14px"></div>
-      <button type="button" class="btn ghost sm" style="margin-top:6px" onclick="addWorker(${g})">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
-        إضافة فني/مصنعية
+      <div class="row2" style="margin-bottom: 24px">
+        <div class="field" style="margin:0">
+          <label style="font-weight:700">اسم البند *</label>
+          <input type="text" name="bands[${g}][name]" placeholder="محارة / سيراميك / دهانات..." required list="band-names-list" class="neo-big-input">
+        </div>
+        <div class="field" style="margin:0; width: 250px">
+          <label style="font-weight:700">إجمالي البند للعميل (ج.م)</label>
+          <input type="number" name="bands[${g}][price]" class="neo-big-input band-price" placeholder="0.00" min="0" step="0.01" style="font-weight:800;color:var(--accent-ink);background:#eff6ff !important; border-color: #bfdbfe !important" oninput="updateGlobalTotals()">
+          <small style="color:var(--pos);font-size:.75rem;margin-top:4px;display:block">يُحسب تلقائياً من الأصناف إذا وُجدت</small>
+        </div>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.5); border-radius: 20px; padding: 20px; border: 1px dashed rgba(0,0,0,0.1); margin-bottom: 16px">
+        <div style="font-weight:800; color:var(--ink-2); margin-bottom:12px; display:flex; align-items:center; gap:8px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-box"/></svg>
+          خامات البند
+        </div>
+        <div class="band-items" id="band-items-${g}"></div>
+        <button type="button" class="neo-add-btn" onclick="addItem(${g})">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-plus"/></svg>
+          إضافة خامة
+        </button>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.5); border-radius: 20px; padding: 20px; border: 1px dashed rgba(0,0,0,0.1)">
+        <div style="font-weight:800; color:var(--ink-2); margin-bottom:12px; display:flex; align-items:center; gap:8px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-users"/></svg>
+          مصنعيات البند (الفنيين)
+        </div>
+        <div class="band-workers" id="band-workers-${g}"></div>
+        <button type="button" class="neo-add-btn" onclick="addWorker(${g})" style="background: linear-gradient(45deg, #10b981, #34d399)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-plus"/></svg>
+          إضافة فني / مصنعية
+        </button>
+      </div>
+    </div>`;
+}
+
+function itemRowHtml(g, i) {
+  return `
+    <div class="neo-item-bubble item-row" data-item="${i}">
+      <div class="neo-col neo-col-main">
+        <span class="neo-label">اسم الخامة *</span>
+        <input type="text" name="bands[${g}][items][${i}][name]" class="neo-input" placeholder="أسمنت، سيراميك..." required oninput="recalcBandPrice(${g})">
+      </div>
+      <div class="neo-col neo-col-sm">
+        <span class="neo-label">الكمية</span>
+        <input type="number" name="bands[${g}][items][${i}][qty]" class="neo-input" placeholder="0" min="0" step="0.01" value="1" required oninput="recalcBandPrice(${g})">
+      </div>
+      <div class="neo-col">
+        <span class="neo-label" style="color:var(--pos)">سعر البيع للعميل</span>
+        <input type="number" name="bands[${g}][items][${i}][unit_price]" class="neo-input" placeholder="0.00" min="0" step="0.01" required oninput="recalcBandPrice(${g})">
+      </div>
+      <div class="neo-col neo-col-sm">
+        <span class="neo-label" style="color:#7c3aed">إشراف %</span>
+        <input type="number" name="bands[${g}][items][${i}][supervision_pct]" class="neo-input" placeholder="0" min="0" max="100" step="0.1" value="{{ $settings->default_supervision_pct }}" oninput="recalcBandPrice(${g})">
+      </div>
+      <button type="button" class="neo-delete-btn ir-del" onclick="this.closest('.item-row').remove(); recalcBandPrice(${g})" title="حذف الخامة">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"/></svg>
       </button>
     </div>`;
 }
 
 function workerRowHtml(g, w) {
   return `
-    <div class="worker-row" data-worker="${w}" style="border:1px solid var(--line);border-radius:8px;padding:10px;margin:8px 0;background:#fafafa">
-      <div class="row2">
-        <div class="field" style="margin:0"><input type="text" name="bands[${g}][workers][${w}][name]" placeholder="اسم الفني *" required></div>
-        <div class="field" style="margin:0"><input type="text" name="bands[${g}][workers][${w}][specialty]" placeholder="التخصص (اختياري) مثل: كهربائي"></div>
-      </div>
-      <div class="field" style="margin:0 0 8px">
-        <select name="bands[${g}][workers][${w}][contract_type]" class="worker-contract-type" onchange="toggleWorkerQtyWrap(${g},${w},this.value)">
-          <option value="">— نوع التعاقد —</option>
-          <option value="lump_sum">مقاولة مقطوعة</option>
-          <option value="per_meter">بالمتر</option>
-          <option value="per_piece">بالقطعة</option>
-          <option value="daily">يومية</option>
-        </select>
-      </div>
-      <div class="worker-qty-wrap row2" style="margin-top:0;display:none">
-        <div class="field" style="margin:0"><input type="number" name="bands[${g}][workers][${w}][contract_qty]" class="worker-qty" placeholder="الكمية (متر/قطعة/يوم)" min="0" step="0.01" oninput="recalcWorker(${g},${w})"></div>
-        <div class="field" style="margin:0;display:none"><input type="number" name="bands[${g}][workers][${w}][contract_unit_rate]" class="worker-rate" placeholder="سعر الوحدة (تكلفة)" min="0" step="0.01" oninput="recalcWorker(${g},${w})"></div>
-        <div class="field" style="margin:0"><input type="number" name="bands[${g}][workers][${w}][sell_rate]" class="worker-sell-rate" placeholder="سعر الوحدة للعميل" min="0" step="0.01" oninput="recalcWorker(${g},${w})"></div>
-      </div>
-      <div class="row2" style="margin-top:8px">
-        <div class="field" style="margin:0;display:none"><input type="number" name="bands[${g}][workers][${w}][amount]" class="worker-amount" placeholder="الأجر الإجمالي (تكلفة)" min="0" step="0.01" oninput="this.dataset.touched='1'; recalcBandPrice(${g})"></div>
-        <div class="field" style="margin:0"><input type="number" name="bands[${g}][workers][${w}][sell_amount]" class="worker-sell-amount" placeholder="سعره الإجمالي للعميل" min="0" step="0.01" oninput="this.dataset.touched='1'; recalcBandPrice(${g})"></div>
-      </div>
-      <div class="row2" style="margin-top:8px;align-items:end">
-        <div class="field" style="margin:0">
-          <label style="color:#7c3aed">إشراف %</label>
-          <input type="number" name="bands[${g}][workers][${w}][supervision_pct]" class="worker-sup" placeholder="0" min="0" max="100" step="0.1" value="{{ $settings->default_supervision_pct }}" oninput="recalcBandPrice(${g})" style="border-color:#c4b5fd">
+    <div class="neo-item-bubble worker-row" data-worker="${w}" style="border: 2px solid #e2e8f0; border-left: 4px solid #10b981; align-items: flex-start;">
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 12px; width: 100%">
+        
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+          <div class="neo-col neo-col-main">
+            <span class="neo-label">اسم الفني *</span>
+            <input type="text" name="bands[${g}][workers][${w}][name]" class="neo-input" placeholder="مثال: أحمد مقاول المحارة..." required>
+          </div>
+          <div class="neo-col">
+            <span class="neo-label">التخصص (اختياري)</span>
+            <input type="text" name="bands[${g}][workers][${w}][specialty]" class="neo-input" placeholder="مثال: مبيض محارة">
+          </div>
+          <div class="neo-col">
+            <span class="neo-label">نوع التعاقد</span>
+            <select name="bands[${g}][workers][${w}][contract_type]" class="neo-input worker-contract-type" onchange="toggleWorkerQtyWrap(${g},${w},this.value)">
+              <option value="">— نوع التعاقد —</option>
+              <option value="lump_sum">مقاولة مقطوعة</option>
+              <option value="per_meter">بالمتر</option>
+              <option value="per_piece">بالقطعة</option>
+              <option value="daily">يومية</option>
+            </select>
+          </div>
         </div>
-        <button type="button" class="btn ghost sm danger" onclick="this.closest('.worker-row').remove(); recalcBandPrice(${g})">حذف الفني</button>
+
+        <div class="worker-qty-wrap" style="display:none; gap: 20px; flex-wrap: wrap; background: #f8fafc; padding: 12px; border-radius: 16px;">
+          <div class="neo-col">
+            <span class="neo-label">الكمية</span>
+            <input type="number" name="bands[${g}][workers][${w}][contract_qty]" class="neo-input worker-qty" placeholder="الكمية (متر/قطعة/يوم)" min="0" step="0.01" oninput="recalcWorker(${g},${w})">
+          </div>
+          <div class="neo-col" style="display:none">
+            <span class="neo-label">سعر الوحدة (تكلفة)</span>
+            <input type="number" name="bands[${g}][workers][${w}][contract_unit_rate]" class="neo-input worker-rate" placeholder="0.00" min="0" step="0.01" oninput="recalcWorker(${g},${w})">
+          </div>
+          <div class="neo-col">
+            <span class="neo-label" style="color:var(--pos)">سعر الوحدة للعميل</span>
+            <input type="number" name="bands[${g}][workers][${w}][sell_rate]" class="neo-input worker-sell-rate" placeholder="0.00" min="0" step="0.01" oninput="recalcWorker(${g},${w})">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+          <div class="neo-col" style="display:none">
+            <span class="neo-label">الأجر الإجمالي (تكلفة)</span>
+            <input type="number" name="bands[${g}][workers][${w}][amount]" class="neo-input worker-amount" placeholder="0.00" min="0" step="0.01" oninput="this.dataset.touched='1'; recalcBandPrice(${g})">
+          </div>
+          <div class="neo-col">
+            <span class="neo-label" style="color:var(--pos)">إجمالي المصنعية للعميل</span>
+            <input type="number" name="bands[${g}][workers][${w}][sell_amount]" class="neo-input worker-sell-amount" placeholder="0.00" min="0" step="0.01" oninput="this.dataset.touched='1'; recalcBandPrice(${g})">
+          </div>
+          <div class="neo-col neo-col-sm">
+            <span class="neo-label" style="color:#7c3aed">إشراف %</span>
+            <input type="number" name="bands[${g}][workers][${w}][supervision_pct]" class="neo-input worker-sup" placeholder="0" min="0" max="100" step="0.1" value="{{ $settings->default_supervision_pct }}" oninput="recalcBandPrice(${g})">
+          </div>
+        </div>
+
       </div>
+
+      <button type="button" class="neo-delete-btn" onclick="this.closest('.worker-row').remove(); recalcBandPrice(${g})" title="حذف الفني" style="align-self: center; margin-top: 0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"/></svg>
+      </button>
     </div>`;
 }
 
-// "مقاولة مقطوعة" = أجر إجمالي ثابت، مفيش كمية ولا سعر وحدة أصلاً — فاخفِ
-// حقول الكمية/السعر خالص لحد ما يختار نوع تعاقد بالكمية (متر/قطعة/يوم)
 function toggleWorkerQtyWrap(g, w, type) {
   const row = document.querySelector(`.band-card[data-band="${g}"] .worker-row[data-worker="${w}"]`);
   if (!row) return;
   const show = (type === 'per_meter' || type === 'per_piece' || type === 'daily');
-  row.querySelectorAll('.worker-qty-wrap').forEach(wrap => { wrap.style.display = show ? '' : 'none'; });
+  row.querySelectorAll('.worker-qty-wrap').forEach(wrap => { 
+    wrap.style.display = show ? 'flex' : 'none'; 
+  });
 }
 
-// qty × rate يملي الأجر/سعر العميل تلقائيًا كبداية — لحد ما المستخدم يعدّل
-// المبلغ بإيده مباشرة (data-touched)، زي نفس فكرة recalcWorkerAmounts في
-// شاشات البنود الحقيقية (bands/_contract-scripts.blade.php)
 function recalcWorker(g, w) {
   const row = document.querySelector(`.band-card[data-band="${g}"] .worker-row[data-worker="${w}"]`);
   if (!row) return;
@@ -154,6 +471,13 @@ function recalcWorker(g, w) {
   recalcBandPrice(g);
 }
 
+function addItem(g) {
+  const container = document.getElementById('band-items-' + g);
+  const i = container.querySelectorAll('.item-row').length;
+  container.insertAdjacentHTML('beforeend', itemRowHtml(g, i));
+  recalcBandPrice(g);
+}
+
 function addWorker(g) {
   const container = document.getElementById('band-workers-' + g);
   const w = container.children.length;
@@ -161,60 +485,16 @@ function addWorker(g) {
   recalcBandPrice(g);
 }
 
-function itemRowHtml(g, i) {
-  return `
-    <div class="item-row" data-item="${i}">
-      <div class="item-row-grid">
-        <div class="irf" style="flex:2.5">
-          <label>اسم الصنف *</label>
-          <input type="text" name="bands[${g}][items][${i}][name]" placeholder="بلاط / جبس / دهان..." required oninput="recalcBandPrice(${g})">
-        </div>
-        <div class="irf" style="flex:1">
-          <label>الكمية</label>
-          <input type="number" name="bands[${g}][items][${i}][qty]" placeholder="0" min="0" step="0.01" value="1" required oninput="recalcBandPrice(${g})">
-        </div>
-        <div class="irf" style="flex:1.4">
-          <label class="price-sell">سعر البيع للوحدة</label>
-          <input type="number" name="bands[${g}][items][${i}][unit_price]" class="price-sell" placeholder="0.00" min="0" step="0.01" required oninput="recalcBandPrice(${g})">
-        </div>
-        <div class="irf" style="flex:1">
-          <label style="color:#7c3aed">إشراف %</label>
-          <input type="number" name="bands[${g}][items][${i}][supervision_pct]" placeholder="0" min="0" max="100" step="0.1" value="{{ $settings->default_supervision_pct }}" oninput="recalcBandPrice(${g})" style="border-color:#c4b5fd">
-        </div>
-        <button type="button" class="btn ghost sm ir-del" onclick="this.closest('.item-row').remove(); recalcBandPrice(${g})" title="حذف">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"/></svg>
-        </button>
-      </div>
-    </div>`;
-}
-
-function addItem(g) {
-  const container = document.getElementById('band-items-' + g);
-  const i = container.querySelectorAll('.item-row').length;
-  if (i === 0 && !container.querySelector('.items-header-row')) {
-    container.insertAdjacentHTML('beforeend', `
-      <div class="items-header-row">
-        <span style="flex:2.5">اسم الصنف</span>
-        <span style="flex:1">الكمية</span>
-        <span style="flex:1.4" class="price-sell">سعر البيع للوحدة</span>
-        <span style="flex:1;color:#7c3aed">إشراف %</span>
-        <span style="width:34px"></span>
-      </div>`);
-  }
-  container.insertAdjacentHTML('beforeend', itemRowHtml(g, i));
-  recalcBandPrice(g);
-}
-
-// The band's total price is auto-computed from its items + workers whenever
-// any exist — stays manually editable only for a fully "سعر مقطوع" band
 function recalcBandPrice(g) {
   const card = document.querySelector(`.band-card[data-band="${g}"]`);
+  if (!card) return;
   const items = card.querySelectorAll('.item-row');
   const workers = card.querySelectorAll('.worker-row');
   const priceField = card.querySelector('.band-price');
 
   if (items.length === 0 && workers.length === 0) {
     priceField.readOnly = false;
+    updateGlobalTotals();
     return;
   }
 
@@ -234,14 +514,15 @@ function recalcBandPrice(g) {
   });
   priceField.value = sum.toFixed(2);
   priceField.readOnly = true;
+  updateGlobalTotals();
 }
 
 function addBand() {
   const g = bandIdx++;
   document.getElementById('bands-list').insertAdjacentHTML('beforeend', bandRowHtml(g));
+  updateGlobalTotals();
 }
 
-// Start with one empty band ready to fill in
 addBand();
 </script>
 @endpush

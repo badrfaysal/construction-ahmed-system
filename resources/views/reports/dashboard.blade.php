@@ -51,7 +51,7 @@
 </form>
 
 {{-- Summary KPIs --}}
-<div class="grid cols-3" style="margin-bottom:20px">
+<div class="grid cols-4" style="margin-bottom:20px">
   <div class="card stat">
     <div class="top"><span class="label">إجمالي الربح</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg></span></div>
     <div class="val tnum" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalProfit) }} <small>ج.م</small></div>
@@ -63,6 +63,17 @@
   <div class="card stat">
     <div class="top"><span class="label">إجمالي المحصّل</span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span></div>
     <div class="val tnum">{{ \App\Support\Money::format($totalCollected) }} <small>ج.م</small></div>
+  </div>
+  <div class="card stat">
+    <div class="top"><span class="label">الخصومات الممنوحة</span><span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-percent"/></svg></span></div>
+    <div class="val tnum" style="color:var(--amber)">{{ \App\Support\Money::format($totalDiscounts) }} <small>ج.م</small></div>
+    @if($topDiscountProject)
+      <div class="note">أعلى خصم: <a href="{{ route('projects.show', $topDiscountProject->id) }}">{{ $topDiscountProject->name }}</a> ({{ \App\Support\Money::format($topDiscountProject->totalDiscount()) }})</div>
+    @endif
+  </div>
+  <div class="card stat">
+    <div class="top"><span class="label">إجمالي عمولات المسوقين</span><span class="ic" style="color:#8b5cf6;background:#f3e8ff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg></span></div>
+    <div class="val tnum" style="color:#8b5cf6">{{ \App\Support\Money::format($totalMarketerCommissions ?? 0) }} <small>ج.م</small></div>
   </div>
 </div>
 
@@ -142,7 +153,7 @@
 </div>
 
 {{-- Top projects tables --}}
-<div class="grid cols-2" style="margin-bottom:24px">
+<div class="grid cols-4" style="margin-bottom:24px">
   <div class="table-card">
     <div class="table-top"><h4>أكتر مشروع صرفت فيه</h4></div>
     <div class="table-scroll">
@@ -173,6 +184,43 @@
               <td><span style="width:22px;height:22px;border-radius:50%;background:{{ ['#0f8a5f','#16b87e','#4ade80','#86efac','#bbf7d0'][$i % 5] }};color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700">{{ $i+1 }}</span></td>
               <td>{{ $row->name }}</td>
               <td class="num" style="font-weight:700;color:{{ $row->profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($row->profit) }}</td>
+            </tr>
+          @empty
+            <tr><td colspan="3" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="table-card">
+    <div class="table-top"><h4>أكتر مشروع أخد خصم</h4></div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>#</th><th>المشروع</th><th class="num">الخصم</th></tr></thead>
+        <tbody>
+          @forelse($topProjectsByDiscount as $i => $row)
+            <tr>
+              <td><span style="width:22px;height:22px;border-radius:50%;background:{{ ['#d97706','#f59e0b','#fbbf24','#fcd34d','#fde68a'][$i % 5] }};color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700">{{ $i+1 }}</span></td>
+              <td>{{ $row->name }}</td>
+              <td class="num" style="font-weight:700;color:var(--amber)">{{ \App\Support\Money::format($row->discount) }}</td>
+            </tr>
+          @empty
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="table-card">
+    <div class="table-top"><h4>أكثر مسوق حصل على عمولات</h4></div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>#</th><th>المسوق</th><th class="num">إجمالي العمولات</th></tr></thead>
+        <tbody>
+          @forelse($topMarketers as $i => $row)
+            <tr>
+              <td><span style="width:22px;height:22px;border-radius:50%;background:{{ ['#8b5cf6','#a78bfa','#c4b5fd','#ddd6fe','#ede9fe'][$i % 5] }};color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700">{{ $i+1 }}</span></td>
+              <td>{{ $row->name }}</td>
+              <td class="num" style="font-weight:700;color:var(--pos)">{{ \App\Support\Money::format($row->total_paid) }}</td>
             </tr>
           @empty
             <tr><td colspan="3" class="muted" style="text-align:center;padding:16px">لا توجد بيانات</td></tr>

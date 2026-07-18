@@ -37,8 +37,6 @@ class MaintenanceController extends Controller
         'sy2_quotes',
         'sy2_project_bands',
         'sy2_projects',
-        'sy2_clients',
-        'sy2_suppliers',
     ];
 
     public function resetDatabase()

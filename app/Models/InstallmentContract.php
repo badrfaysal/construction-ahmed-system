@@ -136,4 +136,10 @@ class InstallmentContract extends Model
 
         return $rows;
     }
+
+    public function interestAmount(): float
+    {
+        $afterDisc = max(0, (float) $this->cash_price - (float) $this->discount);
+        return max(0, (float) $this->total_after_interest - $afterDisc);
+    }
 }

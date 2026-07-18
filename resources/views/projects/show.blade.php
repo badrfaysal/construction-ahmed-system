@@ -14,8 +14,8 @@
 
 @php
   $isOwner = auth()->user()->canSeeFinancials();
-  $totalProfit = $project->bands->sum(fn ($b) => $b->profit());
-  $actualValue  = $project->actualClientTotal();
+  $totalProfit = $project->profit();
+  $actualValue  = $project->grossClientTotal();
   // "قيمة المشروع" فوق = الفاتورة الفعلية الحية (خامات + مصنعية بسعرهم الحقيقي
   // وقت التسجيل). "سعر العميل" في جدول البنود تحت = السعر المتفق عليه وقت
   // إنشاء/تعديل البند (من عرض السعر أو اتكتب يدوي)، وده بيفضل زي ما هو حتى
@@ -85,7 +85,7 @@
 </div>
 @endif
 
-<div class="grid {{ $isOwner ? 'cols-4' : 'cols-3' }}" style="margin-bottom:20px">
+<div class="grid {{ $isOwner ? 'cols-5' : 'cols-4' }}" style="margin-bottom:20px">
   <div class="card stat">
     <div class="top"><span class="label">قيمة المشروع</span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span></div>
     <div class="val tnum price-sell">{{ \App\Support\Money::format($actualValue) }} <small>ج.م</small></div>
@@ -102,6 +102,11 @@
     @endif
   </div>
   <div class="card stat">
+    <div class="top"><span class="label">الخصم الممنوح</span><span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-percent"/></svg></span></div>
+    <div class="val tnum" style="color:var(--amber)">{{ \App\Support\Money::format($project->totalDiscount()) }} <small>ج.م</small></div>
+    <div class="note">إجمالي ما تم خصمه للعميل</div>
+  </div>
+  <div class="card stat">
     <div class="top"><span class="label">محصّل من العميل</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span></div>
     <div class="val tnum" style="color:var(--pos)">{{ \App\Support\Money::format($project->totalCollected()) }} <small>ج.م</small></div>
     <div class="note">الباقي عليه: {{ \App\Support\Money::format(max($project->amountDue(), 0)) }} ج.م</div>
@@ -114,7 +119,7 @@
     <div class="card stat row-click" onclick="document.getElementById('profit-modal').classList.add('open')">
       <div class="top"><span class="label">الربح المتحقق</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg></span></div>
       <div class="val tnum" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalProfit) }} <small>ج.م</small></div>
-      <div class="note">دوس هنا لتفاصيل الربح</div>
+      <div class="note">بعد طرح الخصم — للتفاصيل اضغط هنا</div>
     </div>
   @endif
 </div>
@@ -125,7 +130,7 @@
     البنود والمراحل <span class="cnt">{{ $project->bands->count() }}</span>
   </button>
   <button type="button" class="tab" data-tab="installments" onclick="switchProjectTab('installments')">
-    المدفوعات
+    الماليات
   </button>
   <button type="button" class="tab" data-tab="materials" onclick="switchProjectTab('materials')">
     الخامات المشتراة <span class="cnt">{{ $project->materials->count() }}</span>
@@ -217,17 +222,31 @@
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="2"><strong>الإجماليات</strong></td>
+            <td colspan="2"><strong>الإجماليات للبنود</strong></td>
             <td class="num muted"><strong>{{ \App\Support\Money::format($project->bands->sum('client_price')) }}</strong><div class="muted" style="font-size:11px">متفق عليه</div></td>
             <td class="num"><strong>{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->actualClientTotal())) }}</strong><div class="muted" style="font-size:11px">فاتورة فعلية</div></td>
             <td class="num"><strong>{{ \App\Support\Money::format($project->bands->sum('labor_amount')) }}</strong><div class="muted" style="font-size:11px">مصنعية</div></td>
             <td class="num"><strong>{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->materialCost())) }}</strong><div class="muted" style="font-size:11px">مواد</div></td>
             <td class="num" style="color:{{ $project->bands->sum(fn($b) => $b->profit()) >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
               <strong>{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->profit())) }}</strong>
-              <div class="muted" style="font-size:11px">الربح</div>
+              <div class="muted" style="font-size:11px">الربح قبل الخصم</div>
             </td>
             <td></td>
           </tr>
+          @if($project->totalDiscount() > 0)
+            <tr>
+              <td colspan="6" style="text-align: left; color: var(--amber)"><strong>الخصم الممنوح للعميل على المشروع</strong></td>
+              <td class="num" style="color: var(--amber)"><strong>-{{ \App\Support\Money::format($project->totalDiscount()) }}</strong></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td colspan="6" style="text-align: left;"><strong>صافي ربح البنود</strong></td>
+              <td class="num" style="color:{{ ($project->bands->sum(fn($b) => $b->profit()) - $project->totalDiscount()) >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
+                <strong>{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->profit()) - $project->totalDiscount()) }}</strong>
+              </td>
+              <td></td>
+            </tr>
+          @endif
         </tfoot>
       </table>
     </div>
@@ -241,7 +260,76 @@
 </div>{{-- /tab-panel: bands --}}
 
 <div class="tab-panel" data-panel="installments" style="display:none">
-<div class="section-label" style="margin-top:0">طريقة تحصيل المدفوعات</div>
+
+{{-- ═══ Financials Dashboard ═══ --}}
+<div class="grid cols-3" style="margin-bottom:24px;gap:16px;align-items:start">
+  
+  {{-- Chart 1: Collection --}}
+  <div class="card card-pad" style="padding:16px;height:100%">
+    <div style="font-weight:700;font-size:14px;margin-bottom:4px">موقف تحصيل العميل</div>
+    <div style="font-size:11px;color:var(--ink-3);margin-bottom:16px">إجمالي المحصّل مقابل المتبقي كمديونية</div>
+    <div style="position:relative;width:100%;height:180px;display:flex;align-items:center;justify-content:center">
+      <canvas id="collectionChart"></canvas>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:12px;font-size:12px">
+      <div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:#10b981"></span>محصّل</div>
+      <div style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:#f43f5e"></span>متبقي</div>
+    </div>
+  </div>
+
+  {{-- Chart 2: Cost Breakdown --}}
+  <div class="card card-pad" style="padding:16px;height:100%">
+    <div style="font-weight:700;font-size:14px;margin-bottom:4px">توزيع تكلفة المشروع</div>
+    <div style="font-size:11px;color:var(--ink-3);margin-bottom:16px">المصروفات مقسمة حسب النوع</div>
+    <div style="position:relative;width:100%;height:180px">
+      <canvas id="costBreakdownChart"></canvas>
+    </div>
+  </div>
+
+  {{-- Marketers Block --}}
+  <div class="card card-pad" style="padding:16px;height:100%">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div>
+        <div style="font-weight:700;font-size:14px">عمولات المسوقين</div>
+        <div style="font-size:11px;color:var(--ink-3)">المسوقين المشاركين في المشروع</div>
+      </div>
+      <div style="width:32px;height:32px;border-radius:8px;background:#f3e8ff;color:#8b5cf6;display:grid;place-items:center">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><use href="#i-users"/></svg>
+      </div>
+    </div>
+    
+    @if($projectMarketers->count())
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px">
+        @foreach($projectMarketers as $pm)
+          <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:8px">
+            <span style="font-weight:600;font-size:13px">{{ $pm->name }}</span>
+            <span class="num" style="color:var(--pos);font-weight:700">{{ \App\Support\Money::format($pm->total) }} ج.م</span>
+          </div>
+        @endforeach
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:12px;color:var(--ink-2)">إجمالي العمولات</span>
+          <strong class="num" style="color:#8b5cf6">{{ \App\Support\Money::format($marketersCost) }} ج.م</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;color:var(--ink-2)">نسبة العموله ل تكلفة المشروع</span>
+          @php
+             $costPct = $totalCost > 0 ? round(($marketersCost / $totalCost) * 100, 1) : 0;
+          @endphp
+          <strong class="num" style="color:var(--ink)">{{ $costPct }}%</strong>
+        </div>
+      </div>
+    @else
+      <div style="height:140px;display:flex;align-items:center;justify-content:center;color:var(--ink-3);font-size:13px;background:var(--surface);border-radius:8px">
+        لا يوجد مسوقين في هذا المشروع
+      </div>
+    @endif
+  </div>
+
+</div>
+
+<div class="section-label" style="margin-top:0">إجراءات مالية وتحصيل</div>
 
 {{-- اختيار طريقة الدفع: تحصيل جزء دلوقتي، أو عمل تقسيط بجدول سداد --}}
 <div class="pay-choice">
@@ -266,6 +354,14 @@
     <div class="pay-opt-body">
       <div class="pay-opt-t">إضافة خصم للعميل</div>
       <div class="pay-opt-s">تقليل المديونية بمنح خصم جديد على المشروع</div>
+    </div>
+    <svg class="pay-opt-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg>
+  </button>
+  <button type="button" class="pay-opt" style="cursor:pointer;text-align:start;background:var(--surface);border:1px solid var(--line);width:100%" onclick="document.getElementById('commission-modal').classList.add('open')">
+    <div class="pay-opt-ic" style="color:#8b5cf6;background:#f3e8ff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg></div>
+    <div class="pay-opt-body">
+      <div class="pay-opt-t">دفع عمولة لمسوق</div>
+      <div class="pay-opt-s">دفع عمولة على المشروع وتسجيلها كمصروف</div>
     </div>
     <svg class="pay-opt-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg>
   </button>
@@ -309,6 +405,49 @@
       <div class="btn-row" style="padding:0 20px 20px">
         <button type="submit" class="btn pos">تسجيل التحصيل</button>
         <button type="button" class="btn ghost" onclick="document.getElementById('quick-pay-modal').classList.remove('open')">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{-- مودال دفع عمولة لمسوق --}}
+<div class="modal-overlay" id="commission-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-head">
+      <h4 style="margin:0">دفع عمولة لمسوق</h4>
+      <button class="btn ghost sm" onclick="document.getElementById('commission-modal').classList.remove('open')">✕</button>
+    </div>
+    <form method="POST" action="{{ route('projects.payCommission', $project) }}">
+      @csrf
+      <div class="modal-body">
+          <div class="field">
+            <label>المسوق *</label>
+            <select name="marketer_id" required>
+              <option value="">— اختر المسوق —</option>
+              @foreach($marketers as $marketer)
+                <option value="{{ $marketer->id }}">{{ $marketer->name }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="field">
+            <label>المبلغ (ج.م) *</label>
+            <input type="number" name="amount" min="0.01" step="0.01" required>
+          </div>
+        <div class="row2">
+          <div class="field">
+            <label>التاريخ *</label>
+            <input type="date" name="date" value="{{ today()->format('Y-m-d') }}" required>
+          </div>
+        </div>
+        @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true])
+        <div class="field">
+          <label>ملاحظات</label>
+          <input type="text" name="notes" placeholder="اختياري">
+        </div>
+      </div>
+      <div class="btn-row" style="padding:0 20px 20px">
+        <button type="submit" class="btn pos">تسجيل العمولة</button>
+        <button type="button" class="btn ghost" onclick="document.getElementById('commission-modal').classList.remove('open')">إلغاء</button>
       </div>
     </form>
   </div>
@@ -687,7 +826,7 @@
               <td class="muted">
                 {{ $row->worker->contractTypeAr() }}
                 @if(in_array($row->worker->contract_type, ['per_meter','per_piece','daily']) && $row->worker->contract_qty)
-                  <div style="font-size:12px">{{ rtrim(rtrim(number_format($row->worker->contract_qty, 2), '0'), '.') }} × {{ \App\Support\Money::format($row->worker->contract_unit_rate) }}</div>
+                  <div style="font-size:12px">{{ rtrim(rtrim(number_format($row->worker->contract_qty, 2), '0'), '.') }} × {{ \App\Support\Money::format((float)$row->worker->contract_unit_rate) }}</div>
                 @endif
               </td>
               <td class="num">{{ \App\Support\Money::format($row->worker->amount) }}</td>
@@ -727,18 +866,23 @@
 @php
   $rptMatCost = $project->materials->sum(fn($m) => $m->netCost());
   $rptLaborCost = (float) $project->bands->sum('labor_amount');
-  $rptTotalCost = $rptMatCost + $rptLaborCost;
-  $rptClientTotal = $actualValue;
-  $rptProfit = $rptClientTotal - $rptTotalCost;
-  $rptProfitPct = $rptClientTotal > 0 ? round($rptProfit / $rptClientTotal * 100, 1) : 0;
-  $rptCollected = $project->totalCollected();
-  $rptDue = max(0, $rptClientTotal - $rptCollected);
-  $rptCollectedPct = $rptClientTotal > 0 ? min(100, round($rptCollected / $rptClientTotal * 100)) : 0;
+  $rptTotalCost = $totalCost; // Uses $totalSpent() which includes marketers
+  $rptClientTotal = $actualValue; 
+  $rptProfit = $totalProfit; // Matches top card
+  
+  // Calculate percentage based on Net Client Total (Actual minus payment discounts)
+  $netClientTotal = $project->actualClientTotal() - $project->paymentDiscounts();
+  $rptProfitPct = $netClientTotal > 0 ? round($rptProfit / $netClientTotal * 100, 1) : 0;
+  
+  $rptCollected = $collected; // From controller
+  $rptDue = $remaining; // From controller
+  $rptCollectedPct = $netClientTotal > 0 ? min(100, round($rptCollected / $netClientTotal * 100)) : 0;
 
-  // دونات: توزيع خامات/مصنعية/ربح كنسبة من إجمالي قيمة المشروع
+  // دونات: توزيع خامات/مصنعية/عمولات/ربح كنسبة من المشروع
   $donutSlices = collect([
     ['label' => 'خامات', 'value' => $rptMatCost, 'color' => '#f59e0b'],
     ['label' => 'مصنعية', 'value' => $rptLaborCost, 'color' => '#8b5cf6'],
+    ['label' => 'عمولات', 'value' => $marketersCost, 'color' => '#ec4899'],
     ['label' => 'ربح', 'value' => max(0, $rptProfit), 'color' => '#16a34a'],
   ])->filter(fn ($s) => $s['value'] > 0);
   $donutTotal = $donutSlices->sum('value') ?: 1;
@@ -1053,10 +1197,45 @@
             </tbody>
             <tfoot>
               <tr>
-                <td>الإجمالي</td>
+                <td>مجموع البنود</td>
                 <td class="num">{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->actualClientTotal())) }}</td>
                 <td class="num">{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->totalCost())) }}</td>
-                <td class="num" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalProfit) }}</td>
+                <td class="num" style="color:{{ $project->bands->sum(fn($b) => $b->profit()) >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->profit())) }}</td>
+              </tr>
+              @php
+                $genMatCount = $project->generalMaterials()->count();
+                $genMatClientTotal = $project->generalMaterials()->sum(fn($m) => $m->netClientCost());
+                $genMatCost = $project->generalMaterials()->sum(fn($m) => $m->netCost());
+                $genMatProfit = $project->generalMaterials()->sum(fn($m) => $m->percentageProfit() + $m->tradeProfit());
+              @endphp
+              @if($genMatCount > 0)
+                <tr>
+                  <td>نثريات وخامات عامة</td>
+                  <td class="num">{{ \App\Support\Money::format($genMatClientTotal) }}</td>
+                  <td class="num">{{ \App\Support\Money::format($genMatCost) }}</td>
+                  <td class="num" style="color:{{ $genMatProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($genMatProfit) }}</td>
+                </tr>
+              @endif
+              @php $installmentInterest = $project->contracts()->get()->sum(fn($c) => $c->interestAmount()); @endphp
+              @if($installmentInterest > 0)
+                <tr>
+                  <td>فائدة التقسيط</td>
+                  <td class="num">{{ \App\Support\Money::format($installmentInterest) }}</td>
+                  <td class="num">0.00</td>
+                  <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($installmentInterest) }}</td>
+                </tr>
+              @endif
+              @if($project->totalDiscount() > 0)
+                <tr>
+                  <td colspan="3" style="text-align:left; color: var(--amber)">الخصومات الممنوحة للعميل</td>
+                  <td class="num" style="color: var(--amber)">-{{ \App\Support\Money::format($project->totalDiscount()) }}</td>
+                </tr>
+              @endif
+              <tr style="border-top: 2px solid #ddd;">
+                <td><strong>الصافي الكلي للمشروع</strong></td>
+                <td class="num"><strong>{{ \App\Support\Money::format($project->actualClientTotal() + $project->totalDiscount()) }}</strong></td>
+                <td class="num"><strong>{{ \App\Support\Money::format($project->totalSpent()) }}</strong></td>
+                <td class="num" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}"><strong>{{ \App\Support\Money::format($totalProfit) }}</strong></td>
               </tr>
             </tfoot>
           </table>
@@ -1127,6 +1306,10 @@ function openFinishBand(bandId, bandName) {
 function switchProjectTab(name) {
   document.querySelectorAll('#project-tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.querySelectorAll('.tab-panel').forEach(p => p.style.display = p.dataset.panel === name ? '' : 'none');
+  
+  if (name === 'installments' && typeof initFinancialCharts === 'function') {
+    initFinancialCharts();
+  }
 }
 
 @if($errors->any() && old('amount') !== null)
@@ -1308,6 +1491,96 @@ document.getElementById('materials-band-filter')?.addEventListener('change', fun
 .rv-modal { position:fixed; inset:0; z-index:1060; display:none; align-items:center; justify-content:center; background:rgba(15,23,42,.55); }
 .rv-modal.open { display:flex; }
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+let chartsInitialized = false;
+
+function initFinancialCharts() {
+  if (chartsInitialized) return;
+  chartsInitialized = true;
+
+  Chart.defaults.font.family = "'IBM Plex Sans Arabic', system-ui, sans-serif";
+  const fmt = v => Number(v).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+
+  // Collection Chart (Doughnut)
+  const collectionCtx = document.getElementById('collectionChart');
+  if (collectionCtx) {
+    const collected = {{ $collected ?: 0 }};
+    const remaining = {{ $remaining ?: 0 }};
+    const hasData = collected > 0 || remaining > 0;
+    
+    new Chart(collectionCtx, {
+      type: 'doughnut',
+      data: {
+        labels: hasData ? ['محصّل', 'متبقي'] : ['لا توجد مبالغ'],
+        datasets: [{
+          data: hasData ? [collected, remaining] : [1],
+          backgroundColor: hasData ? ['#10b981', '#f43f5e'] : ['#e2e8f0'],
+          borderWidth: 2,
+          borderColor: '#fff',
+          hoverOffset: hasData ? 4 : 0
+        }]
+      },
+      options: {
+        cutout: '65%',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { 
+              label: ctx => {
+                if (!hasData) return ' صفر ج.م';
+                return ' ' + ctx.label + ': ' + fmt(ctx.raw) + ' ج.م';
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Cost Breakdown Chart (Bar)
+  const costCtx = document.getElementById('costBreakdownChart');
+  if (costCtx) {
+    new Chart(costCtx, {
+      type: 'bar',
+      data: {
+        labels: ['خامات', 'مصنعيات', 'نثريات', 'عمولات'],
+        datasets: [{
+          label: 'التكلفة',
+          data: [{{ $bandMaterialsCost ?: 0 }}, {{ $laborCost ?: 0 }}, {{ $generalMaterialsCost ?: 0 }}, {{ $marketersCost ?: 0 }}],
+          backgroundColor: ['#4f46e5', '#f59e0b', '#06b6d4', '#8b5cf6'],
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: ctx => ' ' + fmt(ctx.raw) + ' ج.م' }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+          y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 }, callback: v => fmt(v) } }
+        }
+      }
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // If the tab is active on load, initialize immediately
+  const activeTab = document.querySelector('#project-tabs .tab.active');
+  if (activeTab && activeTab.dataset.tab === 'installments') {
+    initFinancialCharts();
+  }
+});
+</script>
 
 @endpush
 @endsection

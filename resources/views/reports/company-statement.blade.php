@@ -40,6 +40,10 @@
       <div class="st-box tot"><div class="l">إجمالي التكلفة</div><div class="v">{{ \App\Support\Money::format($totalCost) }} ج.م</div></div>
       <div class="st-box"><div class="l">المفوتر على العميل</div><div class="v">{{ \App\Support\Money::format($totalBilled) }} ج.م</div></div>
       <div class="st-box paid"><div class="l">المحصّل</div><div class="v">{{ \App\Support\Money::format($totalCollected) }} ج.م</div></div>
+      @php $totalDisc = $project->totalDiscount(); @endphp
+      @if($totalDisc > 0)
+        <div class="st-box" style="color:var(--amber)"><div class="l">الخصم الممنوح</div><div class="v" style="color:var(--amber)">{{ \App\Support\Money::format($totalDisc) }} ج.م</div></div>
+      @endif
       <div class="st-box {{ $totalProfit >= 0 ? 'paid' : 'due' }}"><div class="l">الربح</div><div class="v">{{ \App\Support\Money::format($totalProfit) }} ج.م</div></div>
     </div>
 
@@ -133,6 +137,10 @@
         <tr><td class="muted">إجمالي تكلفة المشروع (مشتريات + مصنعية)</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($totalCost) }} ج.م</td></tr>
         <tr><td class="muted">المفوتر على العميل</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($totalBilled) }} ج.م</td></tr>
         <tr><td class="muted">المحصّل من العميل</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($totalCollected) }} ج.م</td></tr>
+        @php $totalDisc = $project->totalDiscount(); @endphp
+        @if($totalDisc > 0)
+          <tr><td class="muted" style="color:var(--amber)">الخصومات الممنوحة للعميل</td><td style="text-align:left;font-weight:700;color:var(--amber)">{{ \App\Support\Money::format($totalDisc) }} ج.م</td></tr>
+        @endif
         <tr class="big"><td>صافي الربح</td><td style="text-align:left">{{ \App\Support\Money::format($totalProfit) }} ج.م</td></tr>
       </table>
     </div>

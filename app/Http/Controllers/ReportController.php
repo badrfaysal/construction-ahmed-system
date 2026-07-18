@@ -36,7 +36,7 @@ class ReportController extends Controller
             ->orderByDesc('created_at')
             ->get()
             ->map(function ($project) {
-                $billed    = $project->actualClientTotal(); // sell price + supervision on every item
+                $billed    = $project->grossClientTotal(); // الإجمالي قبل الخصم
                 $spent     = $project->totalSpent();        // real purchase cost + labor
                 $collected = $project->totalCollected();    // cash actually received
 
@@ -44,8 +44,9 @@ class ReportController extends Controller
                 $project->total_billed     = $billed;
                 $project->total_spent      = $spent;
                 $project->total_collected  = $collected;
-                // ربح دفتري = ما سنحصل عليه (على الورق) - ما صرفناه
-                $project->book_profit      = $billed - $spent;
+                $project->total_discount   = $project->totalDiscount();
+                // ربح دفتري = ما سنحصل عليه (على الورق) - ما صرفناه - الخصومات
+                $project->book_profit      = $billed - $spent - $project->total_discount;
                 // ربح محصل = ما قبضناه فعلاً - ما صرفناه
                 $project->earned_profit    = $collected - $spent;
                 $project->book_margin      = $billed > 0 ? ($project->book_profit / $billed) * 100 : 0;
@@ -53,7 +54,7 @@ class ReportController extends Controller
                 // تفصيل الربح الدفتري لمصدرين منفصلين:
                 //  - تجاري: فرق سعر الشراء عن سعر البيع بس (هامش تجاري بحت)
                 //  - نسبة: نسبة الإشراف المضافة فوق سعر البيع
-                // مجموعهم = book_profit بالظبط (نفس الأرقام، متقسّمة بس)
+                // مجموعهم كان يساوي book_profit قبل خصم الدفعات
                 $trade = $project->tradeProfit();
                 $pct   = $project->percentageProfit();
                 $project->trade_profit      = $trade;
@@ -70,6 +71,7 @@ class ReportController extends Controller
             'total_billed'    => $projects->sum('total_billed'),
             'total_spent'     => $projects->sum('total_spent'),
             'total_collected' => $projects->sum('total_collected'),
+            'total_discount'  => $projects->sum('total_discount'),
             'book_profit'     => $projects->sum('book_profit'),
             'earned_profit'   => $projects->sum('earned_profit'),
             'trade_profit'      => $projects->sum('trade_profit'),
@@ -104,6 +106,12 @@ class ReportController extends Controller
         $totalProfit    = $projects->sum(fn ($p) => $p->profit());
         $totalSpent     = $projects->sum(fn ($p) => $p->totalSpent());
         $totalCollected = $projects->sum(fn ($p) => $p->totalCollected());
+        $totalDiscounts = $projects->sum(fn ($p) => $p->totalDiscount());
+
+        $topDiscountProject = $projects->sortByDesc(fn ($p) => $p->totalDiscount())->first();
+        if ($topDiscountProject && $topDiscountProject->totalDiscount() == 0) {
+            $topDiscountProject = null;
+        }
 
         // ---- Monthly cash flow chart (same grouping as AnalyticsController::index()) ----
         $txQuery = Transaction::select(
@@ -128,14 +136,19 @@ class ReportController extends Controller
             $cashFlow[$row->month][$row->direction] = (float) $row->total;
         }
 
-        // ---- Top projects by spend / by profit ----
+        // ---- Top projects by spend / by profit / by discount ----
         $projectRanking = $projects->map(fn ($p) => (object) [
-            'name'   => $p->name,
-            'spent'  => $p->totalSpent(),
-            'profit' => $p->profit(),
+            'name'     => $p->name,
+            'spent'    => $p->totalSpent(),
+            'profit'   => $p->profit(),
+            'discount' => $p->totalDiscount(),
         ]);
-        $topProjectsBySpend  = $projectRanking->sortByDesc('spent')->take(5)->values();
-        $topProjectsByProfit = $projectRanking->sortByDesc('profit')->take(5)->values();
+        $topProjectsBySpend    = $projectRanking->sortByDesc('spent')->take(5)->values();
+        $topProjectsByProfit   = $projectRanking->sortByDesc('profit')->take(5)->values();
+        
+        $discountedProjects = $projectRanking->filter(fn ($p) => $p->discount > 0);
+        $topProjectsByDiscount = $discountedProjects->sortByDesc('discount')->take(5)->values();
+        $lowestProjectsByDiscount = $discountedProjects->sortBy('discount')->take(5)->values();
 
         // ---- Bands: per-instance ranking + grouped-by-name across all projects ----
         $bandInstances = collect();
@@ -230,14 +243,26 @@ class ReportController extends Controller
             ->take(10)
             ->values();
 
+        // ---- Marketers ----
+        $marketers = \App\Models\Marketer::all()->map(fn($m) => (object)[
+            'name' => $m->name,
+            'total_paid' => $m->totalPaid()
+        ])->filter(fn($m) => $m->total_paid > 0);
+
+        $totalMarketerCommissions = $marketers->sum('total_paid');
+        $topMarketers = $marketers->sortByDesc('total_paid')->take(5)->values();
+        $lowestMarketers = $marketers->sortBy('total_paid')->take(5)->values();
+
         return view('reports.dashboard', compact(
             'from', 'to', 'projectId', 'allProjects',
-            'totalProfit', 'totalSpent', 'totalCollected', 'cashFlow',
-            'topProjectsBySpend', 'topProjectsByProfit',
+            'totalProfit', 'totalSpent', 'totalCollected', 'totalDiscounts', 'topDiscountProject', 'cashFlow',
+            'topProjectsBySpend', 'topProjectsByProfit', 'topProjectsByDiscount',
             'topBandInstancesBySpend', 'topBandInstancesByProfit',
             'topBandNamesBySpend', 'topBandNamesByProfit',
             'technicians',
-            'topPurchasedMaterials', 'topReturnedMaterials'
+            'topPurchasedMaterials', 'topReturnedMaterials',
+            'lowestProjectsByDiscount',
+            'totalMarketerCommissions', 'topMarketers', 'lowestMarketers'
         ));
     }
 
@@ -320,7 +345,7 @@ class ReportController extends Controller
         // بس، أي خامة مسجلة من غير بند بتختفي من التكلفة والربح خالص هنا،
         // مع إن $totalBilled أصلاً بيحسبها (actualClientTotal يشملها)
         $totalCost      = $project->totalSpent();
-        $totalBilled    = $project->actualClientTotal();
+        $totalBilled    = $project->grossClientTotal();
         $totalCollected = $project->totalCollected();
         $totalProfit    = $project->profit();
 

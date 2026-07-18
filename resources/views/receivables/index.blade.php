@@ -250,6 +250,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
         <tr>
           <th style="text-align:right;padding-right:16px">المشروع / العميل</th>
           <th>المفوتر</th>
+          <th>الخصم</th>
           <th>المحصّل</th>
           <th>المتبقي</th>
           <th>التحصيل</th>
@@ -274,6 +275,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
               @endif
             </td>
             <td style="font-weight:600">{{ \App\Support\Money::format($row->billed) }}</td>
+            <td style="color:var(--amber);font-weight:600">{{ \App\Support\Money::format($row->discount) }}</td>
             <td style="color:var(--ok);font-weight:600">{{ \App\Support\Money::format($row->collected) }}</td>
             <td style="color:{{ $row->remaining > 0 ? 'var(--bad)' : 'var(--ok)' }};font-weight:700">{{ \App\Support\Money::format($row->remaining) }}</td>
             <td>

@@ -62,7 +62,7 @@ class TransactionObserver
 
     private function recalculateProjectTotals(Transaction $transaction): void
     {
-        if ($transaction->ref_type === 'client_payment' && $transaction->project_id) {
+        if (in_array($transaction->ref_type, ['client_payment', 'marketer_commission']) && $transaction->project_id) {
             $transaction->project?->recalculateCachedTotals();
         }
     }
