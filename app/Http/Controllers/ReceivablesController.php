@@ -114,10 +114,10 @@ class ReceivablesController extends Controller
             return back()->with('error', 'البند المختار مش تابع لهذا المشروع.')->with('reopen_project', $project->id);
         }
 
+        $warning = null;
         if ($data['amount'] + $discount > $remaining + 0.01) {
             $label = $hasContract ? 'المستحق الإضافي خارج عقد التقسيط' : 'المتبقي على العميل';
-            return back()->with('error', 'المجموع (تحصيل + خصم) أكبر من ' . $label . ' (' . number_format($remaining, 2) . ' ج).')
-                ->with('reopen_project', $project->id);
+            $warning = 'تم التسجيل بنجاح، لكن انتبه: المجموع (تحصيل + خصم) أكبر من ' . $label . ' (دفعة تحت الحساب).';
         }
 
         // وصف الدفعة: عامة للمشروع أو تحت بند محدد
@@ -142,6 +142,10 @@ class ReceivablesController extends Controller
             'ref_type'    => 'client_payment',
             'ref_id'      => null,
         ]));
+
+        if ($warning) {
+            return back()->with('warning', $warning);
+        }
 
         return back()->with('success', 'تم تسجيل تحصيل ' . number_format($data['amount']) . ' ج من العميل.');
     }

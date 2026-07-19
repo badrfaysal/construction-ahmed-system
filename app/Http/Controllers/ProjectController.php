@@ -15,15 +15,20 @@ class ProjectController extends Controller
     {
         $tab = $request->get('tab', 'active'); // default to active tab
 
+        $validTabs = ['active', 'done', 'suspended', 'canceled'];
+        $status = in_array($tab, $validTabs) ? $tab : 'active';
+
         $projects = Project::with(['client', 'bands.workers.payments'])
-            ->where('status', $tab === 'done' ? 'done' : 'active')
+            ->where('status', $status)
             ->orderByDesc('created_at')
             ->get();
 
-        $activeCnt = Project::where('status', 'active')->count();
-        $doneCnt   = Project::where('status', 'done')->count();
+        $activeCnt    = Project::where('status', 'active')->count();
+        $doneCnt      = Project::where('status', 'done')->count();
+        $suspendedCnt = Project::where('status', 'suspended')->count();
+        $canceledCnt  = Project::where('status', 'canceled')->count();
 
-        return view('projects.index', compact('projects', 'tab', 'activeCnt', 'doneCnt'));
+        return view('projects.index', compact('projects', 'tab', 'activeCnt', 'doneCnt', 'suspendedCnt', 'canceledCnt'));
     }
 
     // Show form to create a new project
@@ -166,7 +171,7 @@ class ProjectController extends Controller
             'start_date'     => ['nullable', 'date'],
             'deliver_date'   => ['nullable', 'date'],
             'delivered_date' => ['nullable', 'date'],
-            'status'         => ['required', 'in:active,done'],
+            'status'         => ['required', 'in:active,done,suspended,canceled'],
             'notes'          => ['nullable', 'string'],
         ]);
 
@@ -174,6 +179,17 @@ class ProjectController extends Controller
 
         return redirect()->route('projects.show', $project)
             ->with('success', 'تم تحديث المشروع.');
+    }
+
+    public function changeStatus(Request $request, Project $project)
+    {
+        $request->validate([
+            'status' => ['required', 'in:active,done,suspended,canceled']
+        ]);
+
+        $project->update(['status' => $request->status]);
+
+        return back()->with('success', 'تم تغيير حالة المشروع بنجاح.');
     }
 
     public function payCommission(Request $request, Project $project)

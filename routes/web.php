@@ -54,6 +54,7 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
     Route::post('/projects/{project}/pay-commission', [ProjectController::class, 'payCommission'])->name('projects.payCommission');
+    Route::post('/projects/{project}/status', [ProjectController::class, 'changeStatus'])->name('projects.changeStatus');
     Route::get('/bands/{band}/edit', [ProjectBandController::class, 'edit'])->name('bands.edit');
     Route::put('/bands/{band}', [ProjectBandController::class, 'update'])->name('bands.update');
     Route::patch('/bands/{band}/status', [ProjectBandController::class, 'updateStatus'])->name('bands.updateStatus');

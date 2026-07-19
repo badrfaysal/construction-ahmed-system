@@ -337,6 +337,12 @@
         {{ session('error') }}
       </div>
     @endif
+    @if(session('warning'))
+      <div class="flash" style="background:var(--amber-soft); color:#854d0e; border:1px solid #fef08a;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-alert-circle"/></svg>
+        {{ session('warning') }}
+      </div>
+    @endif
 
     @if($errors->any())
       @php

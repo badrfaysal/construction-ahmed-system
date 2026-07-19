@@ -25,6 +25,12 @@
   <a class="tab {{ $tab === 'done' ? 'active' : '' }}" href="{{ route('projects.index', ['tab' => 'done']) }}">
     مكتملة <span class="cnt">{{ $doneCnt }}</span>
   </a>
+  <a class="tab {{ $tab === 'suspended' ? 'active' : '' }}" href="{{ route('projects.index', ['tab' => 'suspended']) }}">
+    معلقة <span class="cnt">{{ $suspendedCnt }}</span>
+  </a>
+  <a class="tab {{ $tab === 'canceled' ? 'active' : '' }}" href="{{ route('projects.index', ['tab' => 'canceled']) }}">
+    ملغية <span class="cnt">{{ $canceledCnt }}</span>
+  </a>
 </div>
 
 @if($projects->count())

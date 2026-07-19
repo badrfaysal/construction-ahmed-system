@@ -49,6 +49,20 @@
     @if($project->warranty)
       <a href="{{ route('warranties.show', $project) }}" class="btn ghost">الضمان</a>
     @endif
+    <div style="display:flex; flex-direction:column; gap:4px; align-items:stretch">
+      @if($project->status !== 'active')
+        <button type="button" class="btn ghost" style="color:var(--accent); padding:4px 8px; min-height:auto; font-size:11px; height:auto" onclick="changeProjectStatus('active')">تنشيط المشروع</button>
+      @endif
+      @if($project->status !== 'done')
+        <button type="button" class="btn ghost" style="color:var(--good); padding:4px 8px; min-height:auto; font-size:11px; height:auto" onclick="changeProjectStatus('done')">إنهاء المشروع</button>
+      @endif
+      @if($project->status !== 'suspended')
+        <button type="button" class="btn ghost" style="color:var(--amber); padding:4px 8px; min-height:auto; font-size:11px; height:auto" onclick="changeProjectStatus('suspended')">تعليق المشروع</button>
+      @endif
+      @if($project->status !== 'canceled')
+        <button type="button" class="btn ghost" style="color:var(--bad); padding:4px 8px; min-height:auto; font-size:11px; height:auto" onclick="changeProjectStatus('canceled')">إلغاء المشروع</button>
+      @endif
+    </div>
     <a href="{{ route('projects.edit', $project) }}" class="btn ghost">تعديل</a>
     <a href="{{ route('projects.index') }}" class="btn ghost">رجوع</a>
   </div>
@@ -1580,6 +1594,26 @@ document.addEventListener('DOMContentLoaded', function() {
     initFinancialCharts();
   }
 });
+</script>
+
+<form id="change-status-form" method="POST" action="{{ route('projects.changeStatus', $project) }}" style="display:none;">
+  @csrf
+  <input type="hidden" name="status" id="change-status-input">
+</form>
+
+<script>
+  function changeProjectStatus(status) {
+    let msg = '';
+    if(status === 'active') msg = 'هل أنت متأكد من إعادة تنشيط المشروع؟';
+    if(status === 'done') msg = 'هل أنت متأكد من إنهاء المشروع؟';
+    if(status === 'suspended') msg = 'هل أنت متأكد من تعليق المشروع؟';
+    if(status === 'canceled') msg = 'هل أنت متأكد من إلغاء المشروع؟';
+    
+    if(confirm(msg)) {
+      document.getElementById('change-status-input').value = status;
+      document.getElementById('change-status-form').submit();
+    }
+  }
 </script>
 
 @endpush

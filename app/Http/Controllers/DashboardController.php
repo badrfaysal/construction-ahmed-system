@@ -16,8 +16,10 @@ class DashboardController extends Controller
         // Eager load what we need to avoid N+1 queries in the view
         $projects = Project::with(['client', 'bands.materials.returns', 'bands.workers.payments', 'materials.returns', 'contracts.payments', 'clientPayments'])->latest()->get();
 
-        $activeProjects = $projects->where('status', 'active');
-        $doneProjects   = $projects->where('status', 'done');
+        $activeProjects    = $projects->where('status', 'active');
+        $doneProjects      = $projects->where('status', 'done');
+        $suspendedProjects = $projects->where('status', 'suspended');
+        $canceledProjects  = $projects->where('status', 'canceled');
 
         // Total collected from clients = down payments + all installment payments
         $totalCollected = (float) InstallmentContract::sum('down_payment')
@@ -78,7 +80,7 @@ class DashboardController extends Controller
             ->get();
 
         return view('dashboard.index', compact(
-            'projects', 'activeProjects', 'doneProjects',
+            'projects', 'activeProjects', 'doneProjects', 'suspendedProjects', 'canceledProjects',
             'totalCollected', 'totalContract', 'overdueCount',
             'treasuryBalance', 'totalSpentMaterials', 'totalSpentLabor',
             'walletBalance', 'recentTransactions',

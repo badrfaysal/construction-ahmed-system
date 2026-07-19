@@ -63,6 +63,8 @@
         <select name="status">
           <option value="active" {{ $project->status === 'active' ? 'selected' : '' }}>جاري</option>
           <option value="done" {{ $project->status === 'done' ? 'selected' : '' }}>مكتمل</option>
+          <option value="suspended" {{ $project->status === 'suspended' ? 'selected' : '' }}>معلق</option>
+          <option value="canceled" {{ $project->status === 'canceled' ? 'selected' : '' }}>ملغي</option>
         </select>
       </div>
       <div class="field">

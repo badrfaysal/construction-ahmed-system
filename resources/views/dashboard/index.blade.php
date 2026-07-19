@@ -78,90 +78,116 @@
 
   {{-- ═══ العمود الرئيسي ═══ --}}
   <div>
-    @if($activeProjects->count())
-      <div class="section-label">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>
-        المشاريع الجارية
+    @php
+      $dashTabs = [
+        'active' => ['title' => 'المشاريع الجارية', 'items' => $activeProjects],
+        'suspended' => ['title' => 'المشاريع المعلقة', 'items' => $suspendedProjects],
+        'canceled' => ['title' => 'المشاريع الملغية', 'items' => $canceledProjects],
+      ];
+    @endphp
+
+    <div class="tabs" style="margin-bottom:16px;">
+      @foreach($dashTabs as $k => $t)
+        <a class="tab {{ $loop->first ? 'active' : '' }}" onclick="showDashTab('{{ $k }}', this)" style="cursor:pointer;">
+          {{ $t['title'] }} <span class="cnt">{{ $t['items']->count() }}</span>
+        </a>
+      @endforeach
+    </div>
+
+    @foreach($dashTabs as $k => $t)
+      <div id="dash-tab-{{ $k }}" class="dash-tab-content" style="display: {{ $loop->first ? 'block' : 'none' }}">
+        @if($t['items']->count())
+          <div class="pcards">
+            @foreach($t['items'] as $p)
+              @php
+                $prog   = $p->progressPct();
+                $paid   = $p->totalCollected();
+                $actual = $p->actualClientTotal();
+                $due    = max($actual - $paid, 0);
+                $activeBand = $p->bands->where('status', 'active')->first();
+                $paidWorkers = $p->bands->flatMap(fn($b) => $b->workers)->sum(fn($w) => $w->paidTotal());
+              @endphp
+              <a class="pcard" href="{{ route('projects.show', $p) }}">
+                <div class="pc-band"></div>
+                <div class="pc-body">
+                  <div class="pc-head">
+                    <div>
+                      <div class="pc-name">{{ $p->name }}</div>
+                      <div class="pc-client">{{ $p->client->name }}</div>
+                    </div>
+                    @if($activeBand)
+                      <span class="tag blue"><span class="dot"></span>{{ $activeBand->name }}</span>
+                    @endif
+                  </div>
+                  @if($p->address)
+                    <div class="pc-addr">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pin"/></svg>
+                      {{ $p->address }}
+                    </div>
+                  @endif
+                  <div class="pc-prog">
+                    <span class="muted" style="font-size:11px">الإنجاز</span>
+                    <div class="bar-track"><div class="bar-fill" style="width:{{ $prog }}%"></div></div>
+                    <span class="pct">{{ $prog }}%</span>
+                  </div>
+                  @if($p->bands->count())
+                    <div class="pc-bands">
+                      @foreach($p->bands as $band)
+                        <span class="tag {{ $band->status === 'done' ? 'green' : ($band->status === 'active' ? 'blue' : 'gray') }} sm">
+                          @if($band->status === 'done') ✓ @endif{{ $band->name }}
+                        </span>
+                      @endforeach
+                    </div>
+                  @endif
+                  <div class="pc-fin">
+                    <div>
+                      <div class="l">قيمة المشروع</div>
+                      <div class="v">{{ \App\Support\Money::format($actual) }}</div>
+                    </div>
+                    <div>
+                      <div class="l">المدفوع</div>
+                      <div class="v" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }}</div>
+                    </div>
+                    <div>
+                      <div class="l">المتبقي</div>
+                      <div class="v" style="color:var(--warn)">{{ \App\Support\Money::format($due) }}</div>
+                    </div>
+                  </div>
+                  <div class="pc-pays">
+                    <div class="pc-pay in">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>
+                      <span class="l">دفعات العميل</span>
+                      <span class="v">{{ \App\Support\Money::format($paid) }}</span>
+                    </div>
+                    <div class="pc-pay out">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg>
+                      <span class="l">مدفوع للصنايعية</span>
+                      <span class="v">{{ \App\Support\Money::format($paidWorkers) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            @endforeach
+          </div>
+        @else
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>
+            <h4>لا توجد {{ $t['title'] }}</h4>
+          </div>
+        @endif
       </div>
-      <div class="pcards">
-        @foreach($activeProjects as $p)
-          @php
-            $prog   = $p->progressPct();
-            $paid   = $p->totalCollected();
-            $actual = $p->actualClientTotal();
-            $due    = max($actual - $paid, 0);
-            $activeBand = $p->bands->where('status', 'active')->first();
-            $paidWorkers = $p->bands->flatMap(fn($b) => $b->workers)->sum(fn($w) => $w->paidTotal());
-          @endphp
-          <a class="pcard" href="{{ route('projects.show', $p) }}">
-            <div class="pc-band"></div>
-            <div class="pc-body">
-              <div class="pc-head">
-                <div>
-                  <div class="pc-name">{{ $p->name }}</div>
-                  <div class="pc-client">{{ $p->client->name }}</div>
-                </div>
-                @if($activeBand)
-                  <span class="tag blue"><span class="dot"></span>{{ $activeBand->name }}</span>
-                @endif
-              </div>
-              @if($p->address)
-                <div class="pc-addr">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pin"/></svg>
-                  {{ $p->address }}
-                </div>
-              @endif
-              <div class="pc-prog">
-                <span class="muted" style="font-size:11px">الإنجاز</span>
-                <div class="bar-track"><div class="bar-fill" style="width:{{ $prog }}%"></div></div>
-                <span class="pct">{{ $prog }}%</span>
-              </div>
-              @if($p->bands->count())
-                <div class="pc-bands">
-                  @foreach($p->bands as $band)
-                    <span class="tag {{ $band->status === 'done' ? 'green' : ($band->status === 'active' ? 'blue' : 'gray') }} sm">
-                      @if($band->status === 'done') ✓ @endif{{ $band->name }}
-                    </span>
-                  @endforeach
-                </div>
-              @endif
-              <div class="pc-fin">
-                <div>
-                  <div class="l">قيمة المشروع</div>
-                  <div class="v">{{ \App\Support\Money::format($actual) }}</div>
-                </div>
-                <div>
-                  <div class="l">المدفوع</div>
-                  <div class="v" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }}</div>
-                </div>
-                <div>
-                  <div class="l">المتبقي</div>
-                  <div class="v" style="color:var(--warn)">{{ \App\Support\Money::format($due) }}</div>
-                </div>
-              </div>
-              <div class="pc-pays">
-                <div class="pc-pay in">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>
-                  <span class="l">دفعات العميل</span>
-                  <span class="v">{{ \App\Support\Money::format($paid) }}</span>
-                </div>
-                <div class="pc-pay out">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg>
-                  <span class="l">مدفوع للصنايعية</span>
-                  <span class="v">{{ \App\Support\Money::format($paidWorkers) }}</span>
-                </div>
-              </div>
-            </div>
-          </a>
-        @endforeach
-      </div>
-    @else
-      <div class="empty-state">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>
-        <h4>لا توجد مشاريع جارية</h4>
-        <p>ابدأ بإضافة مشروع جديد لمتابعته هنا</p>
-      </div>
-    @endif
+    @endforeach
+
+    <script>
+      function showDashTab(tabId, btn) {
+        document.querySelectorAll('.dash-tab-content').forEach(el => el.style.display = 'none');
+        document.getElementById('dash-tab-' + tabId).style.display = 'block';
+        
+        let parent = btn.closest('.tabs');
+        parent.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+      }
+    </script>
   </div>
 
   {{-- ═══ العمود الجانبي ═══ --}}
