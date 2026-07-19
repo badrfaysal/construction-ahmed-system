@@ -64,7 +64,11 @@ class DashboardController extends Controller
             ->selectRaw('SUM(total_amount - paid_amount) as r')
             ->value('r') ?? 0);
 
-        $netCapital = $walletBalance + $directReceivables + $installmentReceivables - $supplierDebtsRemaining;
+        $totalWorkerContracted = (float) \DB::table('sy2_band_workers')->sum('amount');
+        $totalWorkerPaidAndDiscount = (float) \DB::table('sy2_worker_payments')->sum(\DB::raw('amount + discount'));
+        $unpaidLabor = max($totalWorkerContracted - $totalWorkerPaidAndDiscount, 0);
+
+        $netCapital = $walletBalance + $directReceivables + $installmentReceivables - $supplierDebtsRemaining - $unpaidLabor;
 
         // Last 5 transactions for the quick feed on dashboard
         $recentTransactions = Transaction::with('project')
@@ -78,7 +82,7 @@ class DashboardController extends Controller
             'totalCollected', 'totalContract', 'overdueCount',
             'treasuryBalance', 'totalSpentMaterials', 'totalSpentLabor',
             'walletBalance', 'recentTransactions',
-            'directReceivables', 'installmentReceivables', 'supplierDebtsRemaining', 'netCapital'
+            'directReceivables', 'installmentReceivables', 'supplierDebtsRemaining', 'unpaidLabor', 'netCapital'
         ));
     }
 }
