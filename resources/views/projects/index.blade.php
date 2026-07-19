@@ -54,6 +54,10 @@
             </div>
             @if($p->status === 'done')
               <span class="tag green"><span class="dot"></span>مكتمل ومسلّم</span>
+            @elseif($p->status === 'suspended')
+              <span class="tag amber"><span class="dot"></span>معلق</span>
+            @elseif($p->status === 'canceled')
+              <span class="tag red"><span class="dot"></span>ملغي</span>
             @elseif($activeBand)
               <span class="tag blue"><span class="dot"></span>{{ $activeBand->name }}</span>
             @endif

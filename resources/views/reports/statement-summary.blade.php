@@ -64,29 +64,50 @@
       <tbody>
         @forelse($spentBands as $band)
           @php
-            $bandProfit = $band->percentageProfit();
-            $bandCost = $band->totalCost();
-            $bandPct = $bandCost > 0 ? ($bandProfit / $bandCost) * 100 : 0;
+            $matClientTotal = $band->materialClientCost();
+            $laborClientTotal = $band->laborClientPrice();
           @endphp
-          <tr>
-            <td><strong>{{ $band->name }}</strong></td>
-            <td><span class="tag {{ $band->status === 'done' ? 'green' : ($band->status === 'active' ? 'blue' : 'gray') }}">{{ $band->status === 'done' ? 'مكتمل' : ($band->status === 'active' ? 'جاري' : 'معلق') }}</span></td>
-            <td class="col-sup">
-              {{ (float) number_format($bandPct, 1) }}%
-              @if($bandProfit > 0)
-                <br><small class="muted" style="font-size:12.5px;font-weight:600">({{ \App\Support\Money::format($bandProfit) }} ج.م)</small>
-              @endif
-            </td>
-            <td class="num"><b>{{ \App\Support\Money::format($band->actualClientTotal()) }} ج.م</b></td>
-          </tr>
+          @if($matClientTotal > 0)
+            @php
+              $matProfit = $band->materialPercentageProfit();
+              $matPct = $band->materials->count() > 0 ? $band->materials->avg('supervision_pct') : 0;
+            @endphp
+            <tr>
+              <td><strong>{{ $band->name }} (خامات)</strong></td>
+              <td><span class="tag {{ $band->status === 'done' ? 'green' : ($band->status === 'active' ? 'blue' : 'gray') }}">{{ $band->status === 'done' ? 'مكتمل' : ($band->status === 'active' ? 'جاري' : 'معلق') }}</span></td>
+              <td class="col-sup">
+                {{ (float) number_format($matPct, 1) }}%
+                @if($matProfit > 0)
+                  <br><small class="muted" style="font-size:12.5px;font-weight:600">({{ \App\Support\Money::format($matProfit) }} ج.م)</small>
+                @endif
+              </td>
+              <td class="num"><b>{{ \App\Support\Money::format($matClientTotal) }} ج.م</b></td>
+            </tr>
+          @endif
+          @if($laborClientTotal > 0)
+            @php
+              $laborProfit = $band->laborPercentageProfit();
+              $laborPct = $band->workers->count() > 0 ? $band->workers->avg('supervision_pct') : (float) $band->labor_supervision_pct;
+            @endphp
+            <tr>
+              <td><strong>{{ $band->name }} (مصنعية)</strong></td>
+              <td><span class="tag {{ $band->status === 'done' ? 'green' : ($band->status === 'active' ? 'blue' : 'gray') }}">{{ $band->status === 'done' ? 'مكتمل' : ($band->status === 'active' ? 'جاري' : 'معلق') }}</span></td>
+              <td class="col-sup">
+                {{ (float) number_format($laborPct, 1) }}%
+                @if($laborProfit > 0)
+                  <br><small class="muted" style="font-size:12.5px;font-weight:600">({{ \App\Support\Money::format($laborProfit) }} ج.م)</small>
+                @endif
+              </td>
+              <td class="num"><b>{{ \App\Support\Money::format($laborClientTotal) }} ج.م</b></td>
+            </tr>
+          @endif
         @empty
           <tr><td colspan="4" class="muted" style="text-align:center;padding:20px">لا توجد بنود بدأ العمل بها بعد</td></tr>
         @endforelse
         @if($generalTotal > 0)
           @php
             $genProfit = $project->generalMaterials()->sum(fn($m) => $m->percentageProfit());
-            $genCost = $project->generalMaterials()->sum(fn($m) => $m->netCost());
-            $genPct = $genCost > 0 ? ($genProfit / $genCost) * 100 : 0;
+            $genPct = $project->generalMaterials()->count() > 0 ? $project->generalMaterials()->avg('supervision_pct') : 0;
           @endphp
           <tr>
             <td><strong>مصروفات عامة على المشروع</strong></td>
@@ -103,14 +124,11 @@
         <tr class="sub" style="background:var(--accent-soft)">
           @php
             $projProfit = $project->percentageProfit();
-            $projCost = $subTotal - $projProfit;
-            $projPct = $projCost > 0 ? ($projProfit / $projCost) * 100 : 0;
           @endphp
           <td colspan="2" style="text-align:left;color:var(--accent-ink)">{{ $discountAmount > 0 ? 'إجمالي المستحق قبل الخصم' : 'إجمالي المستحق حتى الآن' }}</td>
           <td class="col-sup" style="color:var(--accent-ink)">
-            {{ (float) number_format($projPct, 1) }}%
             @if($projProfit > 0)
-              <br><small style="font-size:12.5px;font-weight:600;opacity:0.9">({{ \App\Support\Money::format($projProfit) }} ج.م)</small>
+              <span style="font-size:14px;font-weight:600;opacity:0.9">({{ \App\Support\Money::format($projProfit) }} ج.م)</span>
             @endif
           </td>
           <td class="num" style="color:var(--accent-ink)">{{ \App\Support\Money::format($subTotal) }} ج.م</td>

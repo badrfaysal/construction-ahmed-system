@@ -49,20 +49,34 @@
     @if($project->warranty)
       <a href="{{ route('warranties.show', $project) }}" class="btn ghost">الضمان</a>
     @endif
-    <div style="display:flex; flex-direction:column; gap:4px; align-items:stretch">
-      @if($project->status !== 'active')
-        <button type="button" class="btn ghost" style="color:var(--accent); padding:4px 8px; min-height:auto; font-size:11px; height:auto" onclick="changeProjectStatus('active')">تنشيط المشروع</button>
-      @endif
-      @if($project->status !== 'done')
-        <button type="button" class="btn ghost" style="color:var(--good); padding:4px 8px; min-height:auto; font-size:11px; height:auto" onclick="changeProjectStatus('done')">إنهاء المشروع</button>
-      @endif
-      @if($project->status !== 'suspended')
-        <button type="button" class="btn ghost" style="color:var(--amber); padding:4px 8px; min-height:auto; font-size:11px; height:auto" onclick="changeProjectStatus('suspended')">تعليق المشروع</button>
-      @endif
-      @if($project->status !== 'canceled')
-        <button type="button" class="btn ghost" style="color:var(--bad); padding:4px 8px; min-height:auto; font-size:11px; height:auto" onclick="changeProjectStatus('canceled')">إلغاء المشروع</button>
-      @endif
+    <div style="position:relative;" id="statusDropdown">
+      <button type="button" class="btn ghost" onclick="const m = document.getElementById('statusMenu'); m.style.display = m.style.display === 'none' ? 'flex' : 'none'; event.stopPropagation();">
+        تغيير الحالة ▾
+      </button>
+      <div id="statusMenu" class="dropdown-menu" style="display:none; position:absolute; top:100%; left:0; background:var(--surface); border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 16px rgba(0,0,0,0.1); z-index:100; min-width:150px; padding:6px; flex-direction:column; gap:4px; margin-top:4px;">
+        @if($project->status !== 'active')
+          <button type="button" class="btn ghost" style="color:var(--accent); width:100%; justify-content:flex-start; font-weight:bold" onclick="changeProjectStatus('active')">تنشيط المشروع</button>
+        @endif
+        @if($project->status !== 'done')
+          <button type="button" class="btn ghost" style="color:var(--good); width:100%; justify-content:flex-start; font-weight:bold" onclick="changeProjectStatus('done')">إنهاء المشروع</button>
+        @endif
+        @if($project->status !== 'suspended')
+          <button type="button" class="btn ghost" style="color:var(--amber); width:100%; justify-content:flex-start; font-weight:bold" onclick="changeProjectStatus('suspended')">تعليق المشروع</button>
+        @endif
+        @if($project->status !== 'canceled')
+          <button type="button" class="btn ghost" style="color:var(--bad); width:100%; justify-content:flex-start; font-weight:bold" onclick="changeProjectStatus('canceled')">إلغاء المشروع</button>
+        @endif
+      </div>
     </div>
+    <script>
+      document.addEventListener('click', function(e) {
+        const menu = document.getElementById('statusMenu');
+        const dropdown = document.getElementById('statusDropdown');
+        if (menu && dropdown && !dropdown.contains(e.target)) {
+          menu.style.display = 'none';
+        }
+      });
+    </script>
     <a href="{{ route('projects.edit', $project) }}" class="btn ghost">تعديل</a>
     <a href="{{ route('projects.index') }}" class="btn ghost">رجوع</a>
   </div>
@@ -247,16 +261,29 @@
             </td>
             <td></td>
           </tr>
-          @if($project->totalDiscount() > 0)
+          @php
+            $marketersCommission = (float) $project->transactions()->where('ref_type', 'marketer_commission')->sum('amount');
+            $bandsProfit = $project->bands->sum(fn($b) => $b->profit());
+          @endphp
+          @if($project->totalDiscount() > 0 || $marketersCommission > 0)
+            @if($project->totalDiscount() > 0)
             <tr>
               <td colspan="6" style="text-align: left; color: var(--amber)"><strong>الخصم الممنوح للعميل على المشروع</strong></td>
               <td class="num" style="color: var(--amber)"><strong>-{{ \App\Support\Money::format($project->totalDiscount()) }}</strong></td>
               <td></td>
             </tr>
+            @endif
+            @if($marketersCommission > 0)
+            <tr>
+              <td colspan="6" style="text-align: left; color: var(--neg)"><strong>عمولة المسوقين</strong></td>
+              <td class="num" style="color: var(--neg)"><strong>-{{ \App\Support\Money::format($marketersCommission) }}</strong></td>
+              <td></td>
+            </tr>
+            @endif
             <tr>
               <td colspan="6" style="text-align: left;"><strong>صافي ربح البنود</strong></td>
-              <td class="num" style="color:{{ ($project->bands->sum(fn($b) => $b->profit()) - $project->totalDiscount()) >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
-                <strong>{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->profit()) - $project->totalDiscount()) }}</strong>
+              <td class="num" style="color:{{ ($bandsProfit - $project->totalDiscount() - $marketersCommission) >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
+                <strong>{{ \App\Support\Money::format($bandsProfit - $project->totalDiscount() - $marketersCommission) }}</strong>
               </td>
               <td></td>
             </tr>
@@ -1237,6 +1264,15 @@
                   <td class="num">{{ \App\Support\Money::format($installmentInterest) }}</td>
                   <td class="num">0.00</td>
                   <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($installmentInterest) }}</td>
+                </tr>
+              @endif
+              @php $marketersCommission = (float) $project->transactions()->where('ref_type', 'marketer_commission')->sum('amount'); @endphp
+              @if($marketersCommission > 0)
+                <tr>
+                  <td>عمولة المسوقين</td>
+                  <td class="num">0.00</td>
+                  <td class="num">{{ \App\Support\Money::format($marketersCommission) }}</td>
+                  <td class="num" style="color: var(--neg)">-{{ \App\Support\Money::format($marketersCommission) }}</td>
                 </tr>
               @endif
               @if($project->totalDiscount() > 0)

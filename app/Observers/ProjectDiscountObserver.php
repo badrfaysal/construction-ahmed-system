@@ -24,6 +24,7 @@ class ProjectDiscountObserver
             'ref_type'    => 'discount',
             'ref_id'      => $projectDiscount->id,
         ]);
+        $projectDiscount->project->recalculateCachedTotals();
     }
 
     /**
@@ -39,6 +40,7 @@ class ProjectDiscountObserver
                 'description' => 'منح خصم: ' . $projectDiscount->notes,
             ]);
         }
+        $projectDiscount->project->recalculateCachedTotals();
     }
 
     /**
@@ -47,5 +49,13 @@ class ProjectDiscountObserver
     public function deleting(ProjectDiscount $projectDiscount): void
     {
         Transaction::where('ref_type', 'discount')->where('ref_id', $projectDiscount->id)->delete();
+    }
+
+    /**
+     * Handle the ProjectDiscount "deleted" event.
+     */
+    public function deleted(ProjectDiscount $projectDiscount): void
+    {
+        $projectDiscount->project->recalculateCachedTotals();
     }
 }
