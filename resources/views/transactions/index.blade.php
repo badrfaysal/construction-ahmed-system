@@ -184,7 +184,27 @@
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
               <div class="tx-amt" style="{{ $log->action === 'deleted' ? 'text-decoration:line-through' : '' }};color:{{ $meta['color'] }}">
-                {{ $log->direction === 'in' ? '+ ' : '− ' }}{{ \App\Support\Money::format($log->amount) }} ج.م
+                @if($log->amount > 0)
+                  {{ $log->direction === 'in' ? '+ ' : '− ' }}{{ \App\Support\Money::format($log->amount) }} ج.م
+                @elseif($log->amount == 0 && $log->ref_type === 'material' && $log->ref_id && $log->action !== 'deleted')
+                  @php $txDeferredMat = \App\Models\Material::find($log->ref_id); @endphp
+                  @if($txDeferredMat && $txDeferredMat->grossCost() > 0)
+                    <span style="color:var(--amber)">{{ \App\Support\Money::format($txDeferredMat->grossCost()) }} ج.م</span>
+                    <span class="muted" style="font-size:10px;margin-right:4px">(آجل)</span>
+                  @else
+                    0.00 ج.م
+                  @endif
+                @elseif($log->amount == 0 && $log->ref_type === 'material_invoice' && $log->ref_id && $log->action !== 'deleted')
+                  @php $txDeferredInv = \App\Models\MaterialInvoice::find($log->ref_id); @endphp
+                  @if($txDeferredInv && $txDeferredInv->total_amount > 0)
+                    <span style="color:var(--amber)">{{ \App\Support\Money::format($txDeferredInv->total_amount) }} ج.م</span>
+                    <span class="muted" style="font-size:10px;margin-right:4px">(آجل)</span>
+                  @else
+                    0.00 ج.م
+                  @endif
+                @else
+                  {{ $log->direction === 'in' ? '+ ' : '− ' }}0.00 ج.م
+                @endif
               </div>
               @if($isLive && auth()->user()->isAdmin())
                 <div style="display:flex;gap:4px">

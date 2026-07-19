@@ -129,6 +129,22 @@
               <b style="color:{{ $log->direction === 'in' ? 'var(--pos)' : ($log->direction === 'out' ? 'var(--neg)' : 'inherit') }}; {{ $log->action === 'deleted' ? 'text-decoration:line-through' : '' }}">
                 {{ $log->direction === 'in' ? '+' : ($log->direction === 'out' ? '-' : '') }}{{ \App\Support\Money::format($log->amount) }}
               </b>
+            @elseif($log->amount == 0 && $log->ref_type === 'material' && $log->ref_id && $log->action !== 'deleted')
+              @php $deferredMat = \App\Models\Material::find($log->ref_id); @endphp
+              @if($deferredMat && $deferredMat->grossCost() > 0)
+                <b style="color:var(--amber)">{{ \App\Support\Money::format($deferredMat->grossCost()) }}</b>
+                <div class="muted" style="font-size:10px">آجل بالكامل</div>
+              @else
+                <span class="muted">—</span>
+              @endif
+            @elseif($log->amount == 0 && $log->ref_type === 'material_invoice' && $log->ref_id && $log->action !== 'deleted')
+              @php $deferredInv = \App\Models\MaterialInvoice::find($log->ref_id); @endphp
+              @if($deferredInv && $deferredInv->total_amount > 0)
+                <b style="color:var(--amber)">{{ \App\Support\Money::format($deferredInv->total_amount) }}</b>
+                <div class="muted" style="font-size:10px">آجل بالكامل</div>
+              @else
+                <span class="muted">—</span>
+              @endif
             @else
               <span class="muted">—</span>
             @endif

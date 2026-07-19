@@ -154,6 +154,14 @@ class TransactionController extends Controller
                     }
                     $transaction->delete();
                     break;
+                case 'discount':
+                    $discount = \App\Models\ProjectDiscount::find($transaction->ref_id);
+                    if ($discount) {
+                        $discount->delete(); // Observer handles transaction deletion & recalculation
+                    } else {
+                        $transaction->delete();
+                    }
+                    break;
                 default: // manual, client_payment, null, band (legacy)
                     $transaction->delete();
             }
