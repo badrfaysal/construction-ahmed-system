@@ -42,7 +42,7 @@
         $total = $p->initialContractValue();
         $actual = $p->actualClientTotal();
         $activeBand = $p->bands->where('status', 'active')->first();
-        $paidWorkers = $p->bands->flatMap(fn($b) => $b->workers)->sum(fn($w) => $w->paidTotal());
+        $paidWorkers = (float) $p->total_worker_paid;
       @endphp
       <a class="pcard {{ $p->status === 'done' ? 'is-done' : '' }}" href="{{ route('projects.show', $p) }}">
         <div class="pc-band"></div>

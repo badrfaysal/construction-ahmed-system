@@ -13,8 +13,13 @@ class DashboardController extends Controller
     // Main dashboard — summary stats and active project cards
     public function index()
     {
-        // Eager load what we need to avoid N+1 queries in the view
-        $projects = Project::with(['client', 'bands.materials.returns', 'bands.workers.payments', 'materials.returns', 'contracts.payments', 'clientPayments'])->latest()->get();
+        // Use cached totals to avoid massive eager loading
+        $projects = Project::with(['client', 'contracts', 'bands'])
+            ->withSum(['transactions as total_worker_paid' => function ($query) {
+                $query->where('ref_type', 'worker_payment');
+            }], 'amount')
+            ->latest()
+            ->get();
 
         $activeProjects    = $projects->where('status', 'active');
         $doneProjects      = $projects->where('status', 'done');
@@ -26,12 +31,9 @@ class DashboardController extends Controller
             + (float) \DB::table('sy2_installment_payments')->sum('amount_paid');
 
         // Total contract value = sum of each project's locked-in initial value
-        // (falls back to the live band-price sum for projects created before that column existed)
         $totalContract = $projects->sum(fn ($p) => $p->initialContractValue());
 
-        // Overdue contracts — active with a remaining balance whose monthly
-        // installment for the current month hasn't been collected yet and the
-        // due day already passed
+        // Overdue contracts
         $overdueCount = InstallmentContract::with('payments')
             ->where('remaining_balance', '>', 0)
             ->where('due_day', '<', (int) date('d'))
@@ -40,27 +42,25 @@ class DashboardController extends Controller
             ->count();
 
         // Treasury balance: collected - spent (materials + labor)
-        $totalSpentMaterials = $projects->sum(fn ($p) => $p->materials->sum(fn ($m) => $m->netCost()));
-
         $totalSpentLabor = \DB::table('sy2_project_bands')->sum('labor_amount');
+        $totalSpentAll   = $projects->sum('cached_spent');
+        // Total spent on marketers
+        $totalSpentMarketers = \DB::table('sy2_transactions')->where('ref_type', 'marketer_commission')->sum('amount');
+        // Derive materials
+        $totalSpentMaterials = max(0, $totalSpentAll - $totalSpentLabor - $totalSpentMarketers);
+        
         $treasuryBalance = $totalCollected - $totalSpentMaterials - $totalSpentLabor;
 
-        // Real wallet balance — محفظة المقاولات — the actual account every
-        // expense/income in the system debits/credits (see TransactionObserver)
+        // Real wallet balance
         $walletBalance = Account::walletBalance();
 
-        // ── رأس مال مشروع المقاولات = السيولة (المحفظة) + كل المستحقات على
-        // العملاء (مباشرة أو عبر عقود تقسيط) − الديون المتبقية للموردين.
-        // نقسم المستحقات لسطرين (مباشر / عبر تقسيط) للعرض بس، من غير ما نحسب
-        // نفس الفلوس مرتين: amountDue() لكل مشروع أصلاً بيطرح كل تحصيل اتم —
-        // سواء عن طريق عقد أو تحصيل مباشر — فمفيش تداخل بين السطرين.
         $directReceivables = (float) $projects
             ->reject(fn ($p) => $p->hasInstallmentContract())
-            ->sum(fn ($p) => max(0, $p->actualClientTotal() - $p->totalCollected()));
+            ->sum(fn ($p) => max(0, $p->cached_actual_total - $p->cached_collected));
 
         $installmentReceivables = (float) $projects
             ->filter(fn ($p) => $p->hasInstallmentContract())
-            ->sum(fn ($p) => max(0, $p->actualClientTotal() - $p->totalCollected()));
+            ->sum(fn ($p) => max(0, $p->cached_actual_total - $p->cached_collected));
 
         $supplierDebtsRemaining = (float) (SupplierDebt::where('status', '!=', 'paid')
             ->selectRaw('SUM(total_amount - paid_amount) as r')

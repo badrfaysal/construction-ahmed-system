@@ -102,11 +102,11 @@
             @foreach($t['items'] as $p)
               @php
                 $prog   = $p->progressPct();
-                $paid   = $p->totalCollected();
-                $actual = $p->actualClientTotal();
+                $paid   = $p->cached_collected;
+                $actual = $p->cached_actual_total;
                 $due    = max($actual - $paid, 0);
                 $activeBand = $p->bands->where('status', 'active')->first();
-                $paidWorkers = $p->bands->flatMap(fn($b) => $b->workers)->sum(fn($w) => $w->paidTotal());
+                $paidWorkers = (float) $p->total_worker_paid;
               @endphp
               <a class="pcard {{ $p->status === 'done' ? 'is-done' : '' }}" href="{{ route('projects.show', $p) }}">
                 <div class="pc-band"></div>

@@ -261,6 +261,11 @@ class Project extends Model
     // الإشراف) — بنود + نثريات/خامات عامة مش تابعة لبند
     public function tradeProfit(): float
     {
+        return (float) $this->cached_trade_profit;
+    }
+
+    public function computeTradeProfit(): float
+    {
         $bandsTotal = (float) $this->bands->sum(fn ($band) => $band->tradeProfit());
         $generalMaterials = (float) $this->generalMaterials()->sum(fn ($m) => $m->tradeProfit());
         return $bandsTotal + $generalMaterials;
@@ -268,6 +273,11 @@ class Project extends Model
 
     // ربح نسبة الإشراف الكلي للمشروع
     public function percentageProfit(): float
+    {
+        return (float) $this->cached_percentage_profit;
+    }
+
+    public function computePercentageProfit(): float
     {
         $bandsTotal = (float) $this->bands->sum(fn ($band) => $band->percentageProfit());
         $generalMaterials = (float) $this->generalMaterials()->sum(fn ($m) => $m->percentageProfit());
@@ -282,6 +292,11 @@ class Project extends Model
     }
 
     public function totalDiscount(): float
+    {
+        return (float) $this->cached_total_discount;
+    }
+
+    public function computeTotalDiscount(): float
     {
         $projectLevel = (float) $this->discount + (float) $this->discounts()->sum('amount');
         $contractDiscounts = (float) $this->contracts->sum('discount');
@@ -306,9 +321,12 @@ class Project extends Model
         $this->unsetRelation('supplierDebts');
 
         $this->updateQuietly([
-            'cached_actual_total' => $this->computeActualClientTotal(),
-            'cached_collected'    => $this->computeTotalCollected(),
-            'cached_spent'        => $this->computeTotalSpent(),
+            'cached_actual_total'      => $this->computeActualClientTotal(),
+            'cached_collected'         => $this->computeTotalCollected(),
+            'cached_spent'             => $this->computeTotalSpent(),
+            'cached_trade_profit'      => $this->computeTradeProfit(),
+            'cached_percentage_profit' => $this->computePercentageProfit(),
+            'cached_total_discount'    => $this->computeTotalDiscount(),
         ]);
     }
 }

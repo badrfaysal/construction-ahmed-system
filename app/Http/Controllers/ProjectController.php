@@ -18,7 +18,10 @@ class ProjectController extends Controller
         $validTabs = ['active', 'done', 'suspended', 'canceled'];
         $status = in_array($tab, $validTabs) ? $tab : 'active';
 
-        $projects = Project::with(['client', 'bands.workers.payments'])
+        $projects = Project::with(['client', 'bands'])
+            ->withSum(['transactions as total_worker_paid' => function ($query) {
+                $query->where('ref_type', 'worker_payment');
+            }], 'amount')
             ->where('status', $status)
             ->orderByDesc('created_at')
             ->get();
