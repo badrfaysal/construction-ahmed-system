@@ -265,29 +265,23 @@
             $marketersCommission = (float) $project->transactions()->where('ref_type', 'marketer_commission')->sum('amount');
             $bandsProfit = $project->bands->sum(fn($b) => $b->profit());
           @endphp
-          @if($project->totalDiscount() > 0 || $marketersCommission > 0)
-            @if($project->totalDiscount() > 0)
-            <tr>
-              <td colspan="6" style="text-align: left; color: var(--amber)"><strong>الخصم الممنوح للعميل على المشروع</strong></td>
-              <td class="num" style="color: var(--amber)"><strong>-{{ \App\Support\Money::format($project->totalDiscount()) }}</strong></td>
-              <td></td>
-            </tr>
-            @endif
-            @if($marketersCommission > 0)
-            <tr>
-              <td colspan="6" style="text-align: left; color: var(--neg)"><strong>عمولة المسوقين</strong></td>
-              <td class="num" style="color: var(--neg)"><strong>-{{ \App\Support\Money::format($marketersCommission) }}</strong></td>
-              <td></td>
-            </tr>
-            @endif
-            <tr>
-              <td colspan="6" style="text-align: left;"><strong>صافي ربح البنود</strong></td>
-              <td class="num" style="color:{{ ($bandsProfit - $project->totalDiscount() - $marketersCommission) >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
-                <strong>{{ \App\Support\Money::format($bandsProfit - $project->totalDiscount() - $marketersCommission) }}</strong>
-              </td>
-              <td></td>
-            </tr>
-          @endif
+          <tr>
+            <td colspan="6" style="text-align: left; color: var(--amber)"><strong>الخصم الممنوح للعميل على المشروع</strong></td>
+            <td class="num" style="color: var(--amber)"><strong>{{ $project->totalDiscount() > 0 ? '-' : '' }}{{ \App\Support\Money::format($project->totalDiscount()) }}</strong></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td colspan="6" style="text-align: left; color: var(--neg)"><strong>عمولة المسوقين</strong></td>
+            <td class="num" style="color: var(--neg)"><strong>{{ $marketersCommission > 0 ? '-' : '' }}{{ \App\Support\Money::format($marketersCommission) }}</strong></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td colspan="6" style="text-align: left;"><strong>صافي ربح البنود</strong></td>
+            <td class="num" style="color:{{ ($bandsProfit - $project->totalDiscount() - $marketersCommission) >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
+              <strong>{{ \App\Support\Money::format($bandsProfit - $project->totalDiscount() - $marketersCommission) }}</strong>
+            </td>
+            <td></td>
+          </tr>
         </tfoot>
       </table>
     </div>
@@ -1215,6 +1209,19 @@
         </button>
       </div>
       <div class="modal-body">
+        {{-- Print-only header --}}
+        <div class="profit-print-head">
+          <div class="pph-co">
+            <h2>{{ $settings->company_name }}</h2>
+            <p>{{ $settings->company_tagline }} @if($settings->company_phone)· هاتف {{ $settings->company_phone }}@endif</p>
+          </div>
+          <div class="pph-meta">
+            <b>تفاصيل الربح المتحقق</b><br>
+            المشروع: {{ $project->name }}<br>
+            العميل: {{ $project->client->name }}<br>
+            التاريخ: {{ now()->format('d/m/Y') }}
+          </div>
+        </div>
         <div class="table-scroll">
           <table>
             <thead>
@@ -1267,20 +1274,16 @@
                 </tr>
               @endif
               @php $marketersCommission = (float) $project->transactions()->where('ref_type', 'marketer_commission')->sum('amount'); @endphp
-              @if($marketersCommission > 0)
-                <tr>
-                  <td>عمولة المسوقين</td>
-                  <td class="num">0.00</td>
-                  <td class="num">{{ \App\Support\Money::format($marketersCommission) }}</td>
-                  <td class="num" style="color: var(--neg)">-{{ \App\Support\Money::format($marketersCommission) }}</td>
-                </tr>
-              @endif
-              @if($project->totalDiscount() > 0)
-                <tr>
-                  <td colspan="3" style="text-align:left; color: var(--amber)">الخصومات الممنوحة للعميل</td>
-                  <td class="num" style="color: var(--amber)">-{{ \App\Support\Money::format($project->totalDiscount()) }}</td>
-                </tr>
-              @endif
+              <tr>
+                <td>عمولة المسوقين</td>
+                <td class="num">0.00</td>
+                <td class="num">{{ \App\Support\Money::format($marketersCommission) }}</td>
+                <td class="num" style="color: var(--neg)">{{ $marketersCommission > 0 ? '-' : '' }}{{ \App\Support\Money::format($marketersCommission) }}</td>
+              </tr>
+              <tr>
+                <td colspan="3" style="text-align:left; color: var(--amber)">الخصومات الممنوحة للعميل</td>
+                <td class="num" style="color: var(--amber)">{{ $project->totalDiscount() > 0 ? '-' : '' }}{{ \App\Support\Money::format($project->totalDiscount()) }}</td>
+              </tr>
               <tr style="border-top: 2px solid #ddd;">
                 <td><strong>الصافي الكلي للمشروع</strong></td>
                 <td class="num"><strong>{{ \App\Support\Money::format($project->actualClientTotal() + $project->totalDiscount()) }}</strong></td>

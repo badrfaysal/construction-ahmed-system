@@ -17,6 +17,7 @@ class Project extends Model
         'initial_contract_value', 'discount', 'start_date', 'deliver_date', 'delivered_date',
         'current_stage', 'status', 'notes',
         'cached_actual_total', 'cached_collected', 'cached_spent',
+        'cached_trade_profit', 'cached_percentage_profit', 'cached_total_discount',
     ];
 
     protected function casts(): array

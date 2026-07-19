@@ -473,6 +473,9 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
 .st-final tr.big td{background:var(--sidebar);color:#fff;font-weight:700;font-size:15px}
 .st-foot{padding:16px 34px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-3)}
 
+/* Profit modal print header — hidden on screen */
+.profit-print-head{display:none}
+
 /* ---- Print ---- */
 @media print{
   @page{size:A4;margin:9mm}
@@ -485,7 +488,23 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
      project page and lay the modal out as a normal full-width printed block */
   body.printing-profit .page-wrap>*:not(.modal-overlay){display:none!important}
   body.printing-profit .modal-overlay{display:block!important;position:static!important;background:none!important;padding:0!important}
-  body.printing-profit .modal-box{box-shadow:none!important;border:none!important;max-width:100%!important;max-height:none!important;overflow:visible!important}
+  body.printing-profit .modal-box{box-shadow:none!important;border:none!important;max-width:100%!important;max-height:none!important;overflow:visible!important;border-radius:0!important}
+  body.printing-profit .modal-head{display:none!important}
+  body.printing-profit .profit-print-head{display:flex!important;justify-content:space-between;align-items:flex-start;padding:0 0 16px;margin-bottom:16px;border-bottom:3px solid #1e293b}
+  body.printing-profit .pph-co h2{font-size:18px;font-weight:700;color:#1e293b;margin:0}
+  body.printing-profit .pph-co p{font-size:11px;color:#555;margin:4px 0 0}
+  body.printing-profit .pph-meta{text-align:left;font-size:11.5px;color:#555;line-height:1.8}
+  body.printing-profit .pph-meta b{color:#1e293b;font-size:14px;display:block;margin-bottom:2px}
+  body.printing-profit .modal-body{padding:20px 0!important}
+  body.printing-profit .table-scroll{overflow:visible!important}
+  body.printing-profit .modal-body table{width:100%;border-collapse:collapse}
+  body.printing-profit .modal-body thead tr{background:#1e293b!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body.printing-profit .modal-body thead th{background:#1e293b!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:10px 14px;font-size:11.5px;font-weight:600;text-align:right}
+  body.printing-profit .modal-body tbody td{padding:9px 14px;border-bottom:1px solid #e2e8f0;font-size:12px;font-variant-numeric:tabular-nums}
+  body.printing-profit .modal-body tfoot td{padding:9px 14px;font-size:12px;font-variant-numeric:tabular-nums}
+  body.printing-profit .modal-body tfoot tr:last-child{border-top:2px solid #333}
+  body.printing-profit .modal-body tfoot tr:last-child td{padding-top:12px;padding-bottom:12px;font-size:13px}
+  body.printing-profit .btn-row{display:none!important}
 
   body.printing-materials .page-head { display:none!important; }
   body.printing-materials .tabs { display:none!important; }

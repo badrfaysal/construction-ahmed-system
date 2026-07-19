@@ -137,10 +137,12 @@
         <tr><td class="muted">إجمالي تكلفة المشروع (مشتريات + مصنعية)</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($totalCost) }} ج.م</td></tr>
         <tr><td class="muted">المفوتر على العميل</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($totalBilled) }} ج.م</td></tr>
         <tr><td class="muted">المحصّل من العميل</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($totalCollected) }} ج.م</td></tr>
-        @php $totalDisc = $project->totalDiscount(); @endphp
-        @if($totalDisc > 0)
-          <tr><td class="muted" style="color:var(--amber)">الخصومات الممنوحة للعميل</td><td style="text-align:left;font-weight:700;color:var(--amber)">{{ \App\Support\Money::format($totalDisc) }} ج.م</td></tr>
-        @endif
+        @php
+          $totalDisc = $project->totalDiscount();
+          $marketersCommission = (float) $project->transactions()->where('ref_type', 'marketer_commission')->sum('amount');
+        @endphp
+        <tr><td class="muted" style="color:var(--amber)">الخصومات الممنوحة للعميل</td><td style="text-align:left;font-weight:700;color:var(--amber)">{{ $totalDisc > 0 ? '-' : '' }}{{ \App\Support\Money::format($totalDisc) }} ج.م</td></tr>
+        <tr><td class="muted" style="color:var(--neg)">عمولة المسوقين</td><td style="text-align:left;font-weight:700;color:var(--neg)">{{ $marketersCommission > 0 ? '-' : '' }}{{ \App\Support\Money::format($marketersCommission) }} ج.م</td></tr>
         <tr class="big"><td>صافي الربح</td><td style="text-align:left">{{ \App\Support\Money::format($totalProfit) }} ج.م</td></tr>
       </table>
     </div>
