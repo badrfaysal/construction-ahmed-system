@@ -18,11 +18,11 @@ class Marketer extends Model
 
     public function totalPaid(): float
     {
-        return (float) $this->transactions()->sum('amount');
+        return (float) $this->transactions->sum('amount');
     }
 
     public function projectsCount(): int
     {
-        return $this->transactions()->distinct('project_id')->count('project_id');
+        return $this->transactions->pluck('project_id')->filter()->unique()->count();
     }
 }

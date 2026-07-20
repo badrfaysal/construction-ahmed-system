@@ -31,15 +31,15 @@ class RadarController extends Controller
         // Date filter
         $period = $request->get('period', 'today');
         if ($period === 'today') {
-            $query->whereDate('happened_at', Carbon::today());
+            $query->whereBetween('happened_at', [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()]);
         } elseif ($period === 'yesterday') {
-            $query->whereDate('happened_at', Carbon::yesterday());
+            $query->whereBetween('happened_at', [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()]);
         } elseif ($period === 'custom') {
             if ($request->filled('date_from')) {
-                $query->whereDate('happened_at', '>=', $request->date_from);
+                $query->where('happened_at', '>=', Carbon::parse($request->date_from)->startOfDay());
             }
             if ($request->filled('date_to')) {
-                $query->whereDate('happened_at', '<=', $request->date_to);
+                $query->where('happened_at', '<=', Carbon::parse($request->date_to)->endOfDay());
             }
         }
 
@@ -47,7 +47,8 @@ class RadarController extends Controller
         $users = User::all();
         $wallets = \App\Models\Account::selectable();
         
-        $liveIds = \App\Models\Transaction::pluck('id')->flip();
+        $transactionIds = $logs->pluck('transaction_id')->filter()->unique();
+        $liveIds = \App\Models\Transaction::whereIn('id', $transactionIds)->pluck('id')->flip();
 
         return view('radar.index', compact('logs', 'users', 'period', 'liveIds', 'wallets'));
     }

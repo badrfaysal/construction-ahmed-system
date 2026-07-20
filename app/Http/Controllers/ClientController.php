@@ -11,7 +11,7 @@ class ClientController extends Controller
     public function index()
     {
         $clients = Client::withCount('projects')
-            ->with('projects')
+            ->with(['projects.bands', 'projects.contracts.payments', 'projects.clientPayments'])
             ->orderBy('name')
             ->get();
 
