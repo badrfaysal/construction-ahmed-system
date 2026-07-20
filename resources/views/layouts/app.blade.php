@@ -168,7 +168,7 @@
     @endif
     <a class="nav-item {{ request()->routeIs('installments.*') ? 'active' : '' }}" href="{{ route('installments.index') }}" style="--ic:#14b8a6">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-calendar"/></svg>
-      <span>المدفوعات والأقساط</span>
+      <span>الأقساط</span>
     </a>
     <a class="nav-item {{ request()->routeIs('receivables.*') ? 'active' : '' }}" href="{{ route('receivables.index') }}" style="--ic:#22b583">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-coins"/></svg>

@@ -14,15 +14,18 @@
 </div>
 
 @if($clients->count())
-  <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px">
-    <label style="font-size:13px;font-weight:600;color:var(--ink-2)">ترتيب حسب:</label>
-    <select id="client-sort" onchange="sortClientsTable(this.value)" style="padding:6px 12px;border-radius:8px;border:1px solid var(--line);font-size:13px;background:var(--surface);color:var(--ink);cursor:pointer">
-      <option value="newest">الأحدث إضافة</option>
-      <option value="oldest">الأقدم إضافة</option>
-      <option value="volume_desc">الأعلى تعاملاً</option>
-      <option value="volume_asc">الأقل تعاملاً</option>
-      <option value="name">الاسم (أ-ي)</option>
-    </select>
+  <div style="margin-bottom:16px; display:flex; align-items:center; gap:12px;">
+    <label style="font-size:13px; font-weight:600; color:var(--ink-2); white-space:nowrap;">ترتيب حسب:</label>
+    <div class="f-select-wrap" style="width: 220px; margin: 0;">
+      <select id="client-sort" onchange="sortClientsTable(this.value)" class="f-select" style="background: var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <option value="newest">الأحدث إضافة</option>
+        <option value="oldest">الأقدم إضافة</option>
+        <option value="volume_desc">الأعلى تعاملاً</option>
+        <option value="volume_asc">الأقل تعاملاً</option>
+        <option value="name">الاسم (أ-ي)</option>
+      </select>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-down"/></svg>
+    </div>
   </div>
 
   <div class="table-card">
@@ -33,7 +36,7 @@
             <th>الاسم</th>
             <th>الهاتف</th>
             <th>المشاريع</th>
-            <th class="num">إجمالي التعاقد</th>
+            <th class="num">إجمالي قيم المشاريع</th>
             <th class="num">المحصّل</th>
             <th></th>
           </tr>
@@ -41,7 +44,7 @@
         <tbody>
           @foreach($clients as $c)
             @php
-              $contract  = $c->projects->sum(fn($p) => $p->initialContractValue());
+              $contract  = $c->projects->sum(fn($p) => $p->actualClientTotal());
               $collected = $c->projects->sum(fn($p) => $p->totalCollected());
             @endphp
             <tr class="row-click" onclick="location.href='{{ route('clients.show', $c) }}'"

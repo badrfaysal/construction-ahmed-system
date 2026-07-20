@@ -26,7 +26,9 @@ class MaintenanceController extends Controller
         'sy2_installment_contracts',
         'sy2_worker_payments',
         'sy2_band_workers',
+        'sy2_quote_band_workers',
         'sy2_material_returns',
+        'sy2_material_invoices',
         'sy2_materials',
         'sy2_installments',
         'sy2_supplier_debts',
@@ -35,7 +37,9 @@ class MaintenanceController extends Controller
         'sy2_quote_band_items',
         'sy2_quote_bands',
         'sy2_quotes',
+        'sy2_project_discounts',
         'sy2_project_bands',
+        'sy2_marketers',
         'sy2_projects',
     ];
 

@@ -25,17 +25,21 @@
   </div>
 </div>
 
-{{-- تفصيل الربح الدفتري لمصدرين: تجاري (فرق شراء/بيع) و نسبة (إشراف) --}}
-<div class="grid cols-2" style="margin-bottom:24px">
+<div class="grid cols-3" style="margin-bottom:24px">
   <div class="card stat">
     <div class="top"><span class="label">الربح التجاري (فرق الشراء من البيع)</span></div>
     <div class="val tnum" style="color:{{ $totals['trade_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totals['trade_profit']) }} <small>ج.م</small></div>
     <div class="sub">{{ number_format($totals['trade_profit_share'], 1) }}% من إجمالي الربح الدفتري</div>
   </div>
   <div class="card stat">
-    <div class="top"><span class="label">ربح النسبة (الإشراف)</span></div>
+    <div class="top"><span class="label">نسبة الإشراف</span></div>
     <div class="val tnum" style="color:{{ $totals['percentage_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totals['percentage_profit']) }} <small>ج.م</small></div>
     <div class="sub">{{ number_format($totals['percentage_profit_share'], 1) }}% من إجمالي الربح الدفتري</div>
+  </div>
+  <div class="card stat">
+    <div class="top"><span class="label">أرباح نسبة التقسيط</span></div>
+    <div class="val tnum" style="color:{{ $totals['installment_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totals['installment_profit']) }} <small>ج.م</small></div>
+    <div class="sub">{{ number_format($totals['installment_profit_share'], 1) }}% من إجمالي الربح الدفتري</div>
   </div>
 </div>
 
@@ -54,7 +58,8 @@
             <th class="num">ربح دفتري</th>
             <th class="num">هامش %</th>
             <th class="num">ربح تجاري</th>
-            <th class="num">ربح نسبة</th>
+            <th class="num">نسبة إشراف</th>
+            <th class="num">أرباح تقسيط</th>
             <th class="num">المحصّل</th>
             <th class="num">ربح محصل</th>
           </tr>
@@ -88,6 +93,10 @@
                 {{ \App\Support\Money::format($project->percentage_profit) }}
                 <div class="muted" style="font-size:11px">{{ number_format($project->percentage_profit_share, 1) }}%</div>
               </td>
+              <td class="num" style="color:{{ $project->installment_profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
+                {{ \App\Support\Money::format($project->installment_profit) }}
+                <div class="muted" style="font-size:11px">{{ number_format($project->installment_profit_share, 1) }}%</div>
+              </td>
               <td class="num">{{ \App\Support\Money::format($project->total_collected) }}</td>
               <td class="num" style="color:{{ $project->earned_profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
                 {{ \App\Support\Money::format($project->earned_profit) }}
@@ -110,6 +119,10 @@
             <td class="num" style="color:var(--pos)">
               {{ \App\Support\Money::format($totals['percentage_profit']) }}
               <div class="muted" style="font-size:11px">{{ number_format($totals['percentage_profit_share'], 1) }}%</div>
+            </td>
+            <td class="num" style="color:var(--pos)">
+              {{ \App\Support\Money::format($totals['installment_profit']) }}
+              <div class="muted" style="font-size:11px">{{ number_format($totals['installment_profit_share'], 1) }}%</div>
             </td>
             <td class="num">{{ \App\Support\Money::format($totals['total_collected']) }}</td>
             <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($totals['earned_profit']) }}</td>

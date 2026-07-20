@@ -108,10 +108,11 @@
     .no-print{display:none !important;}
   }
 
-  /* ── حماية السايدبار من Bootstrap (اللي بيعرّف .nav كـ flex-wrap) ── */
+  /* ── حماية السايدبار من Bootstrap (اللي بيعرّف .nav كـ flex-wrap وبيبوظ اللينكات) ── */
   .sidebar .nav { display:block !important; flex:1 1 auto; overflow-y:auto; padding:14px 12px; margin:0; list-style:none; }
-  .sidebar .nav-item { display:flex !important; width:auto; float:none; }
-  .sidebar .nav-label { display:block; }
+  .sidebar .nav-item { display:flex !important; width:auto; float:none; text-decoration:none !important; margin-bottom:2px !important; }
+  .sidebar a { text-decoration: none !important; }
+  .sidebar .nav-label, .sidebar span { display:block; }
 </style>
 @endpush
 

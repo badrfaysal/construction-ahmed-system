@@ -55,6 +55,32 @@
   <div class="card stat">
     <div class="top"><span class="label">إجمالي الربح</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg></span></div>
     <div class="val tnum" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalProfit) }} <small>ج.م</small></div>
+    <div class="note" style="margin-top: 8px; font-size: 11.5px; border-top: 1px solid var(--border); padding-top: 8px;">
+      <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
+        <span style="color:#3b82f6">ربح تجاري:</span> 
+        <strong style="color:{{ $totalTradeProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalTradeProfit) }}</strong>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
+        <span style="color:#ec4899">نسبة إشراف:</span> 
+        <strong style="color:{{ $totalPercentageProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalPercentageProfit) }}</strong>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
+        <span style="color:#10b981">أرباح تقسيط:</span> 
+        <strong style="color:{{ $totalInstallmentProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalInstallmentProfit) }}</strong>
+      </div>
+      @if($totalDiscounts > 0)
+      <div style="display:flex; justify-content:space-between; margin-bottom: 2px; padding-top: 4px; margin-top: 4px; border-top: 1px dashed var(--border);">
+        <span style="color:var(--amber)">خصومات للعملاء (تُطرح):</span> 
+        <strong style="color:var(--neg)">-{{ \App\Support\Money::format($totalDiscounts) }}</strong>
+      </div>
+      @endif
+      @if(isset($totalMarketerCommissions) && $totalMarketerCommissions > 0)
+      <div style="display:flex; justify-content:space-between;">
+        <span style="color:#8b5cf6">عمولات مسوقين (تُطرح):</span> 
+        <strong style="color:var(--neg)">-{{ \App\Support\Money::format($totalMarketerCommissions) }}</strong>
+      </div>
+      @endif
+    </div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">إجمالي المصروف</span><span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></span></div>

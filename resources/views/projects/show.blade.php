@@ -144,10 +144,20 @@
     <div class="val tnum">{{ \App\Support\Money::format($project->totalSpent()) }} <small>ج.م</small></div>
   </div>
   @if($isOwner)
+    @php
+      $installmentInterest = $project->contracts()->get()->sum(fn($c) => $c->interestAmount());
+      $profitWithoutInstallment = $totalProfit - $installmentInterest;
+    @endphp
     <div class="card stat row-click" onclick="document.getElementById('profit-modal').classList.add('open')">
-      <div class="top"><span class="label">الربح المتحقق</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg></span></div>
-      <div class="val tnum" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalProfit) }} <small>ج.م</small></div>
-      <div class="note">بعد طرح الخصم — للتفاصيل اضغط هنا</div>
+      <div class="top"><span class="label">الربح المتحقق (بدون الفوائد)</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg></span></div>
+      <div class="val tnum" style="color:{{ $profitWithoutInstallment >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($profitWithoutInstallment) }} <small>ج.م</small></div>
+      <div class="note" style="display:flex; justify-content:space-between; align-items:center;">
+        @if($installmentInterest > 0)
+          <span style="color:var(--accent); font-weight:bold;">+ {{ \App\Support\Money::format($installmentInterest) }} ج أرباح نسبة التقسيط</span>
+        @else
+          <span>بعد طرح الخصم الممنوح</span>
+        @endif
+      </div>
     </div>
   @endif
 </div>
@@ -897,7 +907,7 @@
 </div>{{-- /tab-panel: workers --}}
 
 @if($isOwner)
-<div class="tab-panel" data-panel="reports" style="display:none">
+<div class="tab-panel" data-panel="reports" style="display:none; padding: 24px;">
 @php
   $rptMatCost = $project->materials->sum(fn($m) => $m->netCost());
   $rptLaborCost = (float) $project->bands->sum('labor_amount');
@@ -933,12 +943,14 @@
     return $s;
   });
 
-  // دونات: توزيع أرباح المشروع (تجاري / إشراف)
+  // دونات: توزيع أرباح المشروع (تجاري / إشراف / تقسيط)
   $rptTradeProfit = max(0, $project->tradeProfit());
   $rptPercentageProfit = max(0, $project->percentageProfit());
+  $rptInstallmentProfit = max(0, $project->totalInstallmentInterest());
   $profitDonutSlices = collect([
     ['label' => 'ربح تجاري', 'value' => $rptTradeProfit, 'color' => '#3b82f6'],
-    ['label' => 'ربح إشراف', 'value' => $rptPercentageProfit, 'color' => '#ec4899'],
+    ['label' => 'نسبة إشراف', 'value' => $rptPercentageProfit, 'color' => '#ec4899'],
+    ['label' => 'أرباح نسبة التقسيط', 'value' => $rptInstallmentProfit, 'color' => '#10b981'],
   ])->filter(fn ($s) => $s['value'] > 0);
   $profitDonutTotal = $profitDonutSlices->sum('value') ?: 1;
   $profitDonutOffset = 0;
@@ -1003,196 +1015,232 @@
     ->sortByDesc('value')->take(6)->values();
 @endphp
 
-<div class="section-label" style="margin-top:0">نظرة عامة</div>
-<div class="grid cols-4" style="margin-bottom:24px">
-  <div class="vstat vstat-blue">
-    <div class="top"><span class="label">إجمالي قيمة المشروع</span></div>
-    <div class="val tnum">{{ \App\Support\Money::format($rptClientTotal) }} <small>ج.م</small></div>
-  </div>
-  <div class="vstat vstat-amber">
-    <div class="top"><span class="label">إجمالي التكلفة</span></div>
-    <div class="val tnum">{{ \App\Support\Money::format($rptTotalCost) }} <small>ج.م</small></div>
-  </div>
-  <div class="vstat {{ $rptProfit >= 0 ? 'vstat-green' : 'vstat-red' }}">
-    <div class="top"><span class="label">الربح</span></div>
-    <div class="val tnum">{{ \App\Support\Money::format($rptProfit) }} <small>ج.م</small></div>
-  </div>
-  <div class="vstat vstat-navy">
-    <div class="top"><span class="label">نسبة الربح</span></div>
-    <div class="val tnum">{{ $rptProfitPct }}%</div>
-  </div>
-</div>
+<div style="display: flex; flex-direction: column; gap: 32px;">
 
-<div class="grid cols-3" style="margin-bottom:24px;align-items:start">
-  <div class="table-card" style="padding:20px">
-    <div class="section-label" style="margin-top:0">توزيع تكلفة المشروع</div>
-    @if($donutSlices->isNotEmpty())
-      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center">
-        <svg width="140" height="140" viewBox="0 0 100 100" style="transform:rotate(-90deg);flex-shrink:0">
-          <circle cx="50" cy="50" r="40" fill="none" stroke="var(--line)" stroke-width="16"/>
-          @foreach($donutSlices as $slice)
-            <circle cx="50" cy="50" r="40" fill="none" stroke="{{ $slice['color'] }}" stroke-width="16"
-              stroke-dasharray="{{ $slice['dash'] }}" stroke-dashoffset="{{ $slice['dashoffset'] }}" stroke-linecap="butt"/>
-          @endforeach
-        </svg>
-        <div style="display:flex;flex-direction:column;gap:8px;min-width:130px">
-          @foreach($donutSlices as $slice)
-            <div style="display:flex;align-items:center;gap:8px;font-size:13px">
-              <span style="width:10px;height:10px;border-radius:3px;background:{{ $slice['color'] }};flex-shrink:0"></span>
-              <span>{{ $slice['label'] }}</span>
-              <strong style="margin-inline-start:auto">{{ $slice['pct'] }}%</strong>
-            </div>
-          @endforeach
+  <!-- نظرة عامة -->
+  <div>
+    <div class="section-label" style="margin-top:0; margin-bottom: 16px; font-size: 16px;">نظرة عامة</div>
+    <div class="grid cols-4" style="gap: 20px;">
+      <div class="vstat vstat-blue" style="padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+        <div class="top"><span class="label">إجمالي قيمة المشروع</span></div>
+        <div class="val tnum" style="font-size: 24px; margin-top: 12px;">{{ \App\Support\Money::format($rptClientTotal) }} <small style="font-size: 14px;">ج.م</small></div>
+      </div>
+      <div class="vstat vstat-amber" style="padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+        <div class="top"><span class="label">إجمالي التكلفة</span></div>
+        <div class="val tnum" style="font-size: 24px; margin-top: 12px;">{{ \App\Support\Money::format($rptTotalCost) }} <small style="font-size: 14px;">ج.م</small></div>
+      </div>
+      <div class="vstat {{ $rptProfit >= 0 ? 'vstat-green' : 'vstat-red' }}" style="padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+        <div class="top"><span class="label">الربح</span></div>
+        <div class="val tnum" style="font-size: 24px; margin-top: 12px;">{{ \App\Support\Money::format($rptProfit) }} <small style="font-size: 14px;">ج.م</small></div>
+      </div>
+      <div class="vstat vstat-navy" style="padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+        <div class="top"><span class="label">نسبة الربح</span></div>
+        <div class="val tnum" style="font-size: 24px; margin-top: 12px;">{{ $rptProfitPct }}%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- التوزيعات البيانية -->
+  <div class="grid cols-3" style="gap: 24px; align-items: stretch;">
+    
+    <div class="table-card" style="padding: 28px; display: flex; flex-direction: column;">
+      <div class="section-label" style="margin-top:0; margin-bottom: 24px; font-size: 15px;">توزيع تكلفة المشروع</div>
+      @if($donutSlices->isNotEmpty())
+        <div style="display:flex; flex-direction: column; align-items:center; gap:32px; flex: 1; justify-content: center;">
+          <svg width="160" height="160" viewBox="0 0 100 100" style="transform:rotate(-90deg);flex-shrink:0; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.08));">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="var(--line)" stroke-width="16"/>
+            @foreach($donutSlices as $slice)
+              <circle cx="50" cy="50" r="40" fill="none" stroke="{{ $slice['color'] }}" stroke-width="16"
+                stroke-dasharray="{{ $slice['dash'] }}" stroke-dashoffset="{{ $slice['dashoffset'] }}" stroke-linecap="butt"/>
+            @endforeach
+          </svg>
+          <div style="display:flex;flex-direction:column;gap:12px; width: 100%;">
+            @foreach($donutSlices as $slice)
+              <div style="display:flex;align-items:center;gap:10px;font-size:14px;">
+                <span style="width:12px;height:12px;border-radius:4px;background:{{ $slice['color'] }};flex-shrink:0;"></span>
+                <span style="font-weight: 500;">{{ $slice['label'] }}</span>
+                <strong style="margin-inline-start:auto; color: var(--ink-2);">{{ $slice['pct'] }}%</strong>
+              </div>
+            @endforeach
+          </div>
+        </div>
+      @else
+        <p class="muted" style="text-align: center; margin: auto;">لا توجد بيانات كافية بعد</p>
+      @endif
+    </div>
+
+    <div class="table-card" style="padding: 28px; display: flex; flex-direction: column;">
+      <div class="section-label" style="margin-top:0; margin-bottom: 24px; font-size: 15px;">توزيع أرباح المشروع</div>
+      @if($profitDonutSlices->isNotEmpty())
+        <div style="display:flex; flex-direction: column; align-items:center; gap:32px; flex: 1; justify-content: center;">
+          <svg width="160" height="160" viewBox="0 0 100 100" style="transform:rotate(-90deg);flex-shrink:0; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.08));">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="var(--line)" stroke-width="16"/>
+            @foreach($profitDonutSlices as $slice)
+              <circle cx="50" cy="50" r="40" fill="none" stroke="{{ $slice['color'] }}" stroke-width="16"
+                stroke-dasharray="{{ $slice['dash'] }}" stroke-dashoffset="{{ $slice['dashoffset'] }}" stroke-linecap="butt"/>
+            @endforeach
+          </svg>
+          <div style="display:flex;flex-direction:column;gap:12px; width: 100%;">
+            @foreach($profitDonutSlices as $slice)
+              <div style="display:flex;align-items:center;gap:10px;font-size:14px;">
+                <span style="width:12px;height:12px;border-radius:4px;background:{{ $slice['color'] }};flex-shrink:0;"></span>
+                <span style="font-weight: 500;">{{ $slice['label'] }}</span>
+                <strong style="margin-inline-start:auto; color: var(--ink-2);">{{ $slice['pct'] }}%</strong>
+              </div>
+            @endforeach
+          </div>
+        </div>
+      @else
+        <p class="muted" style="text-align: center; margin: auto;">لا توجد أرباح مسجلة بعد</p>
+      @endif
+    </div>
+
+    <div class="table-card" style="padding: 28px; display: flex; flex-direction: column;">
+      <div class="section-label" style="margin-top:0; margin-bottom: 24px; font-size: 15px;">نسبة التحصيل من العميل</div>
+      <div style="display:flex; flex-direction: column; justify-content: center; flex: 1; gap: 20px;">
+        <div style="display:flex;justify-content:space-between;font-size:14px; background: rgba(0,0,0,0.02); padding: 16px; border-radius: 8px;">
+          <span class="muted" style="display:flex; flex-direction: column; gap: 4px;">
+            <span>مُحصّل</span>
+            <strong style="color:var(--pos); font-size: 16px;">{{ \App\Support\Money::format($rptCollected) }}</strong>
+          </span>
+          <span class="muted" style="display:flex; flex-direction: column; gap: 4px; text-align: left;">
+            <span>متبقي</span>
+            <strong style="color:var(--warn); font-size: 16px;">{{ \App\Support\Money::format($rptDue) }}</strong>
+          </span>
+        </div>
+        <div>
+          <div class="bar-track" style="height:16px;border-radius:8px; background: var(--line);">
+            <div class="bar-fill {{ $rptCollectedPct >= 100 ? 'full' : '' }}" style="width:{{ $rptCollectedPct }}%;border-radius:8px; transition: width 1s ease-in-out;"></div>
+          </div>
+          <div style="text-align:center;margin-top:16px;font-weight:800;font-size:32px;color:var(--accent)">{{ $rptCollectedPct }}%</div>
         </div>
       </div>
+    </div>
+
+  </div>
+
+  <!-- البنود والصنايعية -->
+  <div style="display: flex; flex-direction: column; gap: 24px;">
+    
+    <div class="table-card" style="padding: 28px;">
+      <div class="section-label" style="margin-top:0; margin-bottom: 20px; font-size: 15px;">مقارنة البنود (سعر العميل مقابل التكلفة)</div>
+      @forelse($rptBandRows as $row)
+        <div style="margin-bottom:20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+          <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+            <strong style="font-size: 15px;">{{ $row->name }}</strong>
+            <span class="muted" style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <span><span style="opacity: 0.7;">سعر العميل:</span> <strong style="color:var(--ink);">{{ \App\Support\Money::format($row->client) }}</strong></span>
+              <span style="color: var(--line-dark);">|</span>
+              <span><span style="opacity: 0.7;">التكلفة:</span> <strong style="color:var(--ink);">{{ \App\Support\Money::format($row->cost) }}</strong></span>
+              <span style="color: var(--line-dark);">|</span>
+              <span><span style="opacity: 0.7;">الربح:</span> 
+                <span style="color:{{ $row->profit >= 0 ? 'var(--pos)' : 'var(--neg)' }};font-weight:700">{{ \App\Support\Money::format($row->profit) }}</span>
+              </span>
+            </span>
+          </div>
+          <div class="bar-track" style="height: 10px;">
+            <div class="bar-fill" style="width:{{ $maxBandClient > 0 ? round($row->client / $maxBandClient * 100) : 0 }}%;background:var(--accent); border-radius: 5px;"></div>
+          </div>
+        </div>
+      @empty
+        <p class="muted">لا توجد بنود بعد</p>
+      @endforelse
+    </div>
+
+    <div class="table-card" style="padding: 28px;">
+      <div class="section-label" style="margin-top:0; margin-bottom: 20px; font-size: 15px;">حالة تحصيل الصنايعية</div>
+      @forelse($rptWorkers as $w)
+        @php $wPaid = $w->paidTotal(); $wRem = $w->remaining(); @endphp
+        <div style="margin-bottom:20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); last-child { border-bottom: none; }">
+          <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+            <strong style="font-size: 15px;">{{ $w->name }}</strong>
+            <span class="muted" style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <span><span style="opacity: 0.7;">التعاقد:</span> <strong style="color:var(--ink);">{{ \App\Support\Money::format($w->amount) }}</strong></span>
+              <span style="color: var(--line-dark);">|</span>
+              <span><span style="opacity: 0.7;">مدفوع:</span> <strong style="color:var(--pos);">{{ \App\Support\Money::format($wPaid) }}</strong></span>
+              <span style="color: var(--line-dark);">|</span>
+              <span><span style="opacity: 0.7;">متبقي:</span> 
+                <span style="color:{{ $wRem > 0 ? 'var(--warn)' : 'var(--pos)' }};font-weight:700">{{ \App\Support\Money::format($wRem) }}</span>
+              </span>
+            </span>
+          </div>
+          <div class="bar-track" style="height: 10px;">
+            <div class="bar-fill {{ $wRem <= 0 ? 'full' : '' }}" style="width:{{ (float) $w->amount > 0 ? round($wPaid / (float) $w->amount * 100) : 0 }}%;background:var(--pos); border-radius: 5px;"></div>
+          </div>
+        </div>
+      @empty
+        <p class="muted">لا يوجد صنايعية بعد</p>
+      @endforelse
+    </div>
+
+  </div>
+
+  {{-- ═══ تحليل الخامات + الموردين ═══ --}}
+  <div class="grid cols-2" style="gap: 24px; align-items:start">
+    <div class="table-card" style="padding: 28px;">
+      <div class="section-label" style="margin-top:0; margin-bottom: 24px; font-size: 15px;">أعلى الخامات تكلفة</div>
+      @forelse($rptTopMaterials as $m)
+        <div style="margin-bottom:18px;">
+          <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+            <strong style="font-size: 14.5px;">{{ $m->item }}</strong>
+            <span class="muted">الكمية: <strong style="color:var(--ink);">{{ number_format($m->qty, 1) }}</strong> <span style="color: var(--line-dark); margin: 0 4px;">|</span> التكلفة: <strong class="price-cost" style="color:var(--warn);">{{ \App\Support\Money::format($m->cost) }} ج.م</strong></span>
+          </div>
+          <div class="bar-track" style="height: 8px;">
+            <div class="bar-fill" style="width:{{ round($m->cost / $rptMaxMatCost * 100) }}%;background:var(--warn); border-radius: 4px;"></div>
+          </div>
+        </div>
+      @empty
+        <p class="muted">لا توجد خامات مسجّلة</p>
+      @endforelse
+    </div>
+
+    <div class="table-card" style="padding: 28px;">
+      <div class="section-label" style="margin-top:0; margin-bottom: 24px; font-size: 15px;">توزيع المشتريات على الموردين</div>
+      @forelse($rptBySupplier as $s)
+        <div style="margin-bottom:18px;">
+          <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+            <strong style="font-size: 14.5px;">{{ $s->name }}</strong>
+            <span class="muted">العدد: <strong style="color:var(--ink);">{{ $s->count }} {{ $s->count === 1 ? 'صنف' : 'أصناف' }}</strong> <span style="color: var(--line-dark); margin: 0 4px;">|</span> <strong style="color:var(--accent-ink);">{{ \App\Support\Money::format($s->cost) }} ج.م</strong></span>
+          </div>
+          <div class="bar-track" style="height: 8px;">
+            <div class="bar-fill" style="width:{{ round($s->cost / $rptMaxSupplierCost * 100) }}%;background:var(--accent); border-radius: 4px;"></div>
+          </div>
+        </div>
+      @empty
+        <p class="muted">لا يوجد موردون مسجّلون</p>
+      @endforelse
+    </div>
+  </div>
+
+  {{-- ═══ تحليل المرتجعات ═══ --}}
+  <div class="table-card" style="padding: 28px;">
+    <div class="section-label" style="margin-top:0; margin-bottom: 24px; font-size: 15px;">تحليل المرتجعات</div>
+    @if($rptReturnsCount > 0)
+      <div class="grid cols-3" style="gap: 20px; margin-bottom:24px">
+        <div class="card stat" style="box-shadow: none; border: 1px solid var(--border);"><div class="top"><span class="label">عدد المرتجعات</span></div><div class="val tnum">{{ $rptReturnsCount }}</div></div>
+        <div class="card stat" style="box-shadow: none; border: 1px solid var(--border);"><div class="top"><span class="label">قيمة المرتجعات</span></div><div class="val tnum">{{ \App\Support\Money::format($rptReturnsValue) }} <small>ج.م</small></div></div>
+        <div class="card stat" style="box-shadow: none; border: 1.5px solid {{ $rptReturnsLoss > 0 ? 'var(--neg)' : 'var(--border)' }};"><div class="top"><span class="label">خسائر المرتجعات</span></div><div class="val tnum" style="color:{{ $rptReturnsLoss > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($rptReturnsLoss) }} <small>ج.م</small></div></div>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>الصنف</th><th class="num">الكمية المرتجعة</th><th class="num">القيمة</th><th class="num">الخسارة</th></tr></thead>
+          <tbody>
+            @foreach($rptTopReturns as $r)
+              <tr>
+                <td><strong>{{ $r->item }}</strong></td>
+                <td class="num">{{ number_format($r->qty, 1) }}</td>
+                <td class="num">{{ \App\Support\Money::format($r->value) }}</td>
+                <td class="num" style="{{ $r->loss > 0 ? 'color:var(--neg);font-weight:700' : '' }}">{{ $r->loss > 0 ? \App\Support\Money::format($r->loss) : '—' }}</td>
+              </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
     @else
-      <p class="muted">لا توجد بيانات كافية بعد</p>
+      <p class="muted">لا توجد مرتجعات على هذا المشروع</p>
     @endif
   </div>
 
-  <div class="table-card" style="padding:20px">
-    <div class="section-label" style="margin-top:0">توزيع أرباح المشروع</div>
-    @if($profitDonutSlices->isNotEmpty())
-      <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center">
-        <svg width="140" height="140" viewBox="0 0 100 100" style="transform:rotate(-90deg);flex-shrink:0">
-          <circle cx="50" cy="50" r="40" fill="none" stroke="var(--line)" stroke-width="16"/>
-          @foreach($profitDonutSlices as $slice)
-            <circle cx="50" cy="50" r="40" fill="none" stroke="{{ $slice['color'] }}" stroke-width="16"
-              stroke-dasharray="{{ $slice['dash'] }}" stroke-dashoffset="{{ $slice['dashoffset'] }}" stroke-linecap="butt"/>
-          @endforeach
-        </svg>
-        <div style="display:flex;flex-direction:column;gap:8px;min-width:130px">
-          @foreach($profitDonutSlices as $slice)
-            <div style="display:flex;align-items:center;gap:8px;font-size:13px">
-              <span style="width:10px;height:10px;border-radius:3px;background:{{ $slice['color'] }};flex-shrink:0"></span>
-              <span>{{ $slice['label'] }}</span>
-              <strong style="margin-inline-start:auto">{{ $slice['pct'] }}%</strong>
-            </div>
-          @endforeach
-        </div>
-      </div>
-    @else
-      <p class="muted">لا توجد أرباح مسجلة بعد</p>
-    @endif
-  </div>
-
-  <div class="table-card" style="padding:20px">
-    <div class="section-label" style="margin-top:0">نسبة التحصيل من العميل</div>
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px">
-      <span class="muted">محصّل: <strong style="color:var(--pos)">{{ \App\Support\Money::format($rptCollected) }}</strong></span>
-      <span class="muted">متبقي: <strong style="color:var(--warn)">{{ \App\Support\Money::format($rptDue) }}</strong></span>
-    </div>
-    <div class="bar-track" style="height:14px;border-radius:8px">
-      <div class="bar-fill {{ $rptCollectedPct >= 100 ? 'full' : '' }}" style="width:{{ $rptCollectedPct }}%;border-radius:8px"></div>
-    </div>
-    <div style="text-align:center;margin-top:10px;font-weight:800;font-size:22px;color:var(--accent)">{{ $rptCollectedPct }}%</div>
-  </div>
-</div>
-
-<div class="table-card" style="padding:20px;margin-bottom:24px">
-  <div class="section-label" style="margin-top:0">مقارنة البنود (سعر العميل مقابل التكلفة)</div>
-  @forelse($rptBandRows as $row)
-    <div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;flex-wrap:wrap;gap:4px">
-        <strong>{{ $row->name }}</strong>
-        <span class="muted">سعر العميل: {{ \App\Support\Money::format($row->client) }} · تكلفة: {{ \App\Support\Money::format($row->cost) }} · ربح:
-          <span style="color:{{ $row->profit >= 0 ? 'var(--pos)' : 'var(--neg)' }};font-weight:700">{{ \App\Support\Money::format($row->profit) }}</span>
-        </span>
-      </div>
-      <div class="bar-track">
-        <div class="bar-fill" style="width:{{ $maxBandClient > 0 ? round($row->client / $maxBandClient * 100) : 0 }}%;background:var(--accent)"></div>
-      </div>
-    </div>
-  @empty
-    <p class="muted">لا توجد بنود بعد</p>
-  @endforelse
-</div>
-
-<div class="table-card" style="padding:20px">
-  <div class="section-label" style="margin-top:0">حالة تحصيل الصنايعية</div>
-  @forelse($rptWorkers as $w)
-    @php $wPaid = $w->paidTotal(); $wRem = $w->remaining(); @endphp
-    <div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;flex-wrap:wrap;gap:4px">
-        <strong>{{ $w->name }}</strong>
-        <span class="muted">متعاقد: {{ \App\Support\Money::format($w->amount) }} · مدفوع:
-          <span style="color:var(--pos);font-weight:700">{{ \App\Support\Money::format($wPaid) }}</span> · متبقي:
-          <span style="color:{{ $wRem > 0 ? 'var(--warn)' : 'var(--pos)' }};font-weight:700">{{ \App\Support\Money::format($wRem) }}</span>
-        </span>
-      </div>
-      <div class="bar-track">
-        <div class="bar-fill {{ $wRem <= 0 ? 'full' : '' }}" style="width:{{ (float) $w->amount > 0 ? round($wPaid / (float) $w->amount * 100) : 0 }}%;background:var(--pos)"></div>
-      </div>
-    </div>
-  @empty
-    <p class="muted">لا يوجد صنايعية بعد</p>
-  @endforelse
-</div>
-
-{{-- ═══ تحليل الخامات + الموردين ═══ --}}
-<div class="grid cols-2" style="margin-top:24px;align-items:start">
-  <div class="table-card" style="padding:20px">
-    <div class="section-label" style="margin-top:0">أعلى الخامات تكلفة</div>
-    @forelse($rptTopMaterials as $m)
-      <div style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;flex-wrap:wrap;gap:4px">
-          <strong>{{ $m->item }}</strong>
-          <span class="muted">{{ number_format($m->qty, 1) }} · <span class="price-cost" style="font-weight:700">{{ \App\Support\Money::format($m->cost) }} ج.م</span></span>
-        </div>
-        <div class="bar-track">
-          <div class="bar-fill" style="width:{{ round($m->cost / $rptMaxMatCost * 100) }}%;background:var(--warn)"></div>
-        </div>
-      </div>
-    @empty
-      <p class="muted">لا توجد خامات مسجّلة</p>
-    @endforelse
-  </div>
-
-  <div class="table-card" style="padding:20px">
-    <div class="section-label" style="margin-top:0">توزيع المشتريات على الموردين</div>
-    @forelse($rptBySupplier as $s)
-      <div style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px;flex-wrap:wrap;gap:4px">
-          <strong>{{ $s->name }}</strong>
-          <span class="muted">{{ $s->count }} {{ $s->count === 1 ? 'صنف' : 'أصناف' }} · <span style="font-weight:700;color:var(--accent-ink)">{{ \App\Support\Money::format($s->cost) }} ج.م</span></span>
-        </div>
-        <div class="bar-track">
-          <div class="bar-fill" style="width:{{ round($s->cost / $rptMaxSupplierCost * 100) }}%;background:var(--accent)"></div>
-        </div>
-      </div>
-    @empty
-      <p class="muted">لا يوجد موردون مسجّلون</p>
-    @endforelse
-  </div>
-</div>
-
-{{-- ═══ تحليل المرتجعات ═══ --}}
-<div class="table-card" style="padding:20px;margin-top:24px">
-  <div class="section-label" style="margin-top:0">تحليل المرتجعات</div>
-  @if($rptReturnsCount > 0)
-    <div class="grid cols-3" style="margin-bottom:16px">
-      <div class="card stat"><div class="top"><span class="label">عدد المرتجعات</span></div><div class="val tnum">{{ $rptReturnsCount }}</div></div>
-      <div class="card stat"><div class="top"><span class="label">قيمة المرتجعات</span></div><div class="val tnum">{{ \App\Support\Money::format($rptReturnsValue) }} <small>ج.م</small></div></div>
-      <div class="card stat" style="{{ $rptReturnsLoss > 0 ? 'border:1.5px solid var(--neg)' : '' }}"><div class="top"><span class="label">خسائر المرتجعات</span></div><div class="val tnum" style="color:{{ $rptReturnsLoss > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($rptReturnsLoss) }} <small>ج.م</small></div></div>
-    </div>
-    <div class="table-scroll">
-      <table>
-        <thead><tr><th>الصنف</th><th class="num">الكمية المرتجعة</th><th class="num">القيمة</th><th class="num">الخسارة</th></tr></thead>
-        <tbody>
-          @foreach($rptTopReturns as $r)
-            <tr>
-              <td><strong>{{ $r->item }}</strong></td>
-              <td class="num">{{ number_format($r->qty, 1) }}</td>
-              <td class="num">{{ \App\Support\Money::format($r->value) }}</td>
-              <td class="num" style="{{ $r->loss > 0 ? 'color:var(--neg);font-weight:700' : '' }}">{{ $r->loss > 0 ? \App\Support\Money::format($r->loss) : '—' }}</td>
-            </tr>
-          @endforeach
-        </tbody>
-      </table>
-    </div>
-  @else
-    <p class="muted">لا توجد مرتجعات على هذا المشروع</p>
-  @endif
 </div>
 </div>{{-- /tab-panel: reports --}}
 @endif
@@ -1244,11 +1292,11 @@
               @endforeach
             </tbody>
             <tfoot>
-              <tr>
-                <td>مجموع البنود</td>
-                <td class="num">{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->actualClientTotal())) }}</td>
-                <td class="num">{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->totalCost())) }}</td>
-                <td class="num" style="color:{{ $project->bands->sum(fn($b) => $b->profit()) >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->profit())) }}</td>
+              <tr style="background: rgba(99, 102, 241, 0.05);">
+                <td style="color: #6366f1; font-weight: bold;">مجموع البنود</td>
+                <td class="num" style="color: #6366f1; font-weight: bold;">{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->actualClientTotal())) }}</td>
+                <td class="num" style="color: #6366f1; font-weight: bold;">{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->totalCost())) }}</td>
+                <td class="num" style="color: #6366f1; font-weight: bold;">{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->profit())) }}</td>
               </tr>
               @php
                 $genMatCount = $project->generalMaterials()->count();
@@ -1266,11 +1314,11 @@
               @endif
               @php $installmentInterest = $project->contracts()->get()->sum(fn($c) => $c->interestAmount()); @endphp
               @if($installmentInterest > 0)
-                <tr>
-                  <td>فائدة التقسيط</td>
-                  <td class="num">{{ \App\Support\Money::format($installmentInterest) }}</td>
-                  <td class="num">0.00</td>
-                  <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($installmentInterest) }}</td>
+                <tr style="background: rgba(16, 185, 129, 0.05);">
+                  <td style="color: #10b981; font-weight: bold;">أرباح نسبة التقسيط</td>
+                  <td class="num" style="color: #10b981; font-weight: bold;">{{ \App\Support\Money::format($installmentInterest) }}</td>
+                  <td class="num" style="color: #10b981; font-weight: bold;">0.00</td>
+                  <td class="num" style="color: #10b981; font-weight: bold;">{{ \App\Support\Money::format($installmentInterest) }}</td>
                 </tr>
               @endif
               @php $marketersCommission = (float) $project->transactions()->where('ref_type', 'marketer_commission')->sum('amount'); @endphp
@@ -1281,12 +1329,14 @@
                 <td class="num" style="color: var(--neg)">{{ $marketersCommission > 0 ? '-' : '' }}{{ \App\Support\Money::format($marketersCommission) }}</td>
               </tr>
               <tr>
-                <td colspan="3" style="text-align:left; color: var(--amber)">الخصومات الممنوحة للعميل</td>
+                <td style="color: var(--amber)">الخصومات الممنوحة للعميل</td>
+                <td class="num" style="color: var(--amber)">{{ $project->totalDiscount() > 0 ? '-' : '' }}{{ \App\Support\Money::format($project->totalDiscount()) }}</td>
+                <td class="num">0.00</td>
                 <td class="num" style="color: var(--amber)">{{ $project->totalDiscount() > 0 ? '-' : '' }}{{ \App\Support\Money::format($project->totalDiscount()) }}</td>
               </tr>
               <tr style="border-top: 2px solid #ddd;">
                 <td><strong>الصافي الكلي للمشروع</strong></td>
-                <td class="num"><strong>{{ \App\Support\Money::format($project->actualClientTotal() + $project->totalDiscount()) }}</strong></td>
+                <td class="num"><strong>{{ \App\Support\Money::format($project->actualClientTotal()) }}</strong></td>
                 <td class="num"><strong>{{ \App\Support\Money::format($project->totalSpent()) }}</strong></td>
                 <td class="num" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}"><strong>{{ \App\Support\Money::format($totalProfit) }}</strong></td>
               </tr>

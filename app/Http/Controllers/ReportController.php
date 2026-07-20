@@ -57,11 +57,16 @@ class ReportController extends Controller
                 // مجموعهم كان يساوي book_profit قبل خصم الدفعات
                 $trade = $project->tradeProfit();
                 $pct   = $project->percentageProfit();
+                $install = $project->totalInstallmentInterest();
+                
                 $project->trade_profit      = $trade;
                 $project->percentage_profit = $pct;
-                $profitBase = $trade + $pct; // = book_profit، بنستخدمه كمقام للنسب عشان نتجنب قسمة مختلفة لو فيه فروق تقريب
+                $project->installment_profit = $install;
+                
+                $profitBase = $trade + $pct + $install; // = book_profit before discounts
                 $project->trade_profit_share = abs($profitBase) > 0.009 ? ($trade / $profitBase) * 100 : 0;
                 $project->percentage_profit_share = abs($profitBase) > 0.009 ? ($pct / $profitBase) * 100 : 0;
+                $project->installment_profit_share = abs($profitBase) > 0.009 ? ($install / $profitBase) * 100 : 0;
 
                 return $project;
             });
@@ -74,12 +79,14 @@ class ReportController extends Controller
             'total_discount'  => $projects->sum('total_discount'),
             'book_profit'     => $projects->sum('book_profit'),
             'earned_profit'   => $projects->sum('earned_profit'),
-            'trade_profit'      => $projects->sum('trade_profit'),
+            'trade_profit'    => $projects->sum('trade_profit'),
             'percentage_profit' => $projects->sum('percentage_profit'),
+            'installment_profit' => $projects->sum('installment_profit'),
         ];
-        $totalProfitBase = $totals['trade_profit'] + $totals['percentage_profit'];
+        $totalProfitBase = $totals['trade_profit'] + $totals['percentage_profit'] + $totals['installment_profit'];
         $totals['trade_profit_share'] = abs($totalProfitBase) > 0.009 ? ($totals['trade_profit'] / $totalProfitBase) * 100 : 0;
         $totals['percentage_profit_share'] = abs($totalProfitBase) > 0.009 ? ($totals['percentage_profit'] / $totalProfitBase) * 100 : 0;
+        $totals['installment_profit_share'] = abs($totalProfitBase) > 0.009 ? ($totals['installment_profit'] / $totalProfitBase) * 100 : 0;
 
         return view('reports.profitability', compact('projects', 'totals'));
     }
@@ -107,6 +114,11 @@ class ReportController extends Controller
         $totalSpent     = $projects->sum(fn ($p) => $p->totalSpent());
         $totalCollected = $projects->sum(fn ($p) => $p->totalCollected());
         $totalDiscounts = $projects->sum(fn ($p) => $p->totalDiscount());
+        $totalMarketerCommissions = $projects->sum(fn ($p) => (float) $p->transactions()->where('ref_type', 'marketer_commission')->sum('amount'));
+
+        $totalTradeProfit       = $projects->sum(fn ($p) => max(0, $p->tradeProfit()));
+        $totalPercentageProfit  = $projects->sum(fn ($p) => max(0, $p->percentageProfit()));
+        $totalInstallmentProfit = $projects->sum(fn ($p) => max(0, $p->totalInstallmentInterest()));
 
         $topDiscountProject = $projects->sortByDesc(fn ($p) => $p->totalDiscount())->first();
         if ($topDiscountProject && $topDiscountProject->totalDiscount() == 0) {
@@ -256,6 +268,7 @@ class ReportController extends Controller
         return view('reports.dashboard', compact(
             'from', 'to', 'projectId', 'allProjects',
             'totalProfit', 'totalSpent', 'totalCollected', 'totalDiscounts', 'topDiscountProject', 'cashFlow',
+            'totalTradeProfit', 'totalPercentageProfit', 'totalInstallmentProfit',
             'topProjectsBySpend', 'topProjectsByProfit', 'topProjectsByDiscount',
             'topBandInstancesBySpend', 'topBandInstancesByProfit',
             'topBandNamesBySpend', 'topBandNamesByProfit',
