@@ -57,17 +57,18 @@
 </div>
 
 <div class="table-wrap">
-  <table class="table">
+  <table class="table" style="min-width:1000px">
     <thead>
       <tr>
-        <th>الوقت</th>
-        <th>المستخدم</th>
-        <th>الإجراء</th>
-        <th>التصنيف</th>
-        <th>المشروع / البند</th>
-        <th>البيان</th>
-        <th class="num">القيمة</th>
-        <th class="no-print" style="width: 100px;">إجراء</th>
+        <th>#</th>
+        <th>نوع الحركة</th>
+        <th class="num">المبلغ</th>
+        <th style="text-align:center">الطرف الخارجي</th>
+        <th style="text-align:center">مسار الحركة (FLOW)</th>
+        <th>البيان والمشروع</th>
+        <th>الإجراء والمستخدم</th>
+        <th>تاريخ التنفيذ</th>
+        <th class="no-print">إجراء</th>
       </tr>
     </thead>
     <tbody>
@@ -76,63 +77,33 @@
           $meta = $log->refMeta();
           $isLive = $log->transaction_id && isset($liveIds[$log->transaction_id]) && $log->action !== 'deleted';
           $isSafe = in_array($log->ref_type, ['manual', 'client_payment', null], true);
+          $accountName = \App\Models\Account::nameOf($log->account_id);
+          $partyName = $log->party ?: 'خارجي';
         @endphp
         <tr style="{{ $log->action === 'deleted' ? 'opacity:.6' : '' }}">
-          <td class="muted" style="white-space:nowrap" title="{{ $log->happened_at->format('Y-m-d H:i:s') }}">
-            {{ $log->happened_at->format('h:i A') }}<br>
-            <small>{{ $log->happened_at->format('Y-m-d') }}</small>
-          </td>
+          <td class="muted">{{ $log->transaction_id ?? $log->id }}</td>
+          
           <td>
-            <div style="display:flex;align-items:center;gap:6px">
-              <div class="avatar sm" style="background:#f1f5f9;color:#475569;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">
-                {{ mb_substr($log->performedBy?->name ?? '?', 0, 1) }}
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ $log->direction === 'in' ? '#10b981' : ($log->direction === 'out' ? '#ef4444' : '#64748b') }};color:#fff;flex-shrink:0">
+                <i class="fa fa-arrow-{{ $log->direction === 'in' ? 'down' : ($log->direction === 'out' ? 'up' : 'minus') }}"></i>
               </div>
-              <span>{{ $log->performedBy?->name ?? 'نظام' }}</span>
+              <div>
+                <div style="font-weight:bold;font-size:13px">{{ $meta['label'] }}</div>
+                <div style="font-size:11px;color:#64748b">{{ $log->direction === 'in' ? 'تدفق داخل' : ($log->direction === 'out' ? 'تدفق خارج' : '—') }}</div>
+              </div>
             </div>
           </td>
-          <td>
-            @if($log->action === 'created')
-              <span class="tag green">إنشاء</span>
-            @elseif($log->action === 'updated')
-              <span class="tag amber">تعديل</span>
-            @elseif($log->action === 'deleted')
-              <span class="tag red">حذف</span>
-            @else
-              <span class="tag gray">{{ $log->action }}</span>
-            @endif
-          </td>
-          <td>
-            <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:6px;background:{{ $meta['color'] }}15;color:{{ $meta['color'] }};font-size:12px;font-weight:600">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><use href="#{{ $meta['icon'] }}"/></svg>
-              {{ $meta['label'] }}
-            </div>
-          </td>
-          <td>
-            @if($log->project)
-              <a href="{{ route('projects.show', $log->project) }}" class="lk">{{ $log->project->name }}</a>
-            @else
-              <span class="muted">—</span>
-            @endif
-            @if($log->band)
-              <br><small class="muted">بند: {{ $log->band->name }}</small>
-            @endif
-          </td>
-          <td style="max-width:300px">
-            @if($log->ref_type === 'material_invoice' && $log->ref_id)
-              <a href="{{ route('material_invoices.show', $log->ref_id) }}" class="truncate muted" style="text-decoration:underline; display:block" title="{{ $log->description }}">{{ $log->description ?: '—' }}</a>
-            @else
-              <div class="truncate" title="{{ $log->description }}">{{ $log->description ?: '—' }}</div>
-            @endif
-          </td>
+
           <td class="num">
             @if($log->amount > 0)
               <b style="color:{{ $log->direction === 'in' ? 'var(--pos)' : ($log->direction === 'out' ? 'var(--neg)' : 'inherit') }}; {{ $log->action === 'deleted' ? 'text-decoration:line-through' : '' }}">
-                {{ $log->direction === 'in' ? '+' : ($log->direction === 'out' ? '-' : '') }}{{ \App\Support\Money::format($log->amount) }}
+                EGP {{ \App\Support\Money::format($log->amount) }} {{ $log->direction === 'in' ? '+' : ($log->direction === 'out' ? '-' : '') }}
               </b>
             @elseif($log->amount == 0 && $log->ref_type === 'material' && $log->ref_id && $log->action !== 'deleted')
               @php $deferredMat = \App\Models\Material::find($log->ref_id); @endphp
               @if($deferredMat && $deferredMat->grossCost() > 0)
-                <b style="color:var(--amber)">{{ \App\Support\Money::format($deferredMat->grossCost()) }}</b>
+                <b style="color:var(--amber)">EGP {{ \App\Support\Money::format($deferredMat->grossCost()) }}</b>
                 <div class="muted" style="font-size:10px">آجل بالكامل</div>
               @else
                 <span class="muted">—</span>
@@ -140,7 +111,7 @@
             @elseif($log->amount == 0 && $log->ref_type === 'material_invoice' && $log->ref_id && $log->action !== 'deleted')
               @php $deferredInv = \App\Models\MaterialInvoice::find($log->ref_id); @endphp
               @if($deferredInv && $deferredInv->total_amount > 0)
-                <b style="color:var(--amber)">{{ \App\Support\Money::format($deferredInv->total_amount) }}</b>
+                <b style="color:var(--amber)">EGP {{ \App\Support\Money::format($deferredInv->total_amount) }}</b>
                 <div class="muted" style="font-size:10px">آجل بالكامل</div>
               @else
                 <span class="muted">—</span>
@@ -149,6 +120,68 @@
               <span class="muted">—</span>
             @endif
           </td>
+
+          <td style="text-align:center;font-weight:600;font-size:13px;color:#475569">
+            {{ $partyName }}
+          </td>
+
+          <td>
+            <div style="display:flex;align-items:center;gap:6px;justify-content:center;white-space:nowrap;direction:rtl">
+              @if($log->direction === 'in')
+                <div style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600"><i class="fa fa-globe me-1"></i> {{ $partyName }}</div>
+                <i class="fa fa-arrow-left text-muted" style="font-size:10px"></i>
+                <div style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600"><i class="fa fa-wallet me-1"></i> {{ $accountName }}</div>
+              @elseif($log->direction === 'out')
+                <div style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600"><i class="fa fa-wallet me-1"></i> {{ $accountName }}</div>
+                <i class="fa fa-arrow-left text-muted" style="font-size:10px"></i>
+                <div style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600"><i class="fa fa-globe me-1"></i> {{ $partyName }}</div>
+              @else
+                <span class="muted">—</span>
+              @endif
+            </div>
+          </td>
+
+          <td style="max-width:250px">
+            @if($log->ref_type === 'material_invoice' && $log->ref_id)
+              <a href="{{ route('material_invoices.show', $log->ref_id) }}" class="truncate muted fw-bold" style="text-decoration:none; display:block" title="{{ $log->description }}">{{ $log->description ?: '—' }}</a>
+            @else
+              <div class="truncate fw-bold" title="{{ $log->description }}">{{ $log->description ?: '—' }}</div>
+            @endif
+            @if($log->project)
+              <div style="font-size:11px;color:#64748b;margin-top:2px">
+                <i class="fa fa-folder-open me-1"></i> <a href="{{ route('projects.show', $log->project) }}" class="lk" style="color:inherit">{{ $log->project->name }}</a>
+                @if($log->band) <span class="ms-1">(بند: {{ $log->band->name }})</span> @endif
+              </div>
+            @endif
+          </td>
+
+          <td>
+            <div style="display:flex;flex-direction:column;gap:2px">
+              <div>
+                @if($log->action === 'created')
+                  <span class="tag green" style="font-size:10px;padding:2px 6px">إنشاء</span>
+                @elseif($log->action === 'updated')
+                  <span class="tag amber" style="font-size:10px;padding:2px 6px">تعديل</span>
+                @elseif($log->action === 'deleted')
+                  <span class="tag red" style="font-size:10px;padding:2px 6px">حذف</span>
+                @else
+                  <span class="tag gray" style="font-size:10px;padding:2px 6px">{{ $log->action }}</span>
+                @endif
+              </div>
+              <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:#475569;margin-top:2px">
+                <div class="avatar sm" style="background:#f1f5f9;color:#475569;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600">
+                  {{ mb_substr($log->performedBy?->name ?? '?', 0, 1) }}
+                </div>
+                <span>{{ $log->performedBy?->name ?? 'نظام' }}</span>
+              </div>
+            </div>
+          </td>
+
+          <td class="muted" style="white-space:nowrap;font-size:12px" title="{{ $log->happened_at->format('Y-m-d H:i:s') }}">
+            <div style="font-weight:bold;color:#334155">{{ $log->happened_at->format('Y/m/d') }}</div>
+            <div>{{ $log->happened_at->format('h:i A') }}</div>
+          </td>
+
           <td class="no-print">
             @if($isLive)
               <div style="display:flex;gap:4px">

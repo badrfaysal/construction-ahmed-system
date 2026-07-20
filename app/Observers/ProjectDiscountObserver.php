@@ -15,7 +15,7 @@ class ProjectDiscountObserver
         // Add a "virtual" transaction so it appears in the ledger/radar
         Transaction::create([
             'project_id'  => $projectDiscount->project_id,
-            'direction'   => 'in',
+            'direction'   => null,
             'type'        => 'client_discount',
             'party'       => $projectDiscount->project->client->name,
             'amount'      => $projectDiscount->amount,
