@@ -115,7 +115,7 @@
 
 <div class="grid {{ $isOwner ? 'cols-5' : 'cols-4' }}" style="margin-bottom:20px">
   <div class="card stat">
-    <div class="top"><span class="label">قيمة المشروع</span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span></div>
+    <div class="top"><span class="label">إجمالي قيمة المشروع</span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span></div>
     <div class="val tnum price-sell">{{ \App\Support\Money::format($actualValue) }} <small>ج.م</small></div>
     <div class="note" style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
       <span>سعر الشراء (تكلفة)</span>

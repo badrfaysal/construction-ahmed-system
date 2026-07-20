@@ -14,7 +14,7 @@ class DashboardController extends Controller
     public function index()
     {
         // Use cached totals to avoid massive eager loading
-        $projects = Project::with(['client', 'contracts', 'bands'])
+        $projects = Project::with(['client', 'contracts', 'bands', 'discounts'])
             ->withSum(['transactions as total_worker_paid' => function ($query) {
                 $query->where('ref_type', 'worker_payment');
             }], 'amount')

@@ -137,8 +137,8 @@ class Project extends Model
         
         $interest = (float) $this->contracts()->get()->sum(fn ($c) => $c->interestAmount());
 
-        $projectDiscounts = (float) $this->discounts()->sum('amount') + (float) $this->discount;
-        $contractDiscounts = (float) $this->contracts()->get()->sum('discount');
+        $projectDiscounts = (float) $this->discounts->sum('amount') + (float) $this->discount;
+        $contractDiscounts = (float) $this->contracts->sum('discount');
 
         return $bandsTotal + $generalMaterials + $interest - $projectDiscounts - $contractDiscounts;
     }
@@ -146,7 +146,7 @@ class Project extends Model
     // الفاتورة قبل أي خصومات عامة على المشروع وعقود التقسيط (إجمالي ما تم فوترته + فوائد)
     public function grossClientTotal(): float
     {
-        $projectLevel = (float) $this->discounts()->sum('amount') + (float) $this->discount;
+        $projectLevel = (float) $this->discounts->sum('amount') + (float) $this->discount;
         $contractLevel = (float) $this->contracts->sum('discount');
         return $this->actualClientTotal() + $projectLevel + $contractLevel;
     }

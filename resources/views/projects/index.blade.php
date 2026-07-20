@@ -40,7 +40,7 @@
         $prog = $p->progressPct();
         $paid  = $p->totalCollected();
         $total = $p->initialContractValue();
-        $actual = $p->actualClientTotal();
+        $actual = $p->grossClientTotal();
         $activeBand = $p->bands->where('status', 'active')->first();
         $paidWorkers = (float) $p->total_worker_paid;
       @endphp
@@ -84,7 +84,7 @@
           @endif
           <div class="pc-fin">
             <div>
-              <div class="l">قيمة المشروع</div>
+              <div class="l" style="display:flex;align-items:center;gap:4px">قيمة المشروع <small class="muted" style="font-size:9px" title="قبل الخصم">(إجمالي)</small></div>
               <div class="v" style="color:var(--brand)">{{ \App\Support\Money::format($actual) }}</div>
               @if($actual > $total + 1)
                 <div style="font-size:11px;color:var(--muted);margin-top:3px;font-weight:600">

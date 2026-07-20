@@ -104,6 +104,7 @@
                 $prog   = $p->progressPct();
                 $paid   = $p->cached_collected;
                 $actual = $p->cached_actual_total;
+                $gross  = $p->grossClientTotal();
                 $due    = max($actual - $paid, 0);
                 $activeBand = $p->bands->where('status', 'active')->first();
                 $paidWorkers = (float) $p->total_worker_paid;
@@ -148,8 +149,8 @@
                   @endif
                   <div class="pc-fin">
                     <div>
-                      <div class="l">قيمة المشروع</div>
-                      <div class="v">{{ \App\Support\Money::format($actual) }}</div>
+                      <div class="l" style="display:flex;align-items:center;gap:4px">قيمة المشروع <small class="muted" style="font-size:9px" title="قبل الخصم">(إجمالي)</small></div>
+                      <div class="v">{{ \App\Support\Money::format($gross) }}</div>
                     </div>
                     <div>
                       <div class="l">المدفوع</div>
