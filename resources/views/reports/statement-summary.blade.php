@@ -121,6 +121,14 @@
             <td class="num"><b>{{ \App\Support\Money::format($generalTotal) }} ج.م</b></td>
           </tr>
         @endif
+        @if(isset($interest) && $interest > 0)
+        <tr>
+          <td><strong>فوائد التقسيط المضافة</strong></td>
+          <td>—</td>
+          <td class="col-sup">—</td>
+          <td class="num"><b>{{ \App\Support\Money::format($interest) }} ج.م</b></td>
+        </tr>
+        @endif
         <tr class="sub" style="background:var(--accent-soft)">
           @php
             $projProfit = $project->percentageProfit();

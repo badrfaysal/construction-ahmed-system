@@ -128,6 +128,12 @@
             </tr>
           @endforeach
         @endif
+        @if(isset($interest) && $interest > 0)
+          <tr class="grp">
+            <td colspan="6" style="text-align:left;">فوائد التقسيط المضافة</td>
+            <td><b>{{ \App\Support\Money::format($interest) }} ج.م</b></td>
+          </tr>
+        @endif
         <tr class="sub" style="background:var(--accent-soft)">
           <td colspan="6" style="text-align:left;color:var(--accent-ink)">{{ $discountAmount > 0 ? 'إجمالي المستحق قبل الخصم' : 'إجمالي المستحق حتى الآن' }}</td>
           <td style="color:var(--accent-ink)">{{ \App\Support\Money::format($subTotal) }} ج.م</td>

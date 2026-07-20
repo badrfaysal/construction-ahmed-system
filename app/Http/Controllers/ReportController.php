@@ -290,23 +290,27 @@ class ReportController extends Controller
             'installments' => fn ($q) => $q->orderBy('due_date'),
         ]);
 
-        // Only bands that have actually started carry real spend worth listing
-        $spentBands = $project->bands->where('status', '!=', 'pending');
+        // Only bands that have actually started carry real spend worth listing, unless it's in installments
+        $spentBands = $project->hasInstallmentContract() ? $project->bands : $project->bands->where('status', '!=', 'pending');
 
         // Petty/misc expenses registered without a specific band (band_id null)
         $generalMaterials = $project->generalMaterials()->sortBy('date');
 
         $initialContractValue = $project->initialContractValue();
         $totalPaid            = $project->totalCollected();
+        
+        $interest             = $project->totalInstallmentInterest();
         $subTotal             = $spentBands->sum(fn ($band) => $band->actualClientTotal())
-            + $generalMaterials->sum(fn ($m) => $m->netClientCost());
+            + $generalMaterials->sum(fn ($m) => $m->netClientCost())
+            + $interest;
             
-        $discountAmount       = (float) $project->discount + (float) $project->discounts()->sum('amount');
+        $contractDiscounts    = (float) $project->contracts->sum('discount');
+        $discountAmount       = (float) $project->discount + (float) $project->discounts()->sum('amount') + $contractDiscounts;
         $actualTotal          = $subTotal - $discountAmount;
         $balance              = $actualTotal - $totalPaid;
 
         return view('reports.statement', compact(
-            'project', 'spentBands', 'generalMaterials', 'initialContractValue', 'totalPaid', 'subTotal', 'discountAmount', 'actualTotal', 'balance'
+            'project', 'spentBands', 'generalMaterials', 'initialContractValue', 'totalPaid', 'subTotal', 'discountAmount', 'actualTotal', 'balance', 'interest', 'contractDiscounts'
         ));
     }
 
@@ -321,19 +325,25 @@ class ReportController extends Controller
             'installments' => fn ($q) => $q->orderBy('due_date'),
         ]);
 
-        $spentBands = $project->bands->where('status', '!=', 'pending');
+        $spentBands = $project->hasInstallmentContract() ? $project->bands : $project->bands->where('status', '!=', 'pending');
+        
         $generalMaterials = $project->generalMaterials()->sortBy('date');
         $generalTotal = $generalMaterials->sum(fn ($m) => $m->netClientCost());
 
         $initialContractValue = $project->initialContractValue();
         $totalPaid            = $project->totalCollected();
-        $subTotal             = $spentBands->sum(fn ($band) => $band->actualClientTotal()) + $generalTotal;
-        $discountAmount       = (float) $project->discount + (float) $project->discounts()->sum('amount');
+        
+        $interest             = $project->totalInstallmentInterest();
+        $subTotal             = $spentBands->sum(fn ($band) => $band->actualClientTotal()) + $generalTotal + $interest;
+        
+        $contractDiscounts    = (float) $project->contracts->sum('discount');
+        $discountAmount       = (float) $project->discount + (float) $project->discounts()->sum('amount') + $contractDiscounts;
+        
         $actualTotal          = $subTotal - $discountAmount;
         $balance              = $actualTotal - $totalPaid;
 
         return view('reports.statement-summary', compact(
-            'project', 'spentBands', 'generalTotal', 'initialContractValue', 'totalPaid', 'subTotal', 'discountAmount', 'actualTotal', 'balance'
+            'project', 'spentBands', 'generalTotal', 'initialContractValue', 'totalPaid', 'subTotal', 'discountAmount', 'actualTotal', 'balance', 'interest', 'contractDiscounts'
         ));
     }
 
