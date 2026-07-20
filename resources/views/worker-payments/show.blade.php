@@ -60,12 +60,24 @@
     @csrf
     <div class="form-card" style="max-width:none">
       <div class="section-label" style="margin-top:0">تسجيل دفعة جديدة</div>
-      <div class="row2">
+      
+      <div class="row2" style="align-items:flex-end; gap:20px;">
+        <div class="field" style="margin-bottom:0">
+          <label style="display:block;margin-bottom:6px">الخزنة / المحفظة (الصرف منها) *</label>
+          @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true, 'selectStyle' => 'width:100%;margin:0', 'bare' => true])
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label style="display:block;margin-bottom:6px">التاريخ *</label>
+          <input type="date" name="date" value="{{ old('date', today()->format('Y-m-d')) }}" required style="width:100%;margin:0;padding:8px 12px;border:1px solid #e4eaf4;border-radius:8px;font-size:.87rem;background:#fff;height:38px;box-sizing:border-box;">
+        </div>
+      </div>
+
+      <div class="row2" style="align-items:start">
         <div class="field">
-          <label>المبلغ (ج.م)</label>
+          <label>المبلغ (ج.م) *</label>
           <input type="number" id="pay_amt" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" placeholder="{{ number_format($remaining, 2, '.', '') }}">
           @if($remaining > 0)
-          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;min-height:32px;">
             <button type="button" class="btn ghost sm pay-btn" id="btn-full" onclick="setPayAmount({{ $remaining }}, 'full')">سداد كلي</button>
             <button type="button" class="btn ghost sm pay-btn" id="btn-partial" onclick="setPayAmount({{ round($remaining * 0.5, 2) }}, 'partial')">النصف</button>
             <button type="button" class="btn ghost sm pay-btn" id="btn-quarter" onclick="setPayAmount({{ round($remaining * 0.25, 2) }}, 'quarter')">الربع</button>
@@ -73,27 +85,19 @@
           @endif
         </div>
         <div class="field">
-          <label>التاريخ *</label>
-          <input type="date" name="date" value="{{ old('date', today()->format('Y-m-d')) }}" required>
-        </div>
-      </div>
-      <div class="row2">
-        <div class="field">
           <label>الخصم (ج.م)</label>
           <input type="number" id="wp-discount" name="discount" step="0.01" min="0" value="{{ old('discount') }}" placeholder="0.00" oninput="toggleDiscountReason()">
-        </div>
-        <div class="field">
-          @include('partials._wallet-select', ['wallets' => $wallets, 'label' => 'المحفظة (الصرف منها) *', 'required' => true, 'selectStyle' => 'width:100%'])
+          <div id="wp-discount-reason-row" style="margin-top:8px; display:{{ old('discount') > 0 ? 'block' : 'none' }}">
+            <input type="text" name="discount_reason" id="wp-discount-reason" value="{{ old('discount_reason') }}" placeholder="سبب الخصم (تأخير، تلف..)" style="border-color:var(--warn,#c9821a);">
+          </div>
         </div>
       </div>
-      <div class="field" id="wp-discount-reason-row" style="display:{{ old('discount') > 0 ? 'block' : 'none' }}">
-        <label style="color:var(--warn,#c9821a)">سبب الخصم *</label>
-        <input type="text" name="discount_reason" id="wp-discount-reason" value="{{ old('discount_reason') }}" placeholder="مثال: تأخير في التسليم / تلف في الشغل">
-      </div>
+
       <div class="field">
         <label>ملاحظات</label>
         <input type="text" name="notes" value="{{ old('notes') }}" placeholder="اختياري">
       </div>
+      
       <div class="btn-row" style="margin-top:8px">
         <button type="submit" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check"/></svg>حفظ الدفعة</button>
       </div>
