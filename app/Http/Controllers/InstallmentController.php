@@ -228,7 +228,7 @@ class InstallmentController extends Controller
         $validator = Validator::make($request->all(), [
             'amount_paid'      => ['required', 'numeric', 'min:0'],
             'discount_applied' => ['nullable', 'numeric', 'min:0'],
-            'account_id'       => ['required', 'integer', 'exists:accounts,id'],
+            'account_id'       => ['nullable', 'integer', 'exists:accounts,id'],
             'payment_date'     => ['required', 'date'],
             'method'           => ['nullable', 'string', 'max:50'],
             'notes'            => ['nullable', 'string', 'max:255'],
@@ -325,6 +325,23 @@ class InstallmentController extends Controller
     }
 
     // تعديل عقد قائم — يعيد حساب الخطة ويزامن المقدم في المحفظة لو اتغيّر
+    public function destroyPayment(InstallmentPayment $payment)
+    {
+        // Must load contract before deleting so we have the phone/name to reload the statement
+        $contract = $payment->contract;
+        $customerPhone = $contract->customer_phone;
+        $customerName = $contract->customer_name;
+
+        // Delete the payment (Observer will restore remaining balance and delete Transaction)
+        $payment->delete();
+
+        // Regenerate and return the statement view
+        return $this->customerStatement(new Request([
+            'phone' => $customerPhone,
+            'name'  => $customerName,
+        ]));
+    }
+
     public function update(Request $request, InstallmentContract $contract)
     {
         $validator = Validator::make($request->all(), [

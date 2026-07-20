@@ -594,6 +594,8 @@ function stmtSetPayStyle(cid, type, monthly, totalRemain) {
   const inp=document.getElementById('pay_amt_'+cid);
   const notes=document.getElementById('pay_notes_'+cid);
   const discEl=document.getElementById('pay_disc_'+cid);
+  const accSel=document.getElementById('pay_acc_'+cid);
+  const accSelWrap=document.getElementById('pay_acc_wrap_'+cid); // If we wrap it to hide
   if(!inp)return;
 
   let disc = parseFloat(discEl.value) || 0;
@@ -627,6 +629,12 @@ function stmtSetPayStyle(cid, type, monthly, totalRemain) {
   inp.readOnly = false;
   discEl.readOnly = false;
   notes.value = '';
+  if(accSel) {
+    accSel.required = true;
+    accSel.parentElement.style.opacity = '1';
+    accSel.parentElement.style.pointerEvents = 'auto';
+  }
+  
   if(type==='monthly') {
       inp.value=Math.min(monthly,newRemain).toFixed(2);
   } else if(type==='full') {
@@ -636,9 +644,59 @@ function stmtSetPayStyle(cid, type, monthly, totalRemain) {
       inp.readOnly = true;
       discEl.readOnly = true;
       notes.value = 'تعثر سداد';
+      if(accSel) {
+        accSel.required = false;
+        accSel.parentElement.style.opacity = '0.4';
+        accSel.parentElement.style.pointerEvents = 'none';
+      }
   } else {
       inp.value=''; 
       inp.focus();
+  }
+}
+
+async function deleteInstallmentPayment(paymentId, groupKey) {
+  if(!confirm('هل أنت متأكد من حذف هذه الدفعة؟ سيعود المبلغ كمتبقي على العقد.')) return;
+  
+  if (window.showConstructionLoader) window.showConstructionLoader();
+  try {
+    const res = await fetch(`{{ url('installments/payments') }}/${paymentId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+      }
+    });
+    if(!res.ok) throw new Error('فشل החذف');
+    
+    // The response is the new statement HTML, just inject it
+    const html = await res.text();
+    const host = document.getElementById('statementModalHost');
+    host.innerHTML = html;
+    
+    // We need to re-initialize the modal since the HTML was replaced
+    const modalEl = host.querySelector('.modal');
+    if(modalEl) {
+      // Find the currently active tab in the OLD modal before we replaced it
+      const oldModal = document.getElementById('captureCustomer_' + groupKey);
+      let activePane = null;
+      if (oldModal) {
+          activePane = oldModal.getAttribute('data-active-pane');
+      }
+      
+      const m = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modalEl.addEventListener('hidden.bs.modal', () => { host.innerHTML=''; }, {once:true});
+      m.show();
+      
+      // Restore tab
+      if (activePane) {
+          switchTab(groupKey, activePane.replace('pane_'+groupKey+'_', ''));
+      }
+    }
+  } catch(e) {
+    Swal.fire('خطأ', 'تعذّر حذف الدفعة', 'error');
+  } finally {
+    if (window.hideConstructionLoader) window.hideConstructionLoader();
   }
 }
 

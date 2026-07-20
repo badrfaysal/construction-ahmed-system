@@ -21,10 +21,21 @@
   </div>
 @endif
 
+<div style="margin-bottom:12px;display:flex;align-items:center;gap:8px">
+  <label style="font-size:13px;font-weight:600;color:var(--ink-2)">ترتيب حسب:</label>
+  <select id="marketer-sort" onchange="sortMarketersTable(this.value)" style="padding:6px 12px;border-radius:8px;border:1px solid var(--line);font-size:13px;background:var(--surface);color:var(--ink);cursor:pointer">
+    <option value="newest">الأحدث إضافة</option>
+    <option value="oldest">الأقدم إضافة</option>
+    <option value="volume_desc">الأعلى تعاملاً (عمولات)</option>
+    <option value="volume_asc">الأقل تعاملاً (عمولات)</option>
+    <option value="name">الاسم (أ-ي)</option>
+  </select>
+</div>
+
 <div class="table-card">
   @if($marketers->count())
     <div class="table-scroll">
-      <table>
+      <table id="marketers-table">
         <thead>
           <tr>
             <th>الاسم</th>
@@ -36,7 +47,9 @@
         </thead>
         <tbody>
           @foreach($marketers as $marketer)
-            <tr>
+            <tr data-created="{{ $marketer->created_at?->timestamp ?? 0 }}"
+                data-volume="{{ $marketer->totalPaid() }}"
+                data-name="{{ $marketer->name }}">
               <td><strong>{{ $marketer->name }}</strong></td>
               <td class="muted" style="direction:ltr;text-align:right">{{ $marketer->phone ?: '—' }}</td>
               <td class="num">{{ $marketer->projectsCount() }}</td>
@@ -87,4 +100,33 @@
     </form>
   </div>
 </div>
+
+@push('scripts')
+<script>
+function sortMarketersTable(mode) {
+  const tbody = document.querySelector('#marketers-table tbody');
+  if (!tbody) return;
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  rows.sort((a, b) => {
+    switch (mode) {
+      case 'newest':
+        return (parseFloat(b.dataset.created) || 0) - (parseFloat(a.dataset.created) || 0);
+      case 'oldest':
+        return (parseFloat(a.dataset.created) || 0) - (parseFloat(b.dataset.created) || 0);
+      case 'volume_desc':
+        return (parseFloat(b.dataset.volume) || 0) - (parseFloat(a.dataset.volume) || 0);
+      case 'volume_asc':
+        return (parseFloat(a.dataset.volume) || 0) - (parseFloat(b.dataset.volume) || 0);
+      case 'name':
+        return (a.dataset.name || '').localeCompare(b.dataset.name || '', 'ar');
+      default:
+        return 0;
+    }
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+// Default: newest first
+document.addEventListener('DOMContentLoaded', () => sortMarketersTable('newest'));
+</script>
+@endpush
 @endsection

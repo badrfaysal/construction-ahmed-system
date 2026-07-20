@@ -249,8 +249,9 @@
             <tr class="pxls-pay-row">
               <td class="pxls-pay-date" dir="ltr">{{ optional($p->payment_date)->format('Y-m-d') }}</td>
               <td class="pxls-pay-num" style="position:relative;">
-                <span class="pxls-pay-amount">{{ fmtMoney($p->amount_paid) }}@if((float)$p->discount_applied > 0)<small style="color:#0277bd;"> (+خصم {{ fmtMoney($p->discount_applied) }})</small>@endif</span>
                 <span class="pxls-row-badge">{{ $pIdx + 1 }}</span>
+                <span class="pxls-pay-amount">{{ fmtMoney($p->amount_paid) }}@if((float)$p->discount_applied > 0)<small style="color:#0277bd;"> (+خصم {{ fmtMoney($p->discount_applied) }})</small>@endif</span>
+                <button type="button" class="no-print" onclick="deleteInstallmentPayment({{ $p->id }}, '{{ $groupKey }}')" style="position:absolute;left:35px;top:50%;transform:translateY(-50%);background:none;border:none;color:#ef4444;opacity:0.4;font-size:12px;cursor:pointer;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.4'" title="حذف الدفعة"><i class="fa fa-trash"></i></button>
               </td>
             </tr>
             @empty
