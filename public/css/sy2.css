@@ -22,7 +22,7 @@
   --shadow-lg:0 12px 40px rgba(16,30,54,.16);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;background:var(--bg);color:var(--ink);
+body{font-family:'Tajawal',system-ui,sans-serif;background:var(--bg);color:var(--ink);
   display:flex;min-height:100vh;font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}
 svg{display:block}
@@ -479,7 +479,7 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
 /* ---- Print ---- */
 @media print{
   @page{size:A4;margin:9mm}
-  .sidebar,.topbar,.no-print{display:none!important}
+  .sidebar,.topbar,.no-print,.modal-overlay{display:none!important}
   .main{margin:0}
   body{background:#fff;font-size:11px}
   .page-wrap{padding:0}
@@ -487,8 +487,9 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
   /* Printing the profit modal (كارت الربح المتحقق): hide the rest of the
      project page and lay the modal out as a normal full-width printed block */
   body.printing-profit .page-wrap>*:not(.modal-overlay){display:none!important}
-  body.printing-profit .modal-overlay{display:block!important;position:static!important;background:none!important;padding:0!important}
-  body.printing-profit .modal-box{box-shadow:none!important;border:none!important;max-width:100%!important;max-height:none!important;overflow:visible!important;border-radius:0!important}
+  body.printing-profit .modal-overlay{display:none!important}
+  body.printing-profit #profit-modal{display:block!important;position:static!important;background:none!important;padding:0!important}
+  body.printing-profit #profit-modal .modal-box{box-shadow:none!important;border:none!important;max-width:100%!important;max-height:none!important;overflow:visible!important;border-radius:0!important}
   body.printing-profit .modal-head{display:none!important}
   body.printing-profit .profit-print-head{display:flex!important;justify-content:space-between;align-items:flex-start;padding:0 0 16px;margin-bottom:16px;border-bottom:3px solid #1e293b}
   body.printing-profit .pph-co h2{font-size:18px;font-weight:700;color:#1e293b;margin:0}

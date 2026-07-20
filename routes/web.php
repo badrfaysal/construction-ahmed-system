@@ -102,6 +102,7 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::get('/installments/customer-statement', [InstallmentController::class, 'customerStatement'])->name('installments.customer_statement');
     // سداد دفعة (كامل/شهري/جزئي + خصم اختياري)
     Route::post('/installments/{contract}/pay', [InstallmentController::class, 'pay'])->name('installments.pay');
+    Route::post('/installments/{contract}/settle', [InstallmentController::class, 'settle'])->name('installments.settle');
     Route::delete('/installments/payments/{payment}', [InstallmentController::class, 'destroyPayment'])->name('installments.payments.destroy');
     // دفع جماعي للأقساط الشهرية لعدة عقود
     Route::post('/installments/pay-bulk', [InstallmentController::class, 'payBulk'])->name('installments.pay_bulk');

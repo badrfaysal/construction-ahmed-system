@@ -116,18 +116,15 @@
 <div class="grid {{ $isOwner ? 'cols-5' : 'cols-4' }}" style="margin-bottom:20px">
   <div class="card stat">
     <div class="top"><span class="label">إجمالي قيمة المشروع</span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span></div>
-    <div class="val tnum price-sell">{{ \App\Support\Money::format($actualValue) }} <small>ج.م</small></div>
+    @php
+      $installmentDiscounts = (float) \App\Models\InstallmentPayment::where('project_id', $project->id)->sum('discount_applied');
+      $displayValue = $project->grossClientTotal() - $installmentDiscounts;
+    @endphp
+    <div class="val tnum price-sell">{{ \App\Support\Money::format($displayValue) }} <small>ج.م</small></div>
     <div class="note" style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
       <span>سعر الشراء (تكلفة)</span>
       <strong class="price-cost">{{ \App\Support\Money::format($project->totalSpent()) }} ج.م</strong>
     </div>
-    @if(abs($valueGap) > 0.5)
-      <div class="note" style="margin-top:4px;font-size:11px;color:var(--ink-3)">
-        الفرق عن سعر البنود المتفق عليه ({{ \App\Support\Money::format($bandsAgreedTotal) }} ج.م):
-        {{ $valueGap > 0 ? '+' : '' }}{{ \App\Support\Money::format($valueGap) }} ج.م
-        — خامات/مصنعية اتسجلت فعليًا بعد تحديد سعر البند
-      </div>
-    @endif
   </div>
   <div class="card stat">
     <div class="top"><span class="label">الخصم الممنوح</span><span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-percent"/></svg></span></div>
@@ -149,13 +146,12 @@
       $profitWithoutInstallment = $totalProfit - $installmentInterest;
     @endphp
     <div class="card stat row-click" onclick="document.getElementById('profit-modal').classList.add('open')">
-      <div class="top"><span class="label">الربح المتحقق (بدون الفوائد)</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg></span></div>
-      <div class="val tnum" style="color:{{ $profitWithoutInstallment >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($profitWithoutInstallment) }} <small>ج.م</small></div>
+      <div class="top"><span class="label">الربح المتحقق</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg></span></div>
+      <div class="val tnum" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalProfit) }} <small>ج.م</small></div>
       <div class="note" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>بعد طرح الخصم الممنوح والعمولات</span>
         @if($installmentInterest > 0)
-          <span style="color:var(--accent); font-weight:bold;">+ {{ \App\Support\Money::format($installmentInterest) }} ج أرباح نسبة التقسيط</span>
-        @else
-          <span>بعد طرح الخصم الممنوح</span>
+          <span style="color:var(--accent); font-size:10px; font-weight:600;">(متضمن أرباح التقسيط)</span>
         @endif
       </div>
     </div>
@@ -1312,7 +1308,11 @@
                   <td class="num" style="color:{{ $genMatProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($genMatProfit) }}</td>
                 </tr>
               @endif
-              @php $installmentInterest = $project->contracts()->get()->sum(fn($c) => $c->interestAmount()); @endphp
+              @php 
+                $installmentInterest = $project->totalInstallmentInterest(); // Now returns net interest
+                $installmentWaived = (float) $project->contracts()->with('payments')->get()->sum(fn ($c) => $c->payments->sum('discount_applied'));
+                $displayDiscount = $project->totalDiscount() - $installmentWaived;
+              @endphp
               @if($installmentInterest > 0)
                 <tr style="background: rgba(16, 185, 129, 0.05);">
                   <td style="color: #10b981; font-weight: bold;">أرباح نسبة التقسيط</td>
@@ -1330,9 +1330,9 @@
               </tr>
               <tr>
                 <td style="color: var(--amber)">الخصومات الممنوحة للعميل</td>
-                <td class="num" style="color: var(--amber)">{{ $project->totalDiscount() > 0 ? '-' : '' }}{{ \App\Support\Money::format($project->totalDiscount()) }}</td>
+                <td class="num" style="color: var(--amber)">{{ $displayDiscount > 0 ? '-' : '' }}{{ \App\Support\Money::format($displayDiscount) }}</td>
                 <td class="num">0.00</td>
-                <td class="num" style="color: var(--amber)">{{ $project->totalDiscount() > 0 ? '-' : '' }}{{ \App\Support\Money::format($project->totalDiscount()) }}</td>
+                <td class="num" style="color: var(--amber)">{{ $displayDiscount > 0 ? '-' : '' }}{{ \App\Support\Money::format($displayDiscount) }}</td>
               </tr>
               <tr style="border-top: 2px solid #ddd;">
                 <td><strong>الصافي الكلي للمشروع</strong></td>

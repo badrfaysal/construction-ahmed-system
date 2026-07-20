@@ -28,18 +28,24 @@ class RadarController extends Controller
             $query->where('performed_by', $request->user_id);
         }
 
-        // Date filter
-        $period = $request->get('period', 'today');
-        if ($period === 'today') {
-            $query->whereBetween('happened_at', [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()]);
-        } elseif ($period === 'yesterday') {
-            $query->whereBetween('happened_at', [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()]);
-        } elseif ($period === 'custom') {
-            if ($request->filled('date_from')) {
-                $query->where('happened_at', '>=', Carbon::parse($request->date_from)->startOfDay());
-            }
-            if ($request->filled('date_to')) {
-                $query->where('happened_at', '<=', Carbon::parse($request->date_to)->endOfDay());
+        // Transaction filter (to jump to specific radar entry)
+        if ($request->filled('tx')) {
+            $query->where('transaction_id', $request->tx);
+            $period = 'all'; // Override period to ensure we find it
+        } else {
+            // Date filter
+            $period = $request->get('period', 'today');
+            if ($period === 'today') {
+                $query->whereBetween('happened_at', [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()]);
+            } elseif ($period === 'yesterday') {
+                $query->whereBetween('happened_at', [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()]);
+            } elseif ($period === 'custom') {
+                if ($request->filled('date_from')) {
+                    $query->where('happened_at', '>=', Carbon::parse($request->date_from)->startOfDay());
+                }
+                if ($request->filled('date_to')) {
+                    $query->where('happened_at', '<=', Carbon::parse($request->date_to)->endOfDay());
+                }
             }
         }
 

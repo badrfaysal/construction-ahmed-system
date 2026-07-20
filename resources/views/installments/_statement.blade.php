@@ -120,9 +120,14 @@
           <div class="sheet-no-export no-print" style="background:#fff8e1;border-bottom:1px solid #ffe082;padding:8px 12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
             @if($instRemain > 0.009)
               <button type="button" class="btn btn-success btn-sm fw-bold px-3" onclick="toggleStmtForm({{ $c->id }},'pay')"><i class="fa fa-cash-register me-1"></i>سداد قسط</button>
+              <button type="button" class="btn btn-dark btn-sm fw-bold px-3" onclick="toggleStmtForm({{ $c->id }},'settle')"><i class="fa fa-handshake me-1"></i>تسوية كاش (إنهاء مبكر)</button>
             @endif
             <button type="button" class="btn btn-primary btn-sm fw-bold px-3" onclick="toggleStmtForm({{ $c->id }},'edit')"><i class="fa fa-pen me-1"></i>تعديل</button>
-            <span class="small text-muted align-self-center">حذف العقد من <a href="{{ route('transactions.index') }}">سجل الحركات</a></span>
+            @php
+                $txId = \App\Models\Transaction::where('ref_type', 'inst_down')->where('ref_id', $c->id)->value('id');
+                $deleteUrl = $txId ? route('radar.index', ['tx' => $txId]) : route('radar.index');
+            @endphp
+            <a href="{{ $deleteUrl }}" class="btn btn-outline-danger btn-sm fw-bold px-3" target="_blank"><i class="fa fa-trash me-1"></i>حذف العقد (من الرادار)</a>
           </div>
 
           {{-- ── نموذج سداد (مخفي) ── --}}
@@ -203,6 +208,76 @@
                       <input type="hidden" name="notes" id="pay_notes_{{ $c->id }}" value="">
 
                       <button type="submit" class="btn w-100" style="background:#059669;color:#fff;font-size:20px;font-weight:bold;padding:14px;border-radius:30px;"><i class="fa fa-check-circle me-2"></i> تأكيد التحصيل</button>
+                    </form>
+                </div>
+            </div>
+          </div>
+          @endif
+
+          {{-- ── نموذج تسوية كاش (مخفي) ── --}}
+          @if($instRemain > 0.009)
+          <div id="stmtSettle_{{ $c->id }}" class="no-print" style="display:none;position:fixed;inset:0;z-index:1060;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);">
+            <div style="background:#fff;border-radius:12px;width:100%;max-width:500px;box-shadow:0 10px 25px rgba(0,0,0,0.2);overflow:hidden;display:flex;flex-direction:column;max-height:90vh;margin:auto;">
+                <div style="background:#1e293b;color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">
+                    <div style="font-weight:bold;font-size:18px;display:flex;align-items:center;gap:10px;">
+                        <i class="fa fa-handshake"></i> تسوية كاش للعقد: {{ $cName }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" onclick="toggleStmtForm({{ $c->id }},'settle')" style="opacity:0.8;"></button>
+                </div>
+                <div style="padding:20px;overflow-y:auto;">
+                    @php
+                        $settleTotalPaidSoFar = (float)$c->down_payment + (float)$c->payments->sum('amount_paid') + (float)$c->payments->sum('discount_applied');
+                        $settleCashDue = max(0, $afterDisc - $settleTotalPaidSoFar);
+                        $settleDiscount = max(0, $instRemain - $settleCashDue);
+                    @endphp
+                    <form method="POST" action="{{ route('installments.settle', $c) }}" id="formSettle_{{ $c->id }}">
+                      @csrf
+                      
+                      <!-- تفاصيل التسوية -->
+                      <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:16px;margin-bottom:20px;">
+                          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                              <span style="color:#475569;font-weight:bold;">قيمة العقد كاش:</span>
+                              <span style="font-weight:bold;" class="tnum">{{ \App\Support\Money::format($afterDisc) }} ج</span>
+                          </div>
+                          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                              <span style="color:#475569;font-weight:bold;">إجمالي المدفوع حتى الآن:</span>
+                              <span style="font-weight:bold;color:#16a34a;" class="tnum">{{ \App\Support\Money::format($settleTotalPaidSoFar) }} ج</span>
+                          </div>
+                          <hr style="margin:8px 0;border-color:#cbd5e1;">
+                          <div style="display:flex;justify-content:space-between;">
+                              <span style="color:#dc2626;font-weight:bold;">الفوائد التي سيتم إعفاؤها:</span>
+                              <span style="font-weight:bold;color:#dc2626;" class="tnum">{{ \App\Support\Money::format($settleDiscount) }} ج</span>
+                          </div>
+                      </div>
+
+                      <!-- المطلوب سداده كاش -->
+                      <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:16px;text-align:center;margin-bottom:20px;">
+                         <div style="color:#16a34a;font-weight:bold;font-size:18px;margin-bottom:4px;">المطلوب سداده الآن كاش:</div>
+                         <div style="color:#16a34a;font-weight:900;font-size:28px;" class="tnum" dir="ltr">{{ \App\Support\Money::format($settleCashDue) }} <small>ج</small></div>
+                      </div>
+
+                      <div class="row g-2 mb-3">
+                         <div class="col-6">
+                            <label style="font-weight:bold;display:block;margin-bottom:6px;">الخزينة المحصل عليها <span class="text-danger">*</span></label>
+                            <select name="account_id" class="form-select form-select-lg" required style="border-color:#3b82f6;color:#1d4ed8;font-weight:bold;">
+                               <option value="" disabled {{ $c->account_id ? '' : 'selected' }}>— اختر الخزنة —</option>
+                               @foreach(($wallets ?? collect()) as $w)
+                                  <option value="{{ $w->id }}" @selected($c->account_id == $w->id)>{{ $w->account_name }} — {{ \App\Support\Money::format($w->balance) }} ج</option>
+                               @endforeach
+                            </select>
+                         </div>
+                         <div class="col-6">
+                            <label style="font-weight:bold;display:block;margin-bottom:6px;">تاريخ التسوية <span class="text-danger">*</span></label>
+                            <input type="date" name="payment_date" class="form-control form-control-lg text-center fw-bold" value="{{ date('Y-m-d') }}" required>
+                         </div>
+                      </div>
+
+                      <div style="margin-bottom:20px;">
+                         <label style="font-weight:bold;display:block;margin-bottom:6px;">ملاحظات (اختياري)</label>
+                         <input type="text" name="notes" class="form-control" placeholder="مثال: تم سداد باقي الكاش وتسوية العقد نهائياً">
+                      </div>
+
+                      <button type="submit" class="btn w-100" style="background:#1e293b;color:#fff;font-size:18px;font-weight:bold;padding:12px;border-radius:30px;"><i class="fa fa-handshake me-2"></i> تأكيد التسوية وإنهاء العقد</button>
                     </form>
                 </div>
             </div>

@@ -717,12 +717,19 @@ function switchTab(group, pane){
   root.setAttribute('data-active-pane', pane);
 }
 function toggleStmtForm(id, which){
-  const el =document.getElementById('stmt'+(which==='pay'?'Pay':'Edit')+'_'+id);
-  const oth=document.getElementById('stmt'+(which==='pay'?'Edit':'Pay')+'_'+id);
-  if(oth)oth.style.display='none';
+  const suffix = which === 'pay' ? 'Pay' : (which === 'settle' ? 'Settle' : 'Edit');
+  const el = document.getElementById('stmt' + suffix + '_' + id);
+  
+  ['Pay', 'Edit', 'Settle'].forEach(w => {
+    if(w.toLowerCase() !== which) {
+      let oth = document.getElementById('stmt' + w + '_' + id);
+      if(oth) oth.style.display = 'none';
+    }
+  });
+
   if(el){
     if(el.style.display==='none'||!el.style.display){
-      el.style.display = (which==='pay' ? 'flex' : 'block');
+      el.style.display = (which==='pay' || which==='settle' ? 'flex' : 'block');
     } else {
       el.style.display = 'none';
     }

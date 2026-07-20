@@ -6,7 +6,7 @@
 <title>@yield('title', 'نظام الإدارة') — {{ $settings->company_name }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('css/sy2.css?v=1.2') }}">
 {{-- flatpickr — يخلّي كل حقول التاريخ تتعرض يوم/شهر/سنة (dd/mm/yyyy) وتتبعت Y-m-d --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">

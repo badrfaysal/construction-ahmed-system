@@ -285,6 +285,72 @@ class InstallmentController extends Controller
             ->with('reopen_name', $contract->customer_name);
     }
 
+    // تسوية العقد كاش مبكراً (سداد المتبقي من الكاش وإسقاط فوائد التقسيط المتبقية)
+    public function settle(Request $request, InstallmentContract $contract)
+    {
+        $validator = Validator::make($request->all(), [
+            'account_id'   => ['nullable', 'integer', 'exists:accounts,id'],
+            'payment_date' => ['required', 'date'],
+            'notes'        => ['nullable', 'string', 'max:255'],
+        ]);
+
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput()
+                ->with('reopen_phone', $contract->customer_phone)
+                ->with('reopen_name', $contract->customer_name)
+                ->with('reopen_contract_id', $contract->id)
+                ->with('reopen_form', 'settle');
+        }
+
+        $data = $validator->validated();
+
+        try {
+            DB::transaction(function () use ($contract, $data) {
+                $locked = InstallmentContract::whereKey($contract->id)->lockForUpdate()->firstOrFail();
+
+                if ((float) $locked->remaining_balance <= 0.009) {
+                    throw ValidationException::withMessages([
+                        'payment_date' => 'العقد مسدد بالكامل بالفعل ولا توجد حاجة لتسويته.',
+                    ]);
+                }
+
+                $afterDisc = max(0, (float)$locked->cash_price - (float)$locked->discount);
+                $totalPaidSoFar = (float)$locked->down_payment + (float)$locked->payments->sum('amount_paid') + (float)$locked->payments->sum('discount_applied');
+                
+                $settleCashDue = max(0, $afterDisc - $totalPaidSoFar);
+                $settleDiscount = max(0, (float)$locked->remaining_balance - $settleCashDue);
+
+                InstallmentPayment::create([
+                    'contract_id'      => $locked->id,
+                    'project_id'       => $locked->project_id,
+                    'account_id'       => $data['account_id'] ?? $locked->account_id,
+                    'amount_paid'      => $settleCashDue,
+                    'discount_applied' => $settleDiscount,
+                    'payment_date'     => $data['payment_date'],
+                    'method'           => null,
+                    'notes'            => 'تسوية كاش وإنهاء العقد مبكراً' . ($data['notes'] ? ' — ' . $data['notes'] : ''),
+                ]);
+
+                // تحديث حالة العقد
+                $locked->update([
+                    'status' => 'completed',
+                    'close_reason' => 'settlement',
+                ]);
+            });
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->validator)->withInput()
+                ->with('reopen_phone', $contract->customer_phone)
+                ->with('reopen_name', $contract->customer_name)
+                ->with('reopen_contract_id', $contract->id)
+                ->with('reopen_form', 'settle');
+        }
+
+        return back()
+            ->with('success', 'تم تسوية العقد وإنهاؤه بنجاح.')
+            ->with('reopen_phone', $contract->customer_phone)
+            ->with('reopen_name', $contract->customer_name);
+    }
+
     // دفع جماعي: يسدّد القسط الشهري لكل عقد من العقود المحددة دفعة واحدة
     public function payBulk(Request $request)
     {

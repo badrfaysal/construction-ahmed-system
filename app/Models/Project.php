@@ -151,10 +151,14 @@ class Project extends Model
         return $this->actualClientTotal() + $projectLevel + $contractLevel;
     }
 
-    // إجمالي الفائدة/الربح من كل عقود التقسيط في المشروع
+    // إجمالي الفائدة/الربح من كل عقود التقسيط في المشروع (بعد خصم الفوائد المعفاة/التسويات)
     public function totalInstallmentInterest(): float
     {
-        return (float) $this->contracts->sum(fn ($c) => $c->interestAmount());
+        return (float) $this->contracts->sum(function ($c) {
+            $grossInterest = $c->interestAmount();
+            $waivedInterest = (float) $c->payments->sum('discount_applied');
+            return max(0, $grossInterest - $waivedInterest);
+        });
     }
 
     // Materials/expenses registered directly on the project without a band
