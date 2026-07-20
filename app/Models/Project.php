@@ -135,7 +135,7 @@ class Project extends Model
         $bandsTotal = (float) $this->bands->sum(fn ($band) => $band->computeActualClientTotal());
         $generalMaterials = (float) $this->generalMaterials()->sum(fn ($m) => $m->netClientCost());
         
-        $interest = (float) $this->contracts()->get()->sum(fn ($c) => $c->interestAmount());
+        $interest = $this->totalInstallmentInterest();
 
         $projectDiscounts = (float) $this->discounts->sum('amount') + (float) $this->discount;
         $contractDiscounts = (float) $this->contracts->sum('discount');
@@ -291,9 +291,7 @@ class Project extends Model
 
     public function paymentDiscounts(): float
     {
-        $directDiscount = (float) $this->clientPayments->sum('discount');
-        $installmentDiscount = (float) \App\Models\InstallmentPayment::where('project_id', $this->id)->sum('discount_applied');
-        return $directDiscount + $installmentDiscount;
+        return (float) $this->clientPayments->sum('discount');
     }
 
     public function totalDiscount(): float

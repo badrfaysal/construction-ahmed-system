@@ -117,8 +117,7 @@
   <div class="card stat">
     <div class="top"><span class="label">إجمالي قيمة المشروع</span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span></div>
     @php
-      $installmentDiscounts = (float) \App\Models\InstallmentPayment::where('project_id', $project->id)->sum('discount_applied');
-      $displayValue = $project->grossClientTotal() - $installmentDiscounts;
+      $displayValue = $project->grossClientTotal();
     @endphp
     <div class="val tnum price-sell">{{ \App\Support\Money::format($displayValue) }} <small>ج.م</small></div>
     <div class="note" style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
@@ -1019,7 +1018,7 @@
     <div class="grid cols-4" style="gap: 20px;">
       <div class="vstat vstat-blue" style="padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
         <div class="top"><span class="label">إجمالي قيمة المشروع</span></div>
-        <div class="val tnum" style="font-size: 24px; margin-top: 12px;">{{ \App\Support\Money::format($rptClientTotal) }} <small style="font-size: 14px;">ج.م</small></div>
+        <div class="val tnum" style="font-size: 24px; margin-top: 12px;">{{ \App\Support\Money::format($project->grossClientTotal()) }} <small style="font-size: 14px;">ج.م</small></div>
       </div>
       <div class="vstat vstat-amber" style="padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
         <div class="top"><span class="label">إجمالي التكلفة</span></div>

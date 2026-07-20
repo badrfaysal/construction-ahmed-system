@@ -233,7 +233,7 @@
             $phone = trim((string)($c->customer_phone ?? ''));
             return ($phone !== '' && $phone !== '—') ? $phone : ('n:'.($c->customer_name ?? ''));
         })->map(fn($g)=>[
-            'total_value'=>(float)$g->sum('total_after_interest'),
+            'total_value'=>(float)$g->sum(fn($c) => max(0, (float)$c->total_after_interest - (float)$c->down_payment)),
             'total_remaining'=>(float)$g->sum(fn($c)=>max(0,(float)$c->remaining_balance)),
         ]), JSON_UNESCAPED_UNICODE) !!}
         </script>
