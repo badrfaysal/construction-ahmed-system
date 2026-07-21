@@ -81,7 +81,7 @@
                   </td>
                   <td class="num"><input type="number" name="items[{{ $idx }}][qty]" value="{{ rtrim(rtrim($item->qty, '0'), '.') }}" min="0" step="0.01" style="width:80px"></td>
                   <td class="num"><input type="number" name="items[{{ $idx }}][unit_price]" value="{{ $item->unit_price }}" min="0" step="0.01" style="width:100px"></td>
-                  <td class="num"><input type="number" name="items[{{ $idx }}][sell_price]" value="{{ $item->unit_price }}" min="0" step="0.01" style="width:100px"></td>
+                  <td class="num"><input type="number" name="items[{{ $idx }}][sell_price]" value="{{ $item->unit_price }}" min="0" step="0.01" style="width:100px; background-color:#f1f5f9; cursor:not-allowed;" readonly title="سعر البيع محدد مسبقاً في عرض السعر"></td>
                   <td class="num"><input type="number" name="items[{{ $idx }}][supervision_pct]" value="{{ $item->supervision_pct }}" min="0" max="100" step="0.1" style="width:70px"></td>
                   <td>
                     <select name="items[{{ $idx }}][supplier_id]" style="min-width:120px">

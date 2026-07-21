@@ -251,41 +251,73 @@ class QuoteController extends Controller
                 }
             }
 
-            // Record the items marked "already purchased" as real purchases
-            foreach ($data['items'] ?? [] as $item) {
-                if (empty($item['purchased'])) {
-                    continue;
+            // Record the items marked "already purchased" as real purchases inside proper Invoices
+            $purchasedItems = array_filter($data['items'] ?? [], fn($i) => !empty($i['purchased']));
+            
+            $groupedBySupplier = [];
+            foreach ($purchasedItems as $item) {
+                $supplierId = $item['supplier_id'] ?? 0;
+                $groupedBySupplier[$supplierId][] = $item;
+            }
+
+            foreach ($groupedBySupplier as $supplierId => $itemsGroup) {
+                $invoiceTotalCost = 0;
+                $invoicePaidAmount = 0;
+                $invoiceDate = $itemsGroup[0]['date'] ?? today();
+
+                foreach ($itemsGroup as $item) {
+                    $paymentStatus = $item['payment_status'] ?? 'paid';
+                    $unitPrice     = (float) ($item['unit_price'] ?? 0);
+                    $qty           = (float) ($item['qty'] ?? 1);
+                    $totalCost     = $unitPrice * $qty;
+                    $paidAmount = match ($paymentStatus) {
+                        'partial'  => (float) ($item['paid_amount'] ?? 0),
+                        'deferred' => 0,
+                        default    => $totalCost,
+                    };
+                    $invoiceTotalCost += $totalCost;
+                    $invoicePaidAmount += $paidAmount;
                 }
 
-                $paymentStatus = $item['payment_status'] ?? 'paid';
-                $unitPrice     = (float) ($item['unit_price'] ?? 0);
-                $qty           = (float) ($item['qty'] ?? 1);
-                $totalCost     = $unitPrice * $qty;
-
-                // For partial payment: use the entered paid_amount
-                // For deferred: paid_amount = 0
-                $paidAmount = match ($paymentStatus) {
-                    'partial'  => (float) ($item['paid_amount'] ?? 0),
-                    'deferred' => 0,
-                    default    => $totalCost, // paid = full cost
-                };
-
-                Material::create([
-                    'project_id'      => $project->id,
-                    'band_id'         => $bandMap[$item['quote_band_id']] ?? null,
-                    'account_id'      => $data['account_id'] ?? null,
-                    'supplier_id'     => $item['supplier_id'] ?? null,
-                    'category'        => 'material',
-                    'item'            => $item['name'],
-                    'unit'            => $item['unit'] ?: 'وحدة',
-                    'qty'             => $qty,
-                    'unit_price'      => $unitPrice,
-                    'sell_price'      => $item['sell_price'] ?? $unitPrice,
-                    'supervision_pct' => $item['supervision_pct'] ?? 0,
-                    'date'            => $item['date'] ?? today(),
-                    'payment_status'  => $paymentStatus,
-                    'paid_amount'     => $paidAmount,
+                $invoice = \App\Models\MaterialInvoice::create([
+                    'project_id'   => $project->id,
+                    'supplier_id'  => $supplierId === 0 ? null : $supplierId,
+                    'account_id'   => $data['account_id'] ?? null,
+                    'date'         => $invoiceDate,
+                    'name'         => 'مشتريات محولة من العرض ' . $quote->ref,
+                    'total_amount' => $invoiceTotalCost,
+                    'paid_amount'  => $invoicePaidAmount,
                 ]);
+
+                foreach ($itemsGroup as $item) {
+                    $paymentStatus = $item['payment_status'] ?? 'paid';
+                    $unitPrice     = (float) ($item['unit_price'] ?? 0);
+                    $qty           = (float) ($item['qty'] ?? 1);
+                    $totalCost     = $unitPrice * $qty;
+                    $paidAmount = match ($paymentStatus) {
+                        'partial'  => (float) ($item['paid_amount'] ?? 0),
+                        'deferred' => 0,
+                        default    => $totalCost,
+                    };
+
+                    Material::create([
+                        'project_id'      => $project->id,
+                        'band_id'         => $bandMap[$item['quote_band_id']] ?? null,
+                        'account_id'      => $data['account_id'] ?? null,
+                        'supplier_id'     => $supplierId === 0 ? null : $supplierId,
+                        'invoice_id'      => $invoice->id,
+                        'category'        => 'material',
+                        'item'            => $item['name'],
+                        'unit'            => $item['unit'] ?: 'وحدة',
+                        'qty'             => $qty,
+                        'unit_price'      => $unitPrice,
+                        'sell_price'      => $item['sell_price'] ?? $unitPrice,
+                        'supervision_pct' => $item['supervision_pct'] ?? 0,
+                        'date'            => $item['date'] ?? today(),
+                        'payment_status'  => $paymentStatus,
+                        'paid_amount'     => $paidAmount,
+                    ]);
+                }
             }
 
             $quote->update(['project_id' => $project->id]);

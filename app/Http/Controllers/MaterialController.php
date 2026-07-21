@@ -121,7 +121,7 @@ class MaterialController extends Controller
             'project_id'                    => ['required', 'exists:sy2_projects,id'],
             'invoice_name'                  => ['required', 'string', 'max:255', 'unique:sy2_material_invoices,name'],
             'date'                          => ['required', 'date'],
-            'supplier_id'                   => ['nullable', 'exists:sy2_suppliers,id'],
+            'supplier_id'                   => ['required', 'exists:sy2_suppliers,id'],
             'payment_status'                => ['nullable', 'in:paid,partial,deferred'],
             'account_id'                    => ['required_unless:payment_status,deferred', 'nullable', 'integer', 'exists:accounts,id'],
             'paid_amount'                   => ['nullable', 'numeric', 'min:0'],

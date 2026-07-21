@@ -270,8 +270,8 @@
       </div>
       <div class="field" style="margin-bottom:0">
         <label>المورد *</label>
-        <select name="supplier_id" class="neo-big-input">
-          <option value="">— بدون مورد —</option>
+        <select name="supplier_id" class="neo-big-input" required>
+          <option value="">— اختر المورد —</option>
           @foreach($suppliers as $s)
             <option value="{{ $s->id }}">{{ $s->name }} {{ $s->activity ? '— ' . $s->activity : '' }}</option>
           @endforeach
@@ -437,7 +437,7 @@ function updateSupervisionDefault(select) {
 const suppliersData = @json($suppliers->map(fn ($s) => ['id' => $s->id, 'label' => $s->name . ($s->activity ? ' — ' . $s->activity : '')]));
 
 function supplierOptionsHtml(selectedId = '') {
-  let html = `<option value="" ${String(selectedId) === '' ? 'selected' : ''}>— بدون مورد —</option>`;
+  let html = `<option value="" ${String(selectedId) === '' ? 'selected' : ''}>— اختر المورد —</option>`;
   suppliersData.forEach(s => {
     html += `<option value="${s.id}" ${String(selectedId) === String(s.id) ? 'selected' : ''}>${s.label}</option>`;
   });

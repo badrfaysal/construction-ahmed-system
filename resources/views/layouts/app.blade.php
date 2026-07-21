@@ -200,6 +200,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
       <span>كشف حساب العميل</span>
     </a>
+    <a class="nav-item {{ request()->routeIs('calculator.*') ? 'active' : '' }}" href="{{ route('calculator.index') }}" style="--ic:#0ea5e9">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-grid"/></svg>
+      <span>حاسبة المقايسة</span>
+    </a>
     @if(auth()->user()->canSeeFinancials())
     <a class="nav-item {{ request()->routeIs('reports.estimation.*') ? 'active' : '' }}" href="{{ route('reports.estimation.index') }}" style="--ic:#f59e0b">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-clipboard"/></svg>
@@ -268,6 +272,7 @@
     'returns'       => ['#ea580c','#f97316','#ffedd5','#c2410c','i-box'],
     'reports'       => ['#7c3aed','#8b5cf6','#f2ecfe','#5b21b6','i-bar-chart'],
     'analytics'     => ['#4f46e5','#6366f1','#ececfe','#4338ca','i-pie-chart'],
+    'calculator'    => ['#0ea5e9','#38bdf8','#e0f2fe','#0284c7','i-grid'],
     'price-history' => ['#0891b2','#06b6d4','#e0f7fa','#0e7490','i-trending-up'],
     'alerts'        => ['#dc2626','#ef4444','#fdeae7','#b91c1c','i-bell'],
     'warranties'    => ['#059669','#10b981','#e3f6ee','#047857','i-shield'],

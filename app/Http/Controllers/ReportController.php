@@ -49,7 +49,7 @@ class ReportController extends Controller
                 $project->book_profit      = $billed - $spent - $project->total_discount;
                 // ربح محصل = ما قبضناه فعلاً - ما صرفناه
                 $project->earned_profit    = $collected - $spent;
-                $project->book_margin      = $billed > 0 ? ($project->book_profit / $billed) * 100 : 0;
+                $project->book_margin      = $spent > 0 ? ($project->book_profit / $spent) * 100 : ($project->book_profit > 0 ? 100 : 0);
 
                 // تفصيل الربح الدفتري لمصدرين منفصلين:
                 //  - تجاري: فرق سعر الشراء عن سعر البيع بس (هامش تجاري بحت)

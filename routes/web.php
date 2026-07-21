@@ -167,6 +167,11 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
     Route::get('/analytics/technicians', [AnalyticsController::class, 'technicians'])->name('analytics.technicians');
 
+    // Calculator (حاسبة المقايسة)
+    Route::get('/calculator', [\App\Http\Controllers\CalculatorController::class, 'index'])->name('calculator.index');
+    Route::post('/calculator', [\App\Http\Controllers\CalculatorController::class, 'store'])->name('calculator.store');
+    Route::delete('/calculator/{calculator}', [\App\Http\Controllers\CalculatorController::class, 'destroy'])->name('calculator.destroy');
+
     // Warranty tracking (متابعة الضمانات) — "create" must come before the {project}-bound show route
     Route::get('/warranties', [WarrantyController::class, 'index'])->name('warranties.index');
     Route::get('/warranties/create', [WarrantyController::class, 'create'])->name('warranties.create');

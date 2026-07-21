@@ -38,6 +38,7 @@
             <th>المشاريع</th>
             <th class="num">إجمالي قيم المشاريع</th>
             <th class="num">المحصّل</th>
+            <th class="num">المتبقي</th>
             <th></th>
           </tr>
         </thead>
@@ -60,6 +61,7 @@
               </td>
               <td class="num">{{ \App\Support\Money::format($contract) }}</td>
               <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($collected) }}</td>
+              <td class="num" style="color:var(--neg); font-weight:700;">{{ \App\Support\Money::format($contract - $collected) }}</td>
               <td>
                 <a href="{{ route('clients.show', $c) }}" class="btn ghost sm" onclick="event.stopPropagation()">تفاصيل</a>
               </td>
