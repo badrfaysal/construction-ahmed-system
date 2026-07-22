@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', $quote->ref)
 @section('page-title', 'عرض سعر: ' . $quote->ref)
 
@@ -37,9 +37,9 @@
         <a href="{{ route('quotes.convert', $quote) }}" class="btn pos">تحويل إلى مشروع</a>
       @endif
     @endif
-    <button onclick="window.print()" class="btn ghost">
+    <button onclick="window.print()" class="btn" style="font-weight:700">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-print"/></svg>
-      طباعة
+      طباعة عرض السعر
     </button>
     <a href="{{ route('quotes.index') }}" class="btn ghost">رجوع</a>
   </div>

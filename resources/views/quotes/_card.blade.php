@@ -76,7 +76,7 @@
     @if($q->whatsappLink())
       <a href="{{ $q->whatsappLink() }}" target="_blank" class="btn ghost sm">إرسال واتساب</a>
     @endif
-    <a href="{{ route('quotes.show', $q) }}" class="btn ghost sm">
+    <a href="{{ route('quotes.show', $q) }}" class="btn sm" style="font-weight:700">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-print"/></svg>
       طباعه وعرض
     </a>
