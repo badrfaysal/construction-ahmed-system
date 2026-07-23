@@ -5,8 +5,8 @@
 @section('content')
 
 <style>
-  .calc-tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--bg-alt); padding: 4px; border-radius: 8px; width: max-content; }
-  .calc-tab-btn { padding: 8px 24px; cursor: pointer; border: none; background: transparent; color: var(--text-muted); border-radius: 6px; font-weight: 600; font-size: 0.95rem; transition: all 0.2s ease; }
+  .calc-tabs { display: flex; gap: 8px; margin-bottom: 32px; background: var(--bg-alt); padding: 6px; border-radius: 10px; width: max-content; }
+  .calc-tab-btn { padding: 10px 28px; cursor: pointer; border: none; background: transparent; color: var(--text-muted); border-radius: 8px; font-weight: 600; font-size: 1rem; transition: all 0.2s ease; }
   .calc-tab-btn:hover { color: var(--text); }
   .calc-tab-btn.active { background: white; color: var(--brand); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
   .dark .calc-tab-btn.active { background: var(--bg); }
@@ -16,7 +16,7 @@
 
   .space-input {
     width: 100%;
-    padding: 12px 16px;
+    padding: 14px 18px;
     border: 2px solid var(--border);
     border-radius: 10px;
     background: var(--bg);
@@ -42,7 +42,7 @@
   }
   
   table .space-input {
-    padding: 8px 10px;
+    padding: 12px 14px;
     font-size: 0.95rem;
     border-radius: 8px;
     border-width: 1px;
@@ -56,12 +56,36 @@
 
   .custom-label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
     font-weight: 700;
     color: #475569;
-    font-size: 0.95rem;
+    font-size: 1.05rem;
   }
   .dark .custom-label { color: #cbd5e1; }
+
+  /* Spacing Improvements */
+  .card {
+    padding: 28px !important;
+    margin-bottom: 28px !important;
+    border-radius: 12px;
+  }
+  .card.stat {
+    padding: 24px !important;
+  }
+  .grid {
+    gap: 28px !important;
+  }
+  table th, table td {
+    padding: 16px 14px !important;
+    vertical-align: middle;
+  }
+  .page-head {
+    margin-bottom: 32px !important;
+  }
+  .btn {
+    padding: 12px 24px;
+    font-size: 1rem;
+  }
 </style>
 
 <div class="page-head">
@@ -138,11 +162,11 @@
     <h3 style="margin-bottom: 16px;">النتائج الإجمالية للمقايسة</h3>
     <div class="grid cols-4" style="margin-bottom: 24px">
       <div class="card stat">
-        <div class="top"><span class="label">إجمالي الدهانات (حوائط + أسقف)</span></div>
+        <div class="top"><span class="label">حوائط الغرف</span></div>
         <div class="val tnum" style="color:var(--brand)"><span id="lblPaints">0.00</span> <small>م²</small></div>
       </div>
       <div class="card stat">
-        <div class="top"><span class="label">سيراميك الأرضيات</span></div>
+        <div class="top"><span class="label">الارضيات = الاسقف</span></div>
         <div class="val tnum" style="color:var(--amber)"><span id="lblFloorCeramics">0.00</span> <small>م²</small></div>
       </div>
       <div class="card stat">
@@ -184,8 +208,8 @@
           <thead>
             <tr>
               <th>العنوان</th>
-              <th>إجمالي الدهانات</th>
-              <th>أرضيات سيراميك</th>
+              <th>حوائط الغرف</th>
+              <th>الارضيات = الاسقف</th>
               <th>حوائط سيراميك</th>
               <th>تاريخ الحفظ</th>
               <th>إجراء</th>
@@ -304,8 +328,8 @@
         rowText = `أرضية: ${floorArea.toFixed(1)}م² | حوائط: ${wallArea.toFixed(1)}م²`;
       } else {
         const ceilingArea = floorArea; // السقف = الطول × العرض
-        totalPaints += wallArea + ceilingArea;
-        totalFloorCeramics += floorArea;
+        totalPaints += wallArea; // حوائط الغرف فقط
+        totalFloorCeramics += floorArea; // الارضيات = الاسقف
         rowText = `حوائط: ${wallArea.toFixed(1)}م² | سقف: ${ceilingArea.toFixed(1)}م² | أرضية: ${floorArea.toFixed(1)}م²`;
       }
 
