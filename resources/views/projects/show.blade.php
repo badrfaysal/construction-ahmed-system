@@ -115,7 +115,7 @@
 
 <div class="grid {{ $isOwner ? 'cols-5' : 'cols-4' }}" style="margin-bottom:20px">
   <div class="card stat">
-    <div class="top"><span class="label"> <p> متضمن نسبة الاقساط </p> إجمالي قيمة المشروع</span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span></div>
+    <div class="top"><span class="label">إجمالي قيمة المشروع<br><span style="font-size: 11px; font-weight: normal; opacity: 0.8; display: inline-block; margin-top: 2px;">متضمن نسبة الاقساط</span></span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span></div>
     @php
       $displayValue = $project->grossClientTotal();
     @endphp

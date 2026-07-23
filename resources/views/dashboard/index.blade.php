@@ -5,7 +5,80 @@
 
 @section('content')
 
-{{-- Summary stats row — كروت متدرّجة ملوّنة (بروح المركز المالي في نظام 1) --}}
+<style>
+/* تحسين شكل كروت الإحصائيات (Premium CSS) */
+.vstat {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    background-size: 200% auto;
+}
+.vstat:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+    background-position: right center;
+}
+.vstat .ic {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: transform 0.3s ease;
+}
+.vstat:hover .ic {
+    transform: scale(1.1) rotate(5deg);
+}
+.vstat-navy { background-image: linear-gradient(135deg, #1e293b 0%, #0f172a 51%, #1e293b 100%); }
+.vstat-blue { background-image: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 51%, #3b82f6 100%); }
+.vstat-teal { background-image: linear-gradient(135deg, #14b8a6 0%, #0f766e 51%, #14b8a6 100%); }
+.vstat-green{ background-image: linear-gradient(135deg, #10b981 0%, #047857 51%, #10b981 100%); }
+.vstat-red  { background-image: linear-gradient(135deg, #ef4444 0%, #b91c1c 51%, #ef4444 100%); }
+.vstat-amber{ background-image: linear-gradient(135deg, #f59e0b 0%, #b45309 51%, #f59e0b 100%); }
+.vstat-gold { background-image: linear-gradient(135deg, #d97706 0%, #92400e 51%, #d97706 100%); }
+
+.filter-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    padding: 12px 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.filter-bar h2 { margin: 0; font-size: 16px; font-weight: 700; color: #1e293b; }
+.filter-form { display: flex; gap: 10px; align-items: center; }
+.filter-form input[type="month"] {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    font-family: inherit;
+    outline: none;
+}
+.filter-form input[type="month"]:focus { border-color: #3b82f6; }
+
+/* دعم شبكة 5 أعمدة للكروت في الشاشات الكبيرة */
+.cols-5 { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 1400px) {
+    .cols-5 { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+    .cols-5 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+    .cols-5 { grid-template-columns: 1fr; }
+}
+</style>
+
+{{-- شريط الفلتر الزمني --}}
+<div class="filter-bar">
+    <h2>نظرة عامة {{ $isFiltered ? '- شهر ' . \Carbon\Carbon::parse($monthFilter)->translatedFormat('F Y') : '- كل الأوقات' }}</h2>
+    <form class="filter-form" method="GET" action="{{ route('dashboard') }}">
+        <input type="month" name="month" value="{{ $monthFilter === 'all' ? '' : $monthFilter }}" onchange="this.form.submit()">
+        <a href="{{ route('dashboard', ['month' => 'all']) }}" class="btn ghost sm {{ $monthFilter === 'all' ? 'active' : '' }}" style="margin: 0">الكل (بدون فلتر)</a>
+    </form>
+</div>
+
+{{-- Summary stats row --}}
 <div class="grid cols-5" style="margin-bottom:20px">
 
   {{-- رأس مال مشروع المقاولات — السيولة + كل المستحقات (مباشر وعبر تقسيط) − الديون --}}
@@ -27,9 +100,9 @@
   </div>
 
   <div class="vstat vstat-blue">
-    <div class="top">
-      <span class="label">المشاريع الجارية</span>
-      <span class="ic">
+      <div class="top">
+        <span class="label">{{ $isFiltered ? 'مشاريع الشهر' : 'المشاريع الجارية' }}</span>
+        <span class="ic">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>
       </span>
     </div>
@@ -38,9 +111,9 @@
   </div>
 
   <div class="vstat vstat-teal">
-    <div class="top">
-      <span class="label">إجمالي المحصّل</span>
-      <span class="ic">
+      <div class="top">
+        <span class="label">المحصّل {{ $isFiltered ? 'بالشهر' : 'الإجمالي' }}</span>
+        <span class="ic">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>
       </span>
     </div>
@@ -60,15 +133,15 @@
     <div class="note">{{ $walletIsAdmin ? 'دوس لإدارة المحفظة والحركات اليدوية' : 'الرصيد الفعلي — كل مصروف ودفعة بيتحدّث فيها تلقائيًا' }}</div>
   </{{ $walletIsAdmin ? 'a' : 'div' }}>
 
-  <a class="vstat vstat-amber" href="{{ route('alerts.index') }}">
+  <a class="vstat vstat-gold" href="{{ route('installments.index') }}">
     <div class="top">
-      <span class="label">أقساط مستحقة</span>
+      <span class="label">مستحق منظومة الأقساط</span>
       <span class="ic">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
       </span>
     </div>
-    <div class="val">{{ $overdueCount }}</div>
-    <div class="note">{{ $overdueCount > 0 ? 'تحتاج متابعة عاجلة — اضغط للتفاصيل' : 'لا توجد أقساط متأخرة' }}</div>
+    <div class="val tnum">{{ \App\Support\Money::format($installmentContractsDue) }} <small>ج.م</small></div>
+    <div class="note">المتبقي من عقود تقسيط المقاولات</div>
   </a>
 
 </div>
@@ -80,7 +153,7 @@
   <div>
     @php
       $dashTabs = [
-        'active' => ['title' => 'المشاريع الجارية', 'items' => $activeProjects],
+        'active' => ['title' => $isFiltered ? 'مشاريع الشهر' : 'المشاريع الجارية', 'items' => $activeProjects],
         'done' => ['title' => 'المشاريع المكتملة', 'items' => $doneProjects],
         'suspended' => ['title' => 'المشاريع المعلقة', 'items' => $suspendedProjects],
         'canceled' => ['title' => 'المشاريع الملغية', 'items' => $canceledProjects],

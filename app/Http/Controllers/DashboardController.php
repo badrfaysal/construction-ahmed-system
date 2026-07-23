@@ -12,15 +12,25 @@ use App\Models\Transaction;
 class DashboardController extends Controller
 {
     // Main dashboard — summary stats and active project cards
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
+        $monthFilter = $request->input('month', date('Y-m'));
+        $isFiltered = $monthFilter !== 'all';
+        $startDate = $isFiltered ? \Carbon\Carbon::parse($monthFilter . '-01')->startOfMonth() : null;
+        $endDate = $isFiltered ? \Carbon\Carbon::parse($monthFilter . '-01')->endOfMonth() : null;
+
         // Use cached totals to avoid massive eager loading
-        $projects = Project::with(['client', 'contracts', 'bands', 'discounts'])
+        $allProjects = Project::with(['client', 'contracts', 'bands', 'discounts'])
             ->withSum(['transactions as total_worker_paid' => function ($query) {
                 $query->where('ref_type', 'worker_payment');
             }], 'amount')
             ->latest()
             ->get();
+
+        // Projects filtered by the selected month
+        $projects = $isFiltered 
+            ? $allProjects->filter(fn($p) => $p->created_at >= $startDate && $p->created_at <= $endDate)
+            : $allProjects;
 
         $activeProjects    = $projects->where('status', 'active');
         $doneProjects      = $projects->where('status', 'done');
@@ -28,8 +38,13 @@ class DashboardController extends Controller
         $canceledProjects  = $projects->where('status', 'canceled');
 
         // Total collected from clients = down payments + all installment payments
-        $totalCollected = (float) InstallmentContract::sum('down_payment')
-            + (float) \DB::table('sy2_installment_payments')->sum('amount_paid');
+        if ($isFiltered) {
+            $totalCollected = (float) InstallmentContract::whereBetween('start_date', [$startDate, $endDate])->sum('down_payment')
+                + (float) \DB::table('sy2_installment_payments')->whereBetween('payment_date', [$startDate, $endDate])->sum('amount_paid');
+        } else {
+            $totalCollected = (float) InstallmentContract::sum('down_payment')
+                + (float) \DB::table('sy2_installment_payments')->sum('amount_paid');
+        }
 
         // Total contract value = sum of each project's locked-in initial value
         $totalContract = $projects->sum(fn ($p) => $p->initialContractValue());
@@ -41,6 +56,9 @@ class DashboardController extends Controller
             ->get()
             ->filter(fn ($c) => ! $c->isPaidThisMonth())
             ->count();
+
+        // Total due from installment contracts
+        $installmentContractsDue = (float) InstallmentContract::sum('remaining_balance');
 
         // Treasury balance: collected - spent (materials + labor)
         $totalSpentLabor = \DB::table('sy2_project_bands')->sum('labor_amount');
@@ -59,11 +77,12 @@ class DashboardController extends Controller
         // رصيد المحفظة الافتراضية (للعرض فقط في الكارت المنفصل)
         $walletBalance = Account::walletBalance();
 
-        $directReceivables = (float) $projects
+        // Capital metrics use ALL projects (excluding from month filter as requested)
+        $directReceivables = (float) $allProjects
             ->reject(fn ($p) => $p->hasInstallmentContract())
             ->sum(fn ($p) => max(0, $p->cached_actual_total - $p->cached_collected));
 
-        $installmentReceivables = (float) $projects
+        $installmentReceivables = (float) $allProjects
             ->filter(fn ($p) => $p->hasInstallmentContract())
             ->sum(fn ($p) => max(0, $p->cached_actual_total - $p->cached_collected));
 
@@ -78,18 +97,19 @@ class DashboardController extends Controller
         $netCapital = $constructionNetCash + $directReceivables + $installmentReceivables - $supplierDebtsRemaining - $unpaidLabor;
 
         // Last 5 transactions for the quick feed on dashboard
-        $recentTransactions = Transaction::with('project')
-            ->orderByDesc('date')
-            ->orderByDesc('id')
-            ->limit(5)
-            ->get();
+        $recentTransactionsQuery = Transaction::with('project')->orderByDesc('date')->orderByDesc('id');
+        if ($isFiltered) {
+            $recentTransactionsQuery->whereBetween('date', [$startDate, $endDate]);
+        }
+        $recentTransactions = $recentTransactionsQuery->limit(5)->get();
 
         return view('dashboard.index', compact(
             'projects', 'activeProjects', 'doneProjects', 'suspendedProjects', 'canceledProjects',
-            'totalCollected', 'totalContract', 'overdueCount',
+            'totalCollected', 'totalContract', 'overdueCount', 'installmentContractsDue',
             'treasuryBalance', 'totalSpentMaterials', 'totalSpentLabor',
             'walletBalance', 'constructionNetCash', 'recentTransactions',
-            'directReceivables', 'installmentReceivables', 'supplierDebtsRemaining', 'unpaidLabor', 'netCapital'
+            'directReceivables', 'installmentReceivables', 'supplierDebtsRemaining', 'unpaidLabor', 'netCapital',
+            'monthFilter', 'isFiltered'
         ));
     }
 }

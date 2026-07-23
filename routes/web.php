@@ -219,3 +219,7 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     // Global search (بحث) — available from the topbar on every screen
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');
 });
+
+
+
+        
