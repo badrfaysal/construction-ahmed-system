@@ -96,19 +96,10 @@
         <label for="title" class="custom-label">عنوان الحسبة (اختياري)</label>
         <input type="text" name="title" id="title" class="space-input" placeholder="مثال: مقايسة فيلا العميل محمد...">
       </div>
-      <div class="card grid cols-2" style="gap: 20px; border-top: 4px solid #38bdf8;">
-        <div>
-          <label for="workType" class="custom-label">نوع الحساب المطلوب</label>
-          <select name="work_type" id="workType" class="space-input" onchange="calculateAll()">
-            <option value="paints">دهانات (حوائط + سقف)</option>
-            <option value="ceramics">سيراميك (أرضيات وحوائط)</option>
-            <option value="both" selected>شامل (دهانات + سيراميك)</option>
-          </select>
-        </div>
-        <div>
-          <label for="globalHeight" class="custom-label">ارتفاع السقف (متر)</label>
-          <input type="number" name="global_height" id="globalHeight" class="space-input" value="" placeholder="مثال: 2.8" step="0.1" min="1" oninput="calculateAll()">
-        </div>
+      <div class="card" style="border-top: 4px solid #38bdf8;">
+        <label for="globalHeight" class="custom-label">ارتفاع السقف (متر)</label>
+        <input type="number" name="global_height" id="globalHeight" class="space-input" value="" placeholder="مثال: 2.8" step="0.1" min="1" oninput="calculateAll()">
+        <input type="hidden" name="work_type" value="both">
       </div>
     </div>
 
@@ -193,7 +184,6 @@
           <thead>
             <tr>
               <th>العنوان</th>
-              <th>النوع</th>
               <th>إجمالي الدهانات</th>
               <th>أرضيات سيراميك</th>
               <th>حوائط سيراميك</th>
@@ -205,9 +195,6 @@
             @foreach($history as $item)
             <tr>
               <td><strong>{{ $item->title }}</strong></td>
-              <td>
-                @if($item->work_type == 'paints') دهانات @elseif($item->work_type == 'ceramics') سيراميك @else شامل @endif
-              </td>
               <td>{{ $item->total_paints }} م²</td>
               <td>{{ $item->total_floor_ceramics }} م²</td>
               <td>{{ $item->total_wall_ceramics }} م²</td>
@@ -288,7 +275,6 @@
 
   function calculateAll() {
     const globalHeight = parseFloat(document.getElementById('globalHeight').value) || 0;
-    const workType = document.getElementById('workType').value;
     const rows = document.querySelectorAll('#spacesTable tr.space-row');
 
     let totalPaints = 0;
@@ -318,12 +304,8 @@
         rowText = `أرضية: ${floorArea.toFixed(1)}م² | حوائط: ${wallArea.toFixed(1)}م²`;
       } else {
         const ceilingArea = floorArea; // السقف = الطول × العرض
-        if (workType === 'paints' || workType === 'both') {
-          totalPaints += wallArea + ceilingArea;
-        }
-        if (workType === 'ceramics' || workType === 'both') {
-          totalFloorCeramics += floorArea;
-        }
+        totalPaints += wallArea + ceilingArea;
+        totalFloorCeramics += floorArea;
         rowText = `حوائط: ${wallArea.toFixed(1)}م² | سقف: ${ceilingArea.toFixed(1)}م² | أرضية: ${floorArea.toFixed(1)}م²`;
       }
 
