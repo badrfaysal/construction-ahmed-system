@@ -35,6 +35,7 @@ class MaterialInvoiceController extends Controller
     public function destroy(MaterialInvoice $invoice)
     {
         $projectId = $invoice->project_id;
+        $bandsToRecalculate = $invoice->materials->pluck('band_id')->filter()->unique();
         
         DB::transaction(function() use ($invoice) {
             // Delete materials first, so observers can fire if needed 
@@ -43,6 +44,12 @@ class MaterialInvoiceController extends Controller
             // Delete the invoice, triggering MaterialInvoiceObserver to delete Transactions and Debts
             $invoice->delete();
         });
+
+        // Recalculate financial totals for affected bands and the project
+        foreach (\App\Models\ProjectBand::whereIn('id', $bandsToRecalculate)->get() as $band) {
+            $band->recalculateCachedTotals();
+        }
+        \App\Models\Project::find($projectId)?->recalculateCachedTotals();
 
         return redirect()->route('projects.show', $projectId)
             ->with('success', 'تم حذف الفاتورة وكل الخامات التابعة لها بنجاح.');
