@@ -97,6 +97,10 @@ class TransactionObserver
         $walletId = $transaction->account_id ?: Account::WALLET_ID;
         $isIn     = $transaction->direction === 'in';
 
+        // الحركات المرتبطة بمشاريع (مش يدوية) بتاخد construction_id
+        // عشان تتجمّع في معادلة رأس المال عبر كل الحسابات
+        $isProjectRelated = $transaction->ref_type !== 'manual';
+
         $attrs = [
             'type'            => $isIn ? 'income' : 'general_expense',
             'subtype'         => null,
@@ -108,6 +112,7 @@ class TransactionObserver
             'person_name'     => $transaction->party,
             'cancelled_at'    => null,
             'cancel_reason'   => null,
+            'construction_id' => $isProjectRelated ? $transaction->id : null,
         ];
 
         $row = FinancialTransaction::where('ref_type', FinancialTransaction::REF_TYPE)

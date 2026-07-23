@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\FinancialTransaction;
 use App\Models\InstallmentContract;
 use App\Models\Project;
 use App\Models\SupplierDebt;
@@ -51,7 +52,11 @@ class DashboardController extends Controller
         
         $treasuryBalance = $totalCollected - $totalSpentMaterials - $totalSpentLabor;
 
-        // Real wallet balance
+        // صافي كل الحركات المالية المرتبطة بمشاريع عبر كل الحسابات
+        // (بدل رصيد محفظة المقاولات فقط — عشان يشمل أي حساب بنكي أو محفظة)
+        $constructionNetCash = FinancialTransaction::constructionNetCash();
+
+        // رصيد المحفظة الافتراضية (للعرض فقط في الكارت المنفصل)
         $walletBalance = Account::walletBalance();
 
         $directReceivables = (float) $projects
@@ -70,7 +75,7 @@ class DashboardController extends Controller
         $totalWorkerPaidAndDiscount = (float) \DB::table('sy2_worker_payments')->sum(\DB::raw('amount + discount'));
         $unpaidLabor = max($totalWorkerContracted - $totalWorkerPaidAndDiscount, 0);
 
-        $netCapital = $walletBalance + $directReceivables + $installmentReceivables - $supplierDebtsRemaining - $unpaidLabor;
+        $netCapital = $constructionNetCash + $directReceivables + $installmentReceivables - $supplierDebtsRemaining - $unpaidLabor;
 
         // Last 5 transactions for the quick feed on dashboard
         $recentTransactions = Transaction::with('project')
@@ -83,7 +88,7 @@ class DashboardController extends Controller
             'projects', 'activeProjects', 'doneProjects', 'suspendedProjects', 'canceledProjects',
             'totalCollected', 'totalContract', 'overdueCount',
             'treasuryBalance', 'totalSpentMaterials', 'totalSpentLabor',
-            'walletBalance', 'recentTransactions',
+            'walletBalance', 'constructionNetCash', 'recentTransactions',
             'directReceivables', 'installmentReceivables', 'supplierDebtsRemaining', 'unpaidLabor', 'netCapital'
         ));
     }

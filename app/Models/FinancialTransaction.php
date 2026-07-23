@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 // Points at the FIRST system's money-movement audit log (`financial_transactions`,
 // unprefixed, shared DB). We only ever write/edit/delete OUR OWN rows — the ones
@@ -23,6 +24,7 @@ class FinancialTransaction extends Model
         'type', 'subtype', 'amount', 'from_account_id', 'to_account_id',
         'notes', 'status', 'person_name', 'ref_id', 'ref_type',
         'cancelled_at', 'cancel_reason', 'created_at',
+        'construction_id',
     ];
 
     // Marker put in front of every mirrored note so an operator scanning the
@@ -32,4 +34,24 @@ class FinancialTransaction extends Model
 
     // ref_type value that tags every row this system owns in the shared log.
     const REF_TYPE = 'construction';
+
+    /**
+     * صافي الكاش بتاع المقاولات عبر كل الحسابات — بيحسب مجموع الإيداعات ناقص
+     * السحوبات لكل الحركات اللي ليها construction_id (يعني مرتبطة بمشاريع فعلاً،
+     * مش الحركات اليدوية زي تغذية رأس مال أو مسحوبات شخصية).
+     *
+     * بيستخدم في معادلة رأس المال في الداشبورد بدل Account::walletBalance()
+     * عشان يشمل أي فلوس اتحركت من/إلى أي حساب بنكي أو محفظة.
+     */
+    public static function constructionNetCash(): float
+    {
+        return (float) static::query()
+            ->whereNotNull('construction_id')
+            ->where('ref_type', self::REF_TYPE)
+            ->where(function ($q) {
+                $q->where('status', '!=', 'cancelled')
+                  ->orWhereNull('status');
+            })
+            ->sum(DB::raw("CASE WHEN type = 'income' THEN amount ELSE -amount END"));
+    }
 }

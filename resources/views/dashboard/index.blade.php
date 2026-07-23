@@ -18,7 +18,7 @@
     </div>
     <div class="val tnum">{{ \App\Support\Money::format($netCapital) }} <small>ج.م</small></div>
     <div class="cap-breakdown">
-      <div><span>محفظة المقاولات</span><b>{{ \App\Support\Money::format($walletBalance) }}</b></div>
+      <div><span>صافي حركات المقاولات</span><b>{{ \App\Support\Money::format($constructionNetCash) }}</b></div>
       <div><span>مستحق مباشر</span><b>{{ \App\Support\Money::format($directReceivables) }}</b></div>
       <div><span>مستحق تقسيط</span><b>{{ \App\Support\Money::format($installmentReceivables) }}</b></div>
       <div><span>ديون موردين −</span><b>{{ \App\Support\Money::format($supplierDebtsRemaining) }}</b></div>

@@ -100,7 +100,7 @@
         <div>
           <label for="workType" class="custom-label">نوع الحساب المطلوب</label>
           <select name="work_type" id="workType" class="space-input" onchange="calculateAll()">
-            <option value="paints">دهانات (حوائط فقط)</option>
+            <option value="paints">دهانات (حوائط + سقف)</option>
             <option value="ceramics">سيراميك (أرضيات وحوائط)</option>
             <option value="both" selected>شامل (دهانات + سيراميك)</option>
           </select>
@@ -147,7 +147,7 @@
     <h3 style="margin-bottom: 16px;">النتائج الإجمالية للمقايسة</h3>
     <div class="grid cols-4" style="margin-bottom: 24px">
       <div class="card stat">
-        <div class="top"><span class="label">إجمالي الدهانات (حوائط)</span></div>
+        <div class="top"><span class="label">إجمالي الدهانات (حوائط + أسقف)</span></div>
         <div class="val tnum" style="color:var(--brand)"><span id="lblPaints">0.00</span> <small>م²</small></div>
       </div>
       <div class="card stat">
@@ -317,13 +317,14 @@
         totalWallCeramics += wallArea;
         rowText = `أرضية: ${floorArea.toFixed(1)}م² | حوائط: ${wallArea.toFixed(1)}م²`;
       } else {
+        const ceilingArea = floorArea; // السقف = الطول × العرض
         if (workType === 'paints' || workType === 'both') {
-          totalPaints += wallArea;
+          totalPaints += wallArea + ceilingArea;
         }
         if (workType === 'ceramics' || workType === 'both') {
           totalFloorCeramics += floorArea;
         }
-        rowText = `حوائط: ${wallArea.toFixed(1)}م² | أرضية: ${floorArea.toFixed(1)}م²`;
+        rowText = `حوائط: ${wallArea.toFixed(1)}م² | سقف: ${ceilingArea.toFixed(1)}م² | أرضية: ${floorArea.toFixed(1)}م²`;
       }
 
       resultCell.innerText = rowText;
