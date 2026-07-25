@@ -43,15 +43,22 @@ class FinancialTransaction extends Model
      * بيستخدم في معادلة رأس المال في الداشبورد بدل Account::walletBalance()
      * عشان يشمل أي فلوس اتحركت من/إلى أي حساب بنكي أو محفظة.
      */
-    public static function constructionNetCash(): float
+    public static function constructionNetCash(bool $activeOnly = false): float
     {
-        return (float) static::query()
-            ->whereNotNull('construction_id')
-            ->where('ref_type', self::REF_TYPE)
+        $query = static::query()
+            ->whereNotNull('financial_transactions.construction_id')
+            ->where('financial_transactions.ref_type', self::REF_TYPE)
             ->where(function ($q) {
-                $q->where('status', '!=', 'cancelled')
-                  ->orWhereNull('status');
-            })
-            ->sum(DB::raw("CASE WHEN type = 'income' THEN amount ELSE -amount END"));
+                $q->where('financial_transactions.status', '!=', 'cancelled')
+                  ->orWhereNull('financial_transactions.status');
+            });
+
+        if ($activeOnly) {
+            $query->join('sy2_transactions', 'financial_transactions.construction_id', '=', 'sy2_transactions.id')
+                  ->join('sy2_projects', 'sy2_transactions.project_id', '=', 'sy2_projects.id')
+                  ->whereNotIn('sy2_projects.status', ['done', 'canceled']);
+        }
+
+        return (float) $query->sum(DB::raw("CASE WHEN financial_transactions.type = 'income' THEN financial_transactions.amount ELSE -financial_transactions.amount END"));
     }
 }

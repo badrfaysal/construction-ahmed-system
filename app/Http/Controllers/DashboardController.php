@@ -70,27 +70,39 @@ class DashboardController extends Controller
         
         $treasuryBalance = $totalCollected - $totalSpentMaterials - $totalSpentLabor;
 
-        // Capital metrics use ALL projects (excluding from month filter as requested)
-        // If we exclude finished projects, we lose their realized cash profit from the Net Capital.
-        $constructionNetCash = FinancialTransaction::constructionNetCash();
+        // Capital metrics based on active projects only (as requested by user)
+        $activeOnlyProjects = $allProjects->whereNotIn('status', ['done', 'canceled']);
+
+        $constructionNetCash = FinancialTransaction::constructionNetCash(activeOnly: true);
 
         // رصيد المحفظة الافتراضية (للعرض فقط في الكارت المنفصل)
         $walletBalance = Account::walletBalance();
 
-        $directReceivables = (float) $allProjects
+        $directReceivables = (float) $activeOnlyProjects
             ->reject(fn ($p) => $p->hasInstallmentContract())
             ->sum(fn ($p) => max(0, $p->cached_actual_total - $p->cached_collected));
 
-        $installmentReceivables = (float) $allProjects
+        $installmentReceivables = (float) $activeOnlyProjects
             ->filter(fn ($p) => $p->hasInstallmentContract())
             ->sum(fn ($p) => max(0, $p->cached_actual_total - $p->cached_collected));
 
-        $supplierDebtsRemaining = (float) (SupplierDebt::where('status', '!=', 'paid')
-            ->selectRaw('SUM(total_amount - paid_amount) as r')
+        $supplierDebtsRemaining = (float) (SupplierDebt::where('sy2_supplier_debts.status', '!=', 'paid')
+            ->join('sy2_projects', 'sy2_supplier_debts.project_id', '=', 'sy2_projects.id')
+            ->whereNotIn('sy2_projects.status', ['done', 'canceled'])
+            ->selectRaw('SUM(sy2_supplier_debts.total_amount - sy2_supplier_debts.paid_amount) as r')
             ->value('r') ?? 0);
 
-        $totalWorkerContracted = (float) \DB::table('sy2_band_workers')->sum('amount');
-        $totalWorkerPaidAndDiscount = (float) \DB::table('sy2_worker_payments')->sum(\DB::raw('amount + discount'));
+        $totalWorkerContracted = (float) \DB::table('sy2_band_workers')
+            ->join('sy2_project_bands', 'sy2_band_workers.project_band_id', '=', 'sy2_project_bands.id')
+            ->join('sy2_projects', 'sy2_project_bands.project_id', '=', 'sy2_projects.id')
+            ->whereNotIn('sy2_projects.status', ['done', 'canceled'])
+            ->sum('sy2_band_workers.amount');
+
+        $totalWorkerPaidAndDiscount = (float) \DB::table('sy2_worker_payments')
+            ->join('sy2_projects', 'sy2_worker_payments.project_id', '=', 'sy2_projects.id')
+            ->whereNotIn('sy2_projects.status', ['done', 'canceled'])
+            ->sum(\DB::raw('sy2_worker_payments.amount + sy2_worker_payments.discount'));
+
         $unpaidLabor = max($totalWorkerContracted - $totalWorkerPaidAndDiscount, 0);
 
         $netCapital = $constructionNetCash + $directReceivables + $installmentReceivables - $supplierDebtsRemaining - $unpaidLabor;
