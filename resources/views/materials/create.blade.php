@@ -343,9 +343,9 @@
     <div class="top"><span class="label">عدد الأصناف</span></div>
     <div class="val tnum"><span id="tot-items-count">0</span></div>
   </div>
-  <div class="card stat">
-    <div class="top"><span class="label">إجمالي الشراء (تكلفة)</span></div>
-    <div class="val tnum"><span id="tot-purchase">0</span> <small>ج.م</small></div>
+  <div class="card stat" style="background: #fffbeb; border: 1px solid #fde68a;">
+    <div class="top"><span class="label" style="color: #b45309; font-weight: 600;">إجمالي الشراء (تكلفة)</span></div>
+    <div class="val tnum" style="color: #92400e;"><span id="tot-purchase">0</span> <small style="color: #d97706;">ج.م</small></div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">إجمالي البيع</span></div>
