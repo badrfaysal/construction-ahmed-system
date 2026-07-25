@@ -8,16 +8,7 @@
   <a href="{{ route('materials.index') }}" class="btn ghost">رجوع</a>
 </div>
 
-@if($errors->any())
-  <div class="flash error">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"/></svg>
-    <div>
-      @foreach($errors->all() as $error)
-        <div>{{ $error }}</div>
-      @endforeach
-    </div>
-  </div>
-@endif
+@include('partials._errors')
 
 <style>
   /* تخطيط شاشة الخامات الأساسي */
@@ -253,27 +244,27 @@
         <select name="project_id" id="project_select" required class="neo-big-input" onchange="loadBandsForProject(this.value); updateSupervisionDefault(this); checkProjectLock(this)">
           <option value="">— اختر المشروع —</option>
           @foreach($projects as $p)
-            <option value="{{ $p->id }}" data-sup="{{ $p->default_supervision_pct > 0 ? $p->default_supervision_pct : $settings->default_supervision_pct }}" data-locked="{{ $p->hasWholeProjectInstallmentContract() ? 1 : 0 }}" {{ $selectedProject?->id == $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
+            <option value="{{ $p->id }}" data-sup="{{ $p->default_supervision_pct > 0 ? $p->default_supervision_pct : $settings->default_supervision_pct }}" data-locked="{{ $p->hasWholeProjectInstallmentContract() ? 1 : 0 }}" {{ old('project_id', $selectedProject?->id) == $p->id ? 'selected' : '' }}>{{ $p->name }}</option>
           @endforeach
         </select>
       </div>
       <div class="field" style="margin-bottom:0">
         <label>اسم الفاتورة *</label>
-        <input type="text" name="invoice_name" id="invoice_name" class="neo-big-input" placeholder="مثال: فاتورة مشروع كذا..." required oninput="invoiceNameTouched = true">
+        <input type="text" name="invoice_name" id="invoice_name" class="neo-big-input" placeholder="مثال: فاتورة مشروع كذا..." required oninput="invoiceNameTouched = true" value="{{ old('invoice_name') }}">
       </div>
     </div>
     
     <div class="row2" style="margin-bottom:0; gap:24px;">
       <div class="field" style="margin-bottom:0">
         <label>تاريخ الفاتورة *</label>
-        <input type="date" name="date" id="invoice_date" required class="neo-big-input" onchange="suggestInvoiceName()" value="{{ today()->format('Y-m-d') }}">
+        <input type="date" name="date" id="invoice_date" required class="neo-big-input" onchange="suggestInvoiceName()" value="{{ old('date', today()->format('Y-m-d')) }}">
       </div>
       <div class="field" style="margin-bottom:0">
         <label>المورد *</label>
         <select name="supplier_id" class="neo-big-input" required>
           <option value="">— اختر المورد —</option>
           @foreach($suppliers as $s)
-            <option value="{{ $s->id }}">{{ $s->name }} {{ $s->activity ? '— ' . $s->activity : '' }}</option>
+            <option value="{{ $s->id }}" {{ old('supplier_id') == $s->id ? 'selected' : '' }}>{{ $s->name }} {{ $s->activity ? '— ' . $s->activity : '' }}</option>
           @endforeach
         </select>
       </div>
@@ -303,15 +294,15 @@
     
     <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px">
       <label class="neo-radio-pill">
-        <input type="radio" name="payment_status" value="paid" checked onchange="togglePaidAmt(this.value)">
+        <input type="radio" name="payment_status" value="paid" {{ old('payment_status', 'paid') === 'paid' ? 'checked' : '' }} onchange="togglePaidAmt(this.value)">
         <span>دفع نقدي بالكامل</span>
       </label>
       <label class="neo-radio-pill">
-        <input type="radio" name="payment_status" value="partial" onchange="togglePaidAmt(this.value)">
+        <input type="radio" name="payment_status" value="partial" {{ old('payment_status') === 'partial' ? 'checked' : '' }} onchange="togglePaidAmt(this.value)">
         <span>دفع جزء و تبقي دين</span>
       </label>
       <label class="neo-radio-pill">
-        <input type="radio" name="payment_status" value="deferred" onchange="togglePaidAmt(this.value)">
+        <input type="radio" name="payment_status" value="deferred" {{ old('payment_status') === 'deferred' ? 'checked' : '' }} onchange="togglePaidAmt(this.value)">
         <span>آجل بالكامل (دين)</span>
       </label>
     </div>
@@ -321,10 +312,10 @@
         <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">المحفظة للصرف *</label>
         <select name="account_id" id="wallet_select" required class="neo-big-input"></select>
       </div>
-      <div id="paid-amt-row" style="display:none">
+      <div id="paid-amt-row" style="display:{{ old('payment_status') === 'partial' ? 'block' : 'none' }}">
         <div class="field" style="margin:0">
           <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">المبلغ المدفوع الآن (ج.م) *</label>
-          <input type="number" name="paid_amount" id="paid-amt" min="0" step="0.01" placeholder="مثال: 1500" class="neo-big-input">
+          <input type="number" name="paid_amount" id="paid-amt" min="0" step="0.01" placeholder="مثال: 1500" class="neo-big-input" value="{{ old('paid_amount') }}">
         </div>
       </div>
     </div>
@@ -638,17 +629,110 @@ function togglePaidAmt(val) {
 
 // init defaults
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('invoice_date').value = new Date().toISOString().slice(0, 10);
   document.getElementById('wallet_select').innerHTML = walletOptionsHtml;
+
+  // Restore old data if validation failed (rebuild dynamic groups/items)
+  const oldGroups = @json(old('groups', []));
+  const oldAccountId = '{{ old('account_id') }}';
+  const oldPaymentStatus = '{{ old('payment_status', 'paid') }}';
+
+  if (oldGroups && Object.keys(oldGroups).length > 0) {
+    // لو في old data من validation error، ابني المجموعات والأصناف منها
+    Object.values(oldGroups).forEach((group) => {
+      const g = groupCounter++;
+      // Build the group card
+      const html = `
+        <div class="neo-group-card band-group" data-group="${g}">
+          <div class="neo-group-header">
+            <div class="neo-group-title">
+              <div style="background:var(--accent-soft); width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:var(--accent);">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-box"/></svg>
+              </div>
+              مجموعة أصناف (${g + 1})
+            </div>
+            <button type="button" class="btn ghost danger" style="border-radius:50px; font-weight:700;" onclick="this.closest('.band-group').remove(); recalcTotals()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
+              حذف المجموعة
+            </button>
+          </div>
+          
+          <div class="row3" style="margin-bottom:32px; gap:24px;">
+            <div class="field" style="margin:0; flex:2;">
+              <label style="font-weight:700; color:var(--ink-2); margin-bottom:8px; display:block;">البند التابع له هذه الأصناف</label>
+              <select name="groups[${g}][band_id]" class="neo-big-input band-select" onchange="suggestInvoiceName()">${bandOptionsHtml()}</select>
+            </div>
+          </div>
+          
+          <div class="items-container" id="items-${g}"></div>
+          
+          <button type="button" class="neo-add-btn" onclick="addItem(${g})">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
+            إضافة صنف آخر لهذا البند
+          </button>
+        </div>`;
+      document.getElementById('groups-container').insertAdjacentHTML('beforeend', html);
+
+      // Set the band select value
+      if (group.band_id) {
+        const bandSel = document.querySelector(`[name="groups[${g}][band_id]"]`);
+        if (bandSel) bandSel.value = group.band_id;
+      }
+
+      // Add items with old data
+      if (group.items) {
+        Object.values(group.items).forEach((item, i) => {
+          const container = document.getElementById('items-' + g);
+          container.insertAdjacentHTML('beforeend', itemRowHtml(g, i));
+          const row = container.lastElementChild;
+          
+          const setVal = (selector, val) => { const el = row.querySelector(selector); if (el && val) el.value = val; };
+          setVal(`[name="groups[${g}][items][${i}][item]"]`, item.item);
+          setVal(`[name="groups[${g}][items][${i}][qty]"]`, item.qty);
+          setVal(`[name="groups[${g}][items][${i}][unit_price]"]`, item.unit_price);
+          setVal(`[name="groups[${g}][items][${i}][sell_price]"]`, item.sell_price);
+          setVal(`[name="groups[${g}][items][${i}][supervision_pct]"]`, item.supervision_pct);
+        });
+      }
+    });
+    // Mark invoice name as touched so auto-suggest doesn't overwrite it
+    invoiceNameTouched = true;
+  } else {
+    // No old data — start with one empty group
+    addGroup();
+  }
+
+  // Restore wallet selection
+  if (oldAccountId) {
+    const walletSel = document.getElementById('wallet_select');
+    if (walletSel) walletSel.value = oldAccountId;
+  }
+
+  // Restore payment status UI state
+  if (oldPaymentStatus === 'deferred') {
+    togglePaidAmt('deferred');
+  } else if (oldPaymentStatus === 'partial') {
+    togglePaidAmt('partial');
+  }
+
+  // Recalculate totals after restoring
+  recalcTotals();
+
+  // Don't overwrite the date if old() already set it
+  @if(!old('date'))
+    document.getElementById('invoice_date').value = new Date().toISOString().slice(0, 10);
+  @endif
 });
 
-// Start with one band group ready to fill in
-addGroup();
-
-// لو المشروع متحدد مسبقًا من الرابط (project_id) وهو متقسّط بالكامل، اقفل
+// لو المشروع متحدد مسبقًا من الرابط (project_id) أو من old() وهو متقسّط بالكامل، اقفل
 // الفورم من أول ما الصفحة تحمّل بدل ما ينتظر المستخدم يغيّر السيلكت
-@if($selectedProject)
-  checkProjectLock(document.getElementById('project_select'));
+@if($selectedProject || old('project_id'))
+  document.addEventListener('DOMContentLoaded', () => {
+    const projSel = document.getElementById('project_select');
+    if (projSel && projSel.value) {
+      loadBandsForProject(projSel.value);
+      checkProjectLock(projSel);
+    }
+  });
 @endif
 </script>
 @endpush

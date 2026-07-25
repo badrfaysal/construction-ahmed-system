@@ -8,12 +8,7 @@
   <a href="{{ route('projects.show', $project) }}" class="btn ghost">رجوع</a>
 </div>
 
-@if($errors->any())
-  <div class="flash error">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"/></svg>
-    <div>@foreach($errors->all() as $error)<div>{{ $error }}</div>@endforeach</div>
-  </div>
-@endif
+@include('partials._errors')
 
 <form method="POST" action="{{ route('projects.bands.store', $project) }}">
   @csrf

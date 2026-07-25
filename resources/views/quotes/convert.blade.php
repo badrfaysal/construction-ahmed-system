@@ -11,12 +11,7 @@
   <a href="{{ route('quotes.show', $quote) }}" class="btn ghost">رجوع</a>
 </div>
 
-@if($errors->any())
-  <div class="flash error">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"/></svg>
-    <div>@foreach($errors->all() as $error)<div>{{ $error }}</div>@endforeach</div>
-  </div>
-@endif
+@include('partials._errors')
 
 <style>
   .mat-layout {
