@@ -35,34 +35,35 @@
 
 @if($projects->count())
   <style>
-    .compact-table { border-collapse: separate !important; border-spacing: 0 10px !important; margin-top: -10px; width: 100%; }
-    .compact-table th { padding: 4px 12px !important; line-height: 1.2; border: none !important; color: #64748b; }
+    .compact-table { border-collapse: separate !important; border-spacing: 0 12px !important; width: 100%; margin-top: 4px; }
+    .compact-table th { padding: 8px 16px !important; line-height: 1.4; border: none !important; color: #475569; text-align: right; font-size: 14.5px; font-weight: 700; white-space: nowrap; }
+    .compact-table th svg { opacity: 0.5; margin-left: 6px; vertical-align: -4px; width: 18px; height: 18px; color: #64748b; }
     .compact-table td { 
-        padding: 10px 12px !important; 
-        line-height: 1.2; 
+        padding: 14px 16px !important; 
+        line-height: 1.4; 
         border-top: 1px solid #e2e8f0 !important;
         border-bottom: 1px solid #e2e8f0 !important;
         background-color: #fff;
-        font-size: 13px; 
+        font-size: 13.5px; 
     }
-    .compact-table td:first-child { border-right: 1px solid #e2e8f0 !important; border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
-    .compact-table td:last-child { border-left: 1px solid #e2e8f0 !important; border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
-    .compact-table tbody tr { box-shadow: 0 1px 3px rgba(0,0,0,0.03); transition: all 0.15s ease; }
-    .compact-table tbody tr:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.06); }
+    .compact-table td:first-child { border-right: 1px solid #e2e8f0 !important; border-top-right-radius: 10px; border-bottom-right-radius: 10px; }
+    .compact-table td:last-child { border-left: 1px solid #e2e8f0 !important; border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
+    .compact-table tbody tr { box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: all 0.2s ease; }
+    .compact-table tbody tr:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     .compact-table tbody tr:hover td { background-color: #f8fafc !important; border-color: #cbd5e1 !important; }
   </style>
-  <div class="table-card">
-    <div class="table-scroll">
+  <div class="table-card" style="background: transparent; box-shadow: none; padding: 0; border: none;">
+    <div class="table-scroll" style="padding-bottom: 12px;">
       <table class="compact-table" style="white-space: nowrap;">
         <thead>
           <tr>
-            <th>المشروع والعميل</th>
-            <th>العنوان</th>
-            <th>البنود الجارية</th>
-            <th>الإنجاز</th>
-            <th>قيمة المشروع</th>
-            <th>المدفوع</th>
-            <th>التسليم</th>
+            <th><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>المشروع والعميل</th>
+            <th><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pin"/></svg>العنوان</th>
+            <th><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>البنود الجارية</th>
+            <th><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pie-chart"/></svg>الإنجاز</th>
+            <th><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>قيمة المشروع</th>
+            <th><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>المدفوع</th>
+            <th><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-calendar"/></svg>التسليم</th>
           </tr>
         </thead>
         <tbody>
