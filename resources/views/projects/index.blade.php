@@ -34,14 +34,31 @@
 </div>
 
 @if($projects->count())
+  <style>
+    .compact-table { border-collapse: separate !important; border-spacing: 0 10px !important; margin-top: -10px; width: 100%; }
+    .compact-table th { padding: 4px 12px !important; line-height: 1.2; border: none !important; color: #64748b; }
+    .compact-table td { 
+        padding: 10px 12px !important; 
+        line-height: 1.2; 
+        border-top: 1px solid #e2e8f0 !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        background-color: #fff;
+        font-size: 13px; 
+    }
+    .compact-table td:first-child { border-right: 1px solid #e2e8f0 !important; border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+    .compact-table td:last-child { border-left: 1px solid #e2e8f0 !important; border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+    .compact-table tbody tr { box-shadow: 0 1px 3px rgba(0,0,0,0.03); transition: all 0.15s ease; }
+    .compact-table tbody tr:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.06); }
+    .compact-table tbody tr:hover td { background-color: #f8fafc !important; border-color: #cbd5e1 !important; }
+  </style>
   <div class="table-card">
     <div class="table-scroll">
-      <table style="white-space: nowrap;">
+      <table class="compact-table" style="white-space: nowrap;">
         <thead>
           <tr>
             <th>المشروع والعميل</th>
             <th>العنوان</th>
-            <th>الحالة</th>
+            <th>البنود الجارية</th>
             <th>الإنجاز</th>
             <th>قيمة المشروع</th>
             <th>المدفوع</th>
@@ -56,7 +73,7 @@
               $actual = $p->grossClientTotal();
               $activeBand = $p->bands->where('status', 'active')->first();
             @endphp
-            <tr onclick="window.location='{{ route('projects.show', $p) }}'" style="cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <tr onclick="window.location='{{ route('projects.show', $p) }}'" style="cursor: pointer; transition: background 0.15s;">
               <td>
                 <div style="font-weight: 700; font-size: 14px; color: #0f172a">{{ $p->name }}</div>
                 <div style="font-size: 12px; color: #64748b">{{ $p->client->name }}</div>
