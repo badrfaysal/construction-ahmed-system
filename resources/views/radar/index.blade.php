@@ -80,7 +80,7 @@
           $accountName = \App\Models\Account::nameOf($log->account_id);
           $partyName = $log->party ?: 'خارجي';
         @endphp
-        <tr style="{{ $log->action === 'deleted' ? 'opacity:.6' : '' }}">
+        <tr style="{{ $log->action === 'deleted' ? 'background:repeating-linear-gradient(45deg, #fffafa, #fffafa 10px, #fff5f5 10px, #fff5f5 20px); opacity: 0.8;' : '' }}">
           <td class="muted">{{ $log->transaction_id ?? $log->id }}</td>
           
           <td>

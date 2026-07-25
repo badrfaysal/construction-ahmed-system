@@ -325,12 +325,12 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
 .sup .ph{font-size:12px;color:var(--ink-3)}
 
 /* ---- Project cards ---- */
-.pcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+.pcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
 .pcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;transition:.16s;box-shadow:var(--shadow-sm)}
 .pcard:hover{box-shadow:var(--shadow);transform:translateY(-2px);border-color:#d4ddea}
 .pcard .pc-band{height:5px;background:var(--accent)}
 .pcard.is-done .pc-band{background:var(--pos)}
-.pcard .pc-body{padding:18px 20px}
+.pcard .pc-body{padding:14px 16px}
 .pcard .pc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:15px}
 .pcard .pc-name{font-size:16px;font-weight:700;letter-spacing:-.01em}
 .pcard .pc-client{font-size:12.5px;color:var(--ink-3);margin-top:2px}
@@ -415,11 +415,13 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
 .f-select-wrap{position:relative}
 .f-select-wrap .chev{position:absolute;inset-inline-end:12px;top:50%;transform:translateY(-50%);
   width:13px;height:13px;color:var(--ink-3);pointer-events:none}
-.f-select{appearance:none;-webkit-appearance:none;-moz-appearance:none;width:100%;background:var(--surface-2);
+.f-select, .f-input{appearance:none;-webkit-appearance:none;-moz-appearance:none;width:100%;background:var(--surface-2);
   border:1.5px solid var(--line);border-radius:7px;padding:10px 13px;padding-inline-end:34px;
-  color:var(--ink);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.14s;min-width:180px}
-.f-select:hover{border-color:#cfd8e3;background:var(--surface)}
-.f-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:var(--surface)}
+  color:var(--ink);font-family:inherit;font-size:13px;font-weight:600;transition:.14s;min-width:180px}
+.f-select {cursor:pointer;}
+.f-input {cursor:text; padding-inline-end:13px;}
+.f-select:hover, .f-input:hover{border-color:#cfd8e3;background:var(--surface)}
+.f-select:focus, .f-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:var(--surface)}
 .filter-bar .f-actions{display:flex;align-items:center;margin-inline-start:auto}
 @media(max-width:640px){.filter-bar{flex-direction:column;align-items:stretch}.filter-bar .f-actions{margin-inline-start:0}}
 

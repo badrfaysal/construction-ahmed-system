@@ -12,7 +12,7 @@ class Quote extends Model
 
     protected $fillable = [
         'ref', 'client_id', 'client_name', 'phone', 'address', 'area',
-        'date', 'status', 'note', 'project_id',
+        'date', 'status', 'note', 'project_id', 'terms',
     ];
 
     protected function casts(): array

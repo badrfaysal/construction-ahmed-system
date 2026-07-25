@@ -18,8 +18,7 @@ class SettingsController extends Controller
         $data = $request->validate([
             'company_name'            => ['required', 'string', 'max:255'],
             'company_tagline'         => ['nullable', 'string', 'max:255'],
-            'company_phone'           => ['nullable', 'string', 'max:100'],
-            'company_registration'    => ['nullable', 'string', 'max:100'],
+            'company_phone'           => ['nullable', 'string', 'max:50'],
             'whatsapp_country_code'   => ['required', 'string', 'max:5'],
         ]);
 

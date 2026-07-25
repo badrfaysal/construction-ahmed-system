@@ -18,6 +18,35 @@
   </div>
 @endif
 
+<style>
+  .mat-layout {
+    --accent: #2563eb; --accent-2: #3b82f6; --accent-soft: #eff6ff; --accent-ink: #1e3a8a;
+    display:flex; gap:32px; align-items:flex-start;
+  }
+  .mat-layout .mat-form{flex:1;min-width:0}
+  
+  .mat-totals {
+    position:sticky;top:24px;width:300px;flex-shrink:0;
+    background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 32px; padding: 28px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.04), inset 0 2px 4px rgba(255,255,255,0.5);
+  }
+  .mat-totals .section-label{margin:0 0 20px; font-size: 1.3rem; color: var(--ink); font-weight: 800; text-align: center;}
+  .mat-totals .card.stat {
+    margin:0 0 16px; background: linear-gradient(145deg, #ffffff, #f8fafc); border: none;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.03); padding: 16px 20px; border-radius: 20px; transition: transform 0.3s;
+  }
+  .mat-totals .card.stat:hover { transform: translateY(-3px); }
+  .mat-totals .card.stat:last-child{margin-bottom:0}
+  @media (max-width:1100px) {
+    .mat-layout{flex-direction:column}
+    .mat-totals{position:static;width:100%}
+  }
+</style>
+
+<div class="mat-layout">
+<div class="mat-form">
+
 <div class="flash" style="background:var(--card);border:1px solid var(--line);margin-bottom:16px">
   علّم الأصناف اللي <strong>تم شراؤها فعلاً</strong> — هتتسجل كمشتريات حقيقية في المشروع وتتخصم من محفظة المقاولات. الأصناف اللي متتعلمش، المشروع هيتعمل من غير ما تسجّلها (تقدر تسجّلها بعدين).
 </div>
@@ -69,7 +98,7 @@
             </thead>
             <tbody>
               @foreach($band->items as $item)
-                <tr id="conv-row-{{ $idx }}">
+                <tr id="conv-row-{{ $idx }}" class="conv-row">
                   <td style="text-align:center">
                     <input type="hidden" name="items[{{ $idx }}][name]" value="{{ $item->name }}">
                     <input type="hidden" name="items[{{ $idx }}][quote_band_id]" value="{{ $band->id }}">
@@ -133,6 +162,33 @@
     <a href="{{ route('quotes.show', $quote) }}" class="btn ghost">إلغاء</a>
   </div>
 </form>
+</div>
+
+<aside class="mat-totals">
+  <div class="section-label">الإجماليات (للمشتريات)</div>
+  <div class="card stat">
+    <div class="top"><span class="label">عدد الأصناف</span></div>
+    <div class="val tnum"><span id="tot-items-count">0</span></div>
+  </div>
+  <div class="card stat">
+    <div class="top"><span class="label">إجمالي الشراء (تكلفة)</span></div>
+    <div class="val tnum"><span id="tot-purchase">0</span> <small>ج.م</small></div>
+  </div>
+  <div class="card stat">
+    <div class="top"><span class="label">إجمالي البيع</span></div>
+    <div class="val tnum"><span id="tot-sell">0</span> <small>ج.م</small></div>
+  </div>
+  <div class="card stat">
+    <div class="top"><span class="label">الإجمالي للعميل (بعد الإشراف)</span></div>
+    <div class="val tnum"><span id="tot-client">0</span> <small>ج.م</small></div>
+  </div>
+  <div class="card stat">
+    <div class="top"><span class="label">إجمالي الربح</span></div>
+    <div class="val tnum" style="color:var(--pos)"><span id="tot-profit">0</span> <small>ج.م</small></div>
+    <div class="note">فرق السعر: <span id="tot-pricediff">0</span> · إشراف: <span id="tot-sup">0</span></div>
+  </div>
+</aside>
+</div>
 @push('scripts')
 <script>
 function toggleConvPaid(idx, val) {
@@ -142,7 +198,43 @@ function toggleConvPaid(idx, val) {
 // تطبيق نسبة الإشراف الافتراضية على كل خانات إشراف الأصناف
 function applyConvSupervision(v) {
   document.querySelectorAll('input[name^="items"][name$="[supervision_pct]"]').forEach(i => { i.value = v; });
+  recalcConvTotals();
 }
+
+function recalcConvTotals() {
+  let purchase = 0, sell = 0, client = 0, itemsCount = 0;
+  document.querySelectorAll('.conv-row').forEach(row => {
+    const isChecked = row.querySelector('input[type="checkbox"]').checked;
+    if (!isChecked) return;
+    
+    itemsCount++;
+    const qty = parseFloat(row.querySelector('input[name$="[qty]"]').value) || 0;
+    const cost = parseFloat(row.querySelector('input[name$="[unit_price]"]').value) || 0;
+    const sp = parseFloat(row.querySelector('input[name$="[sell_price]"]').value) || 0;
+    const pct = parseFloat(row.querySelector('input[name$="[supervision_pct]"]').value) || 0;
+    
+    purchase += qty * cost;
+    sell += qty * sp;
+    client += qty * (sp + cost * (pct / 100));
+  });
+  
+  const fmt = n => Math.round(n).toLocaleString('en-US');
+  document.getElementById('tot-items-count').textContent = itemsCount;
+  document.getElementById('tot-purchase').textContent = fmt(purchase);
+  document.getElementById('tot-sell').textContent = fmt(sell);
+  document.getElementById('tot-client').textContent = fmt(client);
+  document.getElementById('tot-profit').textContent = fmt(client - purchase);
+  document.getElementById('tot-pricediff').textContent = fmt(sell - purchase);
+  document.getElementById('tot-sup').textContent = fmt(client - sell);
+}
+
+document.addEventListener('change', function(e) {
+  if (e.target.closest('.conv-row') || e.target.id === 'conv_sup') recalcConvTotals();
+});
+document.addEventListener('input', function(e) {
+  if (e.target.closest('.conv-row') || e.target.id === 'conv_sup') recalcConvTotals();
+});
+document.addEventListener('DOMContentLoaded', recalcConvTotals);
 </script>
 @endpush
 @endsection

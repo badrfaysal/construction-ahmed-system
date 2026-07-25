@@ -5,7 +5,7 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
   /* ── منقول بروح صفحة الأقساط في السيستم الأول (مكوّنات مستقلة، prefixed) ── */
@@ -763,10 +763,23 @@ function printCustomerStatement(group){
   setTimeout(()=>{w.focus();w.print();},400);
 }
 function downloadCustomerSheet(group){
-  const p=_activePane(group)||document.getElementById('captureCustomer_'+group);
-  if(!p||typeof html2canvas==='undefined')return;
-  html2canvas(p,{scale:2,backgroundColor:'#fff'}).then(canvas=>{
-    const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='statement_'+group+'.png';a.click();
+  const originalNode=_activePane(group)||document.getElementById('captureCustomer_'+group);
+  if(!originalNode||typeof htmlToImage==='undefined')return;
+  
+  const p = originalNode.cloneNode(true);
+  document.body.appendChild(p);
+  p.style.position = 'absolute';
+  p.style.left = '0';
+  p.style.top = '0';
+  p.style.margin = '0';
+  p.style.zIndex = '-9999';
+
+  htmlToImage.toPng(p,{pixelRatio:2,backgroundColor:'#fff'}).then(dataUrl=>{
+    p.remove();
+    const a=document.createElement('a');a.href=dataUrl;a.download='statement_'+group+'.png';a.click();
+  }).catch(e => {
+    p.remove();
+    alert('حدث خطأ أثناء التقاط الصورة');
   });
 }
 // طباعة كشف الحساب المفتوح في نافذة مستقلة (تتجنّب تعارض print CSS)

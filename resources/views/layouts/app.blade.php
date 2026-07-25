@@ -329,42 +329,7 @@
   {{-- Page content — كل صفحة بتاخد لونها الخاص عن طريق المتغيّرات دي --}}
   <div class="page-wrap" style="--accent:{{ $T[0] }};--accent-2:{{ $T[1] }};--accent-soft:{{ $T[2] }};--accent-ink:{{ $T[3] }}">
 
-    {{-- Flash messages (success / error) from session --}}
-    @if(session('success'))
-      <div class="flash success">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-check"/></svg>
-        {{ session('success') }}
-      </div>
-    @endif
-    @if(session('error'))
-      <div class="flash error">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"/></svg>
-        {{ session('error') }}
-      </div>
-    @endif
-    @if(session('warning'))
-      <div class="flash" style="background:var(--amber-soft); color:#854d0e; border:1px solid #fef08a;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-alert-circle"/></svg>
-        {{ session('warning') }}
-      </div>
-    @endif
 
-    @if($errors->any())
-      @php
-        $errStr = implode(' | ', $errors->all());
-        $isPhoneErr = str_contains($errStr, 'رقم الموبايل مسجل مسبقاً');
-      @endphp
-      @if($isPhoneErr)
-        <div class="modal-overlay open" id="global-error-modal" style="z-index:9999" onclick="if(event.target===this)this.classList.remove('open')">
-          <div class="modal-box" style="max-width:400px; text-align:center; padding: 30px;">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--danger, #e53e3e)" stroke-width="2" style="margin-bottom: 15px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-            <h3 style="color:var(--danger, #e53e3e); margin:0 0 10px;">عذراً، لا يمكن الحفظ</h3>
-            <p style="font-size: 16px; font-weight: bold; color: var(--text)">{{ $errStr }}</p>
-            <button class="btn" style="background:var(--danger, #e53e3e); border-color:var(--danger, #e53e3e); margin-top: 20px; width: 100%" onclick="document.getElementById('global-error-modal').classList.remove('open')">حسناً، فهمت</button>
-          </div>
-        </div>
-      @endif
-    @endif
 
     @yield('content')
   </div>
@@ -471,6 +436,63 @@
     transform: rotate(180deg);
   }
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  // Setup SweetAlert Toast for success messages
+  const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 4000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.onmouseenter = Swal.stopTimer;
+      toast.onmouseleave = Swal.resumeTimer;
+    }
+  });
+
+  @if(session('success'))
+    Toast.fire({
+      icon: 'success',
+      title: '{{ session('success') }}'
+    });
+  @endif
+
+  @if(session('error'))
+    Swal.fire({
+      icon: 'error',
+      title: 'عفواً!',
+      text: '{{ session('error') }}',
+      confirmButtonText: 'حسناً',
+      confirmButtonColor: 'var(--accent)'
+    });
+  @endif
+
+  @if(session('warning'))
+    Swal.fire({
+      icon: 'warning',
+      title: 'تنبيه',
+      text: '{{ session('warning') }}',
+      confirmButtonText: 'حسناً',
+      confirmButtonColor: 'var(--accent)'
+    });
+  @endif
+
+  @if($errors->any())
+    Swal.fire({
+      icon: 'error',
+      title: 'عفواً، راجع البيانات',
+      html: '<ul style="text-align:right; margin-top:10px;">' +
+      @foreach($errors->all() as $error)
+        '<li>{{ $error }}</li>' +
+      @endforeach
+      '</ul>',
+      confirmButtonText: 'موافق',
+      confirmButtonColor: 'var(--accent)'
+    });
+  @endif
+</script>
 
 @stack('scripts')
 </body>

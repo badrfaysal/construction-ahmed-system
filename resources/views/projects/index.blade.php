@@ -86,11 +86,6 @@
             <div>
               <div class="l" style="display:flex;align-items:center;gap:4px">قيمة المشروع <small class="muted" style="font-size:9px" title="قبل الخصم">(إجمالي)</small></div>
               <div class="v" style="color:var(--brand)">{{ \App\Support\Money::format($actual) }}</div>
-              @if($actual > $total + 1)
-                <div style="font-size:11px;color:var(--muted);margin-top:3px;font-weight:600">
-                  المتفق عليه: {{ \App\Support\Money::format($total) }} ج.م
-                </div>
-              @endif
             </div>
             <div>
               <div class="l">محصّل من العميل</div>
@@ -99,19 +94,6 @@
             <div>
               <div class="l">{{ $p->status === 'done' ? 'تاريخ التسليم' : 'موعد التسليم' }}</div>
               <div class="v">{{ $p->status === 'done' ? ($p->delivered_date?->format('Y-m-d') ?? '—') : ($p->deliver_date?->format('Y-m-d') ?? '—') }}</div>
-            </div>
-          </div>
-          {{-- شريط مدفوعات مختصر: دفعات العميل + المدفوع للصنايعية --}}
-          <div class="pc-pays">
-            <div class="pc-pay in">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>
-              <span class="l">دفعات العميل</span>
-              <span class="v">{{ \App\Support\Money::format($paid) }}</span>
-            </div>
-            <div class="pc-pay out">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg>
-              <span class="l">مدفوع للصنايعية</span>
-              <span class="v">{{ \App\Support\Money::format($paidWorkers) }}</span>
             </div>
           </div>
         </div>

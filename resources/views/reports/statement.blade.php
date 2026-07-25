@@ -30,7 +30,7 @@
     <div class="co">
       <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg></div>
       <h2>{{ $settings->company_name }}</h2>
-      <p>{{ $settings->company_tagline }} @if($settings->company_phone)· هاتف {{ $settings->company_phone }}@endif @if($settings->company_registration)· سجل تجاري {{ $settings->company_registration }}@endif</p>
+      <p>{{ $settings->company_tagline }} @if($settings->company_phone)· هاتف {{ $settings->company_phone }}@endif</p>
     </div>
     <div class="meta">
       <b>كشف حساب</b><br>
@@ -49,7 +49,7 @@
 
     {{-- Summary boxes --}}
     <div class="st-summary">
-      <div class="st-box tot"><div class="l">إجمالي المستحق</div><div class="v">{{ \App\Support\Money::format($actualTotal) }} ج.م</div></div>
+      <div class="st-box tot"><div class="l">إجمالي المستحق</div><div class="v">{{ \App\Support\Money::format($subTotal) }} ج.م</div></div>
       @if($discountAmount > 0)
       <div class="st-box" style="background: #fee2e2; border-color: #fca5a5"><div class="l" style="color:#b91c1c">الخصم</div><div class="v" style="color:#b91c1c">{{ \App\Support\Money::format($discountAmount) }} ج.م</div></div>
       @endif

@@ -26,10 +26,6 @@
         <label>الهاتف</label>
         <input type="text" name="company_phone" value="{{ old('company_phone', $settings->company_phone) }}">
       </div>
-      <div class="field">
-        <label>رقم السجل التجاري</label>
-        <input type="text" name="company_registration" value="{{ old('company_registration', $settings->company_registration) }}">
-      </div>
     </div>
   </div>
 

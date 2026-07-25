@@ -11,7 +11,7 @@ class Settings extends Model
 
     protected $fillable = [
         'company_name', 'company_tagline',
-        'company_phone', 'company_registration', 'whatsapp_country_code',
+        'company_phone', 'whatsapp_country_code',
     ];
 
     public static function current(): self
@@ -24,7 +24,6 @@ class Settings extends Model
             'company_name'            => 'شركة الضبع للتجارة والتوريدات',
             'company_tagline'         => 'مقاولات وتشطيبات · القاهرة',
             'company_phone'           => '0100 000 0000',
-            'company_registration'    => '12345',
             'whatsapp_country_code'   => '20',
         ]);
         $settings->id = 1;

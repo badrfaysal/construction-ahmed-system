@@ -48,6 +48,7 @@ class InstallmentController extends Controller
             ->withExists(['contracts as has_whole_contract' => function ($query) {
                 $query->whereNull('band_id');
             }])
+            ->whereNotIn('status', ['done', 'canceled'])
             ->orderByDesc('id')
             ->get()
             ->map(function ($p) {

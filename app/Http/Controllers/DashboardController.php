@@ -70,14 +70,13 @@ class DashboardController extends Controller
         
         $treasuryBalance = $totalCollected - $totalSpentMaterials - $totalSpentLabor;
 
-        // صافي كل الحركات المالية المرتبطة بمشاريع عبر كل الحسابات
-        // (بدل رصيد محفظة المقاولات فقط — عشان يشمل أي حساب بنكي أو محفظة)
+        // Capital metrics use ALL projects (excluding from month filter as requested)
+        // If we exclude finished projects, we lose their realized cash profit from the Net Capital.
         $constructionNetCash = FinancialTransaction::constructionNetCash();
 
         // رصيد المحفظة الافتراضية (للعرض فقط في الكارت المنفصل)
         $walletBalance = Account::walletBalance();
 
-        // Capital metrics use ALL projects (excluding from month filter as requested)
         $directReceivables = (float) $allProjects
             ->reject(fn ($p) => $p->hasInstallmentContract())
             ->sum(fn ($p) => max(0, $p->cached_actual_total - $p->cached_collected));

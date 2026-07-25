@@ -29,17 +29,17 @@
   <div class="card stat">
     <div class="top"><span class="label">الربح التجاري (فرق الشراء من البيع)</span></div>
     <div class="val tnum" style="color:{{ $totals['trade_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totals['trade_profit']) }} <small>ج.م</small></div>
-    <div class="sub">{{ number_format($totals['trade_profit_share'], 1) }}% من إجمالي الربح الدفتري</div>
+    <div class="sub">{{ number_format($totals['trade_profit_share'], 1) }}% من إجمالي التكلفة</div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">نسبة الإشراف</span></div>
     <div class="val tnum" style="color:{{ $totals['percentage_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totals['percentage_profit']) }} <small>ج.م</small></div>
-    <div class="sub">{{ number_format($totals['percentage_profit_share'], 1) }}% من إجمالي الربح الدفتري</div>
+    <div class="sub">{{ number_format($totals['percentage_profit_share'], 1) }}% من إجمالي التكلفة</div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">أرباح نسبة التقسيط</span></div>
     <div class="val tnum" style="color:{{ $totals['installment_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totals['installment_profit']) }} <small>ج.م</small></div>
-    <div class="sub">{{ number_format($totals['installment_profit_share'], 1) }}% من إجمالي الربح الدفتري</div>
+    <div class="sub">{{ number_format($totals['installment_profit_share'], 1) }}% من إجمالي التكلفة</div>
   </div>
 </div>
 

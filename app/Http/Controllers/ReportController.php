@@ -33,6 +33,7 @@ class ReportController extends Controller
     public function profitability()
     {
         $projects = Project::with(['client'])
+            ->where('status', 'active')
             ->orderByDesc('created_at')
             ->get()
             ->map(function ($project) {
@@ -63,10 +64,9 @@ class ReportController extends Controller
                 $project->percentage_profit = $pct;
                 $project->installment_profit = $install;
                 
-                $profitBase = $trade + $pct + $install; // = book_profit before discounts
-                $project->trade_profit_share = abs($profitBase) > 0.009 ? ($trade / $profitBase) * 100 : 0;
-                $project->percentage_profit_share = abs($profitBase) > 0.009 ? ($pct / $profitBase) * 100 : 0;
-                $project->installment_profit_share = abs($profitBase) > 0.009 ? ($install / $profitBase) * 100 : 0;
+                $project->trade_profit_share = $spent > 0 ? ($trade / $spent) * 100 : ($trade > 0 ? 100 : 0);
+                $project->percentage_profit_share = $spent > 0 ? ($pct / $spent) * 100 : ($pct > 0 ? 100 : 0);
+                $project->installment_profit_share = $spent > 0 ? ($install / $spent) * 100 : ($install > 0 ? 100 : 0);
 
                 return $project;
             });
@@ -83,10 +83,10 @@ class ReportController extends Controller
             'percentage_profit' => $projects->sum('percentage_profit'),
             'installment_profit' => $projects->sum('installment_profit'),
         ];
-        $totalProfitBase = $totals['trade_profit'] + $totals['percentage_profit'] + $totals['installment_profit'];
-        $totals['trade_profit_share'] = abs($totalProfitBase) > 0.009 ? ($totals['trade_profit'] / $totalProfitBase) * 100 : 0;
-        $totals['percentage_profit_share'] = abs($totalProfitBase) > 0.009 ? ($totals['percentage_profit'] / $totalProfitBase) * 100 : 0;
-        $totals['installment_profit_share'] = abs($totalProfitBase) > 0.009 ? ($totals['installment_profit'] / $totalProfitBase) * 100 : 0;
+        $totalSpent = $totals['total_spent'];
+        $totals['trade_profit_share'] = $totalSpent > 0 ? ($totals['trade_profit'] / $totalSpent) * 100 : ($totals['trade_profit'] > 0 ? 100 : 0);
+        $totals['percentage_profit_share'] = $totalSpent > 0 ? ($totals['percentage_profit'] / $totalSpent) * 100 : ($totals['percentage_profit'] > 0 ? 100 : 0);
+        $totals['installment_profit_share'] = $totalSpent > 0 ? ($totals['installment_profit'] / $totalSpent) * 100 : ($totals['installment_profit'] > 0 ? 100 : 0);
 
         return view('reports.profitability', compact('projects', 'totals'));
     }
@@ -290,8 +290,8 @@ class ReportController extends Controller
             'installments' => fn ($q) => $q->orderBy('due_date'),
         ]);
 
-        // Only bands that have actually started carry real spend worth listing, unless it's in installments
-        $spentBands = $project->hasInstallmentContract() ? $project->bands : $project->bands->where('status', '!=', 'pending');
+        // Include all bands so the statement's breakdown matches the project's actualClientTotal exactly.
+        $spentBands = $project->bands;
 
         // Petty/misc expenses registered without a specific band (band_id null)
         $generalMaterials = $project->generalMaterials()->sortBy('date');
@@ -325,7 +325,7 @@ class ReportController extends Controller
             'installments' => fn ($q) => $q->orderBy('due_date'),
         ]);
 
-        $spentBands = $project->hasInstallmentContract() ? $project->bands : $project->bands->where('status', '!=', 'pending');
+        $spentBands = $project->bands;
         
         $generalMaterials = $project->generalMaterials()->sortBy('date');
         $generalTotal = $generalMaterials->sum(fn ($m) => $m->netClientCost());
