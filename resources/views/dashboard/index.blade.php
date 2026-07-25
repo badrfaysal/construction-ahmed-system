@@ -56,16 +56,16 @@
 }
 .filter-form input[type="month"]:focus { border-color: #3b82f6; }
 
-/* دعم شبكة 5 أعمدة للكروت في الشاشات الكبيرة */
-.cols-5 { grid-template-columns: repeat(5, 1fr); }
+/* دعم شبكة 4 أعمدة للكروت في الشاشات الكبيرة */
+.cols-4 { grid-template-columns: repeat(4, 1fr); }
 @media (max-width: 1400px) {
-    .cols-5 { grid-template-columns: repeat(3, 1fr); }
+    .cols-4 { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 768px) {
-    .cols-5 { grid-template-columns: repeat(2, 1fr); }
+    .cols-4 { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 480px) {
-    .cols-5 { grid-template-columns: 1fr; }
+    .cols-4 { grid-template-columns: 1fr; }
 }
 </style>
 
@@ -79,7 +79,7 @@
 </div>
 
 {{-- Summary stats row --}}
-<div class="grid cols-5" style="margin-bottom:20px">
+<div class="grid cols-4" style="margin-bottom:20px">
 
   {{-- رأس مال مشروع المقاولات — السيولة + كل المستحقات (مباشر وعبر تقسيط) − الديون --}}
   <div class="vstat vstat-navy">
@@ -121,17 +121,7 @@
     <div class="note">من إجمالي {{ \App\Support\Money::format($totalContract) }} ج.م</div>
   </div>
 
-  @php $walletIsAdmin = auth()->user()->isAdmin(); @endphp
-  <{{ $walletIsAdmin ? 'a' : 'div' }} class="vstat {{ $walletBalance >= 0 ? 'vstat-green' : 'vstat-red' }}" @if($walletIsAdmin) href="{{ route('wallet.index') }}" style="text-decoration:none" @endif>
-    <div class="top">
-      <span class="label">محفظة المقاولات</span>
-      <span class="ic">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>
-      </span>
-    </div>
-    <div class="val tnum">{{ number_format($walletBalance, 2) }} <small>ج.م</small></div>
-    <div class="note">{{ $walletIsAdmin ? 'دوس لإدارة المحفظة والحركات اليدوية' : 'الرصيد الفعلي — كل مصروف ودفعة بيتحدّث فيها تلقائيًا' }}</div>
-  </{{ $walletIsAdmin ? 'a' : 'div' }}>
+
 
   <a class="vstat vstat-gold" href="{{ route('installments.index') }}">
     <div class="top">
@@ -290,6 +280,7 @@
           <span class="ic ic-gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span>
           <span class="lbl">الأقساط</span>
         </a>
+        @php $walletIsAdmin = auth()->user()->isAdmin(); @endphp
         @if($walletIsAdmin)
           <a class="qlink" href="{{ route('wallet.index') }}">
             <span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg></span>

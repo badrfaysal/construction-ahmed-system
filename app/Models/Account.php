@@ -56,6 +56,10 @@ class Account extends Model
     {
         return static::query()
             ->where('status', 'active')
+            ->where(function ($q) {
+                $q->where('category', '!=', 'project_sector')
+                  ->orWhereNull('category');
+            })
             ->orderByRaw('id = ? DESC', [self::WALLET_ID])
             ->orderBy('account_name')
             ->get(['id', 'account_name', 'category', 'balance']);
