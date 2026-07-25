@@ -910,9 +910,9 @@
   $rptClientTotal = $actualValue; 
   $rptProfit = $totalProfit; // Matches top card
   
-  // Calculate percentage based on Net Client Total (Actual minus payment discounts)
+  // Calculate percentage based on Cost (Markup on Cost)
   $netClientTotal = $project->actualClientTotal() - $project->paymentDiscounts();
-  $rptProfitPct = $netClientTotal > 0 ? round($rptProfit / $netClientTotal * 100, 1) : 0;
+  $rptProfitPct = $rptTotalCost > 0 ? round($rptProfit / $rptTotalCost * 100, 1) : 0;
   
   $rptCollected = $collected; // From controller
   $rptDue = $remaining; // From controller
