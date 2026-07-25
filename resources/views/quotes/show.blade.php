@@ -208,11 +208,15 @@
 .quote-summary-row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 14px 16px;
   font-size: 14px;
   border-bottom: 1px solid #f1f5f9;
   font-weight: 600;
   color: #475569;
+}
+.quote-summary-row span {
+  white-space: nowrap;
 }
 .quote-summary-row:last-child { border-bottom: none; }
 .quote-summary-total {
@@ -224,6 +228,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.quote-summary-total span {
+  white-space: nowrap;
 }
 
 .quote-barcode-wrap {
@@ -399,11 +406,11 @@
         </div>
         <div class="quote-summary-row">
           <span>الخصم (0%)</span>
-          <span class="num" style="color: #ef4444;">- 0.00</span>
+          <span class="num" style="color: #ef4444; direction: ltr; display: inline-block;">- 0.00</span>
         </div>
         <div class="quote-summary-row">
           <span>الضريبة (0%)</span>
-          <span class="num" style="color: #10b981;">+ 0.00</span>
+          <span class="num" style="color: #10b981; direction: ltr; display: inline-block;">+ 0.00</span>
         </div>
         <div class="quote-summary-total">
           <span>الإجمالي النهائي</span>
