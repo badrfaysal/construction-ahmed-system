@@ -26,9 +26,9 @@
   .mat-layout .mat-form{flex:1;min-width:0}
   
   .mat-totals {
-    position:sticky;top:24px;width:300px;flex-shrink:0;
+    position:sticky;top:24px;width:250px;flex-shrink:0;
     background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 32px; padding: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 24px; padding: 20px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.04), inset 0 2px 4px rgba(255,255,255,0.5);
   }
   .mat-totals .section-label{margin:0 0 20px; font-size: 1.3rem; color: var(--ink); font-weight: 800; text-align: center;}
@@ -41,6 +41,13 @@
   @media (max-width:1100px) {
     .mat-layout{flex-direction:column}
     .mat-totals{position:static;width:100%}
+  }
+  
+  /* تصغير حجم الخانات في الجدول عشان تظهر كلها بدون شريط تمرير */
+  .conv-row input[type="number"], .conv-row input[type="date"], .conv-row select {
+    padding: 4px 6px !important;
+    font-size: 0.85rem !important;
+    height: auto !important;
   }
 </style>
 
@@ -93,7 +100,7 @@
                 <th class="num">إشراف %</th>
                 <th>المورد</th>
                 <th>التاريخ</th>
-                <th style="min-width:200px">طريقة الدفع</th>
+                <th>طريقة الدفع</th>
               </tr>
             </thead>
             <tbody>
@@ -102,42 +109,42 @@
                   <td style="text-align:center">
                     <input type="hidden" name="items[{{ $idx }}][name]" value="{{ $item->name }}">
                     <input type="hidden" name="items[{{ $idx }}][quote_band_id]" value="{{ $band->id }}">
-                    <input type="checkbox" name="items[{{ $idx }}][purchased]" value="1" style="width:18px;height:18px">
+                    <input type="checkbox" name="items[{{ $idx }}][purchased]" value="1" {{ old('items.' . $idx . '.purchased') ? 'checked' : '' }} style="width:18px;height:18px">
                   </td>
                   <td>
                     <strong>{{ $item->name }}</strong>
                     <input type="hidden" name="items[{{ $idx }}][unit]" value="وحدة">
                   </td>
-                  <td class="num"><input type="number" name="items[{{ $idx }}][qty]" value="{{ rtrim(rtrim($item->qty, '0'), '.') }}" min="0" step="0.01" style="width:80px"></td>
-                  <td class="num"><input type="number" name="items[{{ $idx }}][unit_price]" value="{{ $item->unit_price }}" min="0" step="0.01" style="width:100px"></td>
-                  <td class="num"><input type="number" name="items[{{ $idx }}][sell_price]" value="{{ $item->unit_price }}" min="0" step="0.01" style="width:100px; background-color:#f1f5f9; cursor:not-allowed;" readonly title="سعر البيع محدد مسبقاً في عرض السعر"></td>
-                  <td class="num"><input type="number" name="items[{{ $idx }}][supervision_pct]" value="{{ $item->supervision_pct }}" min="0" max="100" step="0.1" style="width:70px"></td>
+                  <td class="num"><input type="number" name="items[{{ $idx }}][qty]" value="{{ old('items.' . $idx . '.qty', rtrim(rtrim($item->qty, '0'), '.')) }}" min="0" step="0.01" style="width:60px"></td>
+                  <td class="num"><input type="number" name="items[{{ $idx }}][unit_price]" value="{{ old('items.' . $idx . '.unit_price', $item->unit_price) }}" min="0" step="0.01" style="width:80px"></td>
+                  <td class="num"><input type="number" name="items[{{ $idx }}][sell_price]" value="{{ $item->unit_price }}" min="0" step="0.01" style="width:80px; background-color:#f1f5f9; cursor:not-allowed;" readonly title="سعر البيع محدد مسبقاً في عرض السعر"></td>
+                  <td class="num"><input type="number" name="items[{{ $idx }}][supervision_pct]" value="{{ old('items.' . $idx . '.supervision_pct', $item->supervision_pct) }}" min="0" max="100" step="0.1" style="width:55px"></td>
                   <td>
-                    <select name="items[{{ $idx }}][supplier_id]" style="min-width:120px">
+                    <select name="items[{{ $idx }}][supplier_id]" style="width:100%; max-width:110px;">
                       <option value="">— بدون —</option>
                       @foreach($suppliers as $s)
-                        <option value="{{ $s->id }}">{{ $s->name }}</option>
+                        <option value="{{ $s->id }}" {{ old('items.' . $idx . '.supplier_id') == $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
                       @endforeach
                     </select>
                   </td>
-                  <td><input type="date" name="items[{{ $idx }}][date]" value="{{ today()->format('Y-m-d') }}"></td>
+                  <td><input type="date" name="items[{{ $idx }}][date]" value="{{ old('items.' . $idx . '.date', today()->format('Y-m-d')) }}"></td>
                   <td>
                     {{-- Payment type --}}
                     <div style="display:flex;flex-direction:column;gap:4px">
                       <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:.82rem">
-                        <input type="radio" name="items[{{ $idx }}][payment_status]" value="paid" checked onchange="toggleConvPaid({{ $idx }},this.value)">
+                        <input type="radio" name="items[{{ $idx }}][payment_status]" value="paid" {{ old('items.' . $idx . '.payment_status', 'paid') === 'paid' ? 'checked' : '' }} onchange="toggleConvPaid({{ $idx }},this.value)">
                         <span style="color:#059669;font-weight:600">كاش</span>
                       </label>
                       <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:.82rem">
-                        <input type="radio" name="items[{{ $idx }}][payment_status]" value="partial" onchange="toggleConvPaid({{ $idx }},this.value)">
+                        <input type="radio" name="items[{{ $idx }}][payment_status]" value="partial" {{ old('items.' . $idx . '.payment_status') === 'partial' ? 'checked' : '' }} onchange="toggleConvPaid({{ $idx }},this.value)">
                         <span style="color:#d97706;font-weight:600">جزئي</span>
                       </label>
                       <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:.82rem">
-                        <input type="radio" name="items[{{ $idx }}][payment_status]" value="deferred" onchange="toggleConvPaid({{ $idx }},this.value)">
+                        <input type="radio" name="items[{{ $idx }}][payment_status]" value="deferred" {{ old('items.' . $idx . '.payment_status') === 'deferred' ? 'checked' : '' }} onchange="toggleConvPaid({{ $idx }},this.value)">
                         <span style="color:#dc2626;font-weight:600">أجل كامل</span>
                       </label>
-                      <div id="conv-paid-{{ $idx }}" style="display:none;margin-top:4px">
-                        <input type="number" name="items[{{ $idx }}][paid_amount]" placeholder="المبلغ المدفوع" min="0" step="0.01" style="width:120px;border-color:#d97706">
+                      <div id="conv-paid-{{ $idx }}" style="display:{{ old('items.' . $idx . '.payment_status') === 'partial' ? 'block' : 'none' }};margin-top:4px">
+                        <input type="number" name="items[{{ $idx }}][paid_amount]" value="{{ old('items.' . $idx . '.paid_amount') }}" placeholder="المبلغ المدفوع" min="0" step="0.01" style="width:100px;border-color:#d97706">
                         <small style="color:#d97706;display:block;font-size:.7rem">أدخل المبلغ المدفوع</small>
                       </div>
                     </div>
@@ -170,9 +177,9 @@
     <div class="top"><span class="label">عدد الأصناف</span></div>
     <div class="val tnum"><span id="tot-items-count">0</span></div>
   </div>
-  <div class="card stat">
-    <div class="top"><span class="label">إجمالي الشراء (تكلفة)</span></div>
-    <div class="val tnum"><span id="tot-purchase">0</span> <small>ج.م</small></div>
+  <div class="card stat" style="background: #fffbeb; border: 1px solid #fde68a;">
+    <div class="top"><span class="label" style="color: #b45309; font-weight: 600;">إجمالي الشراء (تكلفة)</span></div>
+    <div class="val tnum" style="color: #92400e;"><span id="tot-purchase">0</span> <small style="color: #d97706;">ج.م</small></div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">إجمالي البيع</span></div>
