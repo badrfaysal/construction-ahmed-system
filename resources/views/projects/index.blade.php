@@ -69,8 +69,9 @@
 @if($projects->count())
   <style>
     .compact-table { border-collapse: separate !important; border-spacing: 0 12px !important; width: 100%; margin-top: 4px; }
-    .compact-table th { padding: 8px 16px !important; line-height: 1.4; border: none !important; color: #475569; text-align: right; font-size: 14.5px; font-weight: 700; white-space: nowrap; }
-    .compact-table th svg { opacity: 0.9; margin-left: 6px; vertical-align: -4px; width: 18px; height: 18px; }
+    .compact-table th { padding: 12px 16px !important; border: none !important; color: #475569; text-align: right; font-size: 14.5px; font-weight: 700; white-space: nowrap; }
+    .compact-table th .th-flex { display: flex; align-items: center; justify-content: flex-start; gap: 6px; }
+    .compact-table th svg { opacity: 0.9; width: 18px; height: 18px; flex-shrink: 0; }
     .compact-table td { 
         padding: 14px 16px !important; 
         line-height: 1.4; 
@@ -90,13 +91,13 @@
       <table class="compact-table" style="white-space: nowrap;">
         <thead>
           <tr>
-            <th><svg style="color: #3b82f6;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>المشروع والعميل</th>
-            <th><svg style="color: #ef4444;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pin"/></svg>العنوان</th>
-            <th><svg style="color: #8b5cf6;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>البنود الجارية</th>
-            <th><svg style="color: #06b6d4;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pie-chart"/></svg>الإنجاز</th>
-            <th><svg style="color: #f59e0b;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>قيمة المشروع</th>
-            <th><svg style="color: #10b981;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>المدفوع</th>
-            <th><svg style="color: #6366f1;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-calendar"/></svg>التسليم</th>
+            <th><div class="th-flex"><svg style="color: #3b82f6;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>المشروع والعميل</div></th>
+            <th><div class="th-flex"><svg style="color: #ef4444;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pin"/></svg>العنوان</div></th>
+            <th><div class="th-flex"><svg style="color: #8b5cf6;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>البنود الجارية</div></th>
+            <th><div class="th-flex"><svg style="color: #06b6d4;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pie-chart"/></svg>الإنجاز</div></th>
+            <th><div class="th-flex"><svg style="color: #f59e0b;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>قيمة المشروع</div></th>
+            <th><div class="th-flex"><svg style="color: #10b981;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>المدفوع</div></th>
+            <th><div class="th-flex"><svg style="color: #6366f1;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-calendar"/></svg>التسليم</div></th>
           </tr>
         </thead>
         <tbody>
@@ -105,7 +106,7 @@
               $prog = $p->progressPct();
               $paid  = $p->totalCollected();
               $actual = $p->grossClientTotal();
-              $activeBand = $p->bands->where('status', 'active')->first();
+              $activeBands = $p->bands->where('status', 'active');
             @endphp
             <tr onclick="window.location='{{ route('projects.show', $p) }}'" style="cursor: pointer; transition: background 0.15s;">
               <td>
@@ -127,8 +128,12 @@
                   <span class="tag amber sm"><span class="dot"></span>معلق</span>
                 @elseif($p->status === 'canceled')
                   <span class="tag red sm"><span class="dot"></span>ملغي</span>
-                @elseif($activeBand)
-                  <span class="tag blue sm"><span class="dot"></span>{{ $activeBand->name }}</span>
+                @elseif($activeBands->count() > 0)
+                  <div style="display: flex; gap: 4px; flex-wrap: wrap; max-width: 200px;">
+                    @foreach($activeBands as $band)
+                      <span class="tag blue sm"><span class="dot"></span>{{ $band->name }}</span>
+                    @endforeach
+                  </div>
                 @else
                   <span class="tag gray sm">جاري</span>
                 @endif
