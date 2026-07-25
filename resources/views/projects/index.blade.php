@@ -34,71 +34,70 @@
 </div>
 
 @if($projects->count())
-  <div class="pcards">
-    @foreach($projects as $p)
-      @php
-        $prog = $p->progressPct();
-        $paid  = $p->totalCollected();
-        $total = $p->initialContractValue();
-        $actual = $p->grossClientTotal();
-        $activeBand = $p->bands->where('status', 'active')->first();
-        $paidWorkers = (float) $p->total_worker_paid;
-      @endphp
-      <a class="pcard {{ $p->status === 'done' ? 'is-done' : '' }}" href="{{ route('projects.show', $p) }}">
-        <div class="pc-band"></div>
-        <div class="pc-body">
-          <div class="pc-head">
-            <div>
-              <div class="pc-name">{{ $p->name }}</div>
-              <div class="pc-client">{{ $p->client->name }}</div>
-            </div>
-            @if($p->status === 'done')
-              <span class="tag green"><span class="dot"></span>مكتمل ومسلّم</span>
-            @elseif($p->status === 'suspended')
-              <span class="tag amber"><span class="dot"></span>معلق</span>
-            @elseif($p->status === 'canceled')
-              <span class="tag red"><span class="dot"></span>ملغي</span>
-            @elseif($activeBand)
-              <span class="tag blue"><span class="dot"></span>{{ $activeBand->name }}</span>
-            @endif
-          </div>
-          @if($p->address)
-            <div class="pc-addr">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pin"/></svg>
-              {{ $p->address }}
-            </div>
-          @endif
-          <div class="pc-prog">
-            <span class="muted" style="font-size:11px">الإنجاز</span>
-            <div class="bar-track"><div class="bar-fill {{ $prog >= 100 ? 'full' : '' }}" style="width:{{ $prog }}%"></div></div>
-            <span class="pct">{{ $prog }}%</span>
-          </div>
-          @if($p->bands->count())
-            <div class="pc-bands">
-              @foreach($p->bands as $band)
-                <span class="tag {{ $band->status === 'done' ? 'green' : ($band->status === 'active' ? 'blue' : 'gray') }} sm">
-                  @if($band->status === 'done') ✓ @endif{{ $band->name }}
-                </span>
-              @endforeach
-            </div>
-          @endif
-          <div class="pc-fin">
-            <div>
-              <div class="l" style="display:flex;align-items:center;gap:4px">قيمة المشروع <small class="muted" style="font-size:9px" title="قبل الخصم">(إجمالي)</small></div>
-              <div class="v" style="color:var(--brand)">{{ \App\Support\Money::format($actual) }}</div>
-            </div>
-            <div>
-              <div class="l">محصّل من العميل</div>
-              <div class="v" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }}</div>
-            </div>
-            <div>
-              <div class="l">{{ $p->status === 'done' ? 'تاريخ التسليم' : 'موعد التسليم' }}</div>
-              <div class="v">{{ $p->status === 'done' ? ($p->delivered_date?->format('Y-m-d') ?? '—') : ($p->deliver_date?->format('Y-m-d') ?? '—') }}</div>
-            </div>
-          </div>
-        </div>
-      </a>
-    @endforeach
+  <div class="table-card">
+    <div class="table-scroll">
+      <table style="white-space: nowrap;">
+        <thead>
+          <tr>
+            <th>المشروع والعميل</th>
+            <th>العنوان</th>
+            <th>الحالة</th>
+            <th>الإنجاز</th>
+            <th>قيمة المشروع</th>
+            <th>المدفوع</th>
+            <th>التسليم</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach($projects as $p)
+            @php
+              $prog = $p->progressPct();
+              $paid  = $p->totalCollected();
+              $actual = $p->grossClientTotal();
+              $activeBand = $p->bands->where('status', 'active')->first();
+            @endphp
+            <tr onclick="window.location='{{ route('projects.show', $p) }}'" style="cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+              <td>
+                <div style="font-weight: 700; font-size: 14px; color: #0f172a">{{ $p->name }}</div>
+                <div style="font-size: 12px; color: #64748b">{{ $p->client->name }}</div>
+              </td>
+              <td style="font-size: 12.5px; color: #475569">
+                @if($p->address)
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.6; margin-left: 2px"><use href="#i-pin"/></svg>
+                  {{ \Illuminate\Support\Str::limit($p->address, 30) }}
+                @else
+                  —
+                @endif
+              </td>
+              <td>
+                @if($p->status === 'done')
+                  <span class="tag green sm"><span class="dot"></span>مكتمل</span>
+                @elseif($p->status === 'suspended')
+                  <span class="tag amber sm"><span class="dot"></span>معلق</span>
+                @elseif($p->status === 'canceled')
+                  <span class="tag red sm"><span class="dot"></span>ملغي</span>
+                @elseif($activeBand)
+                  <span class="tag blue sm"><span class="dot"></span>{{ $activeBand->name }}</span>
+                @else
+                  <span class="tag gray sm">جاري</span>
+                @endif
+              </td>
+              <td style="width: 140px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <div class="bar-track" style="flex:1; margin:0; height:6px"><div class="bar-fill {{ $prog >= 100 ? 'full' : '' }}" style="width:{{ $prog }}%"></div></div>
+                  <span class="pct tnum" style="font-size:12px; font-weight:700; min-width:32px">{{ $prog }}%</span>
+                </div>
+              </td>
+              <td style="font-weight: 700; font-size: 13px; color: var(--brand)" class="tnum">{{ \App\Support\Money::format($actual) }}</td>
+              <td style="font-weight: 700; font-size: 13px; color: var(--pos)" class="tnum">{{ \App\Support\Money::format($paid) }}</td>
+              <td style="font-size: 12.5px; color: #475569" class="tnum">
+                {{ $p->status === 'done' ? ($p->delivered_date?->format('Y-m-d') ?? '—') : ($p->deliver_date?->format('Y-m-d') ?? '—') }}
+              </td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+    </div>
   </div>
 @else
   <div class="empty-state">
