@@ -146,9 +146,14 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>
       <span>الشقق والمشاريع</span>
     </a>
+    <div class="nav-label">عروض الأسعار</div>
+    <a class="nav-item {{ request()->routeIs('quotes.create') ? 'active' : '' }}" href="{{ route('quotes.create') }}" style="--ic:#3b82f6">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus-circle"/></svg>
+      <span>إنشاء عرض سعر</span>
+    </a>
     <a class="nav-item {{ request()->routeIs('quotes.index') ? 'active' : '' }}" href="{{ route('quotes.index') }}" style="--ic:#8b5cf6">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg>
-      <span>عروض الأسعار</span>
+      <span>كل عروض الأسعار</span>
     </a>
     <a class="nav-item {{ request()->routeIs('quotes.approved') ? 'active' : '' }}" href="{{ route('quotes.approved') }}" style="--ic:#10b981">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check-circle"/></svg>

@@ -404,17 +404,21 @@
           <span>المجموع الفرعي</span>
           <span class="num">{{ \App\Support\Money::format($quote->total()) }}</span>
         </div>
+        @if($quote->discountAmount() > 0)
         <div class="quote-summary-row">
-          <span>الخصم (0%)</span>
-          <span class="num" style="color: #ef4444; direction: ltr; display: inline-block;">- 0.00</span>
+          <span>الخصم</span>
+          <span class="num" style="color: #ef4444; direction: ltr; display: inline-block;">- {{ \App\Support\Money::format($quote->discountAmount()) }}</span>
         </div>
+        @endif
+        @if($quote->tax_pct > 0)
         <div class="quote-summary-row">
-          <span>الضريبة (0%)</span>
-          <span class="num" style="color: #10b981; direction: ltr; display: inline-block;">+ 0.00</span>
+          <span>الضريبة ({{ rtrim(rtrim($quote->tax_pct, '0'), '.') }}%)</span>
+          <span class="num" style="color: #10b981; direction: ltr; display: inline-block;">+ {{ \App\Support\Money::format($quote->taxAmount()) }}</span>
         </div>
+        @endif
         <div class="quote-summary-total">
           <span>الإجمالي النهائي</span>
-          <span>{{ \App\Support\Money::format($quote->total()) }} <small style="font-size: 13px; font-weight: normal; opacity: 0.9;">EGP</small></span>
+          <span>{{ \App\Support\Money::format($quote->totalWithTax()) }} <small style="font-size: 13px; font-weight: normal; opacity: 0.9;">EGP</small></span>
         </div>
       </div>
     </div>

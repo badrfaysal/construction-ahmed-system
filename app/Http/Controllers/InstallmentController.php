@@ -21,9 +21,18 @@ class InstallmentController extends Controller
     // الشاشة الرئيسية: عقود نشطة (مجمّعة بالعميل في الواجهة) + منتهية + إحصائيات
     public function index(Request $request)
     {
-        $contracts = InstallmentContract::with(['project.client', 'payments'])
-            ->orderByDesc('id')
-            ->get();
+        $sort = $request->input('sort', 'newest');
+
+        $query = InstallmentContract::with(['project.client', 'payments']);
+
+        match ($sort) {
+            'oldest' => $query->orderBy('id', 'asc'),
+            'highest' => $query->orderBy('remaining_balance', 'desc'),
+            'lowest' => $query->orderBy('remaining_balance', 'asc'),
+            default => $query->orderBy('id', 'desc'), // newest
+        };
+
+        $contracts = $query->get();
 
         $active    = $contracts->filter(fn ($c) => (float) $c->remaining_balance > 0.009);
         $completed = $contracts->filter(fn ($c) => (float) $c->remaining_balance <= 0.009);

@@ -14,7 +14,7 @@ class Project extends Model
 
     protected $fillable = [
         'client_id', 'name', 'address', 'area', 'default_supervision_pct',
-        'initial_contract_value', 'discount', 'start_date', 'deliver_date', 'delivered_date',
+        'initial_contract_value', 'discount', 'tax_pct', 'tax_amount', 'start_date', 'deliver_date', 'delivered_date',
         'current_stage', 'status', 'notes',
         'cached_actual_total', 'cached_collected', 'cached_spent',
         'cached_trade_profit', 'cached_percentage_profit', 'cached_total_discount',
@@ -140,7 +140,7 @@ class Project extends Model
         $projectDiscounts = (float) $this->discounts->sum('amount') + (float) $this->discount;
         $contractDiscounts = (float) $this->contracts->sum('discount');
 
-        return $bandsTotal + $generalMaterials + $interest - $projectDiscounts - $contractDiscounts;
+        return $bandsTotal + $generalMaterials + $interest + (float) $this->tax_amount - $projectDiscounts - $contractDiscounts;
     }
 
     // الفاتورة قبل أي خصومات عامة على المشروع وعقود التقسيط (إجمالي ما تم فوترته + فوائد)

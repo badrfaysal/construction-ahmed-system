@@ -6,88 +6,91 @@
 <div class="page-head"><div><h3>تعديل عرض سعر</h3></div><a href="{{ route('quotes.show', $quote) }}" class="btn ghost">رجوع</a></div>
 
 <style>
-  /* Compact UI Styles */
+  /* Professional UI Styles */
   .c-card {
     background: #fff;
     border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   }
   .c-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
   }
   .c-label {
     display: block;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 13px;
+    font-weight: 600;
     color: #475569;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
   }
   .c-input {
     width: 100%;
-    height: 36px;
-    padding: 0 10px;
+    height: 42px;
+    padding: 0 12px;
     border: 1px solid #cbd5e1;
-    border-radius: 6px;
-    font-size: 13px;
-    color: #1e293b;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #0f172a;
     background: #f8fafc;
-    transition: all 0.2s;
+    transition: all 0.2s ease-in-out;
   }
   .c-input:focus {
     background: #fff;
-    border-color: #2563eb;
+    border-color: #3b82f6;
     outline: none;
-    box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
   }
   textarea.c-input {
     height: auto;
-    padding: 8px 10px;
+    padding: 12px;
+    line-height: 1.5;
   }
   
   .c-band {
+    background: #fff;
     border: 1px solid #e2e8f0;
-    background: #f8fafc;
-    border-radius: 8px;
-    margin-bottom: 16px;
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     overflow: hidden;
   }
   .c-band-header {
-    background: #f1f5f9;
-    padding: 12px 16px;
+    background: #f8fafc;
+    padding: 16px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid #e2e8f0;
   }
   .c-band-title {
-    font-size: 14px;
-    font-weight: 800;
+    font-size: 16px;
+    font-weight: 700;
     color: #0f172a;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
   }
   .c-band-body {
-    padding: 16px;
+    padding: 24px;
   }
   
   .c-table-wrap {
     border: 1px solid #e2e8f0;
-    border-radius: 6px;
+    border-radius: 8px;
     background: #fff;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
+    overflow: hidden;
   }
   .c-table-header {
-    background: #f8fafc;
-    padding: 8px 12px;
-    font-size: 12px;
+    background: #f1f5f9;
+    padding: 12px 16px;
+    font-size: 13px;
     font-weight: 700;
-    color: #475569;
+    color: #334155;
     border-bottom: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
@@ -97,8 +100,8 @@
   /* Flex Rows for items and workers */
   .c-row {
     display: flex;
-    gap: 8px;
-    padding: 8px 12px;
+    gap: 16px;
+    padding: 16px;
     border-bottom: 1px solid #f1f5f9;
     align-items: flex-end;
   }
@@ -113,17 +116,18 @@
   .c-col.lg { flex: 2; }
   
   .c-del-btn {
-    width: 32px;
-    height: 32px;
+    width: 42px;
+    height: 42px;
     background: #fee2e2;
     color: #ef4444;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
+    transition: all 0.2s;
   }
   .c-del-btn:hover {
     background: #ef4444;
@@ -134,38 +138,40 @@
   .c-footer {
     position: sticky;
     bottom: 0;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid #e2e8f0;
-    padding: 16px 24px;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(12px);
+    border: 1px solid #e2e8f0;
+    border-radius: 12px 12px 0 0;
+    padding: 20px 32px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     z-index: 100;
-    box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
-    margin: 32px -32px -32px -32px;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+    margin: 40px 0 0 0;
   }
   .c-totals-flex {
     display: flex;
-    gap: 32px;
+    gap: 40px;
     align-items: center;
   }
   .c-tot-box {
     display: flex;
     flex-direction: column;
+    gap: 4px;
   }
   .c-tot-lbl {
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 600;
     color: #64748b;
   }
   .c-tot-val {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 800;
     color: #0f172a;
   }
   .c-tot-val.final {
-    font-size: 20px;
+    font-size: 24px;
     color: #10b981;
   }
 </style>
@@ -216,6 +222,17 @@
         <input type="text" name="note" value="{{ old('note', $quote->note) }}" class="c-input" placeholder="ملاحظات إضافية...">
       </div>
     </div>
+
+    <div class="c-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 12px;">
+      <div>
+        <label class="c-label">الضريبة %</label>
+        <input type="number" name="tax_pct" id="tax_pct" value="{{ old('tax_pct', $quote->tax_pct) }}" min="0" max="100" step="0.1" class="c-input" placeholder="0" oninput="updateGlobalTotals()" style="font-weight:700; color:#059669;">
+      </div>
+      <div>
+        <label class="c-label">الخصم (ج.م) <span style="font-weight:400; color:#94a3b8; font-size:11px;">(شكلي فقط — لا يؤثر على الإجمالي)</span></label>
+        <input type="number" name="discount_amount" id="discount_amount" value="{{ old('discount_amount', $quote->discount_amount) }}" min="0" step="0.01" class="c-input" placeholder="0" oninput="updateGlobalTotals()" style="font-weight:700; color:#ef4444;">
+      </div>
+    </div>
     
     <div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
@@ -249,6 +266,14 @@
       <div class="c-tot-box">
         <span class="c-tot-lbl">المصنعيات</span>
         <span class="c-tot-val tnum" id="tot-workers-count">0</span>
+      </div>
+      <div class="c-tot-box" id="tot-tax-box" style="display:none;">
+        <span class="c-tot-lbl" style="color:#059669;">+ ضريبة</span>
+        <span class="c-tot-val tnum" id="tot-tax-val" style="color:#059669; font-size:14px;">0.00</span>
+      </div>
+      <div class="c-tot-box" id="tot-discount-box" style="display:none;">
+        <span class="c-tot-lbl" style="color:#ef4444;">خصم (شكلي)</span>
+        <span class="c-tot-val tnum" id="tot-discount-val" style="color:#ef4444; font-size:14px;">0.00</span>
       </div>
       <div class="c-tot-box" style="border-right: 2px solid #e2e8f0; padding-right: 16px;">
         <span class="c-tot-lbl">الإجمالي النهائي للعميل</span>
@@ -318,10 +343,33 @@ function updateGlobalTotals() {
     totalPrice += parseFloat(card.querySelector('.band-price').value) || 0;
   });
 
+  const taxPct = parseFloat(document.getElementById('tax_pct')?.value) || 0;
+  const discountAmount = parseFloat(document.getElementById('discount_amount')?.value) || 0;
+  const taxAmount = totalPrice * taxPct / 100;
+  const finalTotal = totalPrice + taxAmount;
+
   document.getElementById('tot-bands-count').innerText = bandsCount;
   document.getElementById('tot-items-count').innerText = itemsCount;
   document.getElementById('tot-workers-count').innerText = workersCount;
-  document.getElementById('tot-quote-price').innerText = totalPrice.toFixed(2);
+  document.getElementById('tot-quote-price').innerText = finalTotal.toFixed(2);
+
+  // Show/hide tax box
+  const taxBox = document.getElementById('tot-tax-box');
+  if (taxPct > 0) {
+    taxBox.style.display = '';
+    document.getElementById('tot-tax-val').innerText = taxAmount.toFixed(2);
+  } else {
+    taxBox.style.display = 'none';
+  }
+
+  // Show/hide discount box (display only)
+  const discountBox = document.getElementById('tot-discount-box');
+  if (discountAmount > 0) {
+    discountBox.style.display = '';
+    document.getElementById('tot-discount-val').innerText = discountAmount.toFixed(2);
+  } else {
+    discountBox.style.display = 'none';
+  }
 }
 
 function bandRowHtml(g) {

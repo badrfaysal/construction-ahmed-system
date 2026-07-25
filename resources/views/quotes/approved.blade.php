@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'العروض المعتمدة')
 @section('page-title', 'العروض المعتمدة')
 
@@ -24,11 +24,7 @@
 </div>
 
 @if($quotes->count())
-  <div class="qcards">
-    @foreach($quotes as $q)
-      @include('quotes._card', ['q' => $q])
-    @endforeach
-  </div>
+  @include('quotes._table', ['quotes' => $quotes])
 @else
   <div class="empty-state">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check"/></svg>

@@ -175,7 +175,16 @@
               </select>
               <button type="button" class="filter-chip" onclick="setTodayDueFilter()"><i class="fa fa-bolt"></i> اليوم</button>
             </div>
-            <div class="filter-actions">
+            <div class="filter-group ms-auto">
+              <label><i class="fa fa-sort"></i> ترتيب:</label>
+              <select id="activeSort" class="filter-select" onchange="applyActiveFilters()">
+                <option value="newest">الأحدث</option>
+                <option value="oldest">الأقدم</option>
+                <option value="high_rem">المتبقي أكتر</option>
+                <option value="low_rem">المتبقي أقل</option>
+              </select>
+            </div>
+            <div class="filter-actions ms-2">
               <button type="button" class="btn-filter-print" onclick="window.print()"><i class="fa fa-print"></i> طباعة</button>
               <button type="button" class="btn-filter-reset" onclick="resetActiveFilters()"><i class="fa fa-rotate-left"></i> مسح</button>
             </div>
@@ -842,19 +851,35 @@ function updateDueStats(range){
 function computeStatus(i){return {paid:i.paid_this_month_amount, isFull:i.paid_this_month};}
 function groupByCustomer(list){
   const g={};
-  list.forEach(i=>{const k=custKey(i);if(!g[k])g[k]={key:k,name:i.customer_name,phone:i.customer_phone,items:[]};g[k].items.push(i);});
+  list.forEach(i=>{
+    const k=custKey(i);
+    if(!g[k])g[k]={key:k,name:i.customer_name,phone:i.customer_phone,items:[],maxId:0,minId:999999999};
+    g[k].items.push(i);
+    if(i.id > g[k].maxId) g[k].maxId = i.id;
+    if(i.id < g[k].minId) g[k].minId = i.id;
+  });
   return Object.values(g).map(x=>{
     const full=x.items.filter(c=>c._isPaid).length, partial=x.items.filter(c=>!c._isPaid&&c._collected>0).length, unpaid=x.items.filter(c=>c._collected===0).length;
     const prog=customerProgress[x.key]; let pct=0;
     if(prog&&prog.total_value>0){pct=Math.round((1-(prog.total_remaining/prog.total_value))*100);pct=Math.max(0,Math.min(100,pct));}
     return {name:x.name,phone:x.phone,count:x.items.length,
+      maxId:x.maxId, minId:x.minId,
       totalMonthly:x.items.reduce((s,c)=>s+c.monthly_installment,0),
       totalRemaining:x.items.reduce((s,c)=>s+c.remaining_balance,0),
       full,partial,unpaid,pct};
   });
 }
 const PAGE=15; let _sorted=[], _page=1;
-function renderRows(rows){_sorted=[...rows].sort((a,b)=>b.totalRemaining-a.totalRemaining);_page=1;renderPage();}
+function renderRows(rows){
+  const sortMode = document.getElementById('activeSort').value;
+  _sorted=[...rows].sort((a,b)=>{
+    if(sortMode === 'newest') return b.maxId - a.maxId;
+    if(sortMode === 'oldest') return a.minId - b.minId;
+    if(sortMode === 'low_rem') return a.totalRemaining - b.totalRemaining;
+    return b.totalRemaining - a.totalRemaining; // high_rem
+  });
+  _page=1;renderPage();
+}
 function gotoPage(p){_page=p;renderPage();}
 function renderPage(){
   const tb=document.getElementById('dueByDayBody');tb.innerHTML='';

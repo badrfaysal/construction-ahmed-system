@@ -113,8 +113,8 @@
 </div>
 @endif
 
-<div class="grid {{ $isOwner ? 'cols-5' : 'cols-4' }}" style="margin-bottom:20px">
-  <div class="card stat">
+<div class="grid {{ $isOwner ? 'cols-6' : 'cols-5' }}" style="margin-bottom:20px">
+  <div class="card stat" style="background: #eff6ff; border-color: #bfdbfe;">
     <div class="top"><span class="label">إجمالي قيمة المشروع<br><span style="font-size: 11px; font-weight: normal; opacity: 0.8; display: inline-block; margin-top: 2px;">متضمن نسبة الاقساط</span></span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span></div>
     @php
       $displayValue = $project->grossClientTotal();
@@ -125,17 +125,22 @@
       <strong class="price-cost">{{ \App\Support\Money::format($project->totalSpent()) }} ج.م</strong>
     </div>
   </div>
-  <div class="card stat">
+  <div class="card stat" style="background: #fffbeb; border-color: #fde68a;">
     <div class="top"><span class="label">الخصم الممنوح</span><span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-percent"/></svg></span></div>
     <div class="val tnum" style="color:var(--amber)">{{ \App\Support\Money::format($project->totalDiscount()) }} <small>ج.م</small></div>
     <div class="note">إجمالي ما تم خصمه للعميل</div>
   </div>
-  <div class="card stat">
+  <div class="card stat" style="background: #faf5ff; border-color: #e9d5ff;">
+    <div class="top"><span class="label">قيمة الضريبة</span><span class="ic" style="color:#9333ea;background:#f3e8ff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg></span></div>
+    <div class="val tnum" style="color:#9333ea">{{ \App\Support\Money::format($project->tax_amount) }} <small>ج.م</small></div>
+    <div class="note">النسبة المطبقة: {{ (float) $project->tax_pct }}%</div>
+  </div>
+  <div class="card stat" style="background: #f0fdf4; border-color: #bbf7d0;">
     <div class="top"><span class="label">محصّل من العميل</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span></div>
     <div class="val tnum" style="color:var(--pos)">{{ \App\Support\Money::format($project->totalCollected()) }} <small>ج.م</small></div>
     <div class="note">الباقي عليه: {{ \App\Support\Money::format(max($project->amountDue(), 0)) }} ج.م</div>
   </div>
-  <div class="card stat">
+  <div class="card stat" style="background: #fff7ed; border-color: #fed7aa;">
     <div class="top"><span class="label">إجمالي المصروف</span><span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></span></div>
     <div class="val tnum">{{ \App\Support\Money::format($project->totalSpent()) }} <small>ج.م</small></div>
   </div>
@@ -144,11 +149,11 @@
       $installmentInterest = $project->contracts()->get()->sum(fn($c) => $c->interestAmount());
       $profitWithoutInstallment = $totalProfit - $installmentInterest;
     @endphp
-    <div class="card stat row-click" onclick="document.getElementById('profit-modal').classList.add('open')">
+    <div class="card stat row-click" style="background: #f8fafc; border-color: #cbd5e1;" onclick="document.getElementById('profit-modal').classList.add('open')">
       <div class="top"><span class="label">الربح المتحقق</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg></span></div>
       <div class="val tnum" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalProfit) }} <small>ج.م</small></div>
       <div class="note" style="display:flex; justify-content:space-between; align-items:center;">
-        <span>بعد طرح الخصم الممنوح والعمولات</span>
+        <span>بعد الخصم والعمولات</span>
         @if($installmentInterest > 0)
           <span style="color:var(--accent); font-size:10px; font-weight:600;">(متضمن أرباح التقسيط)</span>
         @endif
@@ -1318,6 +1323,14 @@
                   <td class="num" style="color: #10b981; font-weight: bold;">{{ \App\Support\Money::format($installmentInterest) }}</td>
                   <td class="num" style="color: #10b981; font-weight: bold;">0.00</td>
                   <td class="num" style="color: #10b981; font-weight: bold;">{{ \App\Support\Money::format($installmentInterest) }}</td>
+                </tr>
+              @endif
+              @if($project->tax_amount > 0)
+                <tr>
+                  <td>ضريبة القيمة المضافة (عرض السعر)</td>
+                  <td class="num">{{ \App\Support\Money::format($project->tax_amount) }}</td>
+                  <td class="num">0.00</td>
+                  <td class="num" style="color: var(--pos)">{{ \App\Support\Money::format($project->tax_amount) }}</td>
                 </tr>
               @endif
               @php $marketersCommission = (float) $project->transactions()->where('ref_type', 'marketer_commission')->sum('amount'); @endphp

@@ -13,11 +13,16 @@ class Quote extends Model
     protected $fillable = [
         'ref', 'client_id', 'client_name', 'phone', 'address', 'area',
         'date', 'status', 'note', 'project_id', 'terms',
+        'tax_pct', 'discount_amount',
     ];
 
     protected function casts(): array
     {
-        return ['date' => 'date'];
+        return [
+            'date' => 'date',
+            'tax_pct' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
+        ];
     }
 
     public function bands(): HasMany
@@ -40,6 +45,25 @@ class Quote extends Model
     public function total(): float
     {
         return (float) $this->bands->sum('price');
+    }
+
+    // الإجمالي بعد الضريبة (الضريبة فقط هي اللي بتأثر — الخصم شكلي)
+    public function totalWithTax(): float
+    {
+        $subtotal = $this->total();
+        $tax = $subtotal * (float)($this->tax_pct ?? 0) / 100;
+        return $subtotal + $tax;
+    }
+
+    public function taxAmount(): float
+    {
+        return $this->total() * (float)($this->tax_pct ?? 0) / 100;
+    }
+
+    // الخصم شكلي فقط — بيظهر في العرض بس مش بيأثر على الإجمالي
+    public function discountAmount(): float
+    {
+        return (float)($this->discount_amount ?? 0);
     }
 
     public function statusAr(): string

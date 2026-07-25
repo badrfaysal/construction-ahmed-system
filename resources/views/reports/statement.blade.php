@@ -10,6 +10,10 @@
       <input type="checkbox" id="toggle-supervision" onchange="document.body.classList.toggle('show-supervision', this.checked)">
       إظهار نسبة الإشراف
     </label>
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-inline-end:10px;font-size:13px;font-weight:600">
+      <input type="checkbox" id="toggle-tax-invoice" onchange="document.body.classList.toggle('tax-invoice-mode', this.checked)">
+      فاتورة ضريبية
+    </label>
     <a href="{{ route('reports.statement.summary', $project) }}" class="btn ghost">الكشف المختصر</a>
     <button onclick="window.print()" class="btn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg>
@@ -22,6 +26,13 @@
 <style>
   .col-sup { display: none; }
   body.show-supervision .col-sup { display: table-cell; }
+  .tax-invoice-label { display: none; }
+  body.tax-invoice-mode .tax-invoice-label { display: inline; }
+  body.tax-invoice-mode .standard-statement-label { display: none; }
+  
+  .tax-invoice-row { display: none; }
+  body.tax-invoice-mode .tax-invoice-row { display: table-row; }
+  body.tax-invoice-mode .standard-total-row { display: none; }
 </style>
 
 <div class="statement">
@@ -33,7 +44,10 @@
       <p>{{ $settings->company_tagline }} @if($settings->company_phone)· هاتف {{ $settings->company_phone }}@endif</p>
     </div>
     <div class="meta">
-      <b>كشف حساب</b><br>
+      <b>
+        <span class="standard-statement-label">كشف حساب</span>
+        <span class="tax-invoice-label">فاتورة ضريبية</span>
+      </b><br>
       رقم: INV-{{ 1000 + $project->id }}<br>
       التاريخ: {{ now()->format('d/m/Y') }}
     </div>
@@ -169,17 +183,36 @@
 
     {{-- Final summary --}}
     <div class="st-final">
-      <table>
-        @if($discountAmount > 0)
-        <tr><td class="muted">إجمالي المستحق قبل الخصم</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($subTotal) }} ج.م</td></tr>
-        <tr><td class="muted">الخصم</td><td style="text-align:left;font-weight:700;color:#b91c1c">{{ \App\Support\Money::format($discountAmount) }} ج.م</td></tr>
-        <tr><td class="muted">إجمالي المستحق بعد الخصم</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($actualTotal) }} ج.م</td></tr>
-        @else
-        <tr><td class="muted">إجمالي المستحق حتى الآن</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($actualTotal) }} ج.م</td></tr>
-        @endif
-        <tr><td class="muted">إجمالي المدفوع</td><td style="text-align:left;font-weight:700;color:var(--pos)">{{ \App\Support\Money::format($totalPaid) }} ج.م</td></tr>
-        <tr class="big"><td>المتبقي المطلوب</td><td style="text-align:left">{{ \App\Support\Money::format($balance) }} ج.م</td></tr>
-      </table>
+      <div class="st-final-blocks">
+        <table>
+          @php
+             $subTax = $actualTotal - $project->tax_amount + $discountAmount;
+          @endphp
+          
+          {{-- TAX INVOICE MODE ROWS --}}
+          <tr class="tax-invoice-row"><td class="muted" style="text-align:right">المجموع</td><td style="text-align:left;font-weight:700;color:var(--ink-2)">{{ \App\Support\Money::format($subTax) }} EGP</td></tr>
+          @if($discountAmount > 0)
+          <tr class="tax-invoice-row"><td class="muted" style="text-align:right">الخصم</td><td style="text-align:left;font-weight:700;color:#b91c1c">-{{ \App\Support\Money::format($discountAmount) }} EGP</td></tr>
+          @endif
+          <tr class="tax-invoice-row"><td class="muted" style="text-align:right">الضريبة ({{ (float) $project->tax_pct }}%)</td><td style="text-align:left;font-weight:700;color:var(--pos)">+{{ \App\Support\Money::format($project->tax_amount) }} EGP</td></tr>
+          <tr class="tax-invoice-row" style="background:#005c97;color:#fff"><td style="font-weight:700;color:#fff;font-size:14.5px">الإجمالي النهائي</td><td style="text-align:left;font-weight:700;color:#fff;font-size:14.5px">{{ \App\Support\Money::format($actualTotal) }} EGP</td></tr>
+
+          {{-- STANDARD MODE ROWS --}}
+          @if($discountAmount > 0)
+          <tr class="standard-total-row"><td class="muted" style="text-align:right">إجمالي المستحق قبل الخصم</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($subTotal) }} ج.م</td></tr>
+          <tr class="standard-total-row"><td class="muted" style="text-align:right">الخصم</td><td style="text-align:left;font-weight:700;color:#b91c1c">-{{ \App\Support\Money::format($discountAmount) }} ج.م</td></tr>
+          <tr class="standard-total-row"><td class="muted" style="text-align:right">إجمالي المستحق بعد الخصم</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($actualTotal) }} ج.م</td></tr>
+          @else
+          <tr class="standard-total-row"><td class="muted" style="text-align:right">إجمالي المستحق حتى الآن</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($actualTotal) }} ج.م</td></tr>
+          @endif
+        </table>
+
+        <table>
+          {{-- ALWAYS SHOWN PAYMENTS --}}
+          <tr><td class="muted" style="text-align:right">المدفوع</td><td style="text-align:left;font-weight:700;color:var(--pos)">{{ \App\Support\Money::format($totalPaid) }} ج.م</td></tr>
+          <tr class="big"><td style="text-align:right;font-size:15px">المتبقي المطلوب</td><td style="text-align:left">{{ \App\Support\Money::format($balance) }} ج.م</td></tr>
+        </table>
+      </div>
     </div>
   </div>
 

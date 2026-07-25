@@ -211,8 +211,11 @@ class QuoteController extends Controller
                 'name'                    => $quote->client_name,
                 'address'                 => $quote->address,
                 'area'                    => $quote->area,
-                'initial_contract_value'  => $quote->total(),
+                'initial_contract_value'  => $quote->totalWithTax(),
                 'default_supervision_pct' => $data['default_supervision_pct'],
+                'discount'                => $quote->discountAmount(),
+                'tax_pct'                 => $quote->tax_pct ?? 0,
+                'tax_amount'              => $quote->taxAmount(),
             ]);
 
 
@@ -349,6 +352,9 @@ class QuoteController extends Controller
             'date'        => ['required', 'date'],
             'status'      => ['required', 'in:draft,sent,approved'],
             'note'        => ['nullable', 'string'],
+            'terms'       => ['nullable', 'string'],
+            'tax_pct'     => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'discount_amount'=> ['nullable', 'numeric', 'min:0'],
             // band arrays: bands[0][name], bands[0][price], optionally bands[0][items][0][name/qty/unit_price]
             'bands'                        => ['nullable', 'array'],
             'bands.*.name'                 => ['required', 'string', 'max:255'],

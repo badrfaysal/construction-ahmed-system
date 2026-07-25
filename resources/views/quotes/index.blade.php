@@ -46,11 +46,7 @@
 </form>
 
 @if($quotes->count())
-  <div class="qcards">
-    @foreach($quotes as $q)
-      @include('quotes._card', ['q' => $q])
-    @endforeach
-  </div>
+  @include('quotes._table', ['quotes' => $quotes])
   <div style="margin-top:16px">{{ $quotes->withQueryString()->links() }}</div>
 @else
   <div class="empty-state">
