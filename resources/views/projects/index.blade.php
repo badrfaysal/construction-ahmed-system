@@ -33,11 +33,44 @@
   </a>
 </div>
 
+<div style="margin: 20px 0; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: #fff; padding: 12px 16px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+  <form method="GET" action="{{ route('projects.index') }}" style="display: flex; gap: 12px; align-items: center; width: 100%; flex-wrap: wrap; margin: 0;">
+    <input type="hidden" name="tab" value="{{ $tab }}">
+    
+    <div style="flex: 1; min-width: 250px; position: relative;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"><use href="#i-search"/></svg>
+      <input type="text" name="search" value="{{ request('search') }}" onblur="this.form.submit()" onkeydown="if(event.key === 'Enter'){this.form.submit()}" placeholder="ابحث باسم المشروع أو العميل..." style="width: 100%; padding: 8px 12px; padding-right: 36px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; outline: none; transition: border-color 0.2s; box-sizing: border-box;">
+    </div>
+    
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 4px; background: #fff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px;">
+        <span style="font-size: 12px; color: #64748b;">من:</span>
+        <input type="date" name="date_from" value="{{ request('date_from') }}" onchange="this.form.submit()" style="border: none; background: transparent; font-size: 13.5px; outline: none; color: #475569;">
+        <span style="font-size: 12px; color: #64748b; border-right: 1px solid #e2e8f0; padding-right: 8px; margin-right: 4px;">إلى:</span>
+        <input type="date" name="date_to" value="{{ request('date_to') }}" onchange="this.form.submit()" style="border: none; background: transparent; font-size: 13.5px; outline: none; color: #475569;">
+      </div>
+      
+      <select name="sort" onchange="this.form.submit()" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; outline: none; background: #fff; cursor: pointer;">
+          <option value="created_desc" {{ request('sort') === 'created_desc' ? 'selected' : '' }}>الإضافة (حديثاً أولاً)</option>
+          <option value="created_asc" {{ request('sort') === 'created_asc' ? 'selected' : '' }}>الإضافة (قديماً أولاً)</option>
+          <option value="paid_desc" {{ request('sort') === 'paid_desc' ? 'selected' : '' }}>المدفوع (الأكثر)</option>
+          <option value="paid_asc" {{ request('sort') === 'paid_asc' ? 'selected' : '' }}>المدفوع (الأقل)</option>
+          <option value="progress_desc" {{ request('sort') === 'progress_desc' ? 'selected' : '' }}>نسبة الإنجاز (الأعلى)</option>
+          <option value="progress_asc" {{ request('sort') === 'progress_asc' ? 'selected' : '' }}>نسبة الإنجاز (الأقل)</option>
+      </select>
+      
+      @if(request('search') || request('sort') || request('date_from') || request('date_to'))
+          <a href="{{ route('projects.index', ['tab' => $tab]) }}" style="color: #ef4444; font-size: 13.5px; font-weight: 600; margin-right: 8px; text-decoration: none; white-space: nowrap;">إلغاء</a>
+      @endif
+    </div>
+  </form>
+</div>
+
 @if($projects->count())
   <style>
     .compact-table { border-collapse: separate !important; border-spacing: 0 12px !important; width: 100%; margin-top: 4px; }
     .compact-table th { padding: 8px 16px !important; line-height: 1.4; border: none !important; color: #475569; text-align: right; font-size: 14.5px; font-weight: 700; white-space: nowrap; }
-    .compact-table th svg { opacity: 0.5; margin-left: 6px; vertical-align: -4px; width: 18px; height: 18px; color: #64748b; }
+    .compact-table th svg { opacity: 0.9; margin-left: 6px; vertical-align: -4px; width: 18px; height: 18px; }
     .compact-table td { 
         padding: 14px 16px !important; 
         line-height: 1.4; 
@@ -57,13 +90,13 @@
       <table class="compact-table" style="white-space: nowrap;">
         <thead>
           <tr>
-            <th><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>المشروع والعميل</th>
-            <th><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pin"/></svg>العنوان</th>
-            <th><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>البنود الجارية</th>
-            <th><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pie-chart"/></svg>الإنجاز</th>
-            <th><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>قيمة المشروع</th>
-            <th><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>المدفوع</th>
-            <th><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-calendar"/></svg>التسليم</th>
+            <th><svg style="color: #3b82f6;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>المشروع والعميل</th>
+            <th><svg style="color: #ef4444;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pin"/></svg>العنوان</th>
+            <th><svg style="color: #8b5cf6;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>البنود الجارية</th>
+            <th><svg style="color: #06b6d4;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pie-chart"/></svg>الإنجاز</th>
+            <th><svg style="color: #f59e0b;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>قيمة المشروع</th>
+            <th><svg style="color: #10b981;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>المدفوع</th>
+            <th><svg style="color: #6366f1;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-calendar"/></svg>التسليم</th>
           </tr>
         </thead>
         <tbody>
@@ -117,6 +150,13 @@
       </table>
     </div>
   </div>
+
+  @if($projects->hasPages())
+    <div style="margin-top: 20px; display: flex; justify-content: center;" class="pagination-wrapper">
+      {{ $projects->links() }}
+    </div>
+  @endif
+
 @else
   <div class="empty-state">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>

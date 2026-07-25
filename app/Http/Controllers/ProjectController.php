@@ -18,13 +18,56 @@ class ProjectController extends Controller
         $validTabs = ['active', 'done', 'suspended', 'canceled'];
         $status = in_array($tab, $validTabs) ? $tab : 'active';
 
-        $projects = Project::with(['client', 'bands', 'contracts', 'discounts'])
+        $query = Project::with(['client', 'bands', 'contracts', 'discounts'])
+            ->withCount([
+                'bands as total_bands', 
+                'bands as done_bands' => function($q) { $q->where('status', 'done'); }
+            ])
             ->withSum(['transactions as total_worker_paid' => function ($query) {
                 $query->where('ref_type', 'worker_payment');
             }], 'amount')
-            ->where('status', $status)
-            ->orderByDesc('created_at')
-            ->get();
+            ->where('status', $status);
+
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhereHas('client', function ($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+        
+        if ($dateFrom = $request->get('date_from')) {
+            $query->whereDate('created_at', '>=', $dateFrom);
+        }
+        if ($dateTo = $request->get('date_to')) {
+            $query->whereDate('created_at', '<=', $dateTo);
+        }
+
+        $sort = $request->get('sort', 'created_desc');
+        switch ($sort) {
+            case 'created_asc':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'paid_desc':
+                $query->orderBy('cached_collected', 'desc');
+                break;
+            case 'paid_asc':
+                $query->orderBy('cached_collected', 'asc');
+                break;
+            case 'progress_desc':
+                $query->orderByRaw('(IFNULL(done_bands, 0) / IFNULL(NULLIF(total_bands, 0), 1)) desc');
+                break;
+            case 'progress_asc':
+                $query->orderByRaw('(IFNULL(done_bands, 0) / IFNULL(NULLIF(total_bands, 0), 1)) asc');
+                break;
+            case 'created_desc':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        $projects = $query->paginate(15)->withQueryString();
 
         $activeCnt    = Project::where('status', 'active')->count();
         $doneCnt      = Project::where('status', 'done')->count();
