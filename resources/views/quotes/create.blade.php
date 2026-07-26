@@ -266,13 +266,21 @@
         <span class="c-tot-lbl">المصنعيات</span>
         <span class="c-tot-val tnum" id="tot-workers-count">0</span>
       </div>
-      <div class="c-tot-box" id="tot-tax-box" style="display:none;">
-        <span class="c-tot-lbl" style="color:#059669;">+ ضريبة</span>
-        <span class="c-tot-val tnum" id="tot-tax-val" style="color:#059669; font-size:14px;">0.00</span>
+      <div class="c-tot-box" style="border-right: 1px solid #e2e8f0; padding-right: 12px; margin-right: 4px;">
+        <span class="c-tot-lbl" style="color:#64748b;">المجموع</span>
+        <span class="c-tot-val tnum" id="tot-subtotal-val" style="color:#475569; font-size:14px;">0.00</span>
       </div>
       <div class="c-tot-box" id="tot-discount-box" style="display:none;">
         <span class="c-tot-lbl" style="color:#ef4444;">الخصم</span>
         <span class="c-tot-val tnum" id="tot-discount-val" style="color:#ef4444; font-size:14px;">0.00</span>
+      </div>
+      <div class="c-tot-box" id="tot-subtotal-after-discount-box" style="display:none;">
+        <span class="c-tot-lbl" style="color:#0f172a;">بعد الخصم</span>
+        <span class="c-tot-val tnum" id="tot-subtotal-after-discount-val" style="color:#0f172a; font-size:14px;">0.00</span>
+      </div>
+      <div class="c-tot-box" id="tot-tax-box" style="display:none;">
+        <span class="c-tot-lbl" style="color:#059669;">+ ضريبة</span>
+        <span class="c-tot-val tnum" id="tot-tax-val" style="color:#059669; font-size:14px;">0.00</span>
       </div>
       <div class="c-tot-box" style="border-right: 2px solid #e2e8f0; padding-right: 16px;">
         <span class="c-tot-lbl">الإجمالي النهائي للعميل</span>
@@ -322,6 +330,7 @@ function updateGlobalTotals() {
   document.getElementById('tot-bands-count').innerText = bandsCount;
   document.getElementById('tot-items-count').innerText = itemsCount;
   document.getElementById('tot-workers-count').innerText = workersCount;
+  document.getElementById('tot-subtotal-val').innerText = totalPrice.toFixed(2);
   document.getElementById('tot-quote-price').innerText = finalTotal.toFixed(2);
 
   // Show/hide tax box
@@ -333,13 +342,17 @@ function updateGlobalTotals() {
     taxBox.style.display = 'none';
   }
 
-  // Show/hide discount box (display only)
+  // Show/hide discount box and subtotal after discount box
   const discountBox = document.getElementById('tot-discount-box');
+  const subAfterBox = document.getElementById('tot-subtotal-after-discount-box');
   if (discountAmount > 0) {
     discountBox.style.display = '';
+    subAfterBox.style.display = '';
     document.getElementById('tot-discount-val').innerText = discountAmount.toFixed(2);
+    document.getElementById('tot-subtotal-after-discount-val').innerText = subtotalAfterDiscount.toFixed(2);
   } else {
     discountBox.style.display = 'none';
+    subAfterBox.style.display = 'none';
   }
 }
 
