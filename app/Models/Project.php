@@ -140,7 +140,7 @@ class Project extends Model
         $projectDiscounts = (float) $this->discounts->sum('amount') + (float) $this->discount;
         $contractDiscounts = (float) $this->contracts->sum('discount');
 
-        return $bandsTotal + $generalMaterials + $interest + (float) $this->tax_amount - $projectDiscounts - $contractDiscounts;
+        return $bandsTotal + $generalMaterials + $interest - $projectDiscounts - $contractDiscounts;
     }
 
     // الفاتورة قبل أي خصومات عامة على المشروع وعقود التقسيط (إجمالي ما تم فوترته + فوائد)

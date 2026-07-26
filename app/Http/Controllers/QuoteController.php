@@ -54,7 +54,7 @@ class QuoteController extends Controller
     public function create()
     {
         // Generate the next reference number automatically
-        $lastRef = Quote::max('ref');
+        $lastRef = Quote::where('ref', 'like', 'QT-%')->max('ref');
         $nextNum = $lastRef ? intval(substr($lastRef, -3)) + 1 : 1;
         $nextRef = 'QT-' . now()->year . '-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
 

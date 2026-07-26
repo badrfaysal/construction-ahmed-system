@@ -63,18 +63,30 @@
 
     {{-- Summary boxes --}}
     <div class="st-summary">
-      <div class="st-box tot"><div class="l">إجمالي المستحق</div><div class="v">{{ \App\Support\Money::format($subTotal) }} ج.م</div></div>
+      <div class="st-box tot">
+        <div class="l">إجمالي المستحق</div>
+        <div class="v">
+          <span class="standard-statement-label">{{ \App\Support\Money::format($subTotal) }} ج.م</span>
+          <span class="tax-invoice-label">{{ \App\Support\Money::format($taxInvoiceTotal ?? ($actualTotal + $project->tax_amount)) }} EGP</span>
+        </div>
+      </div>
       @if($discountAmount > 0)
       <div class="st-box" style="background: #fee2e2; border-color: #fca5a5"><div class="l" style="color:#b91c1c">الخصم</div><div class="v" style="color:#b91c1c">{{ \App\Support\Money::format($discountAmount) }} ج.م</div></div>
       @endif
       <div class="st-box paid"><div class="l">المدفوع</div><div class="v">{{ \App\Support\Money::format($totalPaid) }} ج.م</div></div>
-      <div class="st-box due"><div class="l">المتبقي</div><div class="v">{{ \App\Support\Money::format($balance) }} ج.م</div></div>
+      <div class="st-box due">
+        <div class="l">المتبقي</div>
+        <div class="v">
+          <span class="standard-statement-label">{{ \App\Support\Money::format($balance) }} ج.م</span>
+          <span class="tax-invoice-label">{{ \App\Support\Money::format(($taxInvoiceTotal ?? ($actualTotal + $project->tax_amount)) - $totalPaid) }} EGP</span>
+        </div>
+      </div>
     </div>
 
     {{-- Per-band totals only — no material/quantity detail --}}
     <div class="st-sec">تكلفة كل بند</div>
     <table class="st-table">
-      <thead><tr><th>البند</th><th>الحالة</th><th class="col-sup">الإشراف (% ومبلغ)</th><th class="num">التكلفة الإجمالية</th></tr></thead>
+      <thead><tr><th>البند</th><th class="col-sup">الإشراف (% ومبلغ)</th><th class="num">التكلفة الإجمالية</th></tr></thead>
       <tbody>
         @forelse($spentBands as $band)
           @php
@@ -88,7 +100,6 @@
             @endphp
             <tr>
               <td><strong>{{ $band->name }} (خامات)</strong></td>
-              <td><span class="tag {{ $band->status === 'done' ? 'green' : ($band->status === 'active' ? 'blue' : 'gray') }}">{{ $band->status === 'done' ? 'مكتمل' : ($band->status === 'active' ? 'جاري' : 'معلق') }}</span></td>
               <td class="col-sup">
                 {{ (float) number_format($matPct, 1) }}%
                 @if($matProfit > 0)
@@ -105,7 +116,6 @@
             @endphp
             <tr>
               <td><strong>{{ $band->name }} (مصنعية)</strong></td>
-              <td><span class="tag {{ $band->status === 'done' ? 'green' : ($band->status === 'active' ? 'blue' : 'gray') }}">{{ $band->status === 'done' ? 'مكتمل' : ($band->status === 'active' ? 'جاري' : 'معلق') }}</span></td>
               <td class="col-sup">
                 {{ (float) number_format($laborPct, 1) }}%
                 @if($laborProfit > 0)
@@ -116,7 +126,7 @@
             </tr>
           @endif
         @empty
-          <tr><td colspan="4" class="muted" style="text-align:center;padding:20px">لا توجد بنود بدأ العمل بها بعد</td></tr>
+          <tr><td colspan="3" class="muted" style="text-align:center;padding:20px">لا توجد بنود بدأ العمل بها بعد</td></tr>
         @endforelse
         @if($generalTotal > 0)
           @php
@@ -125,7 +135,6 @@
           @endphp
           <tr>
             <td><strong>مصروفات عامة على المشروع</strong></td>
-            <td>—</td>
             <td class="col-sup">
               {{ (float) number_format($genPct, 1) }}%
               @if($genProfit > 0)
@@ -138,7 +147,6 @@
         @if(isset($interest) && $interest > 0)
         <tr>
           <td><strong>فوائد التقسيط المضافة</strong></td>
-          <td>—</td>
           <td class="col-sup">—</td>
           <td class="num"><b>{{ \App\Support\Money::format($interest) }} ج.م</b></td>
         </tr>
@@ -147,7 +155,7 @@
           @php
             $projProfit = $project->percentageProfit();
           @endphp
-          <td colspan="2" style="text-align:left;color:var(--accent-ink)">{{ $discountAmount > 0 ? 'إجمالي المستحق قبل الخصم' : 'إجمالي المستحق حتى الآن' }}</td>
+          <td style="text-align:left;color:var(--accent-ink)">{{ $discountAmount > 0 ? 'إجمالي المستحق قبل الخصم' : 'إجمالي المستحق حتى الآن' }}</td>
           <td class="col-sup" style="color:var(--accent-ink)">
             @if($projProfit > 0)
               <span style="font-size:14px;font-weight:600;opacity:0.9">({{ \App\Support\Money::format($projProfit) }} ج.م)</span>
@@ -157,11 +165,11 @@
         </tr>
         @if($discountAmount > 0)
         <tr class="sub" style="background: #fee2e2;">
-          <td colspan="3" style="text-align:left;color: #b91c1c;">الخصم</td>
+          <td colspan="2" style="text-align:left;color: #b91c1c;">الخصم</td>
           <td class="num" style="color: #b91c1c;">{{ \App\Support\Money::format($discountAmount) }} ج.م</td>
         </tr>
         <tr class="sub" style="background:var(--accent-soft)">
-          <td colspan="3" style="text-align:left;color:var(--accent-ink)">إجمالي المستحق بعد الخصم</td>
+          <td colspan="2" style="text-align:left;color:var(--accent-ink)">إجمالي المستحق بعد الخصم</td>
           <td class="num" style="color:var(--accent-ink)">{{ \App\Support\Money::format($actualTotal) }} ج.م</td>
         </tr>
         @endif
@@ -189,7 +197,8 @@
       <div class="st-final-blocks">
         <table>
           @php
-             $subTax = $actualTotal - $project->tax_amount + $discountAmount;
+             $subTax = $actualTotal + $discountAmount;
+             $taxInvoiceTotal = $actualTotal + $project->tax_amount;
           @endphp
           
           {{-- TAX INVOICE MODE ROWS --}}
@@ -198,7 +207,7 @@
           <tr class="tax-invoice-row"><td class="muted" style="text-align:right">الخصم</td><td style="text-align:left;font-weight:700;color:#b91c1c">-{{ \App\Support\Money::format($discountAmount) }} EGP</td></tr>
           @endif
           <tr class="tax-invoice-row"><td class="muted" style="text-align:right">الضريبة ({{ (float) $project->tax_pct }}%)</td><td style="text-align:left;font-weight:700;color:var(--pos)">+{{ \App\Support\Money::format($project->tax_amount) }} EGP</td></tr>
-          <tr class="tax-invoice-row" style="background:#005c97;color:#fff"><td style="font-weight:700;color:#fff;font-size:14.5px">الإجمالي النهائي</td><td style="text-align:left;font-weight:700;color:#fff;font-size:14.5px">{{ \App\Support\Money::format($actualTotal) }} EGP</td></tr>
+          <tr class="tax-invoice-row" style="background:#005c97;color:#fff"><td style="font-weight:700;color:#fff;font-size:14.5px">الإجمالي النهائي</td><td style="text-align:left;font-weight:700;color:#fff;font-size:14.5px">{{ \App\Support\Money::format($taxInvoiceTotal) }} EGP</td></tr>
 
           {{-- STANDARD MODE ROWS --}}
           @if($discountAmount > 0)
@@ -213,7 +222,13 @@
         <table>
           {{-- ALWAYS SHOWN PAYMENTS --}}
           <tr><td class="muted" style="text-align:right">المدفوع</td><td style="text-align:left;font-weight:700;color:var(--pos)">{{ \App\Support\Money::format($totalPaid) }} ج.م</td></tr>
-          <tr class="big"><td style="text-align:right;font-size:15px">المتبقي المطلوب</td><td style="text-align:left">{{ \App\Support\Money::format($balance) }} ج.م</td></tr>
+          <tr class="big">
+            <td style="text-align:right;font-size:16px;font-weight:700">المتبقي المطلوب</td>
+            <td style="text-align:left;font-size:20px;font-weight:800">
+              <span class="standard-statement-label">{{ \App\Support\Money::format($balance) }} ج.م</span>
+              <span class="tax-invoice-label">{{ \App\Support\Money::format(($taxInvoiceTotal ?? ($actualTotal + $project->tax_amount)) - $totalPaid) }} EGP</span>
+            </td>
+          </tr>
         </table>
       </div>
     </div>

@@ -63,12 +63,24 @@
 
     {{-- Summary boxes --}}
     <div class="st-summary">
-      <div class="st-box tot"><div class="l">إجمالي المستحق</div><div class="v">{{ \App\Support\Money::format($subTotal) }} ج.م</div></div>
+      <div class="st-box tot">
+        <div class="l">إجمالي المستحق</div>
+        <div class="v">
+          <span class="standard-statement-label">{{ \App\Support\Money::format($subTotal) }} ج.م</span>
+          <span class="tax-invoice-label">{{ \App\Support\Money::format($taxInvoiceTotal ?? ($actualTotal + $project->tax_amount)) }} EGP</span>
+        </div>
+      </div>
       @if($discountAmount > 0)
       <div class="st-box" style="background: #fee2e2; border-color: #fca5a5"><div class="l" style="color:#b91c1c">الخصم</div><div class="v" style="color:#b91c1c">{{ \App\Support\Money::format($discountAmount) }} ج.م</div></div>
       @endif
       <div class="st-box paid"><div class="l">المدفوع</div><div class="v">{{ \App\Support\Money::format($totalPaid) }} ج.م</div></div>
-      <div class="st-box due"><div class="l">المتبقي</div><div class="v">{{ \App\Support\Money::format($balance) }} ج.م</div></div>
+      <div class="st-box due">
+        <div class="l">المتبقي</div>
+        <div class="v">
+          <span class="standard-statement-label">{{ \App\Support\Money::format($balance) }} ج.م</span>
+          <span class="tax-invoice-label">{{ \App\Support\Money::format(($taxInvoiceTotal ?? ($actualTotal + $project->tax_amount)) - $totalPaid) }} EGP</span>
+        </div>
+      </div>
     </div>
 
     {{-- Per-band expense breakdown --}}
@@ -186,7 +198,8 @@
       <div class="st-final-blocks">
         <table>
           @php
-             $subTax = $actualTotal - $project->tax_amount + $discountAmount;
+             $subTax = $actualTotal + $discountAmount;
+             $taxInvoiceTotal = $actualTotal + $project->tax_amount;
           @endphp
           
           {{-- TAX INVOICE MODE ROWS --}}
@@ -195,7 +208,7 @@
           <tr class="tax-invoice-row"><td class="muted" style="text-align:right">الخصم</td><td style="text-align:left;font-weight:700;color:#b91c1c">-{{ \App\Support\Money::format($discountAmount) }} EGP</td></tr>
           @endif
           <tr class="tax-invoice-row"><td class="muted" style="text-align:right">الضريبة ({{ (float) $project->tax_pct }}%)</td><td style="text-align:left;font-weight:700;color:var(--pos)">+{{ \App\Support\Money::format($project->tax_amount) }} EGP</td></tr>
-          <tr class="tax-invoice-row" style="background:#005c97;color:#fff"><td style="font-weight:700;color:#fff;font-size:14.5px">الإجمالي النهائي</td><td style="text-align:left;font-weight:700;color:#fff;font-size:14.5px">{{ \App\Support\Money::format($actualTotal) }} EGP</td></tr>
+          <tr class="tax-invoice-row" style="background:#005c97;color:#fff"><td style="font-weight:700;color:#fff;font-size:14.5px">الإجمالي النهائي</td><td style="text-align:left;font-weight:700;color:#fff;font-size:14.5px">{{ \App\Support\Money::format($taxInvoiceTotal) }} EGP</td></tr>
 
           {{-- STANDARD MODE ROWS --}}
           @if($discountAmount > 0)
@@ -210,7 +223,13 @@
         <table>
           {{-- ALWAYS SHOWN PAYMENTS --}}
           <tr><td class="muted" style="text-align:right">المدفوع</td><td style="text-align:left;font-weight:700;color:var(--pos)">{{ \App\Support\Money::format($totalPaid) }} ج.م</td></tr>
-          <tr class="big"><td style="text-align:right;font-size:15px">المتبقي المطلوب</td><td style="text-align:left">{{ \App\Support\Money::format($balance) }} ج.م</td></tr>
+          <tr class="big">
+            <td style="text-align:right;font-size:16px;font-weight:700">المتبقي المطلوب</td>
+            <td style="text-align:left;font-size:20px;font-weight:800">
+              <span class="standard-statement-label">{{ \App\Support\Money::format($balance) }} ج.م</span>
+              <span class="tax-invoice-label">{{ \App\Support\Money::format(($taxInvoiceTotal ?? ($actualTotal + $project->tax_amount)) - $totalPaid) }} EGP</span>
+            </td>
+          </tr>
         </table>
       </div>
     </div>

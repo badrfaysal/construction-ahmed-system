@@ -1325,14 +1325,7 @@
                   <td class="num" style="color: #10b981; font-weight: bold;">{{ \App\Support\Money::format($installmentInterest) }}</td>
                 </tr>
               @endif
-              @if($project->tax_amount > 0)
-                <tr>
-                  <td>ضريبة القيمة المضافة (عرض السعر)</td>
-                  <td class="num">{{ \App\Support\Money::format($project->tax_amount) }}</td>
-                  <td class="num">0.00</td>
-                  <td class="num" style="color: var(--pos)">{{ \App\Support\Money::format($project->tax_amount) }}</td>
-                </tr>
-              @endif
+
               @php $marketersCommission = (float) $project->transactions()->where('ref_type', 'marketer_commission')->sum('amount'); @endphp
               <tr>
                 <td>عمولة المسوقين</td>

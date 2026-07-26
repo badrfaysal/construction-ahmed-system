@@ -146,8 +146,8 @@
                       
                       <!-- المتبقي المطلوب -->
                       <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:16px;text-align:center;margin-bottom:20px;">
-                         <div style="color:#dc2626;font-weight:bold;font-size:18px;margin-bottom:4px;">المتبقي المطلوب:</div>
-                         <div style="color:#dc2626;font-weight:900;font-size:28px;" dir="ltr"><span id="pay_remain_lbl_{{ $c->id }}">{{ \App\Support\Money::format($instRemain) }}</span> ج</div>
+                         <div style="color:#dc2626;font-weight:900;font-size:24px;margin-bottom:4px;">المتبقي المطلوب:</div>
+                         <div style="color:#dc2626;font-weight:900;font-size:42px;" dir="ltr"><span id="pay_remain_lbl_{{ $c->id }}">{{ \App\Support\Money::format($instRemain) }}</span> ج</div>
                       </div>
 
                       <!-- خصم / تسوية -->
@@ -338,7 +338,7 @@
             @endfor
 
             <tr class="pxls-summary-row paid-summary"><td class="pxls-sum-label">إجمالي المدفوع</td><td class="pxls-sum-value paid-val">{{ fmtMoney($instPaid) }}</td></tr>
-            <tr class="pxls-summary-row remaining-summary"><td class="pxls-sum-label remaining-label">إجمالي المتبقي</td><td class="pxls-sum-value remaining-val">{{ fmtMoney($instRemain) }}</td></tr>
+            <tr class="pxls-summary-row remaining-summary"><td class="pxls-sum-label remaining-label" style="font-size:16px;font-weight:bold;color:#b91c1c;">إجمالي المتبقي</td><td class="pxls-sum-value remaining-val" style="font-size:22px;font-weight:900;color:#b91c1c;">{{ fmtMoney($instRemain) }}</td></tr>
           </table>
         </div>
         @endforeach
