@@ -409,6 +409,10 @@
           <span>الخصم</span>
           <span class="num" style="color: #ef4444; direction: ltr; display: inline-block;">- {{ \App\Support\Money::format($quote->discountAmount()) }}</span>
         </div>
+        <div class="quote-summary-row" style="background-color: #f1f5f9; font-weight: bold;">
+          <span>المجموع (بعد الخصم)</span>
+          <span class="num">{{ \App\Support\Money::format(max(0, $quote->total() - $quote->discountAmount())) }}</span>
+        </div>
         @endif
         @if($quote->tax_pct > 0)
         <div class="quote-summary-row">
@@ -417,8 +421,8 @@
         </div>
         @endif
         <div class="quote-summary-total">
-          <span>الإجمالي النهائي</span>
-          <span>{{ \App\Support\Money::format($quote->totalWithTax()) }} <small style="font-size: 13px; font-weight: normal; opacity: 0.9;">EGP</small></span>
+          <span>الإجمالي المطلوب</span>
+          <span>{{ \App\Support\Money::format($quote->totalWithTax()) }} <small style="font-size: 14px; font-weight: normal; opacity: 0.9;">EGP</small></span>
         </div>
       </div>
     </div>

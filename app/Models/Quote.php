@@ -47,12 +47,11 @@ class Quote extends Model
         return (float) $this->bands->sum('price');
     }
 
-    // الإجمالي بعد الضريبة (الضريبة فقط هي اللي بتأثر — الخصم شكلي)
+    // الإجمالي النهائي (بعد خصم قيمة الخصم وإضافة الضريبة)
     public function totalWithTax(): float
     {
-        $subtotal = $this->total();
-        $tax = $subtotal * (float)($this->tax_pct ?? 0) / 100;
-        return $subtotal + $tax;
+        $subtotal = max(0, $this->total() - $this->discountAmount());
+        return $subtotal + $this->taxAmount();
     }
 
     public function taxAmount(): float
