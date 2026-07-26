@@ -9,7 +9,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DebtController;
 use App\Http\Controllers\InstallmentController;
 use App\Http\Controllers\LaborController;
-use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MaterialReturnController;
 use App\Http\Controllers\PriceHistoryController;
@@ -205,8 +204,6 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
         Route::get('/reports/estimation', [ReportController::class, 'estimationIndex'])->name('reports.estimation.index');
         Route::get('/reports/estimation/{project}', [ReportController::class, 'estimationShow'])->name('reports.estimation.show');
 
-        // تصفير قاعدة البيانات (للتجارب فقط) — يمسح كل بيانات المقاولات ويصفّر المحفظة
-        Route::post('/maintenance/reset', [MaintenanceController::class, 'resetDatabase'])->name('maintenance.reset');
 
         // تعديل/حذف مركزي لأي حركة مالية — من سجل الحركات بس، محمي بباسورد الأدمن
         Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');

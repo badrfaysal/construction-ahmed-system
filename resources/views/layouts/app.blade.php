@@ -301,17 +301,7 @@
       <input type="search" name="q" placeholder="ابحث عن مشروع، عميل، مورد، صنف، مرتجع، أو دين..." value="{{ request('q') }}">
     </form>
     <div class="right">
-      @if(auth()->user()->isAdmin())
-      {{-- تصفير قاعدة البيانات (للتجارب فقط) — يمسح كل بيانات المقاولات --}}
-      <form method="POST" action="{{ route('maintenance.reset') }}" style="margin:0"
-            onsubmit="return confirm('⚠️ تحذير: هيتم مسح كل بيانات المقاولات (المشاريع، الخامات، الحركات، العروض...) وتصفير المحفظة نهائيًا.\n\nالخطوة دي للتيست فقط ومش ممكن التراجع عنها.\n\nمتأكد إنك عايز تكمل؟');">
-        @csrf
-        <button type="submit" class="btn danger sm" title="تصفير كل بيانات المقاولات — للتيست فقط">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
-          تصفير الداتا
-        </button>
-      </form>
-      @endif
+
       {{-- Logout button --}}
       <form method="POST" action="{{ route('logout') }}" style="margin:0">
         @csrf
