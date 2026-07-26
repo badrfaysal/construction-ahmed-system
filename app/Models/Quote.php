@@ -57,7 +57,8 @@ class Quote extends Model
 
     public function taxAmount(): float
     {
-        return $this->total() * (float)($this->tax_pct ?? 0) / 100;
+        $subtotal = max(0, $this->total() - $this->discountAmount());
+        return $subtotal * (float)($this->tax_pct ?? 0) / 100;
     }
 
     // الخصم شكلي فقط — بيظهر في العرض بس مش بيأثر على الإجمالي

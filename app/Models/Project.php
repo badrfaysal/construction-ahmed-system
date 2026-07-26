@@ -323,11 +323,17 @@ class Project extends Model
         $this->unsetRelation('clientPayments');
         $this->unsetRelation('supplierDebts');
 
+        $newTaxAmount = $this->tax_amount;
+        if ((float) $this->tax_pct > 0) {
+            $newTaxAmount = round($this->computeActualClientTotal() * ((float) $this->tax_pct / 100), 2);
+        }
+
         $this->updateQuietly([
             'cached_actual_total'      => $this->computeActualClientTotal(),
             'cached_collected'         => $this->computeTotalCollected(),
             'cached_spent'             => $this->computeTotalSpent(),
             'cached_trade_profit'      => $this->computeTradeProfit(),
+            'tax_amount'               => $newTaxAmount,
             'cached_percentage_profit' => $this->computePercentageProfit(),
             'cached_total_discount'    => $this->computeTotalDiscount(),
         ]);

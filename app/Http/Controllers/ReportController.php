@@ -307,6 +307,9 @@ class ReportController extends Controller
         $contractDiscounts    = (float) $project->contracts->sum('discount');
         $discountAmount       = (float) $project->discount + (float) $project->discounts()->sum('amount') + $contractDiscounts;
         $actualTotal          = $subTotal - $discountAmount;
+        if ($project->tax_pct > 0) {
+            $project->tax_amount = round($actualTotal * ((float) $project->tax_pct / 100), 2);
+        }
         $balance              = $actualTotal - $totalPaid;
 
         return view('reports.statement', compact(
@@ -340,6 +343,9 @@ class ReportController extends Controller
         $discountAmount       = (float) $project->discount + (float) $project->discounts()->sum('amount') + $contractDiscounts;
         
         $actualTotal          = $subTotal - $discountAmount;
+        if ($project->tax_pct > 0) {
+            $project->tax_amount = round($actualTotal * ((float) $project->tax_pct / 100), 2);
+        }
         $balance              = $actualTotal - $totalPaid;
 
         return view('reports.statement-summary', compact(
