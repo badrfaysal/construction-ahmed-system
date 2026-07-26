@@ -194,6 +194,14 @@ class QuoteController extends Controller
             'items.*.date'             => ['nullable', 'date'],
             'items.*.payment_status'   => ['nullable', 'in:paid,partial,deferred'],
             'items.*.paid_amount'      => ['nullable', 'numeric', 'min:0'],
+            'workers'                  => ['nullable', 'array'],
+            'workers.*.id'             => ['required', 'integer'],
+            'workers.*.contract_type'  => ['nullable', 'string'],
+            'workers.*.contract_qty'   => ['nullable', 'numeric', 'min:0'],
+            'workers.*.contract_unit_rate'=> ['nullable', 'numeric', 'min:0'],
+            'workers.*.amount'         => ['required', 'numeric', 'min:0'],
+            'workers.*.payment_status' => ['nullable', 'in:paid,deferred'],
+            'workers.*.paid_amount'    => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $quote->load('bands.workers');
@@ -231,23 +239,38 @@ class QuoteController extends Controller
                 ]);
                 $bandMap[$band->id] = $projectBand->id;
 
-                // انسخ فنيي البند من العرض (لو موجودين) كما هم — نفس المصنعية
-                // المتفق عليها في العرض تبقى نقطة البداية الحقيقية للمشروع،
-                // بدل ما تتكتب يدوي تاني من الصفر
+                // انسخ فنيي البند من العرض (لو موجودين) وحدثهم ببيانات التعاقد الجديدة
                 foreach ($band->workers as $j => $worker) {
-                    $projectBand->workers()->create([
+                    $submittedWorker = collect($data['workers'] ?? [])->firstWhere('id', $worker->id);
+
+                    $pWorker = $projectBand->workers()->create([
                         'name'               => $worker->name,
                         'specialty'          => $worker->specialty,
-                        'contract_type'      => $worker->contract_type,
-                        'contract_qty'       => $worker->contract_qty,
-                        'contract_unit_rate' => $worker->contract_unit_rate,
+                        'contract_type'      => $submittedWorker['contract_type'] ?? $worker->contract_type,
+                        'contract_qty'       => $submittedWorker['contract_qty'] ?? $worker->contract_qty,
+                        'contract_unit_rate' => $submittedWorker['contract_unit_rate'] ?? $worker->contract_unit_rate,
                         'sell_rate'          => $worker->sell_rate,
-                        'amount'             => $worker->amount,
+                        'amount'             => $submittedWorker['amount'] ?? $worker->amount,
                         'sell_amount'        => $worker->sell_amount,
                         'supervision_pct'    => $worker->supervision_pct,
                         'notes'              => $worker->notes,
                         'sort_order'         => $j,
                     ]);
+
+                    if ($submittedWorker && ($submittedWorker['payment_status'] ?? 'deferred') === 'paid') {
+                        $paidAmount = (float) ($submittedWorker['paid_amount'] ?? 0);
+                        if ($paidAmount > 0) {
+                            \App\Models\WorkerPayment::create([
+                                'band_worker_id'  => $pWorker->id,
+                                'project_id'      => $project->id,
+                                'project_band_id' => $projectBand->id,
+                                'account_id'      => $data['account_id'] ?? null,
+                                'amount'          => $paidAmount,
+                                'date'            => today(),
+                                'notes'           => 'دفعة أولية عند تحويل عرض السعر',
+                            ]);
+                        }
+                    }
                 }
                 if ($band->workers->isNotEmpty()) {
                     $projectBand->recomputeLaborTotals();
@@ -344,7 +367,7 @@ class QuoteController extends Controller
     // update() must exclude the quote's own row from the uniqueness check
     private function validateQuote(Request $request, array $refRule): array
     {
-        return $request->validate([
+        $data = $request->validate([
             ...$refRule,
             'client_id'   => ['required', 'exists:sy2_clients,id'],
             'address'     => ['nullable', 'string'],
@@ -377,6 +400,11 @@ class QuoteController extends Controller
             'bands.*.workers.*.supervision_pct'       => ['nullable', 'numeric', 'min:0', 'max:100'],
             'bands.*.workers.*.notes'                 => ['nullable', 'string'],
         ]);
+
+        $data['discount_amount'] = $data['discount_amount'] ?? 0;
+        $data['tax_pct'] = $data['tax_pct'] ?? 0;
+
+        return $data;
     }
 
     // Creates the bands (and their itemized breakdown, if any) for a quote.

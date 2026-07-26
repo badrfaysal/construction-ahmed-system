@@ -205,6 +205,7 @@
           <tr class="tax-invoice-row"><td class="muted" style="text-align:right">المجموع</td><td style="text-align:left;font-weight:700;color:var(--ink-2)">{{ \App\Support\Money::format($subTax) }} EGP</td></tr>
           @if($discountAmount > 0)
           <tr class="tax-invoice-row"><td class="muted" style="text-align:right">الخصم</td><td style="text-align:left;font-weight:700;color:#b91c1c">-{{ \App\Support\Money::format($discountAmount) }} EGP</td></tr>
+          <tr class="tax-invoice-row"><td class="muted" style="text-align:right">المجموع بعد الخصم</td><td style="text-align:left;font-weight:700;color:var(--ink-2)">{{ \App\Support\Money::format($actualTotal) }} EGP</td></tr>
           @endif
           <tr class="tax-invoice-row"><td class="muted" style="text-align:right">الضريبة ({{ (float) $project->tax_pct }}%)</td><td style="text-align:left;font-weight:700;color:var(--pos)">+{{ \App\Support\Money::format($project->tax_amount) }} EGP</td></tr>
           <tr class="tax-invoice-row" style="background:#005c97;color:#fff"><td style="font-weight:700;color:#fff;font-size:14.5px">الإجمالي النهائي</td><td style="text-align:left;font-weight:700;color:#fff;font-size:14.5px">{{ \App\Support\Money::format($taxInvoiceTotal) }} EGP</td></tr>

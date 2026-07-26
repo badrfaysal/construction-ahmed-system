@@ -77,7 +77,7 @@
     <p class="muted" style="margin:8px 0 0;font-size:12px">هتتطبّق على كل أصناف العرض دلوقتي، وتبقى النسبة الافتراضية للمشروع ولأي خامة/مصنعية جديدة بعد كده. الأصناف المشتراة هتتخصم من المحفظة المختارة.</p>
   </div>
 
-  @php $idx = 0; @endphp
+  @php $idx = 0; $wIdx = 0; @endphp
 
   @foreach($quote->bands as $band)
     <div class="section-label" style="margin-top:18px">{{ $band->name }} <span class="muted">— {{ \App\Support\Money::format($band->price) }} ج.م</span></div>
@@ -153,6 +153,81 @@
       @else
         <div class="empty-state" style="padding:16px"><p class="muted">لا توجد أصناف مفصّلة في هذا البند.</p></div>
       @endif
+      
+      @if($band->workers->count())
+        <div class="table-scroll" style="margin-top: 16px; border-top: 2px dashed var(--line); padding-top: 16px;">
+          <h4 style="margin:0 0 12px; font-size: 1.1rem; color: #1e293b;">الصنايعية والفنيين</h4>
+          <table>
+            <thead>
+              <tr>
+                <th style="min-width: 140px;">اسم الفني</th>
+                <th>نوع التعاقد</th>
+                <th class="num">الكمية</th>
+                <th class="num">سعر البيع</th>
+                <th class="num">تكلفة الوحدة</th>
+                <th class="num" style="min-width: 110px;">إجمالي التعاقد</th>
+                <th style="min-width: 160px;">دفعة أولية (للفني)</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach($band->workers as $worker)
+                <tr class="conv-worker-row" style="border-bottom: 1px solid var(--line);">
+                  <td>
+                    <strong>{{ $worker->name }}</strong>
+                    <input type="hidden" name="workers[{{ $wIdx }}][id]" value="{{ $worker->id }}">
+                    <input type="hidden" name="workers[{{ $wIdx }}][name]" value="{{ $worker->name }}">
+                    <input type="hidden" name="workers[{{ $wIdx }}][quote_band_id]" value="{{ $band->id }}">
+                  </td>
+                  <td>
+                    <span style="display:inline-block; padding: 4px 8px; background: #f1f5f9; border-radius: 4px; font-size: 12px; font-weight: bold;">
+                      {{ $worker->contract_type == 'lump_sum' ? 'مقطوعية' : ($worker->contract_type == 'per_meter' ? 'بالمتر' : 'بالقطعة') }}
+                    </span>
+                    <input type="hidden" name="workers[{{ $wIdx }}][contract_type]" value="{{ $worker->contract_type }}">
+                  </td>
+                  <td class="num">
+                    @if(in_array($worker->contract_type, ['per_meter', 'per_piece']))
+                      <input type="number" name="workers[{{ $wIdx }}][contract_qty]" id="cw-qty-{{ $wIdx }}" value="{{ old('workers.' . $wIdx . '.contract_qty', $worker->contract_qty) }}" min="0" step="0.01" style="width:60px; background-color:#f1f5f9; cursor:not-allowed;" readonly>
+                    @else
+                      <span class="muted">—</span>
+                      <input type="hidden" name="workers[{{ $wIdx }}][contract_qty]" id="cw-qty-{{ $wIdx }}" value="0">
+                    @endif
+                  </td>
+                  <td class="num">
+                    <span style="color:var(--pos); font-weight:bold;">{{ \App\Support\Money::format($worker->sell_amount) }}</span>
+                  </td>
+                  <td class="num">
+                    @if(in_array($worker->contract_type, ['per_meter', 'per_piece']))
+                      <input type="number" name="workers[{{ $wIdx }}][contract_unit_rate]" id="cw-rate-{{ $wIdx }}" value="{{ old('workers.' . $wIdx . '.contract_unit_rate', $worker->contract_unit_rate) }}" min="0" step="0.01" style="width:80px;" oninput="recalcConvWorker({{ $wIdx }})">
+                    @else
+                      <span class="muted">—</span>
+                      <input type="hidden" name="workers[{{ $wIdx }}][contract_unit_rate]" id="cw-rate-{{ $wIdx }}" value="0">
+                    @endif
+                  </td>
+                  <td class="num">
+                    <input type="number" name="workers[{{ $wIdx }}][amount]" id="cw-amt-{{ $wIdx }}" value="{{ old('workers.' . $wIdx . '.amount', $worker->amount) }}" min="0" step="0.01" style="width:100%; max-width: 110px; font-weight: bold; background: #fffbeb" required oninput="this.dataset.touched='1'">
+                  </td>
+                  <td>
+                    <div style="display:flex;flex-direction:column;gap:4px">
+                      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:.82rem">
+                        <input type="radio" name="workers[{{ $wIdx }}][payment_status]" value="paid" {{ old('workers.' . $wIdx . '.payment_status') === 'paid' ? 'checked' : '' }} onchange="toggleConvWorkerPaid({{ $wIdx }},this.value)">
+                        <span style="color:#059669;font-weight:600">دفعة كاش</span>
+                      </label>
+                      <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:.82rem">
+                        <input type="radio" name="workers[{{ $wIdx }}][payment_status]" value="deferred" {{ old('workers.' . $wIdx . '.payment_status', 'deferred') === 'deferred' ? 'checked' : '' }} onchange="toggleConvWorkerPaid({{ $wIdx }},this.value)">
+                        <span style="color:#dc2626;font-weight:600">أجل كامل</span>
+                      </label>
+                      <div id="conv-worker-paid-{{ $wIdx }}" style="display:{{ old('workers.' . $wIdx . '.payment_status') === 'paid' ? 'block' : 'none' }};margin-top:4px">
+                        <input type="number" name="workers[{{ $wIdx }}][paid_amount]" value="{{ old('workers.' . $wIdx . '.paid_amount') }}" placeholder="المبلغ المدفوع" min="0" step="0.01" style="width:100%; max-width: 110px; border-color:#059669;">
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                @php $wIdx++; @endphp
+              @endforeach
+            </tbody>
+          </table>
+        </div>
+      @endif
     </div>
   @endforeach
 
@@ -193,10 +268,24 @@
 </div>
 @push('scripts')
 <script>
-function toggleConvPaid(idx, val) {
-  const el = document.getElementById('conv-paid-' + idx);
-  el.style.display = (val === 'partial') ? 'block' : 'none';
-}
+  function toggleConvPaid(idx, val) {
+    document.getElementById('conv-paid-'+idx).style.display = (val === 'partial') ? 'block' : 'none';
+  }
+  function toggleConvWorkerPaid(idx, val) {
+    document.getElementById('conv-worker-paid-'+idx).style.display = (val === 'paid') ? 'block' : 'none';
+  }
+  function toggleConvWorkerQty(idx, type) {
+    const show = (type === 'per_meter' || type === 'per_piece');
+    document.getElementById('cw-qty-'+idx).style.display = show ? 'inline-block' : 'none';
+    document.getElementById('cw-rate-'+idx).style.display = show ? 'inline-block' : 'none';
+  }
+  function recalcConvWorker(idx) {
+    const amtInput = document.getElementById('cw-amt-'+idx);
+    if (amtInput.dataset.touched === '1') return;
+    const q = parseFloat(document.getElementById('cw-qty-'+idx).value) || 0;
+    const r = parseFloat(document.getElementById('cw-rate-'+idx).value) || 0;
+    amtInput.value = (q * r).toFixed(2);
+  }
 // تطبيق نسبة الإشراف الافتراضية على كل خانات إشراف الأصناف
 function applyConvSupervision(v) {
   document.querySelectorAll('input[name^="items"][name$="[supervision_pct]"]').forEach(i => { i.value = v; });
