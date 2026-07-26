@@ -54,9 +54,10 @@ class FinancialTransaction extends Model
             });
 
         if ($activeOnly) {
-            $query->join('sy2_transactions', 'financial_transactions.construction_id', '=', 'sy2_transactions.id')
-                  ->join('sy2_projects', 'sy2_transactions.project_id', '=', 'sy2_projects.id')
-                  ->whereNotIn('sy2_projects.status', ['done', 'canceled']);
+            $dbName = env('DB_DATABASE');
+            $query->join("{$dbName}.sy2_transactions", 'financial_transactions.construction_id', '=', "{$dbName}.sy2_transactions.id")
+                  ->join("{$dbName}.sy2_projects", "{$dbName}.sy2_transactions.project_id", '=', "{$dbName}.sy2_projects.id")
+                  ->whereNotIn("{$dbName}.sy2_projects.status", ['done', 'canceled']);
         }
 
         return (float) $query->sum(DB::raw("CASE WHEN financial_transactions.type = 'income' THEN financial_transactions.amount ELSE -financial_transactions.amount END"));
