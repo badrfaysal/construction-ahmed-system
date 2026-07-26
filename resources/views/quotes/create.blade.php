@@ -228,7 +228,7 @@
         <input type="number" name="tax_pct" id="tax_pct" value="{{ old('tax_pct', 0) }}" min="0" max="100" step="0.1" class="c-input" placeholder="0" oninput="updateGlobalTotals()" style="font-weight:700; color:#059669;">
       </div>
       <div>
-        <label class="c-label">الخصم (ج.م) <span style="font-weight:400; color:#94a3b8; font-size:11px;">(شكلي فقط — لا يؤثر على الإجمالي)</span></label>
+        <label class="c-label">الخصم (ج.م)</label>
         <input type="number" name="discount_amount" id="discount_amount" value="{{ old('discount_amount', 0) }}" min="0" step="0.01" class="c-input" placeholder="0" oninput="updateGlobalTotals()" style="font-weight:700; color:#ef4444;">
       </div>
     </div>
@@ -271,7 +271,7 @@
         <span class="c-tot-val tnum" id="tot-tax-val" style="color:#059669; font-size:14px;">0.00</span>
       </div>
       <div class="c-tot-box" id="tot-discount-box" style="display:none;">
-        <span class="c-tot-lbl" style="color:#ef4444;">خصم (شكلي)</span>
+        <span class="c-tot-lbl" style="color:#ef4444;">الخصم</span>
         <span class="c-tot-val tnum" id="tot-discount-val" style="color:#ef4444; font-size:14px;">0.00</span>
       </div>
       <div class="c-tot-box" style="border-right: 2px solid #e2e8f0; padding-right: 16px;">
@@ -314,8 +314,10 @@ function updateGlobalTotals() {
 
   const taxPct = parseFloat(document.getElementById('tax_pct')?.value) || 0;
   const discountAmount = parseFloat(document.getElementById('discount_amount')?.value) || 0;
-  const taxAmount = totalPrice * taxPct / 100;
-  const finalTotal = totalPrice + taxAmount;
+  
+  const subtotalAfterDiscount = Math.max(0, totalPrice - discountAmount);
+  const taxAmount = subtotalAfterDiscount * taxPct / 100;
+  const finalTotal = subtotalAfterDiscount + taxAmount;
 
   document.getElementById('tot-bands-count').innerText = bandsCount;
   document.getElementById('tot-items-count').innerText = itemsCount;
