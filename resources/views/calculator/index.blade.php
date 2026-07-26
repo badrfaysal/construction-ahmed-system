@@ -5,6 +5,7 @@
 @section('content')
 
 <style>
+  
   .calc-tabs { display: flex; gap: 8px; margin-bottom: 32px; background: var(--bg-alt); padding: 6px; border-radius: 10px; width: max-content; }
   .calc-tab-btn { padding: 10px 28px; cursor: pointer; border: none; background: transparent; color: var(--text-muted); border-radius: 8px; font-weight: 600; font-size: 1rem; transition: all 0.2s ease; }
   .calc-tab-btn:hover { color: var(--text); }
