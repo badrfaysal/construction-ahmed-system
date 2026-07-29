@@ -4,6 +4,14 @@
 
 @section('content')
 
+@push('styles')
+<style>
+.vstat:hover .ic { transform: scale(1.15) rotate(8deg); background: rgba(255, 255, 255, 0.3); }
+.vstat .vstat-bg { position: absolute; left: -10px; bottom: -15px; width: 90px; height: 90px; color: rgba(255, 255, 255, 0.15); z-index: 0; transform: rotate(-15deg); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
+.vstat:hover .vstat-bg { transform: scale(1.2) rotate(5deg); color: rgba(255, 255, 255, 0.25); }
+</style>
+@endpush
+
 <div class="page-head">
   <div><h3>الخامات والمرتجعات</h3><p>كل ما تم شراؤه ومرتجعاته — التعديل والحذف بقوا من <a href="{{ route('transactions.index') }}">سجل الحركات</a> فقط</p></div>
   <a href="{{ route('materials.create') }}" class="btn">
@@ -26,6 +34,7 @@
       <div class="val">—</div>
       <div class="note">لا توجد بيانات كافية بعد</div>
     @endif
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg>
   </div>
   <div class="vstat vstat-red">
     <div class="top">
@@ -39,6 +48,7 @@
       <div class="val">—</div>
       <div class="note">لا توجد مرتجعات مسجّلة بعد</div>
     @endif
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-x"/></svg>
   </div>
   <div class="vstat vstat-teal">
     <div class="top">
@@ -52,6 +62,7 @@
       <div class="val">—</div>
       <div class="note">لا توجد بيانات كافية بعد</div>
     @endif
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg>
   </div>
 </div>
 
@@ -71,13 +82,27 @@
       <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-down"/></svg>
     </div>
   </div>
+  <div class="f-field">
+    <label>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-calendar"/></svg>
+      من تاريخ
+    </label>
+    <input type="date" name="date_from" value="{{ request('date_from') }}" class="f-select" onchange="this.form.submit()">
+  </div>
+  <div class="f-field">
+    <label>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-calendar"/></svg>
+      إلى تاريخ
+    </label>
+    <input type="date" name="date_to" value="{{ request('date_to') }}" class="f-select" onchange="this.form.submit()">
+  </div>
   @include('partials._sort-select', ['options' => [
     'newest'    => 'الأحدث',
     'oldest'    => 'الأقدم',
     'cost_desc' => 'الأعلى تكلفة',
     'cost_asc'  => 'الأقل تكلفة',
   ]])
-  @if(request()->hasAny(['project_id','sort']))
+  @if(request()->hasAny(['project_id','sort','date_from','date_to']))
     <div class="f-actions">
       <a href="{{ route('materials.index') }}" class="btn ghost sm">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-x"/></svg>

@@ -11,7 +11,7 @@ class Material extends Model
     protected $table = 'sy2_materials';
 
     protected $fillable = [
-        'project_id', 'band_id', 'account_id', 'supplier_id', 'invoice_id', 'category',
+        'project_id', 'band_id', 'account_id', 'supplier_id', 'supplier_name', 'contract_type', 'invoice_id', 'category',
         'item', 'unit', 'qty', 'unit_price', 'sell_price', 'supervision_pct',
         'date', 'payment_status', 'paid_amount',
     ];
@@ -21,6 +21,16 @@ class Material extends Model
     public function isMisc(): bool
     {
         return $this->category === 'misc';
+    }
+
+    public function contractTypeAr(): string
+    {
+        return match ($this->contract_type) {
+            'lump_sum'  => 'مقاولة مقطوعة',
+            'per_meter' => 'بالمتر',
+            'per_piece' => 'بالقطعة',
+            default     => '—',
+        };
     }
 
     protected function casts(): array

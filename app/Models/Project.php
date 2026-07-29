@@ -256,6 +256,14 @@ class Project extends Model
     // حالة البند. التكلفة والإيراد لازم يتحسبوا بنفس التوقيت لنفس البند.
     public function computeTotalSpent(): float
     {
+        $outTotal = (float) $this->transactions()->where('direction', 'out')->sum('amount');
+        $returnsRefunded = (float) $this->transactions()->where('direction', 'in')->where('ref_type', 'return')->sum('amount');
+        
+        return max(0, $outTotal - $returnsRefunded);
+    }
+
+    public function computeTotalCost(): float
+    {
         $materialCost = $this->materials->sum(fn ($m) => $m->netCost());
         $laborCost    = $this->bands->sum('labor_amount');
         $marketersCost = (float) $this->transactions()->where('ref_type', 'marketer_commission')->sum('amount');
@@ -312,7 +320,7 @@ class Project extends Model
     // عامة (materials من غير بند) برا الحساب تمامًا، من غير ما يظهر أي تحذير.
     public function profit(): float
     {
-        return $this->actualClientTotal() - $this->totalSpent() - $this->paymentDiscounts();
+        return $this->actualClientTotal() - $this->computeTotalCost() - $this->paymentDiscounts();
     }
 
     public function recalculateCachedTotals(): void

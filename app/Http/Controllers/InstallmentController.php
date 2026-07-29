@@ -120,7 +120,7 @@ class InstallmentController extends Controller
         $data = $request->validate([
             'project_id'         => ['required', 'exists:sy2_projects,id'],
             'band_id'            => ['nullable', 'exists:sy2_project_bands,id'],
-            'account_id'         => ['nullable', 'integer', 'exists:accounts,id'],
+            'account_id'         => ['nullable', 'integer', 'exists:sy2_accounts,id'],
             'product_name'       => ['nullable', 'string', 'max:255'],
             'cash_price'         => ['required', 'numeric', 'min:0'],
             'discount'           => ['nullable', 'numeric', 'min:0'],
@@ -238,7 +238,7 @@ class InstallmentController extends Controller
         $validator = Validator::make($request->all(), [
             'amount_paid'      => ['required', 'numeric', 'min:0'],
             'discount_applied' => ['nullable', 'numeric', 'min:0'],
-            'account_id'       => ['nullable', 'integer', 'exists:accounts,id'],
+            'account_id'       => ['nullable', 'integer', 'exists:sy2_accounts,id'],
             'payment_date'     => ['required', 'date'],
             'method'           => ['nullable', 'string', 'max:50'],
             'notes'            => ['nullable', 'string', 'max:255'],
@@ -299,7 +299,7 @@ class InstallmentController extends Controller
     public function settle(Request $request, InstallmentContract $contract)
     {
         $validator = Validator::make($request->all(), [
-            'account_id'   => ['nullable', 'integer', 'exists:accounts,id'],
+            'account_id'   => ['nullable', 'integer', 'exists:sy2_accounts,id'],
             'payment_date' => ['required', 'date'],
             'notes'        => ['nullable', 'string', 'max:255'],
         ]);
@@ -367,7 +367,7 @@ class InstallmentController extends Controller
         $data = $request->validate([
             'contract_ids'   => ['required', 'array', 'min:1'],
             'contract_ids.*' => ['integer', 'exists:sy2_installment_contracts,id'],
-            'account_id'     => ['nullable', 'integer', 'exists:accounts,id'],
+            'account_id'     => ['nullable', 'integer', 'exists:sy2_accounts,id'],
             'payment_date'   => ['required', 'date'],
             'method'         => ['nullable', 'string', 'max:50'],
         ]);

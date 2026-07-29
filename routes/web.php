@@ -188,12 +188,16 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
+        Route::post('/settings/accounts', [SettingsController::class, 'storeAccount'])->name('settings.store_account');
         Route::post('/settings/export-db', [SettingsController::class, 'exportDatabase'])->name('settings.export_db');
+        Route::post('/settings/reset-db', [SettingsController::class, 'resetDatabase'])->name('settings.reset_db');
 
         // محفظة المقاولات — balance + hand-entered money moves (capital in,
-        // owner withdrawals, general overhead). Owner-level, hence admin-only.
+        // owner withdrawals, general overhead). Owner-level,        // Wallet (المحفظة)
         Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');
         Route::post('/wallet/transactions', [WalletController::class, 'store'])->name('wallet.store');
+        Route::post('/wallet/transfer', [WalletController::class, 'transfer'])->name('wallet.transfer');
+        Route::get('/accounts/{account}/statement', [WalletController::class, 'statement'])->name('accounts.statement');
         // Band statement (كشف حساب البند) — shows real cost & profit
         Route::get('/bands/{band}/statement', [ReportController::class, 'bandStatement'])->name('bands.statement');
         // Company cost statement (كشف حساب الشركة) — per-project real cost breakdown

@@ -38,7 +38,7 @@ class WorkerPaymentController extends Controller
                     }
                 },
             ],
-            'account_id'      => ['nullable', 'integer', 'exists:accounts,id'],
+            'account_id'      => ['nullable', 'integer', 'exists:sy2_accounts,id'],
             'date'            => ['required', 'date'],
             'notes'           => ['nullable', 'string'],
         ]);

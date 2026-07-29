@@ -203,7 +203,7 @@ function workerRowHtml(g) {
         <div class="field" style="margin:0">
           <select name="workers[${g}][contract_type]" class="contract-type-select" onchange="updateWorkerUI(this.closest('.worker-row'))">
             <option value="">— نوع التعاقد —</option>
-            <option value="lump_sum">مقاولة مقطوعة</option>
+            <option value="lump_sum" selected>مقاولة مقطوعة</option>
             <option value="per_meter">بالمتر</option>
             <option value="per_piece">بالقطعة</option>
             <option value="daily">يومية</option>

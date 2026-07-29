@@ -42,7 +42,7 @@ class WalletController extends Controller
     {
         $data = $request->validate([
             'kind'        => ['required', 'in:capital,withdrawal,admin_expense'],
-            'account_id'  => ['required', 'integer', 'exists:accounts,id'],
+            'account_id'  => ['required', 'integer', 'exists:sy2_accounts,id'],
             'amount'      => ['required', 'numeric', 'min:0.01'],
             'date'        => ['required', 'date'],
             'party'       => ['nullable', 'string', 'max:255'],
@@ -68,5 +68,64 @@ class WalletController extends Controller
         ]));
 
         return back()->with('success', 'تم تسجيل الحركة في المحفظة.');
+    }
+
+    public function statement(Account $account)
+    {
+        $transactions = Transaction::with(['project', 'band', 'account'])
+            ->where('account_id', $account->id)
+            ->orderByDesc('date')
+            ->orderByDesc('id')
+            ->paginate(30);
+
+        $wallets = Account::selectable()->where('id', '!=', $account->id);
+
+        return view('wallet.statement', compact('account', 'transactions', 'wallets'));
+    }
+
+    public function transfer(Request $request)
+    {
+        $data = $request->validate([
+            'from_account_id' => ['required', 'integer', 'exists:sy2_accounts,id'],
+            'to_account_id'   => ['required', 'integer', 'exists:sy2_accounts,id', 'different:from_account_id'],
+            'amount'          => ['required', 'numeric', 'min:0.01'],
+            'date'            => ['required', 'date'],
+            'description'     => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $from = Account::findOrFail($data['from_account_id']);
+        $to = Account::findOrFail($data['to_account_id']);
+
+        DB::transaction(function () use ($data, $from, $to) {
+            Transaction::create([
+                'project_id'  => null,
+                'band_id'     => null,
+                'account_id'  => $from->id,
+                'direction'   => 'out',
+                'type'        => 'تحويل صادر',
+                'party'       => 'إلى: ' . $to->name,
+                'amount'      => $data['amount'],
+                'date'        => $data['date'],
+                'description' => $data['description'] ?? null,
+                'ref_type'    => 'transfer',
+                'ref_id'      => null,
+            ]);
+
+            Transaction::create([
+                'project_id'  => null,
+                'band_id'     => null,
+                'account_id'  => $to->id,
+                'direction'   => 'in',
+                'type'        => 'تحويل وارد',
+                'party'       => 'من: ' . $from->name,
+                'amount'      => $data['amount'],
+                'date'        => $data['date'],
+                'description' => $data['description'] ?? null,
+                'ref_type'    => 'transfer',
+                'ref_id'      => null,
+            ]);
+        });
+
+        return back()->with('success', 'تم تحويل المبلغ بنجاح.');
     }
 }

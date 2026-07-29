@@ -95,9 +95,15 @@
           @foreach($band->materials->sortBy('date') as $m)
             <tr>
               <td>{{ $m->date->format('Y-m-d') }}</td>
-              <td>{{ $m->item }}</td>
-              <td>{{ \App\Support\Money::format($m->netQty(), 1) }}</td>
-              <td>{{ $m->unit }}</td>
+              <td>
+                {{ $m->item }}
+                @if($m->category === 'misc')
+                  @if($m->supplier_name)<br><small class="muted">{{ $m->supplier_name }}</small>@endif
+                  @if($m->contract_type && $m->contract_type !== 'lump_sum') <small class="muted">({{ $m->contractTypeAr() }})</small> @endif
+                @endif
+              </td>
+              <td>{{ ($m->category === 'misc' && $m->contract_type === 'lump_sum') ? '—' : \App\Support\Money::format($m->netQty(), 1) }}</td>
+              <td>{{ ($m->category === 'misc' && $m->contract_type === 'lump_sum') ? '—' : $m->unit }}</td>
               <td>{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
               <td class="col-sup">
                 {{ (float) $m->supervision_pct }}%
@@ -108,17 +114,31 @@
               <td><b>{{ \App\Support\Money::format($m->netClientCost()) }}</b></td>
             </tr>
           @endforeach
-          @if($band->labor_amount > 0)
+          @if($band->workers->isNotEmpty())
+            @foreach($band->workers as $w)
+              <tr>
+                <td>{{ $w->start_date?->format('Y-m-d') ?? $band->labor_date?->format('Y-m-d') ?? '—' }}</td>
+                <td>مصنعية وتنفيذ — {{ $w->name }} ({{ $w->contractTypeAr() }})</td>
+                <td>{{ $w->contract_qty > 0 ? (float)$w->contract_qty : '—' }}</td>
+                <td>{{ $w->contract_type === 'per_meter' ? 'متر' : ($w->contract_type === 'per_piece' ? 'قطعة' : '—') }}</td>
+                <td>{{ $w->sell_rate ? \App\Support\Money::format($w->sell_rate) : '—' }}</td>
+                <td class="col-sup">
+                  {{ (float) $w->supervision_pct }}%
+                  @php $workerProfit = $w->clientPrice() - ($w->sell_amount ?: $w->amount); @endphp
+                  @if($workerProfit > 0)
+                    <br><small class="muted" style="font-size:12.5px;font-weight:600">({{ \App\Support\Money::format($workerProfit) }} ج.م)</small>
+                  @endif
+                </td>
+                <td><b>{{ \App\Support\Money::format($w->clientPrice()) }}</b></td>
+              </tr>
+            @endforeach
+          @elseif($band->labor_amount > 0)
             <tr>
               <td>{{ $band->labor_date?->format('Y-m-d') ?? '—' }}</td>
               <td>مصنعية وتنفيذ — {{ $band->team_name ?: '—' }} ({{ $band->contract_type ?: '—' }})</td>
               <td>—</td><td>—</td><td>—</td>
               <td class="col-sup">
-                @if($band->workers->isNotEmpty())
-                  متفاوتة
-                @else
-                  {{ (float) $band->labor_supervision_pct }}%
-                @endif
+                {{ (float) $band->labor_supervision_pct }}%
                 @if($band->laborPercentageProfit() > 0)
                   <br><small class="muted" style="font-size:12.5px;font-weight:600">({{ \App\Support\Money::format($band->laborPercentageProfit()) }} ج.م)</small>
                 @endif
@@ -140,9 +160,15 @@
           @foreach($generalMaterials as $m)
             <tr>
               <td>{{ $m->date->format('Y-m-d') }}</td>
-              <td>{{ $m->item }}</td>
-              <td>{{ $m->category === 'misc' ? '—' : \App\Support\Money::format($m->netQty(), 1) }}</td>
-              <td>{{ $m->category === 'misc' ? '—' : $m->unit }}</td>
+              <td>
+                {{ $m->item }}
+                @if($m->category === 'misc')
+                  @if($m->supplier_name)<br><small class="muted">{{ $m->supplier_name }}</small>@endif
+                  @if($m->contract_type && $m->contract_type !== 'lump_sum') <small class="muted">({{ $m->contractTypeAr() }})</small> @endif
+                @endif
+              </td>
+              <td>{{ ($m->category === 'misc' && $m->contract_type === 'lump_sum') ? '—' : \App\Support\Money::format($m->netQty(), 1) }}</td>
+              <td>{{ ($m->category === 'misc' && $m->contract_type === 'lump_sum') ? '—' : $m->unit }}</td>
               <td>{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
               <td class="col-sup">
                 {{ (float) $m->supervision_pct }}%

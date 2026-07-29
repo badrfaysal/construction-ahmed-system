@@ -31,13 +31,56 @@
         </datalist>
       </div>
     </div>
+    <div style="margin-top:10px; margin-bottom:10px;">
+      <label style="display:block; font-size:0.85rem; font-weight:600; color:var(--text-muted); margin-bottom:6px;">نوع الجهة *</label>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="radio" name="party_type" value="supplier" checked onchange="togglePartyList()">
+          <span>مورد</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="radio" name="party_type" value="craftsman" onchange="togglePartyList()">
+          <span>صنايعي</span>
+        </label>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label>اسم المورد / الصنايعي *</label>
+      <input type="text" id="supplier-name-input" name="supplier_name" value="{{ old('supplier_name') }}" placeholder="ابحث أو اكتب الاسم..." required list="suppliers-list">
+      
+      <datalist id="suppliers-list">
+        @foreach($supplierNames as $sup)
+          <option value="{{ $sup }}">
+        @endforeach
+      </datalist>
+
+      <datalist id="craftsmen-list">
+        @foreach($craftsmenNames as $craftsman)
+          <option value="{{ $craftsman }}">
+        @endforeach
+      </datalist>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>طريقة المحاسبة</label>
+        <select name="contract_type" id="expense-contract-select" onchange="updateExpenseUI()">
+          <option value="lump_sum" {{ old('contract_type') === 'lump_sum' ? 'selected' : '' }}>مبلغ مقطوع</option>
+          <option value="per_meter" {{ old('contract_type') === 'per_meter' ? 'selected' : '' }}>بالمتر</option>
+          <option value="per_piece" {{ old('contract_type') === 'per_piece' ? 'selected' : '' }}>بالقطعة</option>
+        </select>
+      </div>
+      <div class="field" id="expense-qty-wrap" style="{{ in_array(old('contract_type'), ['per_meter', 'per_piece']) ? '' : 'display:none;' }}">
+        <label id="expense-qty-label">الكمية</label>
+        <input type="number" name="qty" value="{{ old('qty') }}" min="0" step="0.01">
+      </div>
+    </div>
     <div class="row3">
       <div class="field">
-        <label>المبلغ (تكلفة) *</label>
+        <label id="expense-cost-label">التكلفة *</label>
         <input type="number" id="amount-field" name="amount" value="{{ old('amount') }}" min="0" step="0.01" required oninput="syncSell()">
       </div>
       <div class="field">
-        <label>سعر البيع للعميل *</label>
+        <label id="expense-sell-label">سعر البيع للعميل *</label>
         <input type="number" id="sell-field" name="sell_price" value="{{ old('sell_price') }}" min="0" step="0.01" required oninput="this.dataset.touched='1'">
       </div>
       <div class="field">
@@ -80,6 +123,26 @@ function syncSell() {
   if (sell.dataset.touched === '1') return;
   sell.value = document.getElementById('amount-field').value;
 }
+
+function updateExpenseUI() {
+  const ctype = document.getElementById('expense-contract-select').value;
+  const qtyWrap = document.getElementById('expense-qty-wrap');
+  const costLabel = document.getElementById('expense-cost-label');
+  const sellLabel = document.getElementById('expense-sell-label');
+  
+  if (ctype === 'lump_sum') {
+    qtyWrap.style.display = 'none';
+    costLabel.textContent = 'التكلفة (مقطوع) *';
+    sellLabel.textContent = 'سعر البيع للعميل (مقطوع) *';
+  } else {
+    qtyWrap.style.display = 'block';
+    const unit = ctype === 'per_meter' ? 'متر' : 'قطعة';
+    document.getElementById('expense-qty-label').textContent = 'الكمية (' + unit + ')';
+    costLabel.textContent = 'سعر ال' + unit + ' (تكلفة) *';
+    sellLabel.textContent = 'سعر ال' + unit + ' للعميل *';
+  }
+}
+
 function toggleExpenseWallet(val) {
   const row = document.getElementById('expense-wallet-row');
   const sel = row.querySelector('select[name="account_id"]');
@@ -91,6 +154,19 @@ function toggleExpenseWallet(val) {
     if (sel) sel.required = true;
   }
 }
+
+function togglePartyList() {
+  const type = document.querySelector('input[name="party_type"]:checked').value;
+  const input = document.getElementById('supplier-name-input');
+  if (type === 'supplier') {
+      input.setAttribute('list', 'suppliers-list');
+  } else {
+      input.setAttribute('list', 'craftsmen-list');
+  }
+}
+
+updateExpenseUI();
+toggleExpenseWallet(document.querySelector('input[name="payment_type"]:checked').value);
 </script>
 @endpush
 @endsection

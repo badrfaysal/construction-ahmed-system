@@ -97,7 +97,7 @@ class TransactionController extends Controller
         $data = $request->validate([
             'current_password' => ['required', 'string'],
             'amount'            => ['required', 'numeric', 'min:0.01'],
-            'account_id'        => ['required', 'integer', 'exists:accounts,id'],
+            'account_id'        => ['required', 'integer', 'exists:sy2_accounts,id'],
             'date'              => ['required', 'date'],
             'description'       => ['nullable', 'string', 'max:1000'],
         ]);

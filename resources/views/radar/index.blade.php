@@ -63,11 +63,11 @@
         <th>#</th>
         <th>نوع الحركة</th>
         <th class="num">المبلغ</th>
-        <th style="text-align:center">الطرف الخارجي</th>
-        <th style="text-align:center">مسار الحركة (FLOW)</th>
+        <th style="text-align:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="margin-left:4px;vertical-align:middle;color:#64748b"><use href="#i-users"/></svg>الطرف الخارجي</th>
+        <th style="text-align:center"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="margin-left:4px;vertical-align:middle;color:#64748b"><use href="#i-activity"/></svg>مسار الحركة (FLOW)</th>
         <th>البيان والمشروع</th>
         <th>الإجراء والمستخدم</th>
-        <th>تاريخ التنفيذ</th>
+        <th><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="margin-left:4px;vertical-align:middle;color:#64748b"><use href="#i-calendar"/></svg>تاريخ التنفيذ</th>
         <th class="no-print">إجراء</th>
       </tr>
     </thead>
@@ -84,9 +84,15 @@
           <td class="muted">{{ $log->transaction_id ?? $log->id }}</td>
           
           <td>
-            <div style="display:flex;align-items:center;gap:8px">
-              <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ $log->direction === 'in' ? '#10b981' : ($log->direction === 'out' ? '#ef4444' : '#64748b') }};color:#fff;flex-shrink:0">
-                <i class="fa fa-arrow-{{ $log->direction === 'in' ? 'down' : ($log->direction === 'out' ? 'up' : 'minus') }}"></i>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:{{ $log->direction === 'in' ? 'rgba(16,185,129,0.1)' : ($log->direction === 'out' ? 'rgba(239,68,68,0.1)' : 'rgba(100,116,139,0.1)') }};color:{{ $log->direction === 'in' ? '#10b981' : ($log->direction === 'out' ? '#ef4444' : '#64748b') }};flex-shrink:0;box-shadow:0 2px 4px rgba(0,0,0,0.02); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" style="{{ $log->direction === 'out' ? 'transform: rotate(180deg);' : '' }}">
+                  @if($log->direction === 'in' || $log->direction === 'out')
+                    <use href="#i-down"/>
+                  @else
+                    <use href="#i-activity"/>
+                  @endif
+                </svg>
               </div>
               <div>
                 <div style="font-weight:bold;font-size:13px">{{ $meta['label'] }}</div>
@@ -128,13 +134,25 @@
           <td>
             <div style="display:flex;align-items:center;gap:6px;justify-content:center;white-space:nowrap;direction:rtl">
               @if($log->direction === 'in')
-                <div style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600"><i class="fa fa-globe me-1"></i> {{ $partyName }}</div>
-                <i class="fa fa-arrow-left text-muted" style="font-size:10px"></i>
-                <div style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600"><i class="fa fa-wallet me-1"></i> {{ $accountName }}</div>
+                <div style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><use href="#i-users"/></svg>
+                  {{ $partyName }}
+                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="color:#94a3b8;transform:rotate(180deg)"><use href="#i-arrow"/></svg>
+                <div style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><use href="#i-wallet"/></svg>
+                  {{ $accountName }}
+                </div>
               @elseif($log->direction === 'out')
-                <div style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600"><i class="fa fa-wallet me-1"></i> {{ $accountName }}</div>
-                <i class="fa fa-arrow-left text-muted" style="font-size:10px"></i>
-                <div style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600"><i class="fa fa-globe me-1"></i> {{ $partyName }}</div>
+                <div style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><use href="#i-wallet"/></svg>
+                  {{ $accountName }}
+                </div>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="color:#94a3b8;transform:rotate(180deg)"><use href="#i-arrow"/></svg>
+                <div style="background:#f8fafc;color:#475569;border:1px solid #e2e8f0;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:4px">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><use href="#i-users"/></svg>
+                  {{ $partyName }}
+                </div>
               @else
                 <span class="muted">—</span>
               @endif

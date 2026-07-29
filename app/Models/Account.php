@@ -5,26 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
-// This model points at an external, unprefixed table ("accounts") that is
-// SHARED with the first (fuel/factory/financial) system. Historically the
-// construction system only ever touched ONE row (المقاولات, id 37). As of the
-// 2026-07-06 merge, the user can now direct any construction money movement at
-// ANY wallet in this table — so we read the full list for the wallet pickers
-// and lock a chosen row when mutating its balance. We still never touch the
-// table's schema; only the `balance` column of the row the user selected.
+// This model points to the construction-specific table "sy2_accounts".
 class Account extends Model
 {
-    protected $table = 'accounts';
+    protected $table = 'sy2_accounts';
 
-    protected $fillable = ['balance'];
+    protected $fillable = ['name', 'category', 'initial_balance', 'balance', 'status'];
 
     public $timestamps = true;
 
-    // The default wallet — used when no account is explicitly chosen, and for
-    // read-only displays (dashboard card) that predate multi-wallet support.
+    // The default wallet — used when no account is explicitly chosen
     const WALLET_ID = 37;
 
-    // Read-only lookup for the DEFAULT wallet's balance (dashboard card, etc.).
+    // Read-only lookup for the DEFAULT wallet's balance
     public static function walletBalance(): float
     {
         return static::balanceOf(self::WALLET_ID);
@@ -42,27 +35,20 @@ class Account extends Model
         return static::lockedById(self::WALLET_ID);
     }
 
-    // Locking lookup of any wallet by id (null → default) for use inside a
-    // DB::transaction() when its balance is about to be mutated, so concurrent
-    // expense/income writes can't race.
+    // Locking lookup of any wallet by id (null → default) for use inside a DB::transaction()
     public static function lockedById(?int $id): self
     {
         return static::query()->lockForUpdate()->findOrFail($id ?: self::WALLET_ID);
     }
 
-    // All active wallets, ordered with المقاولات first, for the expense/income
-    // wallet pickers. Returns lightweight objects: id, name, category, balance.
+    // All active wallets, ordered with المقاولات first, for the expense/income wallet pickers.
     public static function selectable(): Collection
     {
         return static::query()
             ->where('status', 'active')
-            ->where(function ($q) {
-                $q->where('category', '!=', 'project_sector')
-                  ->orWhereNull('category');
-            })
             ->orderByRaw('id = ? DESC', [self::WALLET_ID])
-            ->orderBy('account_name')
-            ->get(['id', 'account_name', 'category', 'balance']);
+            ->orderBy('name')
+            ->get(['id', 'name', 'category', 'balance']);
     }
 
     // Human label for a wallet id (used in logs/statements). Cached per request.
@@ -70,7 +56,7 @@ class Account extends Model
     {
         static $cache = [];
         $id = $id ?: self::WALLET_ID;
-        return $cache[$id] ??= (string) (static::query()->find($id)?->account_name ?? 'المقاولات');
+        return $cache[$id] ??= (string) (static::query()->find($id)?->name ?? 'المقاولات');
     }
 
     // Arabic label for the account category (for grouping in the picker).

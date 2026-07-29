@@ -180,7 +180,7 @@ class QuoteController extends Controller
 
         $data = $request->validate([
             'default_supervision_pct'  => ['required', 'numeric', 'min:0', 'max:100'],
-            'account_id'               => ['nullable', 'integer', 'exists:accounts,id'],
+            'account_id'               => ['nullable', 'integer', 'exists:sy2_accounts,id'],
             'items'                    => ['nullable', 'array'],
             'items.*.purchased'        => ['nullable', 'boolean'],
             'items.*.name'             => ['required', 'string', 'max:255'],

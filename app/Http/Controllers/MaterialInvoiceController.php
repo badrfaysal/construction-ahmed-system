@@ -18,6 +18,12 @@ class MaterialInvoiceController extends Controller
         if ($request->filled('supplier_id')) {
             $query->where('supplier_id', $request->supplier_id);
         }
+        if ($dateFrom = $request->get('date_from')) {
+            $query->whereDate('date', '>=', $dateFrom);
+        }
+        if ($dateTo = $request->get('date_to')) {
+            $query->whereDate('date', '<=', $dateTo);
+        }
 
         $invoices = $query->paginate(20)->withQueryString();
         $projects = \App\Models\Project::orderBy('name')->get();

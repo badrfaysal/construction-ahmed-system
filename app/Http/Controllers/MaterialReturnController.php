@@ -61,7 +61,7 @@ class MaterialReturnController extends Controller
 
             if ($material->isMisc()) {
                 throw ValidationException::withMessages([
-                    "returns.$i.qty" => 'لا يمكن عمل مرتجع للنثريات (' . $material->item . ').',
+                    "returns.$i.qty" => 'لا يمكن عمل مرتجع للمصروفات والبنود الفرعية (' . $material->item . ').',
                 ]);
             }
             if ($row['qty'] > $material->netQty()) {

@@ -7,39 +7,77 @@
   <div><h3>ربحية المشاريع</h3><p>ربح دفتري = سعر البيع + الإشراف − التكلفة | ربح محصل = المحصل فعلاً − التكلفة</p></div>
 </div>
 
-{{-- Summary KPIs --}}
-<div class="grid cols-3" style="margin-bottom:24px">
-  <div class="card stat">
-    <div class="top"><span class="label">إجمالي التكلفة الفعلية</span></div>
-    <div class="val tnum" style="color:var(--warn)">{{ \App\Support\Money::format($totals['total_spent']) }} <small>ج.م</small></div>
-  </div>
-  <div class="card stat">
-    <div class="top"><span class="label">ربح دفتري (على الورق)</span></div>
-    <div class="val tnum" style="color:{{ $totals['book_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totals['book_profit']) }} <small>ج.م</small></div>
-    <div class="sub">إجمالي المفوتر: {{ \App\Support\Money::format($totals['total_billed']) }} ج.م</div>
-  </div>
-  <div class="card stat">
-    <div class="top"><span class="label">ربح محصل (قُبض فعلاً)</span></div>
-    <div class="val tnum" style="color:{{ $totals['earned_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totals['earned_profit']) }} <small>ج.م</small></div>
-    <div class="sub">إجمالي المحصّل: {{ \App\Support\Money::format($totals['total_collected']) }} ج.م</div>
-  </div>
-</div>
+@push('styles')
+<style>
+.vstat { padding: 16px; min-height: 110px; }
+.vstat:hover .ic { transform: scale(1.15) rotate(8deg); background: rgba(255, 255, 255, 0.3); }
+.vstat .vstat-bg { position: absolute; left: -10px; bottom: -15px; width: 90px; height: 90px; color: rgba(255, 255, 255, 0.15); z-index: 0; transform: rotate(-15deg); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
+.vstat:hover .vstat-bg { transform: scale(1.2) rotate(5deg); color: rgba(255, 255, 255, 0.25); }
+.vstat .val { font-size: 1.5rem; }
+.vstat .sub { font-size: 0.75rem; color: rgba(255, 255, 255, 0.8); margin-top: 4px; }
+</style>
+@endpush
 
-<div class="grid cols-3" style="margin-bottom:24px">
-  <div class="card stat">
-    <div class="top"><span class="label">الربح التجاري (فرق الشراء من البيع)</span></div>
-    <div class="val tnum" style="color:{{ $totals['trade_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totals['trade_profit']) }} <small>ج.م</small></div>
-    <div class="sub">{{ number_format($totals['trade_profit_share'], 1) }}% من إجمالي التكلفة</div>
+{{-- Summary KPIs --}}
+<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;margin-bottom:24px">
+  
+  <div class="vstat vstat-red">
+    <div class="top">
+      <span class="label">إجمالي التكلفة</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></span>
+    </div>
+    <div class="val tnum">{{ \App\Support\Money::format($totals['total_spent']) }} <small>ج.م</small></div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg>
   </div>
-  <div class="card stat">
-    <div class="top"><span class="label">نسبة الإشراف</span></div>
-    <div class="val tnum" style="color:{{ $totals['percentage_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totals['percentage_profit']) }} <small>ج.م</small></div>
-    <div class="sub">{{ number_format($totals['percentage_profit_share'], 1) }}% من إجمالي التكلفة</div>
+
+  <div class="vstat {{ $totals['book_profit'] >= 0 ? 'vstat-green' : 'vstat-red' }}">
+    <div class="top">
+      <span class="label">ربح دفتري</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg></span>
+    </div>
+    <div class="val tnum">{{ \App\Support\Money::format($totals['book_profit']) }} <small>ج.م</small></div>
+    <div class="sub">المفوتر: {{ \App\Support\Money::format($totals['total_billed']) }} ج.م</div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg>
   </div>
-  <div class="card stat">
-    <div class="top"><span class="label">أرباح نسبة التقسيط</span></div>
-    <div class="val tnum" style="color:{{ $totals['installment_profit'] >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totals['installment_profit']) }} <small>ج.م</small></div>
-    <div class="sub">{{ number_format($totals['installment_profit_share'], 1) }}% من إجمالي التكلفة</div>
+
+  <div class="vstat {{ $totals['earned_profit'] >= 0 ? 'vstat-blue' : 'vstat-red' }}">
+    <div class="top">
+      <span class="label">ربح محصل</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span>
+    </div>
+    <div class="val tnum">{{ \App\Support\Money::format($totals['earned_profit']) }} <small>ج.م</small></div>
+    <div class="sub">المحصّل: {{ \App\Support\Money::format($totals['total_collected']) }} ج.م</div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>
+  </div>
+
+  <div class="vstat vstat-amber">
+    <div class="top">
+      <span class="label">الربح التجاري</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg></span>
+    </div>
+    <div class="val tnum">{{ \App\Support\Money::format($totals['trade_profit']) }} <small>ج.م</small></div>
+    <div class="sub">{{ number_format($totals['trade_profit_share'], 1) }}% من التكلفة</div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg>
+  </div>
+
+  <div class="vstat vstat-teal">
+    <div class="top">
+      <span class="label">نسبة الإشراف</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-percent"/></svg></span>
+    </div>
+    <div class="val tnum">{{ \App\Support\Money::format($totals['percentage_profit']) }} <small>ج.م</small></div>
+    <div class="sub">{{ number_format($totals['percentage_profit_share'], 1) }}% من التكلفة</div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-percent"/></svg>
+  </div>
+
+  <div class="vstat" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); color:#fff">
+    <div class="top">
+      <span class="label">أرباح التقسيط</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-clock"/></svg></span>
+    </div>
+    <div class="val tnum">{{ \App\Support\Money::format($totals['installment_profit']) }} <small>ج.م</small></div>
+    <div class="sub">{{ number_format($totals['installment_profit_share'], 1) }}% من التكلفة</div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-clock"/></svg>
   </div>
 </div>
 

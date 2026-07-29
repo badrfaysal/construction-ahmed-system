@@ -58,13 +58,21 @@
       <a href="{{ request()->fullUrlWithQuery(['status' => 'paid']) }}" class="tab {{ request('status') === 'paid' ? 'active' : '' }}">مسدد</a>
     </div>
   </div>
+  <div class="f-field">
+    <label>من تاريخ</label>
+    <input type="date" name="date_from" value="{{ request('date_from') }}" class="f-select" onchange="this.form.submit()">
+  </div>
+  <div class="f-field">
+    <label>إلى تاريخ</label>
+    <input type="date" name="date_to" value="{{ request('date_to') }}" class="f-select" onchange="this.form.submit()">
+  </div>
   @include('partials._sort-select', ['options' => [
     'due_asc'     => 'الأقرب استحقاقًا',
     'newest'      => 'الأحدث إضافة',
     'amount_desc' => 'الأعلى قيمة',
     'amount_asc'  => 'الأقل قيمة',
   ]])
-  @if(request()->hasAny(['project_id','supplier_id','status','sort']))
+  @if(request()->hasAny(['project_id','supplier_id','status','sort','date_from','date_to']))
     <div class="f-actions">
       <a href="{{ route('debts.index') }}" class="btn ghost sm">مسح الفلتر</a>
     </div>
@@ -108,12 +116,12 @@
             <div class="muted" style="font-size:11px">متبقي</div>
             <div class="tnum" style="font-weight:700;color:{{ $sRemaining > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($sRemaining) }}</div>
           </div>
-          @if($hasUnpaid && $supplierId > 0)
+          @if($hasUnpaid)
             <div style="display:flex;gap:6px;margin-right:8px">
-              <button class="btn pos sm" onclick="event.stopPropagation(); openSupplierPay({{ $supplierId }}, {{ $sRemaining }}, '{{ addslashes($supplier?->name) }}', 'full')">
+              <button class="btn pos sm" onclick="event.stopPropagation(); openSupplierPay({{ $supplierId }}, {{ $sRemaining }}, '{{ addslashes($supplier?->name ?? 'بدون مورد') }}', 'full')">
                 سداد كلي
               </button>
-              <button class="btn ghost sm" onclick="event.stopPropagation(); openSupplierPay({{ $supplierId }}, {{ $sRemaining }}, '{{ addslashes($supplier?->name) }}', 'partial')">
+              <button class="btn ghost sm" onclick="event.stopPropagation(); openSupplierPay({{ $supplierId }}, {{ $sRemaining }}, '{{ addslashes($supplier?->name ?? 'بدون مورد') }}', 'partial')">
                 سداد جزئي
               </button>
             </div>

@@ -43,7 +43,17 @@
       </div>
     </div>
     
-    @if(request()->hasAny(['project_id', 'supplier_id']))
+    <div class="f-field">
+      <label>من تاريخ</label>
+      <input type="date" name="date_from" value="{{ request('date_from') }}" class="f-select" onchange="this.form.submit()">
+    </div>
+    
+    <div class="f-field">
+      <label>إلى تاريخ</label>
+      <input type="date" name="date_to" value="{{ request('date_to') }}" class="f-select" onchange="this.form.submit()">
+    </div>
+    
+    @if(request()->hasAny(['project_id', 'supplier_id', 'date_from', 'date_to']))
       <div class="f-field" style="display:flex;align-items:flex-end">
         <a href="{{ route('material_invoices.index') }}" class="btn ghost danger">إلغاء الفلاتر</a>
       </div>
@@ -93,9 +103,10 @@
             <td class="num" style="color:{{ $statusColor }}">
               {{ \App\Support\Money::format($remaining) }}
             </td>
-            <td class="no-print">
-              <a href="{{ route('material_invoices.show', $inv->id) }}" class="btn ghost sm" title="عرض التفاصيل">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-eye"/></svg>
+            <td class="no-print" style="text-align:left">
+              <a href="{{ route('material_invoices.show', $inv->id) }}" class="btn sm" style="background:linear-gradient(135deg, #1e293b, #0f172a); color:#fff; border-radius:8px; padding:6px 14px; font-size:0.8rem; display:inline-flex; align-items:center; gap:6px; transition:all 0.3s; border:none; box-shadow:0 2px 4px rgba(0,0,0,0.05);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(15, 23, 42, 0.2)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)';">
+                <span>عرض الفاتورة</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(180deg)"><use href="#i-arrow"/></svg>
               </a>
             </td>
           </tr>

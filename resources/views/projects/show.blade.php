@@ -171,7 +171,7 @@
     الماليات
   </button>
   <button type="button" class="tab" data-tab="materials" onclick="switchProjectTab('materials')">
-    الخامات المشتراة <span class="cnt">{{ $project->materials->count() }}</span>
+    الخامات والمصروفات الفرعية <span class="cnt">{{ $project->materials->count() }}</span>
   </button>
   <button type="button" class="tab" data-tab="returns" onclick="switchProjectTab('returns')">
     المرتجعات <span class="cnt">{{ $project->materials->sum(fn($m) => $m->returns->count()) }}</span>
@@ -619,7 +619,7 @@
 
 <div class="tab-panel" data-panel="materials" style="display:none">
 <div class="section-label no-print" style="display:flex;justify-content:space-between;align-items:center;margin-top:0">
-  <span>الخامات المشتراة</span>
+  <span>الخامات والمصروفات الفرعية</span>
   <div class="btn-row">
     <button type="button" class="btn ghost sm" onclick="printMaterials()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-print"/></svg>
@@ -627,7 +627,7 @@
     </button>
     <a href="{{ route('expenses.create', $project) }}" class="btn ghost sm">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
-      نثريات ومصروفات
+      مصروفات وبنود فرعية
     </a>
     <a href="{{ route('materials.create', ['project_id' => $project->id]) }}" class="btn sm">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
@@ -709,7 +709,7 @@
             <tr class="mat-row" data-band="{{ $m->band_id }}">
               <td>
                 <strong>{{ $m->item }}</strong>
-                @if($m->isMisc())<span class="tag gray sm" style="margin-right:6px">نثريات ومصروفات</span>@endif
+                @if($m->isMisc())<span class="tag gray sm" style="margin-right:6px">مصروفات وبنود فرعية</span>@endif
               </td>
               <td class="muted">{{ $m->supplier?->name ?? '—' }}</td>
               <td class="num">{{ number_format($m->qty, 1) }}</td>
@@ -976,7 +976,7 @@
   // الصنايعية: كل فني ونسبة تحصيله، الأعلى تعاقدًا أولًا
   $rptWorkers = $project->bands->flatMap(fn ($b) => $b->workers)->sortByDesc('amount')->values();
 
-  // ── تحليل الخامات: أعلى الأصناف بالتكلفة (خامات حقيقية فقط، بدون نثريات) ──
+  // ── تحليل الخامات: أعلى الأصناف بالتكلفة (خامات حقيقية فقط، بدون مصروفات وبنود فرعية) ──
   $realMaterials = $project->materials->where('category', '!=', 'misc');
   $rptTopMaterials = $realMaterials
     ->groupBy('item')
@@ -1306,7 +1306,7 @@
               @endphp
               @if($genMatCount > 0)
                 <tr>
-                  <td>نثريات وخامات عامة</td>
+                  <td>مصروفات وبنود فرعية وخامات عامة</td>
                   <td class="num">{{ \App\Support\Money::format($genMatClientTotal) }}</td>
                   <td class="num">{{ \App\Support\Money::format($genMatCost) }}</td>
                   <td class="num" style="color:{{ $genMatProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($genMatProfit) }}</td>
@@ -1655,7 +1655,7 @@ function initFinancialCharts() {
     new Chart(costCtx, {
       type: 'bar',
       data: {
-        labels: ['خامات', 'مصنعيات', 'نثريات', 'عمولات'],
+        labels: ['خامات', 'مصنعيات', 'مصروفات وبنود فرعية', 'عمولات'],
         datasets: [{
           label: 'التكلفة',
           data: [{{ $bandMaterialsCost ?: 0 }}, {{ $laborCost ?: 0 }}, {{ $generalMaterialsCost ?: 0 }}, {{ $marketersCost ?: 0 }}],

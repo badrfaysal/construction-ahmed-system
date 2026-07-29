@@ -60,7 +60,7 @@
     @if($grandPerSqm !== null)<div class="note">{{ number_format($area > 0 ? $totalMaterialCost / $area : 0, 1) }} ج.م/م²</div>@endif
   </div>
   <div class="vstat vstat-red">
-    <div class="top"><span class="label">نثريات ومصروفات</span>
+    <div class="top"><span class="label">مصروفات وبنود فرعية</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span>
     </div>
     <div class="val tnum">{{ \App\Support\Money::format($totalPettyCost) }} <small>ج.م</small></div>
@@ -94,7 +94,7 @@
   <strong style="color:var(--accent-ink)">المتر المربع الواحد يتكلّف:</strong>
   <span class="tag blue">خامات {{ number_format($area > 0 ? $totalMaterialCost / $area : 0, 1) }} ج.م</span>
   <span style="color:var(--ink-3)">+</span>
-  <span class="tag red">نثريات ومصروفات {{ number_format($area > 0 ? $totalPettyCost / $area : 0, 1) }} ج.م</span>
+  <span class="tag red">مصروفات وبنود فرعية {{ number_format($area > 0 ? $totalPettyCost / $area : 0, 1) }} ج.م</span>
   <span style="color:var(--ink-3)">+</span>
   <span class="tag amber">مصنعية {{ number_format($area > 0 ? $totalLaborCost / $area : 0, 1) }} ج.م</span>
   <span style="color:var(--ink-3)">=</span>
@@ -119,7 +119,7 @@
       </div>
       <div class="est-band-costs">
         <div class="ebc"><span class="l">خامات</span><span class="v" style="color:var(--accent)">{{ \App\Support\Money::format($row->material_cost) }}</span></div>
-        <div class="ebc"><span class="l">نثريات ومصروفات</span><span class="v" style="color:var(--neg)">{{ \App\Support\Money::format($row->petty_cost) }}</span></div>
+        <div class="ebc"><span class="l">مصروفات وبنود فرعية</span><span class="v" style="color:var(--neg)">{{ \App\Support\Money::format($row->petty_cost) }}</span></div>
         <div class="ebc"><span class="l">مصنعية</span><span class="v" style="color:var(--warn)">{{ \App\Support\Money::format($row->labor_cost) }}</span></div>
         <div class="ebc ebc-total"><span class="l">الإجمالي</span><span class="v">{{ \App\Support\Money::format($row->total_cost) }}</span></div>
         @if($row->per_sqm !== null)
@@ -180,11 +180,11 @@
       </div>
     @endif
 
-    {{-- نثريات ومصروفات --}}
+    {{-- مصروفات وبنود فرعية --}}
     @if($row->petty->count())
       <div class="est-sec-lbl" style="color:var(--neg);background:color-mix(in srgb, var(--neg) 4%, transparent)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
-        نثريات ومصروفات ({{ $row->petty->count() }} مصروف)
+        مصروفات وبنود فرعية ({{ $row->petty->count() }} مصروف)
       </div>
       <div class="table-scroll">
         <table>
@@ -194,7 +194,7 @@
               <tr><td><strong>{{ $p->item }}</strong></td><td class="muted">{{ $p->date?->format('Y-m-d') ?? '—' }}</td><td class="num">{{ \App\Support\Money::format($p->cost) }}</td></tr>
             @endforeach
           </tbody>
-          <tfoot><tr><td colspan="2" style="color:var(--neg)">إجمالي النثريات والمصروفات</td><td class="num" style="color:var(--neg)">{{ \App\Support\Money::format($row->petty_cost) }}</td></tr></tfoot>
+          <tfoot><tr><td colspan="2" style="color:var(--neg)">إجمالي المصروفات والبنود الفرعية</td><td class="num" style="color:var(--neg)">{{ \App\Support\Money::format($row->petty_cost) }}</td></tr></tfoot>
         </table>
       </div>
     @endif
@@ -235,13 +235,13 @@
   </div>
 @endforeach
 
-{{-- نثريات ومصروفات عامة على المشروع --}}
+{{-- مصروفات وبنود فرعية عامة على المشروع --}}
 @if($generalPetty->count())
   <div class="table-card" style="margin-bottom:18px">
     <div class="table-top">
       <h4>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;vertical-align:middle;margin-inline-end:5px;color:var(--neg)"><use href="#i-receipt"/></svg>
-        نثريات ومصروفات عامة على المشروع
+        مصروفات وبنود فرعية عامة على المشروع
       </h4>
       <div style="text-align:center">
         <div class="muted" style="font-size:11px">الإجمالي</div>
@@ -256,7 +256,7 @@
             <tr><td><strong>{{ $p->item }}</strong></td><td class="muted">{{ $p->date?->format('Y-m-d') ?? '—' }}</td><td class="num">{{ \App\Support\Money::format($p->cost) }}</td></tr>
           @endforeach
         </tbody>
-        <tfoot><tr><td colspan="2" style="color:var(--neg)">إجمالي النثريات والمصروفات العامة</td><td class="num" style="color:var(--neg)">{{ \App\Support\Money::format($generalPettyCost) }}</td></tr></tfoot>
+        <tfoot><tr><td colspan="2" style="color:var(--neg)">إجمالي المصروفات والبنود الفرعية العامة</td><td class="num" style="color:var(--neg)">{{ \App\Support\Money::format($generalPettyCost) }}</td></tr></tfoot>
       </table>
     </div>
   </div>

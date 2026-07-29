@@ -40,4 +40,20 @@ class Transaction extends Model
     {
         return $this->direction === 'in' ? 'وارد' : 'صادر';
     }
+
+    /**
+     * صافي الكاش بتاع المقاولات عبر كل الحسابات (من جدول الحركات الخاص بنا)
+     */
+    public static function constructionNetCash(bool $activeOnly = false): float
+    {
+        $query = static::query()->where('ref_type', '!=', 'manual');
+
+        if ($activeOnly) {
+            $query->whereHas('project', function ($q) {
+                $q->whereNotIn('status', ['done', 'canceled']);
+            });
+        }
+
+        return (float) $query->sum(\Illuminate\Support\Facades\DB::raw("CASE WHEN direction = 'in' THEN amount ELSE -amount END"));
+    }
 }

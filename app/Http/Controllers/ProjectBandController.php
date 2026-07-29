@@ -35,8 +35,12 @@ class ProjectBandController extends Controller
         $knownWorkersJson = \App\Models\BandWorker::select('name', 'phone', 'specialty')
             ->groupBy('name', 'phone', 'specialty')
             ->get()->unique('name')->values()->toJson();
+            
+        $supplierNames = \App\Models\Supplier::select('name')->distinct()->pluck('name')
+            ->merge(\App\Models\Material::whereNotNull('supplier_name')->where('supplier_name', '!=', '')->distinct()->pluck('supplier_name'))
+            ->unique()->sort()->values();
 
-        return view('bands.create', compact('project', 'wallets', 'suppliers', 'itemNames', 'unitNames', 'bandNames', 'knownWorkersJson'));
+        return view('bands.create', compact('project', 'wallets', 'suppliers', 'itemNames', 'unitNames', 'bandNames', 'knownWorkersJson', 'supplierNames'));
     }
 
     // Save a new band under the given project — labor (workers), materials
@@ -77,7 +81,7 @@ class ProjectBandController extends Controller
         // لازم تختار محفظة لو هتشتري خامات/نثريات دلوقتي (إلا لو آجل بالكامل)
         if ($hasItems && $payment['payment_status'] !== 'deferred' && empty($payment['account_id'])) {
             throw ValidationException::withMessages([
-                'account_id' => 'اختر المحفظة التي سيتم الصرف منها للخامات/النثريات.',
+                'account_id' => 'اختر المحفظة التي سيتم الصرف منها للخامات والمصروفات والبنود الفرعية.',
             ]);
         }
 
@@ -86,7 +90,7 @@ class ProjectBandController extends Controller
             $totalCost = $this->itemsCost($materials) + $this->itemsCost($misc, isMisc: true);
             if ((float) $payment['paid_amount'] > $totalCost + 0.01) {
                 throw ValidationException::withMessages([
-                    'paid_amount' => 'المبلغ المدفوع أكبر من إجمالي تكلفة الخامات والنثريات (' . number_format($totalCost, 2) . ' ج.م).',
+                    'paid_amount' => 'المبلغ المدفوع أكبر من إجمالي تكلفة الخامات والمصروفات والبنود الفرعية (' . number_format($totalCost, 2) . ' ج.م).',
                 ]);
             }
         }
@@ -135,7 +139,7 @@ class ProjectBandController extends Controller
     private function itemsCost(array $items, bool $isMisc = false): float
     {
         return array_sum(array_map(
-            fn ($i) => $isMisc ? (float) $i['amount'] : (float) $i['qty'] * (float) $i['unit_price'],
+            fn ($i) => $isMisc ? ((float) ($i['contract_qty'] ?? 1) * (float) $i['amount']) : (float) $i['qty'] * (float) $i['unit_price'],
             $items
         ));
     }
@@ -149,6 +153,8 @@ class ProjectBandController extends Controller
             'category'        => 'material',
             'item'            => $m['item'],
             'supplier_id'     => $m['supplier_id'] ?? null,
+            'supplier_name'   => null,
+            'contract_type'   => null,
             'unit'            => $m['unit'],
             'qty'             => $m['qty'],
             'unit_price'      => $m['unit_price'],
@@ -158,8 +164,10 @@ class ProjectBandController extends Controller
             'category'        => 'misc',
             'item'            => $m['item'],
             'supplier_id'     => null,
-            'unit'            => 'مبلغ',
-            'qty'             => 1,
+            'supplier_name'   => $m['supplier_name'] ?? null,
+            'contract_type'   => $m['contract_type'] ?? null,
+            'unit'            => ($m['contract_type'] ?? '') === 'per_meter' ? 'متر' : (($m['contract_type'] ?? '') === 'per_piece' ? 'قطعة' : 'مبلغ'),
+            'qty'             => (isset($m['contract_qty']) && $m['contract_qty'] > 0) ? (float) $m['contract_qty'] : 1,
             'unit_price'      => $m['amount'],
             'sell_price'      => $m['sell_price'],
             'supervision_pct' => $m['supervision_pct'] ?? 0,
@@ -363,8 +371,11 @@ class ProjectBandController extends Controller
 
             // نثريات اختيارية (إكرامية/نقل...) — بنفس منطق الخامات
             'misc'                         => ['nullable', 'array'],
-            'misc.*.item'                  => ['required', 'string', 'max:255'],
-            'misc.*.amount'                => ['required', 'numeric', 'min:0'],
+            'misc.*.item'            => ['required', 'string', 'max:255'],
+            'misc.*.supplier_name'   => ['required', 'string', 'max:255'],
+            'misc.*.contract_type'   => ['nullable', 'string', 'in:lump_sum,per_meter,per_piece'],
+            'misc.*.contract_qty'    => ['nullable', 'numeric', 'min:0'],
+            'misc.*.amount'          => ['required', 'numeric', 'min:0'],
             'misc.*.sell_price'            => ['required', 'numeric', 'min:0'],
             'misc.*.supervision_pct'       => ['nullable', 'numeric', 'min:0', 'max:100'],
 
@@ -373,7 +384,7 @@ class ProjectBandController extends Controller
             'supplier_id'    => ['nullable', 'exists:sy2_suppliers,id'],
             'purchase_date'  => ['nullable', 'date'],
             'payment_status' => ['nullable', 'in:paid,partial,deferred'],
-            'account_id'     => ['nullable', 'integer', 'exists:accounts,id'],
+            'account_id'     => ['nullable', 'integer', 'exists:sy2_accounts,id'],
             'paid_amount'    => ['nullable', 'numeric', 'min:0'],
         ], [
             'invoice_name.unique' => 'اسم الفاتورة مسجل مسبقاً، يرجى تغييره لعدم التكرار.',

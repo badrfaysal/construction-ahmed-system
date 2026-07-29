@@ -15,17 +15,38 @@ class ReceivablesController extends Controller
     // Shows what clients owe us — split into per-project receivables and overdue installments
     public function index(Request $request)
     {
-        $projects = Project::with([
+        $query = Project::with([
             'client',
             'contracts', // Needed for hasInstallmentContract()
             'clientPayments' // Needed for receivableExcess()
-        ])->orderByDesc('created_at')->get();
+        ])->orderByDesc('created_at');
+
+        if ($dateFrom = $request->get('date_from')) {
+            $query->whereDate('created_at', '>=', $dateFrom);
+        }
+        if ($dateTo = $request->get('date_to')) {
+            $query->whereDate('created_at', '<=', $dateTo);
+        }
+
+        $projects = $query->get();
 
         $rows = $projects->map(function ($project) {
             $billed    = $project->grossClientTotal();
             $collected = $project->totalCollected();
             $discount  = $project->totalDiscount();
-            $remaining = $billed - $collected - $discount;
+
+            // Exclude installment contract numbers to completely separate them from receivables
+            if ($project->hasInstallmentContract()) {
+                $contractScope = $project->contractedScope();
+                $contractCollected = (float) $project->contracts->sum(fn ($c) => (float) $c->payments->sum('amount_paid'));
+                $contractDiscount = (float) $project->contracts->sum('discount');
+
+                $billed    = max(0, $billed - $contractScope);
+                $collected = max(0, $collected - $contractCollected);
+                $discount  = max(0, $discount - $contractDiscount);
+            }
+
+            $remaining = max(0, $billed - $collected - $discount);
 
             return (object) [
                 'project'       => $project,
@@ -33,13 +54,11 @@ class ReceivablesController extends Controller
                 'collected'     => $collected,
                 'discount'      => $discount,
                 'remaining'     => $remaining,
-                // مستحق زيادة عن نطاق عقد التقسيط (لو فيه عقد) — قابل للتحصيل
-                // المباشر من هنا برضو، منفصل تمامًا عن جدول سداد العقد
-                'excess'        => $project->hasInstallmentContract() ? $project->receivableExcess() : null,
-                'book_profit'   => $billed - $project->totalSpent(),
-                'earned_profit' => $collected - $project->totalSpent(),
+                'excess'        => $project->hasInstallmentContract() ? $remaining : null,
+                'book_profit'   => max(0, $billed - $project->totalSpent()),
+                'earned_profit' => max(0, $collected - $project->totalSpent()),
             ];
-        })->filter(fn ($r) => $r->billed > 0);
+        })->filter(fn ($r) => $r->billed > 0 || $r->remaining > 0);
 
         // Overdue installments across all projects
         $overdueInstallments = Installment::with(['project.client', 'band'])
@@ -96,7 +115,7 @@ class ReceivablesController extends Controller
         $validator = Validator::make($request->all(), [
             'amount'     => ['required', 'numeric', 'min:0.01'],
             'discount'   => ['nullable', 'numeric', 'min:0'],
-            'account_id' => ['required', 'integer', 'exists:accounts,id'],
+            'account_id' => ['required', 'integer', 'exists:sy2_accounts,id'],
             'band_id'    => ['nullable', 'integer', 'exists:sy2_project_bands,id'],
             'date'       => ['required', 'date'],
             'notes'      => ['nullable', 'string', 'max:255'],

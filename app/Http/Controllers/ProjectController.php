@@ -244,7 +244,7 @@ class ProjectController extends Controller
             'marketer_id' => ['required', 'exists:sy2_marketers,id'],
             'amount'      => ['required', 'numeric', 'min:0.01'],
             'date'        => ['required', 'date'],
-            'account_id'  => ['required', 'exists:accounts,id'],
+            'account_id'  => ['required', 'exists:sy2_accounts,id'],
             'notes'       => ['nullable', 'string'],
         ]);
 

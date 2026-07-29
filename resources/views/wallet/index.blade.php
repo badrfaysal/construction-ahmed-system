@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'المحفظة')
 @section('page-title', 'محفظة المقاولات')
 
@@ -43,7 +43,7 @@
       @php $accent = $catAccent($w->category); $isDefault = $w->id == \App\Models\Account::WALLET_ID; @endphp
       <div style="border:1px solid var(--line);border-inline-start:3px solid {{ $accent }};border-radius:10px;padding:11px 13px;background:{{ $isDefault ? 'var(--accent-soft)' : '#fff' }};box-shadow:var(--shadow-sm)">
         <div style="font-size:12px;color:var(--ink-2);margin-bottom:3px;font-weight:600">
-          {{ $w->account_name }}@if($isDefault) <span style="color:var(--brand)">★</span>@endif
+          {{ $w->name }}@if($isDefault) <span style="color:var(--brand)">★</span>@endif
         </div>
         <div style="font-weight:700;font-size:1.05rem;color:{{ (float)$w->balance >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
           {{ \App\Support\Money::format($w->balance) }} <small style="font-weight:400;color:var(--ink-3)">ج.م</small>
@@ -119,7 +119,7 @@
                   <div class="muted" style="font-size:12px;margin-top:2px">{{ $tx->type }}</div>
                 </td>
                 <td>
-                  <span style="font-size:12px;font-weight:600">{{ $tx->account?->account_name ?? 'المقاولات' }}</span>
+                  <span style="font-size:12px;font-weight:600">{{ $tx->account?->name ?? 'المقاولات' }}</span>
                 </td>
                 <td>
                   {{ $tx->party }}

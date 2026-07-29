@@ -8,64 +8,156 @@
 <style>
 /* تحسين شكل كروت الإحصائيات (Premium CSS) */
 .vstat {
-    transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    padding: 10px 14px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
     background-size: 200% auto;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+.vstat .val { font-size: 20px; margin-top: -4px; }
+.vstat .ic { width: 28px; height: 28px; }
+.vstat .ic svg { width: 16px; height: 16px; }
+.vstat .top { margin-bottom: 2px; }
+.vstat .note { font-size: 11px; margin-top: 0px; opacity: 0.9; }
+.vstat::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+    z-index: -1;
 }
 .vstat:hover {
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.25);
     background-position: right center;
+    border-color: rgba(255, 255, 255, 0.3);
 }
 .vstat .ic {
     background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    transition: transform 0.3s ease;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 .vstat:hover .ic {
-    transform: scale(1.1) rotate(5deg);
+    transform: scale(1.15) rotate(8deg);
+    background: rgba(255, 255, 255, 0.3);
 }
-.vstat-navy { background-image: linear-gradient(135deg, #1e293b 0%, #0f172a 51%, #1e293b 100%); }
-.vstat-blue { background-image: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 51%, #3b82f6 100%); }
-.vstat-teal { background-image: linear-gradient(135deg, #14b8a6 0%, #0f766e 51%, #14b8a6 100%); }
-.vstat-green{ background-image: linear-gradient(135deg, #10b981 0%, #047857 51%, #10b981 100%); }
-.vstat-red  { background-image: linear-gradient(135deg, #ef4444 0%, #b91c1c 51%, #ef4444 100%); }
-.vstat-amber{ background-image: linear-gradient(135deg, #f59e0b 0%, #b45309 51%, #f59e0b 100%); }
-.vstat-gold { background-image: linear-gradient(135deg, #d97706 0%, #92400e 51%, #d97706 100%); }
+.vstat .vstat-bg {
+    position: absolute;
+    left: -10px;
+    bottom: -15px;
+    width: 90px;
+    height: 90px;
+    color: rgba(255, 255, 255, 0.15);
+    z-index: 0;
+    transform: rotate(-15deg);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+.vstat:hover .vstat-bg {
+    transform: scale(1.2) rotate(5deg);
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.vstat-navy { background-image: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+.vstat-blue { background-image: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); }
+.vstat-teal { background-image: linear-gradient(135deg, #047857 0%, #10b981 100%); }
+.vstat-green{ background-image: linear-gradient(135deg, #4338ca 0%, #8b5cf6 100%); }
+.vstat-red  { background-image: linear-gradient(135deg, #be123c 0%, #f43f5e 100%); }
+.vstat-amber{ background-image: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); }
+.vstat-gold { background-image: linear-gradient(135deg, #334155 0%, #64748b 100%); }
+
+/* Account Cards */
+.acc-card {
+    background: linear-gradient(145deg, #ffffff, #f8fafc);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+    border-radius: 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    position: relative;
+    overflow: hidden;
+}
+.acc-card::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, rgba(59,130,246,0.05) 0%, rgba(255,255,255,0) 70%);
+    border-radius: 50%;
+    transform: translate(30%, -30%);
+    transition: transform 0.4s ease;
+}
+.acc-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    border-color: #cbd5e1;
+}
+.acc-card:hover::after {
+    transform: translate(20%, -20%) scale(1.5);
+}
+.acc-card .acc-bg {
+    position: absolute;
+    left: -15px;
+    bottom: -15px;
+    width: 110px;
+    height: 110px;
+    z-index: 1;
+    transform: rotate(-10deg);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+.acc-card:hover .acc-bg {
+    transform: scale(1.15) rotate(0deg);
+    filter: brightness(0.85); /* Make the color slightly darker/more visible on hover */
+}
 
 .filter-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #fff;
-    padding: 12px 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    padding: 16px 24px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px -2px rgba(0,0,0,0.04);
+    border: 1px solid rgba(226, 232, 240, 0.8);
 }
-.filter-bar h2 { margin: 0; font-size: 16px; font-weight: 700; color: #1e293b; }
-.filter-form { display: flex; gap: 10px; align-items: center; }
+.filter-bar h2 { margin: 0; font-size: 18px; font-weight: 700; color: #0f172a; letter-spacing: -0.02em; }
+.filter-form { display: flex; gap: 12px; align-items: center; }
 .filter-form input[type="month"] {
-    padding: 6px 12px;
-    border-radius: 8px;
+    padding: 8px 16px;
+    border-radius: 10px;
     border: 1px solid #cbd5e1;
     font-family: inherit;
+    font-weight: 500;
+    color: #334155;
     outline: none;
+    transition: all 0.2s;
+    background: #f8fafc;
 }
-.filter-form input[type="month"]:focus { border-color: #3b82f6; }
+.filter-form input[type="month"]:focus { 
+    border-color: #3b82f6; 
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    background: #ffffff;
+}
 
-/* دعم شبكة 4 أعمدة للكروت في الشاشات الكبيرة */
-.cols-4 { grid-template-columns: repeat(4, 1fr); }
-@media (max-width: 1400px) {
-    .cols-4 { grid-template-columns: repeat(2, 1fr); }
+/* دعم شبكة الكروت في الشاشات الكبيرة */
+.cols-top { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 20px; display: grid; }
+.cols-acc { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; display: grid; }
+
+.qlink:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+    border-color: #cbd5e1 !important;
 }
-@media (max-width: 768px) {
-    .cols-4 { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 480px) {
-    .cols-4 { grid-template-columns: 1fr; }
+.qlink:hover .ic {
+    transform: scale(1.1);
 }
 </style>
 
@@ -79,9 +171,9 @@
 </div>
 
 {{-- Summary stats row --}}
-<div class="grid cols-4" style="margin-bottom:20px">
+<div class="cols-top" style="margin-bottom:30px;">
 
-  {{-- رأس مال مشروع المقاولات — السيولة + كل المستحقات (مباشر وعبر تقسيط) − الديون --}}
+  {{-- 1. رأس مال المقاولات --}}
   <div class="vstat vstat-navy">
     <div class="top">
       <span class="label">رأس مال المقاولات</span>
@@ -90,15 +182,11 @@
       </span>
     </div>
     <div class="val tnum">{{ \App\Support\Money::format($netCapital) }} <small>ج.م</small></div>
-    <div class="cap-breakdown">
-      <div><span>صافي حركات المقاولات</span><b>{{ \App\Support\Money::format($constructionNetCash) }}</b></div>
-      <div><span>مستحق مباشر</span><b>{{ \App\Support\Money::format($directReceivables) }}</b></div>
-      <div><span>مستحق تقسيط</span><b>{{ \App\Support\Money::format($installmentReceivables) }}</b></div>
-      <div><span>ديون موردين −</span><b>{{ \App\Support\Money::format($supplierDebtsRemaining) }}</b></div>
-      <div style="grid-column: 1 / -1; border-top: 1px dashed rgba(255,255,255,0.15); margin-top: 2px; padding-top: 4px;"><span>مصنعيات فنيين −</span><b>{{ \App\Support\Money::format($unpaidLabor) }}</b></div>
-    </div>
+    <div class="note">(السيولة + المستحقات − الديون)</div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>
   </div>
 
+  {{-- 2. مشاريع الشهر / المشاريع الجارية --}}
   <div class="vstat vstat-blue">
       <div class="top">
         <span class="label">{{ $isFiltered ? 'مشاريع الشهر' : 'المشاريع الجارية' }}</span>
@@ -108,228 +196,191 @@
     </div>
     <div class="val">{{ $activeProjects->count() }}</div>
     <div class="note">{{ $activeProjects->pluck('name')->join(' · ') ?: 'لا توجد مشاريع جارية' }}</div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>
   </div>
 
-  <div class="vstat vstat-teal">
-      <div class="top">
-        <span class="label">المحصّل {{ $isFiltered ? 'بالشهر' : 'الإجمالي' }}</span>
-        <span class="ic">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>
-      </span>
-    </div>
-    <div class="val tnum">{{ \App\Support\Money::format($totalCollected) }} <small>ج.م</small></div>
-    <div class="note">من إجمالي {{ \App\Support\Money::format($totalContract) }} ج.م</div>
-  </div>
-
-
-
+  {{-- 3. أقساط المقاولات --}}
   <a class="vstat vstat-gold" href="{{ route('installments.index') }}">
     <div class="top">
-      <span class="label">مستحق منظومة الأقساط</span>
+      <span class="label">أقساط المقاولات</span>
       <span class="ic">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
       </span>
     </div>
     <div class="val tnum">{{ \App\Support\Money::format($installmentContractsDue) }} <small>ج.م</small></div>
     <div class="note">المتبقي من عقود تقسيط المقاولات</div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
+  </a>
+
+  {{-- 4. المستحقات لنا --}}
+  <a class="vstat vstat-teal" href="{{ route('receivables.index') }}">
+      <div class="top">
+        <span class="label">المستحقات لنا</span>
+        <span class="ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>
+      </span>
+    </div>
+    <div class="val tnum">{{ \App\Support\Money::format($directReceivables) }} <small>ج.م</small></div>
+    <div class="note">مستحقات مشاريع مباشرة</div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>
+  </a>
+
+  {{-- 5. الديون --}}
+  <a class="vstat vstat-red" href="{{ route('debts.index') }}">
+      <div class="top">
+        <span class="label">ديون الموردين</span>
+        <span class="ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg>
+      </span>
+    </div>
+    <div class="val tnum">{{ \App\Support\Money::format($supplierDebtsRemaining) }} <small>ج.م</small></div>
+    <div class="note">متبقي الديون المستحقة للموردين</div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg>
+  </a>
+
+  {{-- 6. مصنعيات الفنيين --}}
+  <a class="vstat vstat-amber" href="{{ route('labor.index') }}">
+      <div class="top">
+        <span class="label">مصنعيات الفنيين</span>
+        <span class="ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg>
+      </span>
+    </div>
+    <div class="val tnum">{{ \App\Support\Money::format($unpaidLabor) }} <small>ج.م</small></div>
+    <div class="note">مصنعيات فنيين متبقية (غير مسددة)</div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg>
+  </a>
+
+  {{-- 7. سيولة المقاولات --}}
+  <a class="vstat vstat-green" href="{{ route('wallet.index') }}">
+      <div class="top">
+        <span class="label">سيولة المقاولات</span>
+        <span class="ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>
+      </span>
+    </div>
+    <div class="val tnum">{{ \App\Support\Money::format($accountsBalance) }} <small>ج.م</small></div>
+    <div class="note">إجمالي السيولة في الخزائن والبنوك</div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>
   </a>
 
 </div>
 
-{{-- محتوى رئيسي (المشاريع الجارية) + عمود جانبي (روابط سريعة + آخر الحركات) --}}
-<div class="dash-layout">
+<div style="display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; margin-top: 40px;">
 
-  {{-- ═══ العمود الرئيسي ═══ --}}
-  <div>
-    @php
-      $dashTabs = [
-        'active' => ['title' => $isFiltered ? 'مشاريع الشهر' : 'المشاريع الجارية', 'items' => $activeProjects],
-        'done' => ['title' => 'المشاريع المكتملة', 'items' => $doneProjects],
-        'suspended' => ['title' => 'المشاريع المعلقة', 'items' => $suspendedProjects],
-        'canceled' => ['title' => 'المشاريع الملغية', 'items' => $canceledProjects],
-      ];
-    @endphp
+    {{-- Main Area: Accounts --}}
+    <div>
+        <h3 style="margin-top:0; margin-bottom:15px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>
+            السيولة النقدية والمحافظ البنكية
+        </h3>
 
-    <div class="tabs" style="margin-bottom:16px;">
-      @foreach($dashTabs as $k => $t)
-        <a class="tab {{ $loop->first ? 'active' : '' }}" onclick="showDashTab('{{ $k }}', this)" style="cursor:pointer;">
-          {{ $t['title'] }} <span class="cnt">{{ $t['items']->count() }}</span>
-        </a>
-      @endforeach
-    </div>
-
-    @foreach($dashTabs as $k => $t)
-      <div id="dash-tab-{{ $k }}" class="dash-tab-content" style="display: {{ $loop->first ? 'block' : 'none' }}">
-        @if($t['items']->count())
-          <div class="pcards">
-            @foreach($t['items'] as $p)
-              @php
-                $prog   = $p->progressPct();
-                $paid   = $p->cached_collected;
-                $actual = $p->cached_actual_total;
-                $gross  = $p->grossClientTotal();
-                $due    = max($actual - $paid, 0);
-                $activeBand = $p->bands->where('status', 'active')->first();
-                $paidWorkers = (float) $p->total_worker_paid;
-              @endphp
-              <a class="pcard {{ $p->status === 'done' ? 'is-done' : '' }}" href="{{ route('projects.show', $p) }}">
-                <div class="pc-band"></div>
-                <div class="pc-body">
-                  <div class="pc-head">
-                    <div>
-                      <div class="pc-name">{{ $p->name }}</div>
-                      <div class="pc-client">{{ $p->client->name }}</div>
-                    </div>
-                    @if($p->status === 'done')
-                      <span class="tag green"><span class="dot"></span>مكتمل ومسلّم</span>
-                    @elseif($p->status === 'suspended')
-                      <span class="tag amber"><span class="dot"></span>معلق</span>
-                    @elseif($p->status === 'canceled')
-                      <span class="tag red"><span class="dot"></span>ملغي</span>
-                    @elseif($activeBand)
-                      <span class="tag blue"><span class="dot"></span>{{ $activeBand->name }}</span>
-                    @endif
-                  </div>
-                  @if($p->address)
-                    <div class="pc-addr">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-pin"/></svg>
-                      {{ $p->address }}
-                    </div>
-                  @endif
-                  <div class="pc-prog">
-                    <span class="muted" style="font-size:11px">الإنجاز</span>
-                    <div class="bar-track"><div class="bar-fill" style="width:{{ $prog }}%"></div></div>
-                    <span class="pct">{{ $prog }}%</span>
-                  </div>
-                  @if($p->bands->count())
-                    <div class="pc-bands">
-                      @foreach($p->bands as $band)
-                        <span class="tag {{ $band->status === 'done' ? 'green' : ($band->status === 'active' ? 'blue' : 'gray') }} sm">
-                          @if($band->status === 'done') ✓ @endif{{ $band->name }}
-                        </span>
-                      @endforeach
-                    </div>
-                  @endif
-                  <div class="pc-fin">
-                    <div>
-                      <div class="l" style="display:flex;align-items:center;gap:4px">قيمة المشروع <small class="muted" style="font-size:9px" title="قبل الخصم">(إجمالي)</small></div>
-                      <div class="v">{{ \App\Support\Money::format($gross) }}</div>
-                    </div>
-                    <div>
-                      <div class="l">المدفوع</div>
-                      <div class="v" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }}</div>
-                    </div>
-                    <div>
-                      <div class="l">المتبقي</div>
-                      <div class="v" style="color:var(--warn)">{{ \App\Support\Money::format($due) }}</div>
-                    </div>
-                  </div>
-
-                </div>
-              </a>
-            @endforeach
-          </div>
-        @else
-          <div class="empty-state">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>
-            <h4>لا توجد {{ $t['title'] }}</h4>
-          </div>
-        @endif
-      </div>
-    @endforeach
-
-    <script>
-      function showDashTab(tabId, btn) {
-        document.querySelectorAll('.dash-tab-content').forEach(el => el.style.display = 'none');
-        document.getElementById('dash-tab-' + tabId).style.display = 'block';
-        
-        let parent = btn.closest('.tabs');
-        parent.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-      }
-    </script>
-  </div>
-
-  {{-- ═══ العمود الجانبي ═══ --}}
-  <div>
-
-    {{-- روابط سريعة --}}
-    <div class="card card-pad" style="margin-bottom:16px">
-      <div class="section-label" style="margin:0 0 14px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-send"/></svg>
-        روابط سريعة
-      </div>
-      <div class="qlinks">
-        <a class="qlink" href="{{ route('projects.create') }}">
-          <span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg></span>
-          <span class="lbl">مشروع جديد</span>
-        </a>
-        <a class="qlink" href="{{ route('materials.create') }}">
-          <span class="ic ic-teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg></span>
-          <span class="lbl">تسجيل خامة</span>
-        </a>
-        <a class="qlink" href="{{ route('receivables.index') }}">
-          <span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span>
-          <span class="lbl">تحصيل عميل</span>
-        </a>
-        <a class="qlink" href="{{ route('quotes.create') }}">
-          <span class="ic ic-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg></span>
-          <span class="lbl">عرض سعر جديد</span>
-        </a>
-        <a class="qlink" href="{{ route('installments.index') }}">
-          <span class="ic ic-gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span>
-          <span class="lbl">الأقساط</span>
-        </a>
-        @php $walletIsAdmin = auth()->user()->isAdmin(); @endphp
-        @if($walletIsAdmin)
-          <a class="qlink" href="{{ route('wallet.index') }}">
-            <span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg></span>
-            <span class="lbl">المحفظة</span>
-          </a>
-        @else
-          <a class="qlink" href="{{ route('transactions.index') }}">
-            <span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg></span>
-            <span class="lbl">سجل الحركات</span>
-          </a>
-        @endif
-      </div>
-    </div>
-
-    {{-- آخر الحركات --}}
-    <div class="card" style="overflow:hidden">
-      <div class="table-top">
-        <h4>آخر الحركات</h4>
-        <a href="{{ route('transactions.index') }}" class="btn ghost sm">عرض الكل</a>
-      </div>
-      @if($recentTransactions->count())
-        <div class="feed feed-compact">
-          @foreach($recentTransactions as $tx)
-            <div class="tx {{ $tx->direction }}">
-              <div class="tx-ic">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <use href="{{ $tx->direction === 'in' ? '#i-down' : '#i-chart' }}"/>
+        <div class="cols-acc">
+            @foreach($accounts as $acc)
+            <div class="acc-card" style="display:flex; flex-direction:column; justify-content:space-between; padding:24px;">
+                <svg class="acc-bg" style="color: {{ $acc->category === 'bank_wallet' ? 'rgba(59,130,246,0.18)' : ($acc->category === 'safe_cash' ? 'rgba(16,185,129,0.18)' : 'rgba(245,158,11,0.18)') }};" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <use href="{{ $acc->category === 'bank_wallet' ? '#i-building' : ($acc->category === 'safe_cash' ? '#i-wallet' : '#i-cash') }}"/>
                 </svg>
-              </div>
-              <div class="tx-main">
-                <div class="t">{{ $tx->party }}</div>
-                <div class="s">
-                  <span>{{ $tx->type }}</span>
-                  <span>{{ $tx->date->format('d/m/Y') }}</span>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; position:relative; z-index:2;">
+                    <div style="font-weight:700; font-size:17px; color:#0f172a; letter-spacing:-0.01em;">{{ $acc->name }}</div>
+                    @if($acc->category === 'bank_wallet')
+                        <span class="tag blue sm" style="margin:0; box-shadow: 0 2px 4px rgba(59,130,246,0.15)"><span class="dot"></span>بنكي</span>
+                    @elseif($acc->category === 'safe_cash')
+                        <span class="tag green sm" style="margin:0; box-shadow: 0 2px 4px rgba(16,185,129,0.15)"><span class="dot"></span>خزينة</span>
+                    @else
+                        <span class="tag gray sm" style="margin:0; box-shadow: 0 2px 4px rgba(100,116,139,0.15)"><span class="dot"></span>أخرى</span>
+                    @endif
                 </div>
-              </div>
-              <div class="tx-amt">{{ $tx->direction === 'in' ? '+' : '−' }}{{ \App\Support\Money::format($tx->amount) }}</div>
+                <div style="position:relative; z-index:2;">
+                    <div class="muted" style="font-size:12px; margin-bottom:6px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; color:#64748b;">الرصيد الحالي</div>
+                    <div style="font-size:28px; font-weight:800; color:#0f172a; display:flex; align-items:baseline; gap:4px; letter-spacing:-0.02em;">
+                        {{ \App\Support\Money::format($acc->balance) }} <span style="font-size:14px; font-weight:600; color:#94a3b8;">ج.م</span>
+                    </div>
+                </div>
+                
+                <div style="position:relative; z-index:2; margin-top:16px; border-top:1px solid rgba(0,0,0,0.05); padding-top:12px;">
+                    <a href="{{ route('accounts.statement', $acc->id) }}" class="btn ghost sm" style="width:100%; justify-content:center; color:#3b82f6;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="margin-inline-end:6px"><use href="#i-doc"/></svg>
+                        كشف حساب المحفظة
+                    </a>
+                </div>
             </div>
-          @endforeach
+            @endforeach
         </div>
-      @else
-        <div class="empty-state" style="padding:30px 20px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>
-          <h4 style="font-size:13.5px">لا توجد حركات بعد</h4>
-        </div>
-      @endif
     </div>
 
-  </div>
+    {{-- Sidebar: Quick Links & Recent Tx --}}
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+
+        {{-- روابط سريعة --}}
+        <div class="card card-pad" style="display: flex; flex-direction: column; padding: 24px;">
+          <div class="section-label" style="margin:0 0 16px; font-size: 15px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; color: #3b82f6;"><use href="#i-send"/></svg>
+            إجراءات سريعة
+          </div>
+          <div class="qlinks" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+            <a class="qlink" href="{{ route('projects.create') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
+              <span class="ic ic-blue" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg></span>
+              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 12px;">مشروع</span>
+            </a>
+            <a class="qlink" href="{{ route('materials.create') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
+              <span class="ic ic-teal" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg></span>
+              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 12px;">خامة</span>
+            </a>
+            <a class="qlink" href="{{ route('receivables.index') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
+              <span class="ic ic-green" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span>
+              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 12px;">تحصيل</span>
+            </a>
+            <a class="qlink" href="{{ route('quotes.create') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
+              <span class="ic ic-purple" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg></span>
+              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 12px;">عرض سعر</span>
+            </a>
+            <a class="qlink" href="{{ route('installments.index') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
+              <span class="ic ic-gold" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span>
+              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 12px;">أقساط</span>
+            </a>
+            <a class="qlink" href="{{ route('transactions.index') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
+              <span class="ic ic-amber" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg></span>
+              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 12px;">السجل</span>
+            </a>
+          </div>
+        </div>
+
+        {{-- آخر الحركات --}}
+        <div class="card" style="overflow:hidden; display: flex; flex-direction: column;">
+          <div class="table-top" style="padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.05);">
+            <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: #0f172a;">آخر الحركات المالية</h4>
+            <a href="{{ route('transactions.index') }}" class="btn ghost sm" style="font-size: 11px;">عرض الكل</a>
+          </div>
+          @if($recentTransactions->count())
+            <div class="feed feed-compact" style="flex: 1; overflow-y: auto;">
+              @foreach($recentTransactions as $tx)
+                <div class="tx {{ $tx->direction }}" style="padding: 12px 20px;">
+                  <div class="tx-ic">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <use href="{{ $tx->direction === 'in' ? '#i-down' : '#i-chart' }}"/>
+                    </svg>
+                  </div>
+                  <div class="tx-main">
+                    <div class="t" style="font-size: 13px;">{{ \Illuminate\Support\Str::limit($tx->party, 20) }}</div>
+                    <div class="s" style="font-size: 11px;">
+                      <span>{{ $tx->type }}</span>
+                      <span>{{ $tx->date->format('d/m') }}</span>
+                    </div>
+                  </div>
+                  <div class="tx-amt" style="font-weight: 700; font-size: 13px;">{{ $tx->direction === 'in' ? '+' : '−' }}{{ \App\Support\Money::format($tx->amount) }}</div>
+                </div>
+              @endforeach
+            </div>
+          @else
+            <div class="empty-state" style="padding:40px 20px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>
+              <h4 style="font-size:13px; margin-top: 10px;">لا توجد حركات بعد</h4>
+            </div>
+          @endif
+        </div>
+
+    </div>
 
 </div>
 

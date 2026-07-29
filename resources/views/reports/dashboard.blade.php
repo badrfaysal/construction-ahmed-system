@@ -11,6 +11,17 @@
   </button>
 </div>
 
+@push('styles')
+<style>
+.vstat { padding: 16px; min-height: 110px; }
+.vstat:hover .ic { transform: scale(1.15) rotate(8deg); background: rgba(255, 255, 255, 0.3); }
+.vstat .vstat-bg { position: absolute; left: -10px; bottom: -15px; width: 90px; height: 90px; color: rgba(255, 255, 255, 0.15); z-index: 0; transform: rotate(-15deg); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
+.vstat:hover .vstat-bg { transform: scale(1.2) rotate(5deg); color: rgba(255, 255, 255, 0.25); }
+.vstat .val { font-size: 1.5rem; }
+.vstat .note { font-size: 0.75rem; }
+</style>
+@endpush
+
 {{-- Filters --}}
 <form method="GET" class="filter-bar no-print">
   <div class="f-field">
@@ -51,55 +62,80 @@
 </form>
 
 {{-- Summary KPIs --}}
-<div class="grid cols-4" style="margin-bottom:20px">
-  <div class="card stat">
-    <div class="top"><span class="label">إجمالي الربح</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg></span></div>
-    <div class="val tnum" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalProfit) }} <small>ج.م</small></div>
-    <div class="note" style="margin-top: 8px; font-size: 11.5px; border-top: 1px solid var(--border); padding-top: 8px;">
+<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;margin-bottom:20px">
+  
+  <div class="vstat {{ $totalProfit >= 0 ? 'vstat-green' : 'vstat-red' }}">
+    <div class="top">
+      <span class="label">إجمالي الربح</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg></span>
+    </div>
+    <div class="val tnum">{{ \App\Support\Money::format($totalProfit) }} <small>ج.م</small></div>
+    <div class="note" style="margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px;">
       <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
-        <span style="color:#3b82f6">ربح تجاري:</span> 
-        <strong style="color:{{ $totalTradeProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalTradeProfit) }}</strong>
+        <span>ربح تجاري:</span> 
+        <strong>{{ \App\Support\Money::format($totalTradeProfit) }}</strong>
       </div>
       <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
-        <span style="color:#ec4899">نسبة إشراف:</span> 
-        <strong style="color:{{ $totalPercentageProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalPercentageProfit) }}</strong>
+        <span>نسبة إشراف:</span> 
+        <strong>{{ \App\Support\Money::format($totalPercentageProfit) }}</strong>
       </div>
       <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
-        <span style="color:#10b981">أرباح تقسيط:</span> 
-        <strong style="color:{{ $totalInstallmentProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($totalInstallmentProfit) }}</strong>
+        <span>أرباح تقسيط:</span> 
+        <strong>{{ \App\Support\Money::format($totalInstallmentProfit) }}</strong>
       </div>
       @if($totalDiscounts > 0)
-      <div style="display:flex; justify-content:space-between; margin-bottom: 2px; padding-top: 4px; margin-top: 4px; border-top: 1px dashed var(--border);">
-        <span style="color:var(--amber)">خصومات للعملاء (تُطرح):</span> 
-        <strong style="color:var(--neg)">-{{ \App\Support\Money::format($totalDiscounts) }}</strong>
+      <div style="display:flex; justify-content:space-between; margin-bottom: 2px; padding-top: 4px; margin-top: 4px; border-top: 1px dashed rgba(255,255,255,0.2);">
+        <span>خصومات (تُطرح):</span> 
+        <strong>-{{ \App\Support\Money::format($totalDiscounts) }}</strong>
       </div>
       @endif
       @if(isset($totalMarketerCommissions) && $totalMarketerCommissions > 0)
       <div style="display:flex; justify-content:space-between;">
-        <span style="color:#8b5cf6">عمولات مسوقين (تُطرح):</span> 
-        <strong style="color:var(--neg)">-{{ \App\Support\Money::format($totalMarketerCommissions) }}</strong>
+        <span>عمولات مسوقين:</span> 
+        <strong>-{{ \App\Support\Money::format($totalMarketerCommissions) }}</strong>
       </div>
       @endif
     </div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trending-up"/></svg>
   </div>
-  <div class="card stat">
-    <div class="top"><span class="label">إجمالي المصروف</span><span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></span></div>
+
+  <div class="vstat vstat-red">
+    <div class="top">
+      <span class="label">إجمالي المصروف</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></span>
+    </div>
     <div class="val tnum">{{ \App\Support\Money::format($totalSpent) }} <small>ج.م</small></div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg>
   </div>
-  <div class="card stat">
-    <div class="top"><span class="label">إجمالي المحصّل</span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span></div>
+
+  <div class="vstat vstat-blue">
+    <div class="top">
+      <span class="label">إجمالي المحصّل</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span>
+    </div>
     <div class="val tnum">{{ \App\Support\Money::format($totalCollected) }} <small>ج.م</small></div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>
   </div>
-  <div class="card stat">
-    <div class="top"><span class="label">الخصومات الممنوحة</span><span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-percent"/></svg></span></div>
-    <div class="val tnum" style="color:var(--amber)">{{ \App\Support\Money::format($totalDiscounts) }} <small>ج.م</small></div>
+
+  <div class="vstat vstat-amber">
+    <div class="top">
+      <span class="label">الخصومات الممنوحة</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-percent"/></svg></span>
+    </div>
+    <div class="val tnum">{{ \App\Support\Money::format($totalDiscounts) }} <small>ج.م</small></div>
     @if($topDiscountProject)
-      <div class="note">أعلى خصم: <a href="{{ route('projects.show', $topDiscountProject->id) }}">{{ $topDiscountProject->name }}</a> ({{ \App\Support\Money::format($topDiscountProject->totalDiscount()) }})</div>
+      <div class="note" style="color:rgba(255,255,255,0.8)">أعلى خصم: <a href="{{ route('projects.show', $topDiscountProject->id) }}" style="color:#fff;text-decoration:underline">{{ $topDiscountProject->name }}</a> ({{ \App\Support\Money::format($topDiscountProject->totalDiscount()) }})</div>
     @endif
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-percent"/></svg>
   </div>
-  <div class="card stat">
-    <div class="top"><span class="label">إجمالي عمولات المسوقين</span><span class="ic" style="color:#8b5cf6;background:#f3e8ff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg></span></div>
-    <div class="val tnum" style="color:#8b5cf6">{{ \App\Support\Money::format($totalMarketerCommissions ?? 0) }} <small>ج.م</small></div>
+
+  <div class="vstat vstat-teal">
+    <div class="top">
+      <span class="label">إجمالي عمولات المسوقين</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg></span>
+    </div>
+    <div class="val tnum">{{ \App\Support\Money::format($totalMarketerCommissions ?? 0) }} <small>ج.م</small></div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg>
   </div>
 </div>
 

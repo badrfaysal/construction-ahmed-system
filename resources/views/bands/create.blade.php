@@ -24,7 +24,7 @@
         المصنعية <span class="cnt" id="bt-workers-cnt">0</span>
       </button>
       <button type="button" class="tab" data-tab="materials" onclick="switchBandTab('materials')">
-        الخامات والنثريات <span class="cnt" id="bt-items-cnt">0</span>
+        الخامات والبنود الفرعية <span class="cnt" id="bt-items-cnt">0</span>
       </button>
     </div>
 
@@ -64,18 +64,18 @@
         إضافة خامة
       </button>
 
-      <div class="section-label" style="margin-top:10px">نثريات ومصروفات — اختياري (إكرامية / نقل / إفطار...)</div>
+      <div class="section-label" style="margin-top:10px">مصروفات وبنود فرعية — اختياري (مقاولة باطن / نقل / أعمال إضافية...)</div>
       <div id="band-misc-list"></div>
       <button type="button" class="btn ghost sm" style="margin:6px 0 18px" onclick="addBandMisc()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
         إضافة نثرية
       </button>
 
-      {{-- طريقة الدفع — بتظهر بس لو فيه خامات أو نثريات مُضافة --}}
+      {{-- طريقة الدفع — بتظهر بس لو فيه خامات أو بنود فرعية مُضافة --}}
       <div class="pay-section-box" id="band-pay-section" style="display:none">
         <div class="pay-section-title">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-wallet"/></svg>
-          طريقة دفع الخامات والنثريات
+          طريقة دفع الخامات والبنود الفرعية
         </div>
         <p class="muted" style="margin:0 0 10px;font-size:12px">حدد هنا تفاصيل الدفع لتسجيل الحركات المالية الصحيحة.</p>
         <div class="field" style="max-width:260px;margin-bottom:12px">
@@ -128,7 +128,7 @@
       </div>
       <input type="number" id="client-price-field" name="client_price" value="{{ old('client_price', 0) }}"
              min="0" step="0.01" oninput="this.dataset.touched='1'" required class="band-total-inp">
-      <div class="band-total-hint">مصنعية + خامات + نثريات — يتملى تلقائيًا، يمكن تعديله يدويًا</div>
+      <div class="band-total-hint">مصنعية + خامات + مصروفات — يتملى تلقائيًا، يمكن تعديله يدويًا</div>
     </div>
 
     <div class="btn-row" style="margin-top:16px">
@@ -148,8 +148,13 @@
     <option value="{{ $unit }}">
   @endforeach
 </datalist>
+<datalist id="suppliers-list">
+  @foreach($supplierNames as $sup)
+    <option value="{{ $sup }}">
+  @endforeach
+</datalist>
 <datalist id="misc-list">
-  <option value="نقل"><option value="إكرامية"><option value="إفطار العمال"><option value="مواصلات"><option value="نثريات">
+  <option value="نقل"><option value="إكرامية"><option value="مقاولة باطن"><option value="أعمال إضافية"><option value="نثريات">
 </datalist>
 <datalist id="band-names-list">
   @foreach($bandNames as $name)
@@ -237,29 +242,69 @@ function addBandMaterial(prefill = null) {
 let bmiscIdx = 0;
 function bandMiscRowHtml(i) {
   return `
-    <div class="item-row">
-      <div class="item-row-grid">
-        <div class="irf">
-          <label>البيان *</label>
-          <input type="text" name="misc[${i}][item]" placeholder="نقل / إكرامية / إفطار العمال" required list="misc-list" oninput="recalcBandItemsVisibility()">
+    <div class="item-row" style="border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px">
+      <div class="row2">
+        <div class="field" style="margin:0">
+          <label style="margin-bottom:4px">البيان (نوع المصروف) *</label>
+          <input type="text" name="misc[${i}][item]" placeholder="نقل / مصنعية باطن / إكرامية" required list="misc-list" oninput="recalcBandItemsVisibility()">
         </div>
-        <div class="irf">
-          <label>المبلغ</label>
+        <div class="field" style="margin:0">
+          <label style="margin-bottom:4px">المورد / الجهة *</label>
+          <input type="text" name="misc[${i}][supplier_name]" class="misc-supplier" placeholder="اسم مورد أو فني أو جهة" required list="suppliers-list">
+        </div>
+      </div>
+      <div class="row2" style="margin-top:10px">
+        <div class="field" style="margin:0">
+          <label style="margin-bottom:4px">طريقة المحاسبة</label>
+          <select name="misc[${i}][contract_type]" class="misc-contract-select" onchange="updateMiscUI(this.closest('.item-row')); updateClientPrice()">
+            <option value="lump_sum" selected>مبلغ مقطوع</option>
+            <option value="per_meter">بالمتر</option>
+            <option value="per_piece">بالقطعة</option>
+          </select>
+        </div>
+        <div class="field misc-qty-wrap" style="display:none;margin:0">
+          <label style="margin-bottom:4px">الكمية</label>
+          <input type="number" name="misc[${i}][contract_qty]" class="misc-qty" min="0" step="0.01" oninput="updateClientPrice()">
+        </div>
+      </div>
+      <div class="row3" style="margin-top:10px">
+        <div class="field" style="margin:0">
+          <label class="misc-cost-label" style="margin-bottom:4px">التكلفة</label>
           <input type="number" name="misc[${i}][amount]" class="bmisc-cost" placeholder="0.00" min="0" step="0.01" required oninput="updateClientPrice()">
         </div>
-        <div class="irf">
-          <label>سعر البيع للعميل</label>
+        <div class="field" style="margin:0">
+          <label class="misc-sell-label" style="margin-bottom:4px">سعر البيع للعميل</label>
           <input type="number" name="misc[${i}][sell_price]" class="bmisc-sell" placeholder="0.00" min="0" step="0.01" required oninput="updateClientPrice()">
         </div>
-        <div class="irf">
-          <label>إشراف %</label>
+        <div class="field" style="margin:0">
+          <label style="margin-bottom:4px">إشراف %</label>
           <input type="number" name="misc[${i}][supervision_pct]" class="bmisc-sup" placeholder="0" min="0" max="100" step="0.1" value="{{ $project->defaultSupervisionPct() }}" oninput="updateClientPrice()">
         </div>
-        <button type="button" class="btn ghost sm ir-del" onclick="this.closest('.item-row').remove(); recalcBandItemsVisibility(); updateClientPrice()" title="حذف">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-x"/></svg>
-        </button>
+      </div>
+      <div class="btn-row" style="margin-top:8px">
+        <button type="button" class="btn ghost sm danger" onclick="this.closest('.item-row').remove(); recalcBandItemsVisibility(); updateClientPrice()" title="حذف">حذف المصروف / البند</button>
       </div>
     </div>`;
+}
+function updateMiscUI(row) {
+  const ctype = row.querySelector('.misc-contract-select').value;
+  const qtyWrap = row.querySelector('.misc-qty-wrap');
+  const qtyInput = row.querySelector('.misc-qty');
+  const costLabel = row.querySelector('.misc-cost-label');
+  const sellLabel = row.querySelector('.misc-sell-label');
+
+  if (ctype === 'lump_sum') {
+    qtyWrap.style.display = 'none';
+    qtyInput.value = '';
+    costLabel.textContent = 'إجمالي التكلفة';
+    sellLabel.textContent = 'إجمالي السعر للعميل';
+  } else {
+    qtyWrap.style.display = 'block';
+    const unit = ctype === 'per_meter' ? 'متر' : 'قطعة';
+    row.querySelector('.misc-qty-wrap label').textContent = 'الكمية (' + unit + ')';
+    costLabel.textContent = 'سعر ال' + unit + ' (تكلفة)';
+    sellLabel.textContent = 'سعر ال' + unit + ' للعميل';
+  }
 }
 function addBandMisc(prefill = null) {
   const i = bmiscIdx++;
@@ -267,9 +312,13 @@ function addBandMisc(prefill = null) {
   if (prefill) {
     const row = document.getElementById('band-misc-list').lastElementChild;
     row.querySelector(`[name="misc[${i}][item]"]`).value = prefill.item || '';
-    row.querySelector('.bmisc-cost').value = prefill.amount || '';
+    row.querySelector('.misc-supplier').value = prefill.supplier_name || '';
+    if (prefill.contract_type) row.querySelector('.misc-contract-select').value = prefill.contract_type;
+    row.querySelector('.misc-qty').value = prefill.contract_qty || prefill.qty || '';
+    row.querySelector('.bmisc-cost').value = prefill.amount || prefill.unit_price || '';
     row.querySelector('.bmisc-sell').value = prefill.sell_price || '';
     row.querySelector('.bmisc-sup').value = prefill.supervision_pct ?? {{ $project->defaultSupervisionPct() }};
+    updateMiscUI(row);
   }
   recalcBandItemsVisibility();
 }
@@ -347,9 +396,14 @@ function updateClientPrice() {
 
   let miscTotal = 0;
   document.querySelectorAll('#band-misc-list .item-row').forEach(row => {
+    const ctype = row.querySelector('.misc-contract-select')?.value || 'lump_sum';
+    let qty = 1;
+    if (ctype !== 'lump_sum') {
+      qty = parseFloat(row.querySelector('.misc-qty')?.value) || 0;
+    }
     const sell = parseFloat(row.querySelector('.bmisc-sell')?.value) || 0;
     const pct  = parseFloat(row.querySelector('.bmisc-sup')?.value)  || 0;
-    miscTotal += sell * (1 + pct / 100);
+    miscTotal += (qty * sell) * (1 + pct / 100);
   });
 
   clientField.value = (laborTotal + materialsTotal + miscTotal).toFixed(2);

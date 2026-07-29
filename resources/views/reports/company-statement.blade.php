@@ -69,12 +69,15 @@
               <td>{{ $m->date->format('Y-m-d') }}</td>
               <td>
                 {{ $m->item }}
-                @if($m->isMisc())<span class="muted" style="font-size:10.5px">(نثريات ومصروفات)</span>@endif
+                @if($m->isMisc())
+                  <span class="muted" style="font-size:10.5px">(مصروفات وبنود فرعية)</span>
+                  @if($m->contract_type && $m->contract_type !== 'lump_sum') <br><small class="muted" style="font-size:11px">({{ $m->contractTypeAr() }})</small> @endif
+                @endif
                 @if($m->returnedQty() > 0)<span style="color:var(--neg);font-size:10.5px">(مرتجع {{ \App\Support\Money::format($m->returnedQty(), 1) }})</span>@endif
               </td>
-              <td class="muted">{{ $m->supplier?->name ?? '—' }}</td>
-              <td class="num">{{ \App\Support\Money::format($m->netQty(), 1) }} {{ $m->unit }}</td>
-              <td class="num">{{ \App\Support\Money::format($m->unit_price) }}</td>
+              <td class="muted">{{ $m->supplier?->name ?? $m->supplier_name ?? '—' }}</td>
+              <td class="num">{{ ($m->category === 'misc' && $m->contract_type === 'lump_sum') ? '—' : \App\Support\Money::format($m->netQty(), 1) . ' ' . $m->unit }}</td>
+              <td class="num">{{ ($m->category === 'misc' && $m->contract_type === 'lump_sum') ? '—' : \App\Support\Money::format($m->unit_price) }}</td>
               <td class="num"><b>{{ \App\Support\Money::format($m->netCost()) }}</b></td>
               <td class="num">{{ \App\Support\Money::format($m->netQty() * (float)($m->sell_price ?? $m->unit_price)) }}</td>
               <td class="num">{{ (float) $m->supervision_pct }}%</td>
@@ -99,7 +102,11 @@
             <tr>
               <td>{{ $w->name }}</td>
               <td class="muted">{{ $w->specialty ?: '—' }}</td>
-              <td class="muted">{{ $w->contractTypeAr() }}</td>
+              <td class="muted">{{ $w->contractTypeAr() }}
+                @if(in_array($w->contract_type, ['per_meter', 'per_piece']) && $w->contract_qty > 0)
+                  <br><small style="opacity:0.85">الكمية: {{ (float)$w->contract_qty }} {{ $w->contract_type === 'per_meter' ? 'متر' : 'قطعة' }}</small>
+                @endif
+              </td>
               <td class="muted">{{ $w->start_date?->format('Y-m-d') ?? '—' }}</td>
               <td class="num"><b>{{ \App\Support\Money::format($w->amount) }}</b></td>
               <td class="num">{{ \App\Support\Money::format((float) ($w->sell_amount ?: $w->amount)) }}</td>

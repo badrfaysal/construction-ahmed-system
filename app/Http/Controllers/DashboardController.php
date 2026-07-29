@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
-use App\Models\FinancialTransaction;
 use App\Models\InstallmentContract;
 use App\Models\Project;
 use App\Models\SupplierDebt;
@@ -33,10 +32,7 @@ class DashboardController extends Controller
             : $allProjects;
 
         $activeProjects    = $projects->where('status', 'active');
-        $doneProjects      = $projects->where('status', 'done');
-        $suspendedProjects = $projects->where('status', 'suspended');
-        $canceledProjects  = $projects->where('status', 'canceled');
-
+        
         // Total collected from clients = down payments + all installment payments
         if ($isFiltered) {
             $totalCollected = (float) InstallmentContract::whereBetween('start_date', [$startDate, $endDate])->sum('down_payment')
@@ -49,63 +45,48 @@ class DashboardController extends Controller
         // Total contract value = sum of each project's locked-in initial value
         $totalContract = $projects->sum(fn ($p) => $p->initialContractValue());
 
-        // Overdue contracts
-        $overdueCount = InstallmentContract::with('payments')
-            ->where('remaining_balance', '>', 0)
-            ->where('due_day', '<', (int) date('d'))
-            ->get()
-            ->filter(fn ($c) => ! $c->isPaidThisMonth())
-            ->count();
-
         // Total due from installment contracts
         $installmentContractsDue = (float) InstallmentContract::sum('remaining_balance');
 
-        // Treasury balance: collected - spent (materials + labor)
-        $totalSpentLabor = \DB::table('sy2_project_bands')->sum('labor_amount');
-        $totalSpentAll   = $projects->sum('cached_spent');
-        // Total spent on marketers
-        $totalSpentMarketers = \DB::table('sy2_transactions')->where('ref_type', 'marketer_commission')->sum('amount');
-        // Derive materials
-        $totalSpentMaterials = max(0, $totalSpentAll - $totalSpentLabor - $totalSpentMarketers);
-        
-        $treasuryBalance = $totalCollected - $totalSpentMaterials - $totalSpentLabor;
+        $accountsBalance = (float) Account::where('status', 'active')->sum('balance');
 
-        // Capital metrics based on active projects only (as requested by user)
-        $activeOnlyProjects = $allProjects->whereNotIn('status', ['done', 'canceled']);
+        $directReceivables = (float) $allProjects->sum(function ($p) {
+            if ($p->hasInstallmentContract()) {
+                return $p->receivableExcess();
+            }
+            return max(0, $p->cached_actual_total - $p->cached_collected - $p->cached_discount);
+        });
 
-        $constructionNetCash = FinancialTransaction::constructionNetCash(activeOnly: true);
+        $installmentReceivables = $installmentContractsDue;
 
-        // رصيد المحفظة الافتراضية (للعرض فقط في الكارت المنفصل)
-        $walletBalance = Account::walletBalance();
-
-        $directReceivables = (float) $activeOnlyProjects
-            ->reject(fn ($p) => $p->hasInstallmentContract())
-            ->sum(fn ($p) => max(0, $p->cached_actual_total - $p->cached_collected));
-
-        $installmentReceivables = (float) $activeOnlyProjects
-            ->filter(fn ($p) => $p->hasInstallmentContract())
-            ->sum(fn ($p) => max(0, $p->cached_actual_total - $p->cached_collected));
+        $clientOverpayments = (float) $allProjects->sum(function ($p) {
+            // Amount the client overpaid (collected + discount > billed)
+            if ($p->hasInstallmentContract()) {
+                return 0; // Overpayments on installments are handled differently or usually 0
+            }
+            return max(0, $p->cached_collected + $p->cached_discount - $p->cached_actual_total);
+        });
 
         $supplierDebtsRemaining = (float) (SupplierDebt::where('sy2_supplier_debts.status', '!=', 'paid')
             ->join('sy2_projects', 'sy2_supplier_debts.project_id', '=', 'sy2_projects.id')
-            ->whereNotIn('sy2_projects.status', ['done', 'canceled'])
             ->selectRaw('SUM(sy2_supplier_debts.total_amount - sy2_supplier_debts.paid_amount) as r')
             ->value('r') ?? 0);
 
         $totalWorkerContracted = (float) \DB::table('sy2_band_workers')
             ->join('sy2_project_bands', 'sy2_band_workers.project_band_id', '=', 'sy2_project_bands.id')
             ->join('sy2_projects', 'sy2_project_bands.project_id', '=', 'sy2_projects.id')
-            ->whereNotIn('sy2_projects.status', ['done', 'canceled'])
             ->sum('sy2_band_workers.amount');
 
         $totalWorkerPaidAndDiscount = (float) \DB::table('sy2_worker_payments')
             ->join('sy2_projects', 'sy2_worker_payments.project_id', '=', 'sy2_projects.id')
-            ->whereNotIn('sy2_projects.status', ['done', 'canceled'])
             ->sum(\DB::raw('sy2_worker_payments.amount + sy2_worker_payments.discount'));
 
         $unpaidLabor = max($totalWorkerContracted - $totalWorkerPaidAndDiscount, 0);
 
-        $netCapital = $constructionNetCash + $directReceivables + $installmentReceivables - $supplierDebtsRemaining - $unpaidLabor;
+        $netCapital = $accountsBalance + $directReceivables + $installmentReceivables - $supplierDebtsRemaining - $unpaidLabor - $clientOverpayments;
+
+        // Fetch all accounts
+        $accounts = Account::where('status', 'active')->orderBy('id')->get();
 
         // Last 5 transactions for the quick feed on dashboard
         $recentTransactionsQuery = Transaction::with('project')->orderByDesc('date')->orderByDesc('id');
@@ -115,12 +96,9 @@ class DashboardController extends Controller
         $recentTransactions = $recentTransactionsQuery->limit(5)->get();
 
         return view('dashboard.index', compact(
-            'projects', 'activeProjects', 'doneProjects', 'suspendedProjects', 'canceledProjects',
-            'totalCollected', 'totalContract', 'overdueCount', 'installmentContractsDue',
-            'treasuryBalance', 'totalSpentMaterials', 'totalSpentLabor',
-            'walletBalance', 'constructionNetCash', 'recentTransactions',
-            'directReceivables', 'installmentReceivables', 'supplierDebtsRemaining', 'unpaidLabor', 'netCapital',
-            'monthFilter', 'isFiltered'
+            'activeProjects', 'installmentContractsDue',
+            'accountsBalance', 'directReceivables', 'installmentReceivables', 'supplierDebtsRemaining', 'unpaidLabor', 'clientOverpayments', 'netCapital',
+            'monthFilter', 'isFiltered', 'accounts', 'recentTransactions'
         ));
     }
 }

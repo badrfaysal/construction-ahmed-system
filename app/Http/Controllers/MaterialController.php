@@ -29,20 +29,31 @@ class MaterialController extends Controller
         if ($pid) {
             $query->where('project_id', $pid);
         }
+        
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+        if ($dateFrom) {
+            $query->whereDate('date', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $query->whereDate('date', '<=', $dateTo);
+        }
 
-        $materials = $query->paginate(15);
+        $materials = $query->paginate(15)->withQueryString();
         $projects  = Project::orderBy('name')->get(['id', 'name']);
-        $insights  = $this->buildInsights($pid ? (int) $pid : null);
+        $insights  = $this->buildInsights($pid ? (int) $pid : null, $dateFrom, $dateTo);
 
         return view('materials.index', compact('materials', 'projects', 'insights'));
     }
 
     // أكتر خامة اشتريتها (بالتكلفة)، أكتر خامة عملت لها مرتجع (بالقيمة)، وأكتر
-    // بند اشتريت له خامات — بتحترم فلتر المشروع الحالي لو موجود
-    private function buildInsights(?int $projectId): array
+    // بند اشتريت له خامات — بتحترم فلتر المشروع والتاريخ الحالي لو موجود
+    private function buildInsights(?int $projectId, ?string $dateFrom = null, ?string $dateTo = null): array
     {
         $topMaterial = Material::query()
             ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
+            ->when($dateFrom, fn ($q) => $q->whereDate('date', '>=', $dateFrom))
+            ->when($dateTo, fn ($q) => $q->whereDate('date', '<=', $dateTo))
             ->selectRaw('item, unit, SUM(qty) as total_qty, SUM(qty * unit_price) as total_cost, COUNT(*) as purchase_count')
             ->groupBy('item', 'unit')
             ->orderByDesc('total_cost')
@@ -51,6 +62,8 @@ class MaterialController extends Controller
         $topReturned = DB::table('sy2_material_returns as r')
             ->join('sy2_materials as m', 'm.id', '=', 'r.material_id')
             ->when($projectId, fn ($q) => $q->where('m.project_id', $projectId))
+            ->when($dateFrom, fn ($q) => $q->whereDate('r.date', '>=', $dateFrom))
+            ->when($dateTo, fn ($q) => $q->whereDate('r.date', '<=', $dateTo))
             ->selectRaw('m.item, m.unit, SUM(r.qty) as total_qty, SUM(r.qty * m.unit_price) as total_value, COUNT(*) as return_count')
             ->groupBy('m.item', 'm.unit')
             ->orderByDesc('total_value')
@@ -58,6 +71,8 @@ class MaterialController extends Controller
 
         $topBandRow = Material::query()
             ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
+            ->when($dateFrom, fn ($q) => $q->whereDate('date', '>=', $dateFrom))
+            ->when($dateTo, fn ($q) => $q->whereDate('date', '<=', $dateTo))
             ->whereNotNull('band_id')
             ->selectRaw('band_id, SUM(qty * unit_price) as total_cost')
             ->groupBy('band_id')
@@ -123,7 +138,7 @@ class MaterialController extends Controller
             'date'                          => ['required', 'date'],
             'supplier_id'                   => ['required', 'exists:sy2_suppliers,id'],
             'payment_status'                => ['nullable', 'in:paid,partial,deferred'],
-            'account_id'                    => ['required_unless:payment_status,deferred', 'nullable', 'integer', 'exists:accounts,id'],
+            'account_id'                    => ['required_unless:payment_status,deferred', 'nullable', 'integer', 'exists:sy2_accounts,id'],
             'paid_amount'                   => ['nullable', 'numeric', 'min:0'],
             'groups'                        => ['required', 'array', 'min:1'],
             'groups.*.band_id'              => ['nullable', 'exists:sy2_project_bands,id'],
@@ -234,7 +249,6 @@ class MaterialController extends Controller
             ->with('success', "تم تسجيل {$count} صنف بنجاح.");
     }
 
-
     // Show form to add a miscellaneous expense (نثري) to a project — tips,
     // transport, meals, etc. Defaults the band to the one currently in progress.
     public function createExpense(Project $project)
@@ -243,8 +257,14 @@ class MaterialController extends Controller
         $activeBand  = $bands->firstWhere('status', 'active');
         $defaultSup  = $project->defaultSupervisionPct();
         $wallets     = Account::selectable();
+        
+        $supplierNames = \App\Models\Supplier::select('name')->distinct()->pluck('name')
+            ->merge(\App\Models\Material::whereNotNull('supplier_name')->where('supplier_name', '!=', '')->distinct()->pluck('supplier_name'))
+            ->unique()->sort()->values();
 
-        return view('materials.expense', compact('project', 'bands', 'activeBand', 'defaultSup', 'wallets'));
+        $craftsmenNames = \App\Models\BandWorker::select('name')->whereNotNull('name')->where('name', '!=', '')->distinct()->pluck('name')->sort()->values();
+
+        return view('materials.expense', compact('project', 'bands', 'activeBand', 'defaultSup', 'wallets', 'supplierNames', 'craftsmenNames'));
     }
 
     // Save a misc expense as a Material row (category=misc) so it flows through
@@ -254,8 +274,11 @@ class MaterialController extends Controller
         $isDeferred = $request->input('payment_type') === 'deferred';
         $data = $request->validate([
             'band_id'         => ['nullable', 'exists:sy2_project_bands,id'],
-            'account_id'      => [$isDeferred ? 'nullable' : 'required', 'nullable', 'integer', 'exists:accounts,id'],
+            'account_id'      => [$isDeferred ? 'nullable' : 'required', 'nullable', 'integer', 'exists:sy2_accounts,id'],
             'item'            => ['required', 'string', 'max:255'],
+            'supplier_name'   => ['required', 'string', 'max:255'],
+            'contract_type'   => ['nullable', 'string', 'in:lump_sum,per_meter,per_piece'],
+            'qty'             => ['nullable', 'numeric', 'min:0'],
             'amount'          => ['required', 'numeric', 'min:0'],
             'sell_price'      => ['required', 'numeric', 'min:0'],
             'supervision_pct' => ['nullable', 'numeric', 'min:0', 'max:100'],
@@ -277,19 +300,26 @@ class MaterialController extends Controller
             }
         }
 
+        $ctype = $data['contract_type'] ?? null;
+        $unit = $ctype === 'per_meter' ? 'متر' : ($ctype === 'per_piece' ? 'قطعة' : 'مبلغ');
+        $qty = ($ctype && $ctype !== 'lump_sum' && !empty($data['qty']) && $data['qty'] > 0) ? (float) $data['qty'] : 1;
+
         DB::transaction(fn () => Material::create([
             'project_id'      => $project->id,
             'band_id'         => $data['band_id'] ?? null,
             'account_id'      => $isDeferred ? null : ($data['account_id'] ?? null),
+            'supplier_name'   => $data['supplier_name'] ?? null,
+            'contract_type'   => $ctype,
             'category'        => 'misc',
             'item'            => $data['item'],
-            'unit'            => 'مبلغ',
-            'qty'             => 1,
+            'unit'            => $unit,
+            'qty'             => $qty,
             'unit_price'      => $data['amount'],
             'sell_price'      => $data['sell_price'],
             'supervision_pct' => $data['supervision_pct'] ?? 0,
             'date'            => $data['date'],
             'payment_status'  => $isDeferred ? 'deferred' : 'paid',
+            'paid_amount'     => $isDeferred ? 0 : ($qty * (float)$data['amount']),
         ]));
 
         return redirect()->route('projects.show', $project)

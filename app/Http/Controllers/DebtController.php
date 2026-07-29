@@ -40,6 +40,13 @@ class DebtController extends Controller
             $query->where('status', '!=', 'paid');
         }
 
+        if ($dateFrom = $request->get('date_from')) {
+            $query->whereDate('created_at', '>=', $dateFrom);
+        }
+        if ($dateTo = $request->get('date_to')) {
+            $query->whereDate('created_at', '<=', $dateTo);
+        }
+
         $debts     = $query->get();
         $projects  = Project::orderBy('name')->get(['id', 'name']);
         $suppliers = Supplier::orderBy('name')->get(['id', 'name']);
@@ -65,7 +72,7 @@ class DebtController extends Controller
     {
         $data = $request->validate([
             'amount'     => ['required', 'numeric', 'min:0.01', 'max:' . $debt->remaining()],
-            'account_id' => ['required', 'integer', 'exists:accounts,id'],
+            'account_id' => ['required', 'integer', 'exists:sy2_accounts,id'],
             'pay_date'   => ['required', 'date'],
         ]);
 
@@ -101,8 +108,8 @@ class DebtController extends Controller
     // Distributes the amount across unpaid/partial debts (oldest first).
     public function paySupplier(Request $request, int $supplierId)
     {
-        $supplier = Supplier::findOrFail($supplierId);
-        $debts = SupplierDebt::where('supplier_id', $supplierId)
+        $supplier = $supplierId > 0 ? Supplier::findOrFail($supplierId) : null;
+        $debts = SupplierDebt::where('supplier_id', $supplierId > 0 ? $supplierId : null)
             ->where('status', '!=', 'paid')
             ->orderBy('due_date')
             ->orderBy('id')
@@ -112,7 +119,7 @@ class DebtController extends Controller
 
         $data = $request->validate([
             'amount'     => ['required', 'numeric', 'min:0.01', 'max:' . $totalRemaining],
-            'account_id' => ['required', 'integer', 'exists:accounts,id'],
+            'account_id' => ['required', 'integer', 'exists:sy2_accounts,id'],
             'pay_date'   => ['required', 'date'],
         ]);
 
@@ -133,7 +140,7 @@ class DebtController extends Controller
                     'account_id'  => $data['account_id'],
                     'direction'   => 'out',
                     'type'        => 'سداد دين مورد',
-                    'party'       => $supplier->name,
+                    'party'       => $supplier ? $supplier->name : 'بدون مورد',
                     'amount'      => $pay,
                     'date'        => $data['pay_date'],
                     'description' => 'سداد: ' . $debt->description,

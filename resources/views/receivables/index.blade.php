@@ -12,6 +12,33 @@
       --ok:#047857; --okbg:#ecfdf5; --bad:#b91c1c; }
 
 /* ── شريط الإجماليات — أرقام مقسومة بفواصل بدل الكروت الملونة ── */
+.vstat:hover .ic {
+    transform: scale(1.15) rotate(8deg);
+    background: rgba(255, 255, 255, 0.3);
+}
+.vstat .vstat-bg {
+    position: absolute;
+    left: -10px;
+    bottom: -15px;
+    width: 90px;
+    height: 90px;
+    color: rgba(255, 255, 255, 0.15);
+    z-index: 0;
+    transform: rotate(-15deg);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+.vstat:hover .vstat-bg {
+    transform: scale(1.2) rotate(5deg);
+    color: rgba(255, 255, 255, 0.25);
+}
+.vstat-navy { background-image: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+.vstat-blue { background-image: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); }
+.vstat-teal { background-image: linear-gradient(135deg, #047857 0%, #10b981 100%); }
+.vstat-green{ background-image: linear-gradient(135deg, #4338ca 0%, #8b5cf6 100%); }
+.vstat-red  { background-image: linear-gradient(135deg, #be123c 0%, #f43f5e 100%); }
+.vstat-amber{ background-image: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); }
+.vstat-gold { background-image: linear-gradient(135deg, #334155 0%, #64748b 100%); }
 .rv-totals { display:flex; flex-wrap:wrap; background:#fff; border:1px solid var(--ln);
   border-radius:12px; margin-bottom:16px; overflow:hidden; }
 .rv-tot { flex:1; min-width:130px; padding:14px 18px; border-inline-start:1px solid var(--ln); }
@@ -193,36 +220,34 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
 </div>
 
 {{-- شريط الإجماليات — كروت مربعة متدرّجة (نفس روح لوحة التحكم) --}}
-<div class="grid cols-5" style="margin-bottom:20px">
+<div class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom:20px">
   <div class="vstat vstat-blue">
     <div class="top"><span class="label">إجمالي المفوتر</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg></span>
     </div>
     <div class="val tnum">{{ \App\Support\Money::format($totals['total_billed']) }} <small>ج.م</small></div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg>
   </div>
-  <div class="vstat vstat-green">
+  <div class="vstat vstat-teal">
     <div class="top"><span class="label">المحصّل من العملاء</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span>
     </div>
     <div class="val tnum">{{ \App\Support\Money::format($totals['total_collected']) }} <small>ج.م</small></div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>
   </div>
   <div class="vstat vstat-red">
     <div class="top"><span class="label">المتبقي على العملاء</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg></span>
     </div>
     <div class="val tnum">{{ \App\Support\Money::format($totals['total_remaining']) }} <small>ج.م</small></div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>
   </div>
   <div class="vstat vstat-amber">
     <div class="top"><span class="label">الربح الدفتري</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></span>
     </div>
     <div class="val tnum">{{ \App\Support\Money::format($totals['book_profit']) }} <small>ج.م</small></div>
-  </div>
-  <div class="vstat vstat-navy">
-    <div class="top"><span class="label">الربح المحصل فعليًا</span>
-      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg></span>
-    </div>
-    <div class="val tnum">{{ \App\Support\Money::format($totals['earned_profit']) }} <small>ج.م</small></div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg>
   </div>
 </div>
 
@@ -233,7 +258,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
     <span class="c">{{ $rows->count() }} مشروع — اضغط للتفاصيل والتحصيل</span>
   </div>
 
-  <div class="rv-filters no-print">
+  <form class="rv-filters no-print" method="GET" action="{{ route('receivables.index') }}">
     <div class="rv-search">
       <input type="text" id="main-search" placeholder="ابحث بالمشروع أو العميل..." oninput="filterMain()">
       <i class="fa fa-search si"></i>
@@ -241,7 +266,17 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
     <span class="rv-pill active" onclick="filterStatus('all', this)">الكل</span>
     <span class="rv-pill" onclick="filterStatus('active', this)">قيد التحصيل</span>
     <span class="rv-pill" onclick="filterStatus('paid', this)">مسدد</span>
-  </div>
+
+    <div style="display:flex; align-items:center; gap:6px; margin-right:auto">
+      <label style="font-size:0.75rem; color:var(--mut); font-weight:600">من:</label>
+      <input type="date" name="date_from" value="{{ request('date_from') }}" onchange="this.form.submit()" style="padding:4px 8px; border:1px solid var(--ln); border-radius:6px; font-size:0.75rem;">
+      <label style="font-size:0.75rem; color:var(--mut); font-weight:600">إلى:</label>
+      <input type="date" name="date_to" value="{{ request('date_to') }}" onchange="this.form.submit()" style="padding:4px 8px; border:1px solid var(--ln); border-radius:6px; font-size:0.75rem;">
+      @if(request()->hasAny(['date_from', 'date_to']))
+        <a href="{{ route('receivables.index') }}" style="font-size:0.75rem; color:var(--bad); text-decoration:none; margin-right:8px; font-weight:bold;">مسح</a>
+      @endif
+    </div>
+  </form>
 
   @if($rows->count())
   <div style="overflow-x:auto">

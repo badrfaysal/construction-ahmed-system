@@ -245,6 +245,11 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-settings"/></svg>
         <span>الإعدادات</span>
       </a>
+
+      <button type="button" class="nav-item" style="--ic:#ef4444; width:100%; border:none; background:none; cursor:pointer; text-align:right; font-family:inherit; color:#ef4444;" onclick="document.getElementById('resetDatabaseModal').style.display='flex'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        <span style="font-weight:700">تصفير الداتا بيز بالكامل</span>
+      </button>
     @endif
   </nav>
 
@@ -488,6 +493,36 @@
     });
   @endif
 </script>
+
+@if(auth()->check() && auth()->user()->isAdmin())
+{{-- Reset Database Modal --}}
+<div class="modal-overlay" id="resetDatabaseModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.8); z-index:9999; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+    <div style="background:#fff; border-radius:16px; width:100%; max-width:450px; overflow:hidden; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);">
+        <div style="background:#fef2f2; border-bottom:1px solid #fee2e2; padding:24px; text-align:center;">
+            <div style="width:64px; height:64px; background:#fee2e2; color:#dc2626; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01"/></svg>
+            </div>
+            <h3 style="margin:0; font-size:20px; font-weight:800; color:#991b1b;">تحذير: تصفير النظام بالكامل!</h3>
+            <p style="margin:8px 0 0; color:#dc2626; font-size:14px; line-height:1.6;">
+                هذا الإجراء سيقوم بمسح <strong>جميع البيانات</strong> من النظام بشكل نهائي ولا يمكن التراجع عنه. (المشاريع، الحركات المالية، الخامات، الفواتير، الديون.. الخ).
+            </p>
+        </div>
+        <form action="{{ route('settings.reset_db') }}" method="POST">
+            @csrf
+            <div style="padding:24px;">
+                <label style="display:block; margin-bottom:8px; font-size:14px; font-weight:700; color:#334155;">
+                    لتأكيد المسح، اكتب كلمة <strong style="color:#ef4444;">تصفير</strong> في الحقل التالي:
+                </label>
+                <input type="text" name="confirm_text" required autocomplete="off" style="width:100%; padding:12px 16px; border:2px solid #e2e8f0; border-radius:8px; font-size:16px; font-weight:bold; text-align:center; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='#ef4444'" onblur="this.style.borderColor='#e2e8f0'">
+            </div>
+            <div style="padding:16px 24px; background:#f8fafc; border-top:1px solid #f1f5f9; display:flex; gap:12px;">
+                <button type="button" onclick="document.getElementById('resetDatabaseModal').style.display='none'" style="flex:1; padding:12px; background:#fff; border:1px solid #cbd5e1; border-radius:8px; color:#475569; font-weight:700; cursor:pointer;">إلغاء وتراجع</button>
+                <button type="submit" style="flex:1; padding:12px; background:#dc2626; border:none; border-radius:8px; color:#fff; font-weight:700; cursor:pointer;">تأكيد المسح النهائي</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
 
 @stack('scripts')
 </body>
