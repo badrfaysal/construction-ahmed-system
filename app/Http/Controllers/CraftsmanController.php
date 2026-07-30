@@ -87,7 +87,7 @@ class CraftsmanController extends Controller
                     'specialties'    => $rows->pluck('specialty')->filter()->unique()->values(),
                     'bands_worked'   => $rows->pluck('band.name')->filter()->unique()->values(),
                     'projects'       => $rows->pluck('band.project.name')->filter()->unique()->count(),
-                    'contracted'     => (float) $rows->sum(fn ($w) => (float) $w->amount),
+                    'contracted'     => (float) $rows->sum(fn ($w) => (float) $w->amount + $w->deferredExpensesTotal()),
                     'paid'           => (float) $rows->sum(fn ($w) => $w->paidTotal()),
                     'remaining'      => (float) $rows->sum(fn ($w) => $w->remaining()),
                     'owed_to_us'     => (float) $rows->sum(fn ($w) => $w->owedToUs()),
