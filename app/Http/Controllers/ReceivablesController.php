@@ -60,6 +60,17 @@ class ReceivablesController extends Controller
             ];
         })->filter(fn ($r) => $r->billed > 0 || $r->remaining > 0);
 
+        // Sorting
+        $sort = $request->get('sort', 'newest');
+        if ($sort === 'amount_desc') {
+            $rows = $rows->sortByDesc('remaining');
+        } elseif ($sort === 'amount_asc') {
+            $rows = $rows->sortBy('remaining');
+        } else {
+            // newest
+            $rows = $rows->sortByDesc(fn($r) => $r->project->created_at);
+        }
+
         // Overdue installments across all projects
         $overdueInstallments = Installment::with(['project.client', 'band'])
             ->where('status', '!=', 'paid')

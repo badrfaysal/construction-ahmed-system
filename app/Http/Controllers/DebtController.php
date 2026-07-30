@@ -18,11 +18,12 @@ class DebtController extends Controller
         $query = SupplierDebt::with(['project', 'band', 'supplier'])
             ->orderBy('status'); // pending first
 
-        match ($request->get('sort', 'due_asc')) {
+        match ($request->get('sort', 'newest')) {
             'newest'      => $query->orderByDesc('created_at'),
             'amount_desc' => $query->orderByDesc('total_amount'),
             'amount_asc'  => $query->orderBy('total_amount'),
-            default       => $query->orderBy('due_date'),
+            'due_asc'     => $query->orderBy('due_date'),
+            default       => $query->orderByDesc('created_at'),
         };
 
         if ($pid = $request->get('project_id')) {

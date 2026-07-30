@@ -51,20 +51,23 @@
   </div>
   <div class="f-field">
     <label>الحالة</label>
-    <div class="tabs" style="margin-bottom:0">
+    <div class="tabs">
       <a href="{{ request()->fullUrlWithQuery(['status' => null]) }}" class="tab {{ !request('status') ? 'active' : '' }}">غير مسدد</a>
       <a href="{{ request()->fullUrlWithQuery(['status' => 'pending']) }}" class="tab {{ request('status') === 'pending' ? 'active' : '' }}">معلق</a>
       <a href="{{ request()->fullUrlWithQuery(['status' => 'partial']) }}" class="tab {{ request('status') === 'partial' ? 'active' : '' }}">جزئي</a>
       <a href="{{ request()->fullUrlWithQuery(['status' => 'paid']) }}" class="tab {{ request('status') === 'paid' ? 'active' : '' }}">مسدد</a>
     </div>
   </div>
-  <div class="f-field">
-    <label>من تاريخ</label>
-    <input type="date" name="date_from" value="{{ request('date_from') }}" class="f-select" onchange="this.form.submit()">
-  </div>
-  <div class="f-field">
-    <label>إلى تاريخ</label>
-    <input type="date" name="date_to" value="{{ request('date_to') }}" class="f-select" onchange="this.form.submit()">
+  <div class="f-field" style="min-width: auto; flex: 0 0 auto;">
+    <label>التاريخ</label>
+    <div class="btn ghost" id="date-filter-btn" style="height: 42px; padding: 0 16px; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); box-shadow: none; position: relative; cursor: pointer;" title="تصفية بالتاريخ">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-calendar"/></svg>
+      @if(request('date_from') || request('date_to'))
+        <span style="position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; background: var(--pos); border-radius: 50%; border: 2px solid #fff;"></span>
+      @endif
+    </div>
+    <input type="hidden" name="date_from" id="date_from" value="{{ request('date_from') }}">
+    <input type="hidden" name="date_to" id="date_to" value="{{ request('date_to') }}">
   </div>
   @include('partials._sort-select', ['options' => [
     'due_asc'     => 'الأقرب استحقاقًا',
@@ -77,16 +80,119 @@
       <a href="{{ route('debts.index') }}" class="btn ghost sm">مسح الفلتر</a>
     </div>
   @endif
+  <style>
+    .filter-bar { 
+      display: flex; 
+      flex-wrap: nowrap;
+      gap: 12px; 
+      align-items: flex-end; 
+      padding: 16px 20px; 
+      background: var(--surface); 
+      border: 1px solid var(--line); 
+      border-radius: 12px; 
+      margin-bottom: 24px; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      overflow-x: auto;
+    }
+    .filter-bar::-webkit-scrollbar { height: 4px; }
+    .filter-bar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    
+    .filter-bar .f-field { 
+      flex: 1; 
+      min-width: 140px; 
+      margin-bottom: 0 !important; 
+    }
+    
+    .filter-bar .f-actions { 
+      display: flex; 
+      flex: 0 0 auto;
+      align-items: center; 
+      margin-inline-start: auto; 
+    }
+    
+    .filter-bar .tabs { 
+      height: 42px; 
+      border: 1px solid var(--line); 
+      border-radius: 8px; 
+      padding: 4px; 
+      background: var(--surface-2); 
+      display: flex; 
+      gap: 4px; 
+      flex-wrap: nowrap; 
+      margin-bottom: 0 !important; 
+    }
+    .filter-bar .tabs .tab { 
+      flex: 1; 
+      margin: 0; 
+      text-align: center; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      padding: 0 8px; 
+      font-size: 13px; 
+      font-weight: 600; 
+      white-space: nowrap; 
+      border-radius: 6px; 
+      border: none; 
+      text-decoration: none; 
+      color: var(--ink-2); 
+      transition: all 0.2s ease; 
+    }
+    .filter-bar .tabs .tab:hover { color: var(--ink); background: var(--surface); }
+    .filter-bar .tabs .tab.active { 
+      background: var(--surface); 
+      color: var(--neg); 
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06); 
+      font-weight: 700; 
+    }
+    .filter-bar .tabs .tab[href*="pending"].active { color: var(--warn); }
+    .filter-bar .tabs .tab[href*="partial"].active { color: var(--accent); }
+    .filter-bar .tabs .tab[href*="paid"].active { color: var(--pos); }
+    
+    .filter-bar .f-select, .filter-bar input[type="date"] { 
+      height: 42px; 
+      line-height: normal; 
+      padding: 0 12px; 
+      border: 1px solid var(--line); 
+      border-radius: 8px; 
+      background: var(--surface-2); 
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      transition: 0.14s;
+    }
+    .filter-bar .f-select:hover, .filter-bar input[type="date"]:hover {
+      border-color: #cfd8e3;
+      background: var(--surface);
+    }
+    .filter-bar .f-select:focus, .filter-bar input[type="date"]:focus { 
+      border-color: var(--accent); 
+      box-shadow: 0 0 0 3px var(--accent-soft); 
+      background: var(--surface);
+    }
+    .filter-bar .btn { 
+      height: 42px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      padding: 0 24px; 
+      margin: 0; 
+      font-weight: 700; 
+      font-size: 13px; 
+      border-radius: 8px; 
+    }
+  </style>
 </form>
 
 <div class="tabs-container" style="margin-bottom: 20px;">
   <div class="tabs" style="border-bottom: 1px solid var(--line); display:flex; gap:16px;">
-    <div class="tab-btn active" id="tab-btn-supplier" onclick="switchTab('supplier-tab')" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid var(--brand); font-weight:bold; color:var(--brand)">ديون الموردين</div>
-    <div class="tab-btn" id="tab-btn-manual" onclick="switchTab('manual-tab')" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid transparent; font-weight:bold; color:var(--mut)">عهد وديون أخرى</div>
+    <div class="tab-btn {{ request('status') !== 'paid' && !request('tab') ? 'active' : '' }}" id="tab-btn-supplier" onclick="if('{{request('status')}}'==='paid'){window.location.href='?status='}else{switchTab('supplier-tab')}" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid {{ request('status') !== 'paid' && !request('tab') ? 'var(--brand)' : 'transparent' }}; font-weight:bold; color:{{ request('status') !== 'paid' && !request('tab') ? 'var(--brand)' : 'var(--mut)' }}">ديون الموردين</div>
+    <div class="tab-btn {{ request('tab') === 'manual' ? 'active' : '' }}" id="tab-btn-manual" onclick="if('{{request('status')}}'==='paid'){window.location.href='?status=&tab=manual'}else{switchTab('manual-tab')}" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid {{ request('tab') === 'manual' ? 'var(--brand)' : 'transparent' }}; font-weight:bold; color:{{ request('tab') === 'manual' ? 'var(--brand)' : 'var(--mut)' }}; display:{{ request('status') === 'paid' ? 'none' : 'block' }}">عهد وديون أخرى</div>
+    <a href="{{ request()->fullUrlWithQuery(['status' => 'paid']) }}" class="tab-btn {{ request('status') === 'paid' ? 'active' : '' }}" style="padding: 10px 16px; text-decoration:none; border-bottom: 2px solid {{ request('status') === 'paid' ? 'var(--brand)' : 'transparent' }}; font-weight:bold; color:{{ request('status') === 'paid' ? 'var(--brand)' : 'var(--mut)' }}">المسدد (السجل)</a>
   </div>
 </div>
 
-<div id="supplier-tab" class="tab-content" style="display:block;">
+<div id="supplier-tab" class="tab-content" style="display:{{ request('tab') === 'manual' ? 'none' : 'block' }};">
 @if($debts->count())
   @php $bySupplier = $debts->groupBy(fn($d) => $d->supplier_id ?? 0); @endphp
   @foreach($bySupplier as $supplierId => $supplierDebts)
@@ -192,7 +298,7 @@
 
 </div> <!-- end supplier-tab -->
 
-<div id="manual-tab" class="tab-content" style="display:none;">
+<div id="manual-tab" class="tab-content" style="display:{{ request('tab') === 'manual' || request('status') === 'paid' ? 'block' : 'none' }};">
 @if(isset($manualDebts) && $manualDebts->count() > 0)
   <h4 style="margin:20px 0 10px; border-bottom:1px solid var(--border); padding-bottom:8px;">عهد وديون أخرى (حركات يدوية)</h4>
   <div class="table-scroll">
@@ -311,6 +417,43 @@
 
 @push('scripts')
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof flatpickr !== 'undefined') {
+    flatpickr("#date-filter-btn", {
+      mode: "range",
+      locale: "ar",
+      defaultDate: [
+        "{{ request('date_from') }}",
+        "{{ request('date_to') }}"
+      ],
+      onClose: function(selectedDates) {
+        if (selectedDates.length === 2) {
+          const formatDate = (date) => {
+            let d = new Date(date),
+                month = '' + (d.getMonth() + 1),
+                day = '' + d.getDate(),
+                year = d.getFullYear();
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+            return [year, month, day].join('-');
+          }
+          let newFrom = formatDate(selectedDates[0]);
+          let newTo = formatDate(selectedDates[1]);
+          
+          let currentFrom = document.getElementById('date_from').value;
+          let currentTo = document.getElementById('date_to').value;
+          
+          if (newFrom !== currentFrom || newTo !== currentTo) {
+            document.getElementById('date_from').value = newFrom;
+            document.getElementById('date_to').value = newTo;
+            document.getElementById('date_from').form.submit();
+          }
+        }
+      }
+    });
+  }
+});
+
 function openManualPayModal(id, remaining, desc) {
   document.getElementById('manual-pay-desc').textContent = desc;
   document.getElementById('manual-pay-amount').max = remaining;

@@ -255,6 +255,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
   <div class="tabs" style="border-bottom: 1px solid var(--line); display:flex; gap:16px;">
     <div class="tab-btn active" id="tab-btn-project" onclick="switchTab('project-tab')" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid var(--brand); font-weight:bold; color:var(--brand)">مستحقات المشاريع</div>
     <div class="tab-btn" id="tab-btn-manual-recv" onclick="switchTab('manual-recv-tab')" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid transparent; font-weight:bold; color:var(--mut)">سلف ومستحقات أخرى</div>
+    <div class="tab-btn" id="tab-btn-paid" onclick="showPaidGlobal(this)" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid transparent; font-weight:bold; color:var(--mut)">المسدد (السجل)</div>
   </div>
 </div>
 
@@ -271,16 +272,19 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
       <input type="text" id="main-search" placeholder="ابحث بالمشروع أو العميل..." oninput="filterMain()">
       <i class="fa fa-search si"></i>
     </div>
-    <span class="rv-pill active" onclick="filterStatus('all', this)">الكل</span>
-    <span class="rv-pill" onclick="filterStatus('active', this)">قيد التحصيل</span>
-    <span class="rv-pill" onclick="filterStatus('paid', this)">مسدد</span>
+    <!-- Removed pills as per user request to strictly separate unpaid/paid into tabs -->
 
-    <div style="display:flex; align-items:center; gap:6px; margin-right:auto">
+    <div style="display:flex; align-items:center; gap:6px; margin-right:auto; flex-wrap:nowrap;">
+      <select name="sort" onchange="this.form.submit()" style="padding:4px 8px; border:1px solid var(--ln); border-radius:6px; font-size:0.75rem; background:#fff;">
+        <option value="newest" {{ request('sort', 'newest') == 'newest' ? 'selected' : '' }}>الأحدث إضافة</option>
+        <option value="amount_desc" {{ request('sort') == 'amount_desc' ? 'selected' : '' }}>الأعلى متبقي</option>
+        <option value="amount_asc" {{ request('sort') == 'amount_asc' ? 'selected' : '' }}>الأقل متبقي</option>
+      </select>
       <label style="font-size:0.75rem; color:var(--mut); font-weight:600">من:</label>
       <input type="date" name="date_from" value="{{ request('date_from') }}" onchange="this.form.submit()" style="padding:4px 8px; border:1px solid var(--ln); border-radius:6px; font-size:0.75rem;">
       <label style="font-size:0.75rem; color:var(--mut); font-weight:600">إلى:</label>
       <input type="date" name="date_to" value="{{ request('date_to') }}" onchange="this.form.submit()" style="padding:4px 8px; border:1px solid var(--ln); border-radius:6px; font-size:0.75rem;">
-      @if(request()->hasAny(['date_from', 'date_to']))
+      @if(request()->hasAny(['date_from', 'date_to', 'sort']))
         <a href="{{ route('receivables.index') }}" style="font-size:0.75rem; color:var(--bad); text-decoration:none; margin-right:8px; font-weight:bold;">مسح</a>
       @endif
     </div>
@@ -371,7 +375,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
     <h2><i class="fa fa-hand-holding-dollar" style="color:var(--ok)"></i> سلف ومستحقات أخرى (حركات يدوية)</h2>
     <span class="c" style="font-weight:700">إجمالي المتبقي: {{ \App\Support\Money::format($manualReceivables->sum(fn($r) => $r->remaining())) }} ج.م</span>
   </div>
-  <table class="rv-tbl">
+  <table class="rv-tbl" id="manual-table">
     <thead>
       <tr>
         <th>التاريخ</th>
@@ -384,9 +388,9 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
         <th></th>
       </tr>
     </thead>
-    <tbody>
+    <tbody id="manual-tbody">
       @foreach($manualReceivables as $recv)
-        <tr>
+        <tr data-status="{{ $recv->status }}">
           <td class="muted">{{ $recv->date->format('Y-m-d') }}</td>
           <td><strong>{{ $recv->party }}</strong></td>
           <td class="muted">{{ $recv->description ?: '—' }}</td>
@@ -940,18 +944,33 @@ function toggleBands(id) {
 }
 
 /* ── فلترة الجدول الرئيسي ──────────────────── */
-let activeStatus = 'all';
+let activeStatus = 'unpaid';
 function filterMain() {
-  const q = document.getElementById('main-search').value.toLowerCase().trim();
+  const q = document.getElementById('main-search') ? document.getElementById('main-search').value.toLowerCase().trim() : '';
   let visible = 0;
+  
   document.querySelectorAll('#main-tbody tr').forEach(row => {
-    const show = (!q || row.dataset.name.includes(q))
-      && (activeStatus === 'all' || row.dataset.status === activeStatus);
+    const st = row.dataset.status;
+    const matchStatus = (activeStatus === 'all') 
+                     || (activeStatus === 'unpaid' && st !== 'paid') 
+                     || (st === activeStatus);
+    const show = (!q || row.dataset.name.includes(q)) && matchStatus;
     row.style.display = show ? '' : 'none';
     if (show) visible++;
   });
+  
+  document.querySelectorAll('#manual-tbody tr').forEach(row => {
+    const partyCell = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
+    const st = row.dataset.status;
+    const matchStatus = (activeStatus === 'all') 
+                     || (activeStatus === 'unpaid' && st !== 'paid') 
+                     || (st === activeStatus);
+    const show = (!q || partyCell.includes(q)) && matchStatus;
+    row.style.display = show ? '' : 'none';
+  });
+  
   const nr = document.getElementById('no-results');
-  if (nr) nr.style.display = visible === 0 ? 'block' : 'none';
+  if (nr) nr.style.display = visible === 0 && document.querySelectorAll('#main-tbody tr:not([style*="display: none"])').length === 0 ? 'block' : 'none';
 }
 function filterStatus(status, btn) {
   activeStatus = status;
@@ -1068,15 +1087,38 @@ function switchTab(tabId) {
   });
   
   // Show target tab
-  document.getElementById(tabId).style.display = 'block';
+  if (tabId) {
+      document.getElementById(tabId).style.display = 'block';
+  } else {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'block');
+  }
   
   // Add active styling to clicked button
-  const btnId = tabId === 'project-tab' ? 'tab-btn-project' : 'tab-btn-manual-recv';
+  let btnId = 'tab-btn-paid';
+  if (tabId === 'project-tab') btnId = 'tab-btn-project';
+  else if (tabId === 'manual-recv-tab') btnId = 'tab-btn-manual-recv';
+  
   const btn = document.getElementById(btnId);
-  btn.classList.add('active');
-  btn.style.borderBottomColor = 'var(--brand)';
-  btn.style.color = 'var(--brand)';
+  if (btn) {
+      btn.classList.add('active');
+      btn.style.borderBottomColor = 'var(--brand)';
+      btn.style.color = 'var(--brand)';
+  }
+  
+  // Reset any global JS filters
+  if (tabId) {
+      filterStatus('unpaid', null);
+  }
 }
+
+function showPaidGlobal(btn) {
+    switchTab(null);
+    filterStatus('paid');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    filterMain(); // Run filter on load to hide paid items initially
+});
 </script>
 @endpush
 @endsection
