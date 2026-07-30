@@ -87,7 +87,9 @@
     <div class="st-sec">تفاصيل المصروفات لكل بند</div>
     <table class="st-table">
       <thead><tr><th>التاريخ</th><th>البيان</th><th>الكمية</th><th>الوحدة</th><th>سعر الوحدة</th><th class="col-sup">الإشراف (% ومبلغ)</th><th>الإجمالي</th></tr></thead>
-             @php
+      <tbody>
+        @forelse($project->bands as $band)
+          @php
             $realMaterials = $band->materials->where('category', '!=', 'misc')->sortBy('date');
             $subBands = $band->materials->where('category', 'misc')->sortBy('date');
           @endphp
