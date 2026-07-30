@@ -133,6 +133,10 @@
     <a class="nav-item {{ request()->routeIs('debts.*') ? 'active' : '' }}" href="{{ route('debts.index') }}" style="--ic:#ef5a4a">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-credit-card"/></svg>
       <span>الديون</span>
+    </a> 
+     <a class="nav-item {{ request()->routeIs('craftsmen.*') ? 'active' : '' }}" href="{{ route('craftsmen.index') }}" style="--ic:#ca8a04">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-tool"/></svg>
+      <span>الصنايعية ومستحقاتهم</span>
     </a>
     <div class="nav-label">المشاريع</div>
     <a class="nav-item {{ request()->routeIs('projects.*') ? 'active' : '' }}" href="{{ route('projects.index') }}" style="--ic:#6366f1">
@@ -233,10 +237,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg>
       <span>سجل الموردين</span>
     </a>
-    <a class="nav-item {{ request()->routeIs('craftsmen.*') ? 'active' : '' }}" href="{{ route('craftsmen.index') }}" style="--ic:#ca8a04">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-tool"/></svg>
-      <span>الصنايعية ومستحقاتهم</span>
-    </a>
+  
 
     @if(auth()->user()->isAdmin())
       <div class="nav-label">النظام</div>
