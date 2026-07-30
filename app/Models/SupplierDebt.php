@@ -10,7 +10,7 @@ class SupplierDebt extends Model
     protected $table = 'sy2_supplier_debts';
 
     protected $fillable = [
-        'project_id', 'band_id', 'supplier_id', 'material_id',
+        'project_id', 'band_id', 'supplier_id', 'material_id', 'invoice_id',
         'description', 'total_amount', 'paid_amount', 'due_date', 'status', 'notes',
     ];
 

@@ -103,7 +103,8 @@ class MaterialObserver
 
         // Sync debt: only update if the debt originated from this material
         $debt = SupplierDebt::where('material_id', $material->id)->first();
-        $debtAmount = $material->grossCost() - $walletAmount;
+        // gross debt minus the debt that was already cancelled via returns
+        $debtAmount = $material->grossCost() - $walletAmount - $material->returnsDebtDrop();
 
         if ($debtAmount > 0) {
             if ($debt) {

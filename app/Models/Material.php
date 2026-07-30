@@ -108,6 +108,22 @@ class Material extends Model
         };
     }
 
+    // Total debt dropped due to returns (the unpaid portion of the returns)
+    public function returnsDebtDrop(): float
+    {
+        $ratio = $this->paidRatio();
+        if ($ratio >= 1.0) {
+            return 0.0; // fully paid, no debt to drop
+        }
+
+        $drop = 0.0;
+        foreach ($this->returns as $r) {
+            // we use the return's effective price to calculate how much debt is reduced
+            $drop += round((float) $r->qty * $r->effectivePrice() * (1 - $ratio), 2);
+        }
+        return $drop;
+    }
+
     // Per-unit price charged to the client: sell price (falls back to purchase
     // price if not set) plus the supervision markup on top
     public function clientUnitPrice(): float

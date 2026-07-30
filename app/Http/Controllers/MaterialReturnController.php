@@ -19,9 +19,12 @@ class MaterialReturnController extends Controller
             ->where(function($q) {
                 $q->whereNull('category')->orWhere('category', '!=', 'misc');
             })
-            ->with('returns')
+            ->with('returns', 'supplier')
             ->orderByDesc('date')
-            ->get();
+            ->get()
+            ->filter(function($m) {
+                return $m->netQty() > 0;
+            });
 
         return view('returns.create', compact('project', 'materials'));
     }

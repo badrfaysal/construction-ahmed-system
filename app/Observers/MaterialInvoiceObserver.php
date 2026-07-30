@@ -61,7 +61,8 @@ class MaterialInvoiceObserver
         }
 
         // 2. Sync Supplier Debt
-        $debtAmount = $invoice->remainingBalance();
+        // gross debt minus the total debt that was cancelled via returns
+        $debtAmount = $invoice->remainingBalance() - $invoice->materials->sum(fn($m) => tap($m, fn() => $m->loadMissing('returns'))->returnsDebtDrop());
         $debt = SupplierDebt::where('invoice_id', $invoice->id)->first();
 
         if ($debtAmount > 0) {

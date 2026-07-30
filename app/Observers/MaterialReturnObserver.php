@@ -77,7 +77,16 @@ class MaterialReturnObserver
     // Never drops the total below what's already been paid on the debt.
     private function adjustDebt(int $materialId, float $delta): void
     {
-        $debt = SupplierDebt::where('material_id', $materialId)->first();
+        $material = \App\Models\Material::find($materialId);
+        if (! $material) return;
+
+        // If the material is part of an invoice, its debt is tracked at the invoice level
+        if ($material->invoice_id) {
+            $debt = SupplierDebt::where('invoice_id', $material->invoice_id)->first();
+        } else {
+            $debt = SupplierDebt::where('material_id', $materialId)->first();
+        }
+
         if (! $debt) {
             return;
         }

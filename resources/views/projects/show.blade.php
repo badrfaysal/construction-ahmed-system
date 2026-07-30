@@ -680,16 +680,17 @@
     $bColor = $bandColorMap[$bId === null ? 'null' : $bId] ?? '#f8fafc';
     $bNetCost = $bandMats->sum(fn($m) => $m->netCost());
   @endphp
-  <div class="table-card mat-band-section" style="margin-bottom:14px">
-    <div class="mat-band-header" style="background:{{ $bColor }}">
+  <div class="table-card mat-band-section" data-band="{{ $bId ?? '' }}" style="margin-bottom:14px">
+    <div class="mat-band-header" style="background:{{ $bColor }}; cursor:pointer; user-select:none" onclick="const t = this.nextElementSibling; const c = this.querySelector('.chev'); if(t.style.display==='none'){t.style.display='block';c.style.transform='rotate(180deg)';}else{t.style.display='none';c.style.transform='rotate(0deg)';}">
       <div style="display:flex;align-items:center;gap:10px">
+        <svg class="chev" style="transition:transform 0.2s" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-chevron-down"/></svg>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-hardhat"/></svg>
         <strong>{{ $bObj?->name ?? 'خامات بدون بند' }}</strong>
         <span class="tag gray sm">{{ $bandMats->count() }} صنف</span>
       </div>
       <div class="tnum" style="font-weight:700">إجمالي: {{ \App\Support\Money::format($bNetCost) }} ج.م</div>
     </div>
-    <div class="table-scroll">
+    <div class="table-scroll" style="display:none">
       <table>
         <thead>
           <tr style="background:{{ $bColor }}">
@@ -1518,12 +1519,18 @@ async function submitItemDelete(evt) {
 
 document.getElementById('materials-band-filter')?.addEventListener('change', function() {
   const val = this.value;
-  const rows = document.querySelectorAll('.mat-row');
-  rows.forEach(row => {
-    if(val === '' || row.dataset.band === val) {
-      row.style.display = '';
+  const sections = document.querySelectorAll('.mat-band-section');
+  sections.forEach(sec => {
+    if(val === '' || sec.dataset.band === val) {
+      sec.style.display = '';
+      if(val !== '') {
+        const t = sec.querySelector('.table-scroll');
+        const c = sec.querySelector('.chev');
+        if(t) t.style.display = 'block';
+        if(c) c.style.transform = 'rotate(180deg)';
+      }
     } else {
-      row.style.display = 'none';
+      sec.style.display = 'none';
     }
   });
 });
