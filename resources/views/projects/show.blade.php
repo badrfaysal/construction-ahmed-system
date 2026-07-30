@@ -250,6 +250,11 @@
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--pos)" stroke-width="2.5" style="vertical-align:-2px;margin-inline-end:4px"><use href="#i-check-circle"/></svg>
                 @endif
                 <strong>{{ $band->name }}</strong>
+                @if(auth()->user()->canManage() && ! $isDone)
+                  <a href="{{ route('expenses.create', ['project' => $project->id, 'band_id' => $band->id]) }}" class="tag sm" style="margin-inline-start:8px; background:var(--accent-soft); color:var(--accent); text-decoration:none; vertical-align:middle;" title="إضافة بند فرعي لهذا البند">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-inline-end:2px; vertical-align:-2px"><use href="#i-plus"/></svg>إضافة بند فرعي
+                  </a>
+                @endif
               </td>
               <td class="muted">
                 @if($band->workers->count())
@@ -987,7 +992,7 @@
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-coins"/></svg>
   إجمالي تكلفة الخامات الصافية:
   <strong class="tnum price-cost">{{ \App\Support\Money::format($totalNetCost) }} ج.م (تكلفة)</strong>
-  <strong class="tnum price-sell" style="margin-right:15px">{{ \App\Support\Money::format($materials->sum(fn($m) => $m->netClientCost())) }} ج.م (بيع)</strong>
+  <strong class="tnum price-sell" style="margin-right:15px">{{ \App\Support\Money::format($pureMaterials->sum(fn($m) => $m->netClientCost())) }} ج.م (بيع)</strong>
 </div>
 @else
   <div class="table-card" style="margin-bottom:24px">

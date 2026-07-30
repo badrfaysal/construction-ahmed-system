@@ -19,7 +19,7 @@
         <select name="band_id">
           <option value="">— عام للمشروع ككل (بدون بند) —</option>
           @foreach($bands as $b)
-            <option value="{{ $b->id }}" {{ old('band_id', $activeBand?->id) == $b->id ? 'selected' : '' }}>{{ $b->name }}{{ $b->status === 'active' ? ' (جاري حاليًا)' : '' }}</option>
+            <option value="{{ $b->id }}" {{ old('band_id', request('band_id', $activeBand?->id)) == $b->id ? 'selected' : '' }}>{{ $b->name }}{{ $b->status === 'active' ? ' (جاري حاليًا)' : '' }}</option>
           @endforeach
         </select>
       </div>
