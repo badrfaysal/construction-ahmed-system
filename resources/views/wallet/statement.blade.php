@@ -159,6 +159,7 @@
     }
     .tag-badge.green { background: #d1fae5; color: #059669; }
     .tag-badge.red { background: #fee2e2; color: #dc2626; }
+    .tag-badge.blue { background: #dbeafe; color: #1d4ed8; }
     
     .amt-in { color: #10b981; font-weight: 800; font-size: 15px; }
     .amt-out { color: #ef4444; font-weight: 800; font-size: 15px; }
@@ -233,7 +234,7 @@
                                     TX-{{ $tx->date->format('Y') }}-{{ str_pad($tx->id, 5, '0', STR_PAD_LEFT) }}
                                 </td>
                                 <td>
-                                    <span class="tag-badge {{ $tx->direction === 'in' ? 'green' : 'red' }}">
+                                    <span class="tag-badge {{ $tx->ref_type === 'transfer' ? 'blue' : ($tx->direction === 'in' ? 'green' : 'red') }}">
                                         {{ $tx->type }}
                                     </span>
                                 </td>

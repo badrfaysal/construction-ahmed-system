@@ -122,25 +122,18 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-grid"/></svg>
       <span>لوحة التحكم</span>
     </a>
-
-    <div class="nav-label">العملاء والموردون</div>
-    <a class="nav-item {{ request()->routeIs('clients.*') ? 'active' : '' }}" href="{{ route('clients.index') }}" style="--ic:#06b6d4">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg>
-      <span>سجل العملاء</span>
+<a class="nav-item {{ request()->routeIs('installments.*') ? 'active' : '' }}" href="{{ route('installments.index') }}" style="--ic:#14b8a6">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-calendar"/></svg>
+      <span>الأقساط</span>
     </a>
-    <a class="nav-item {{ request()->routeIs('marketers.*') ? 'active' : '' }}" href="{{ route('marketers.index') }}" style="--ic:#8b5cf6">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg>
-      <span>سجل المسوقين</span>
+    <a class="nav-item {{ request()->routeIs('receivables.*') ? 'active' : '' }}" href="{{ route('receivables.index') }}" style="--ic:#22b583">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-coins"/></svg>
+      <span>المستحقات</span>
     </a>
-    <a class="nav-item {{ request()->routeIs('suppliers.*') && !request()->routeIs('suppliers.compare') ? 'active' : '' }}" href="{{ route('suppliers.index') }}" style="--ic:#f97316">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg>
-      <span>سجل الموردين</span>
+    <a class="nav-item {{ request()->routeIs('debts.*') ? 'active' : '' }}" href="{{ route('debts.index') }}" style="--ic:#ef5a4a">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-credit-card"/></svg>
+      <span>الديون</span>
     </a>
-    <a class="nav-item {{ request()->routeIs('craftsmen.*') ? 'active' : '' }}" href="{{ route('craftsmen.index') }}" style="--ic:#ca8a04">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-tool"/></svg>
-      <span>الصنايعية ومستحقاتهم</span>
-    </a>
-
     <div class="nav-label">المشاريع</div>
     <a class="nav-item {{ request()->routeIs('projects.*') ? 'active' : '' }}" href="{{ route('projects.index') }}" style="--ic:#6366f1">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>
@@ -171,18 +164,7 @@
       <span>المحفظة</span>
     </a>
     @endif --}}
-    <a class="nav-item {{ request()->routeIs('installments.*') ? 'active' : '' }}" href="{{ route('installments.index') }}" style="--ic:#14b8a6">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-calendar"/></svg>
-      <span>الأقساط</span>
-    </a>
-    <a class="nav-item {{ request()->routeIs('receivables.*') ? 'active' : '' }}" href="{{ route('receivables.index') }}" style="--ic:#22b583">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-coins"/></svg>
-      <span>المستحقات</span>
-    </a>
-    <a class="nav-item {{ request()->routeIs('debts.*') ? 'active' : '' }}" href="{{ route('debts.index') }}" style="--ic:#ef5a4a">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-credit-card"/></svg>
-      <span>الديون</span>
-    </a>
+    
     <a class="nav-item {{ request()->routeIs('material_invoices.*') ? 'active' : '' }}" href="{{ route('material_invoices.index') }}" style="--ic:#d97706">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
       <span>فواتير الشراء</span>
@@ -237,6 +219,24 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-shield"/></svg>
       <span>متابعة الضمانات</span>
     </a> --}}
+
+    <div class="nav-label">العملاء والموردون</div>
+    <a class="nav-item {{ request()->routeIs('clients.*') ? 'active' : '' }}" href="{{ route('clients.index') }}" style="--ic:#06b6d4">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg>
+      <span>سجل العملاء</span>
+    </a>
+    <a class="nav-item {{ request()->routeIs('marketers.*') ? 'active' : '' }}" href="{{ route('marketers.index') }}" style="--ic:#8b5cf6">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg>
+      <span>سجل المسوقين</span>
+    </a>
+    <a class="nav-item {{ request()->routeIs('suppliers.*') && !request()->routeIs('suppliers.compare') ? 'active' : '' }}" href="{{ route('suppliers.index') }}" style="--ic:#f97316">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg>
+      <span>سجل الموردين</span>
+    </a>
+    <a class="nav-item {{ request()->routeIs('craftsmen.*') ? 'active' : '' }}" href="{{ route('craftsmen.index') }}" style="--ic:#ca8a04">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-tool"/></svg>
+      <span>الصنايعية ومستحقاتهم</span>
+    </a>
 
     @if(auth()->user()->isAdmin())
       <div class="nav-label">النظام</div>

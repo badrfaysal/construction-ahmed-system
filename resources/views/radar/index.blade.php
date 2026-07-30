@@ -413,7 +413,7 @@
         </div>
         
         <div class="btn-row" style="margin-top:20px;">
-          <button type="submit" class="btn primary" style="width:100%; justify-content:center;">
+          <button type="submit" class="btn primary" id="dw-submit-btn" style="width:100%; justify-content:center; transition: all 0.2s">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><use href="#i-check"/></svg>
             تنفيذ العملية
           </button>
@@ -457,7 +457,7 @@
         </div>
         
         <div class="btn-row" style="margin-top:20px;">
-          <button type="submit" class="btn primary" style="width:100%; justify-content:center;">
+          <button type="submit" class="btn primary" id="tr-submit-btn" style="width:100%; justify-content:center; transition: all 0.2s">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><use href="#i-check"/></svg>
             تنفيذ التحويل
           </button>
@@ -550,12 +550,43 @@ function setOpType(type) {
   btns.forEach(b => {
     b.classList.remove('primary');
     b.classList.add('ghost');
+    b.style.backgroundColor = '';
+    b.style.borderColor = '';
+    b.style.color = '';
   });
   
   const activeBtn = document.querySelector(`.op-type-btn[data-type="${type}"]`);
+  const dwSubmit = document.getElementById('dw-submit-btn');
+  const trSubmit = document.getElementById('tr-submit-btn');
+  
   if (activeBtn) {
     activeBtn.classList.remove('ghost');
     activeBtn.classList.add('primary');
+    if (type === 'deposit') {
+      activeBtn.style.background = '#059669'; // Green
+      activeBtn.style.borderColor = '#059669';
+      activeBtn.style.color = '#fff';
+      if(dwSubmit) {
+        dwSubmit.style.background = '#059669';
+        dwSubmit.style.borderColor = '#059669';
+      }
+    } else if (type === 'withdrawal') {
+      activeBtn.style.background = '#dc2626'; // Red
+      activeBtn.style.borderColor = '#dc2626';
+      activeBtn.style.color = '#fff';
+      if(dwSubmit) {
+        dwSubmit.style.background = '#dc2626';
+        dwSubmit.style.borderColor = '#dc2626';
+      }
+    } else {
+      activeBtn.style.background = '#1d4ed8'; // Blue
+      activeBtn.style.borderColor = '#1d4ed8';
+      activeBtn.style.color = '#fff';
+      if(trSubmit) {
+        trSubmit.style.background = '#1d4ed8';
+        trSubmit.style.borderColor = '#1d4ed8';
+      }
+    }
   }
   
   const hint = document.getElementById('op-hint');

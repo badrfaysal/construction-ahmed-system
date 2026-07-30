@@ -382,9 +382,9 @@
               <span class="ic ic-gold" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span>
               <span class="lbl" style="font-weight: 600; color: #334155; font-size: 13px;">أقساط</span>
             </a>
-            <a class="qlink" href="{{ route('transactions.index') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
+            <a class="qlink" href="{{ route('radar.index') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
               <span class="ic ic-amber" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg></span>
-              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 13px;">السجل</span>
+              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 13px;">الرادار (السجل)</span>
             </a>
           </div>
         </div>

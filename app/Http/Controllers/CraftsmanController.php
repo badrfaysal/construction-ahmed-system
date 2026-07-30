@@ -117,7 +117,9 @@ class CraftsmanController extends Controller
         $specialties = BandWorker::whereNotNull('specialty')->where('specialty', '!=', '')
             ->distinct()->orderBy('specialty')->pluck('specialty');
 
-        return view('craftsmen.index', compact('craftsmen', 'totalRemaining', 'totalPaid', 'projects', 'specialties'));
+        $wallets = \App\Models\Account::selectable();
+
+        return view('craftsmen.index', compact('craftsmen', 'totalRemaining', 'totalPaid', 'projects', 'specialties', 'wallets'));
     }
 
     public function rate(\Illuminate\Http\Request $request, string $name)

@@ -92,6 +92,58 @@ class WorkerPaymentController extends Controller
         return back()->with('success', 'تم تسجيل دفعة للصنايعي.');
     }
 
+    // تسديد دفعة مجمعة لصنايعي (يتم توزيعها على البنود اللي ليه فيها متبقي)
+    public function payBulk(Request $request)
+    {
+        $data = $request->validate([
+            'worker_name' => ['required', 'string'],
+            'amount'      => ['required', 'numeric', 'min:0.01'],
+            'account_id'  => ['required', 'integer', 'exists:sy2_accounts,id'],
+            'date'        => ['required', 'date'],
+            'notes'       => ['nullable', 'string'],
+        ]);
+
+        $workers = BandWorker::with('payments')->where('name', $data['worker_name'])->get();
+        
+        $totalRemaining = $workers->sum(fn ($w) => $w->remaining());
+        
+        if ((float) $data['amount'] > $totalRemaining + 0.01) {
+            throw ValidationException::withMessages([
+                'amount' => 'المبلغ أكبر من إجمالي المتبقي للصنايعي (' . number_format($totalRemaining, 2) . ' ج.م).',
+            ]);
+        }
+        
+        $amountToPay = (float) $data['amount'];
+        
+        DB::transaction(function () use ($workers, &$amountToPay, $data) {
+            $workers = $workers->sortBy('id');
+            
+            foreach ($workers as $worker) {
+                if ($amountToPay <= 0) break;
+                
+                $remaining = $worker->remaining();
+                if ($remaining <= 0) continue;
+                
+                $payForThis = min($remaining, $amountToPay);
+                
+                WorkerPayment::create([
+                    'band_worker_id'  => $worker->id,
+                    'project_id'      => $worker->band->project_id ?? null,
+                    'project_band_id' => $worker->band->id ?? null,
+                    'account_id'      => $data['account_id'],
+                    'amount'          => $payForThis,
+                    'discount'        => 0,
+                    'date'            => $data['date'],
+                    'notes'           => $data['notes'] ? $data['notes'] . ' (دفعة مجمعة)' : 'دفعة مجمعة',
+                ]);
+                
+                $amountToPay -= $payForThis;
+            }
+        });
+
+        return back()->with('success', 'تم تسجيل السداد المجمع للصنايعي بنجاح.');
+    }
+
     // تبديل الفني — الصنايعي الأول عمل جزء من الشغل، خد جزء من فلوسه ومشي،
     // وبنجيب صنايعي تاني يكمّل نفس الشغل. بدل ما نمسح الأول (وده ممنوع لأن له
     // دفعات)، بنثبّت تعاقده على اللي استلمه فعلاً (فيبقى مستحقه = صفر)، وننشئ

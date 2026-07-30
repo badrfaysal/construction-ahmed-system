@@ -15,9 +15,9 @@
   <div class="form-card">
     <div class="row2">
       <div class="field">
-        <label>البند الرئيسي *</label>
-        <select name="band_id" required>
-          <option value="">— اختر البند —</option>
+        <label>البند الرئيسي (اختياري)</label>
+        <select name="band_id">
+          <option value="">— عام للمشروع ككل (بدون بند) —</option>
           @foreach($bands as $b)
             <option value="{{ $b->id }}" {{ old('band_id', $activeBand?->id) == $b->id ? 'selected' : '' }}>{{ $b->name }}{{ $b->status === 'active' ? ' (جاري حاليًا)' : '' }}</option>
           @endforeach
@@ -45,6 +45,13 @@
           <div>
             <div style="font-weight:700;font-size:0.9rem">خامات (مورد)</div>
             <div style="font-size:0.75rem;color:var(--ink-3)">أصناف متعددة كفاتورة</div>
+          </div>
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 18px;border:2px solid #e2e8f0;border-radius:10px;transition:all 0.2s;" class="party-option" data-value="general">
+          <input type="radio" name="party_type" value="general" {{ old('party_type') === 'general' ? 'checked' : '' }} onchange="switchPartyType(this.value)">
+          <div>
+            <div style="font-weight:700;font-size:0.9rem">مصروف عام</div>
+            <div style="font-size:0.75rem;color:var(--ink-3)">بدون مورد أو فني</div>
           </div>
         </label>
       </div>
@@ -118,6 +125,26 @@
     </div>
 
     {{-- ═══════════════════════════════════════════════ --}}
+    {{-- قسم المصروف العام (بدون جهة) --}}
+    {{-- ═══════════════════════════════════════════════ --}}
+    <div id="general-section" style="display:none;">
+      <div class="row3">
+        <div class="field">
+          <label>المبلغ (التكلفة) *</label>
+          <input type="number" id="gen-amount-field" name="amount" value="{{ old('amount') }}" min="0" step="0.01" required oninput="syncGenSell()">
+        </div>
+        <div class="field">
+          <label>سعر البيع للعميل *</label>
+          <input type="number" id="gen-sell-field" name="sell_price" value="{{ old('sell_price') }}" min="0" step="0.01" required oninput="this.dataset.touched='1'">
+        </div>
+        <div class="field">
+          <label>نسبة الإشراف %</label>
+          <input type="number" name="supervision_pct" value="{{ old('supervision_pct', $defaultSup) }}" min="0" max="100" step="0.1">
+        </div>
+      </div>
+    </div>
+
+    {{-- ═══════════════════════════════════════════════ --}}
     {{-- مشترك: التاريخ وطريقة الدفع والملاحظات --}}
     {{-- ═══════════════════════════════════════════════ --}}
     <div class="field">
@@ -172,22 +199,36 @@ let supItemIndex = 0;
 function switchPartyType(type) {
   const craftsmanSec = document.getElementById('craftsman-section');
   const supplierSec = document.getElementById('supplier-section');
+  const generalSec = document.getElementById('general-section');
   
   if (type === 'craftsman') {
     craftsmanSec.style.display = '';
     supplierSec.style.display = 'none';
-    // Enable craftsman fields, disable supplier fields
+    generalSec.style.display = 'none';
+    
     craftsmanSec.querySelectorAll('input, select').forEach(el => el.disabled = false);
     supplierSec.querySelectorAll('input, select').forEach(el => el.disabled = true);
-  } else {
+    generalSec.querySelectorAll('input, select').forEach(el => el.disabled = true);
+  } else if (type === 'supplier') {
     craftsmanSec.style.display = 'none';
     supplierSec.style.display = '';
+    generalSec.style.display = 'none';
+    
     craftsmanSec.querySelectorAll('input, select').forEach(el => el.disabled = true);
     supplierSec.querySelectorAll('input, select').forEach(el => el.disabled = false);
-    // Add first item if none exist
+    generalSec.querySelectorAll('input, select').forEach(el => el.disabled = true);
+    
     if (document.querySelectorAll('.sup-item-row').length === 0) {
       addSupplierItem();
     }
+  } else if (type === 'general') {
+    craftsmanSec.style.display = 'none';
+    supplierSec.style.display = 'none';
+    generalSec.style.display = '';
+    
+    craftsmanSec.querySelectorAll('input, select').forEach(el => el.disabled = true);
+    supplierSec.querySelectorAll('input, select').forEach(el => el.disabled = true);
+    generalSec.querySelectorAll('input, select').forEach(el => el.disabled = false);
   }
   // Highlight selected card
   document.querySelectorAll('.party-option').forEach(el => {
@@ -241,6 +282,12 @@ function syncSell() {
   const sell = document.getElementById('sell-field');
   if (sell.dataset.touched === '1') return;
   sell.value = document.getElementById('amount-field').value;
+}
+
+function syncGenSell() {
+  const sell = document.getElementById('gen-sell-field');
+  if (sell.dataset.touched === '1') return;
+  sell.value = document.getElementById('gen-amount-field').value;
 }
 
 function updateExpenseUI() {

@@ -115,7 +115,7 @@
               <tr>
                 <td class="muted">{{ $tx->date->format('Y-m-d') }}</td>
                 <td>
-                  <span class="tag {{ $tx->direction === 'in' ? 'green' : 'red' }}">{{ $tx->directionAr() }}</span>
+                  <span class="tag {{ $tx->ref_type === 'transfer' ? 'blue' : ($tx->direction === 'in' ? 'green' : 'red') }}">{{ $tx->directionAr() }}</span>
                   <div class="muted" style="font-size:12px;margin-top:2px">{{ $tx->type }}</div>
                 </td>
                 <td>

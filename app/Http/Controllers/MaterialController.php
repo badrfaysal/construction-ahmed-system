@@ -16,7 +16,8 @@ class MaterialController extends Controller
     // List all materials across all projects, with optional project filter
     public function index(Request $request)
     {
-        $query = Material::with(['project', 'band', 'supplier', 'returns']);
+        $query = Material::with(['project', 'band', 'supplier', 'returns'])
+            ->where('category', '!=', 'misc');
 
         match ($request->get('sort', 'newest')) {
             'oldest'      => $query->orderBy('date')->orderBy('id'),
@@ -51,6 +52,7 @@ class MaterialController extends Controller
     private function buildInsights(?int $projectId, ?string $dateFrom = null, ?string $dateTo = null): array
     {
         $topMaterial = Material::query()
+            ->where('category', '!=', 'misc')
             ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
             ->when($dateFrom, fn ($q) => $q->whereDate('date', '>=', $dateFrom))
             ->when($dateTo, fn ($q) => $q->whereDate('date', '<=', $dateTo))
@@ -61,6 +63,7 @@ class MaterialController extends Controller
 
         $topReturned = DB::table('sy2_material_returns as r')
             ->join('sy2_materials as m', 'm.id', '=', 'r.material_id')
+            ->where('m.category', '!=', 'misc')
             ->when($projectId, fn ($q) => $q->where('m.project_id', $projectId))
             ->when($dateFrom, fn ($q) => $q->whereDate('r.date', '>=', $dateFrom))
             ->when($dateTo, fn ($q) => $q->whereDate('r.date', '<=', $dateTo))
@@ -70,6 +73,7 @@ class MaterialController extends Controller
             ->first();
 
         $topBandRow = Material::query()
+            ->where('category', '!=', 'misc')
             ->when($projectId, fn ($q) => $q->where('project_id', $projectId))
             ->when($dateFrom, fn ($q) => $q->whereDate('date', '>=', $dateFrom))
             ->when($dateTo, fn ($q) => $q->whereDate('date', '<=', $dateTo))
@@ -278,12 +282,12 @@ class MaterialController extends Controller
 
         // ── Shared validation ──
         $sharedRules = [
-            'band_id'      => ['required', 'exists:sy2_project_bands,id'],
+            'band_id'      => ['nullable', 'exists:sy2_project_bands,id'],
             'item'         => ['required', 'string', 'max:255'],
             'date'         => ['required', 'date'],
             'account_id'   => [$isDeferred ? 'nullable' : 'required', 'nullable', 'integer', 'exists:sy2_accounts,id'],
             'notes'        => ['nullable', 'string'],
-            'party_type'   => ['required', 'string', 'in:supplier,craftsman'],
+            'party_type'   => ['required', 'string', 'in:supplier,craftsman,general'],
             'payment_type' => ['required', 'string', 'in:immediate,deferred'],
         ];
 
@@ -293,6 +297,12 @@ class MaterialController extends Controller
                 'supplier_name'   => ['required', 'string', 'max:255'],
                 'contract_type'   => ['nullable', 'string', 'in:lump_sum,per_meter,per_piece'],
                 'qty'             => ['nullable', 'numeric', 'min:0'],
+                'amount'          => ['required', 'numeric', 'min:0'],
+                'sell_price'      => ['required', 'numeric', 'min:0'],
+                'supervision_pct' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            ]);
+        } elseif ($partyType === 'general') {
+            $rules = array_merge($sharedRules, [
                 'amount'          => ['required', 'numeric', 'min:0'],
                 'sell_price'      => ['required', 'numeric', 'min:0'],
                 'supervision_pct' => ['nullable', 'numeric', 'min:0', 'max:100'],
@@ -365,6 +375,34 @@ class MaterialController extends Controller
 
             return redirect()->route('projects.show', $project)
                 ->with('success', 'تم تسجيل البند الفرعي (مصنعية).');
+        }
+
+        // ═══════════════════════════════════════════════
+        // (C) مصروف عام (بدون مورد ولا صنايعي)
+        // ═══════════════════════════════════════════════
+        if ($partyType === 'general') {
+            DB::transaction(fn () => Material::create([
+                'project_id'      => $project->id,
+                'band_id'         => $data['band_id'] ?? null,
+                'band_worker_id'  => null,
+                'account_id'      => $isDeferred ? null : ($data['account_id'] ?? null),
+                'supplier_name'   => null,
+                'contract_type'   => null,
+                'category'        => 'misc',
+                'item'            => $data['item'],
+                'unit'            => 'مبلغ',
+                'qty'             => 1,
+                'unit_price'      => $data['amount'],
+                'sell_price'      => $data['sell_price'],
+                'supervision_pct' => $data['supervision_pct'] ?? 0,
+                'date'            => $data['date'],
+                'notes'           => $data['notes'] ?? null,
+                'payment_status'  => $isDeferred ? 'deferred' : 'paid',
+                'paid_amount'     => $isDeferred ? 0 : (float)$data['amount'],
+            ]));
+
+            return redirect()->route('projects.show', $project)
+                ->with('success', 'تم تسجيل البند الفرعي (عام).');
         }
 
         // ═══════════════════════════════════════════════
@@ -487,5 +525,70 @@ class MaterialController extends Controller
         });
 
         return back()->with('success', 'تم حذف الصنف بنجاح وتحديث التكاليف والديون المتعلقة به.');
+    }
+
+    public function edit(Material $material)
+    {
+        $material->load('project', 'band');
+        $itemNames = self::knownItemNames();
+        $unitNames = self::knownUnitNames();
+        
+        $supplierNames = \App\Models\Supplier::select('name')->distinct()->pluck('name')
+            ->merge(\App\Models\Material::whereNotNull('supplier_name')->where('supplier_name', '!=', '')->distinct()->pluck('supplier_name'))
+            ->unique()->sort()->values();
+
+        $craftsmenNames = \App\Models\BandWorker::select('name')->whereNotNull('name')->where('name', '!=', '')->distinct()->pluck('name')->sort()->values();
+        $suppliers = Supplier::orderBy('name')->get(['id', 'name', 'activity']);
+
+        return view('materials.edit', compact('material', 'itemNames', 'unitNames', 'supplierNames', 'craftsmenNames', 'suppliers'));
+    }
+
+    public function update(Request $request, Material $material)
+    {
+        $isMisc = $material->category === 'misc';
+
+        $rules = [
+            'item'         => ['required', 'string', 'max:255'],
+            'date'         => ['required', 'date'],
+            'qty'          => ['required', 'numeric', 'min:0'],
+            'unit_price'   => ['required', 'numeric', 'min:0'],
+            'sell_price'   => ['required', 'numeric', 'min:0'],
+            'supervision_pct' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'notes'        => ['nullable', 'string'],
+            'supplier_id'  => ['nullable', 'exists:sy2_suppliers,id'],
+        ];
+
+        if ($isMisc) {
+            $rules['supplier_name'] = ['nullable', 'string', 'max:255'];
+            $rules['contract_type'] = ['nullable', 'string', 'in:lump_sum,per_meter,per_piece'];
+            $rules['unit'] = ['nullable', 'string', 'max:50']; // allow unit update as well
+        } else {
+            $rules['unit'] = ['required', 'string', 'max:50'];
+        }
+
+        $data = $request->validate($rules);
+
+        DB::transaction(function () use ($material, $data, $isMisc) {
+            $oldCost = $material->qty * $material->unit_price;
+
+            $material->update($data);
+
+            $newCost = $material->qty * $material->unit_price;
+
+            // Update invoice total if it belongs to one
+            if ($material->invoice_id) {
+                $invoice = $material->invoice;
+                $diff = $newCost - $oldCost;
+                $invoice->total_amount += $diff;
+                // Pro-rate paid amount down if it exceeds the new total
+                if ($invoice->paid_amount > $invoice->total_amount) {
+                    $invoice->paid_amount = $invoice->total_amount;
+                }
+                $invoice->save(); // Triggers sync
+            }
+        });
+
+        return redirect()->route('projects.show', $material->project_id)
+            ->with('success', 'تم تعديل البند بنجاح.');
     }
 }

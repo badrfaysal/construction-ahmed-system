@@ -116,6 +116,11 @@
           @if($c->owed_to_us > 0)
             <div><div class="muted" style="font-size:12px;color:var(--warn,#c9821a)">مستحق لينا</div><div class="tnum" style="font-weight:700;color:var(--warn,#c9821a)">{{ \App\Support\Money::format($c->owed_to_us) }}</div></div>
           @endif
+          @if($c->remaining > 0)
+            <div style="display:flex;align-items:center;margin-right:10px;">
+              <button type="button" class="btn primary sm" style="background:var(--pos,#10b981); border-color:var(--pos,#10b981); font-weight:bold" onclick="openBulkPaymentModal('{{ addslashes($c->name) }}', {{ $c->remaining }})">سداد مجمع</button>
+            </div>
+          @endif
         </div>
         <form action="{{ route('craftsmen.rate', $c->name) }}" method="POST" class="craftsman-rate-form">
           @csrf
@@ -165,6 +170,7 @@
               <td class="num" style="color:{{ $remaining > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($remaining) }}</td>
               <td>
                 <div style="display:flex; gap:4px">
+                  <button type="button" class="btn primary sm" style="background:var(--pos,#10b981); border-color:var(--pos,#10b981);" onclick="openPaymentModal({{ $a->id }}, '{{ htmlspecialchars($a->name, ENT_QUOTES) }}', {{ $remaining }})">سداد</button>
                   <a href="{{ route('workers.payments', $a) }}" class="btn ghost sm">الدفعات</a>
                   <button type="button" class="btn ghost sm" style="color:var(--warn,#c9821a)" onclick="openDiscountModal({{ $a->id }}, '{{ htmlspecialchars($a->name, ENT_QUOTES) }}', {{ $remaining }})">خصم</button>
                 </div>
@@ -203,6 +209,29 @@ function openDiscountModal(workerId, workerName, remaining) {
 function closeDiscountModal() {
   document.getElementById('discountModal').classList.remove('open');
 }
+
+// --- Modal for direct payment (full/partial) ---
+function openPaymentModal(workerId, workerName, remaining) {
+  document.getElementById('payModalWorkerName').textContent = workerName;
+  document.getElementById('payModalRemaining').textContent = remaining + ' ج.م';
+  document.getElementById('payModalAmount').value = remaining > 0 ? remaining : 0;
+  document.getElementById('paymentForm').action = "/workers/" + workerId + "/payments";
+  document.getElementById('paymentModal').classList.add('open');
+}
+function closePaymentModal() {
+  document.getElementById('paymentModal').classList.remove('open');
+}
+// --- Modal for Bulk Payment ---
+function openBulkPaymentModal(workerName, remaining) {
+  document.getElementById('bulkModalWorkerName').textContent = workerName;
+  document.getElementById('bulkModalWorkerNameInput').value = workerName;
+  document.getElementById('bulkModalRemaining').textContent = remaining + ' ج.م';
+  document.getElementById('bulkModalAmount').value = remaining > 0 ? remaining : 0;
+  document.getElementById('bulkPaymentModal').classList.add('open');
+}
+function closeBulkPaymentModal() {
+  document.getElementById('bulkPaymentModal').classList.remove('open');
+}
 </script>
 
 <div class="rv-modal" id="discountModal" onclick="if(event.target===this) closeDiscountModal()">
@@ -233,6 +262,104 @@ function closeDiscountModal() {
       <div style="text-align:left">
         <button type="button" class="btn ghost" onclick="closeDiscountModal()">إلغاء</button>
         <button type="submit" class="btn" style="background:var(--warn,#c9821a); border-color:var(--warn,#c9821a); color:#fff">تسجيل الخصم</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{-- Payment Modal --}}
+<div class="rv-modal" id="paymentModal" onclick="if(event.target===this) closePaymentModal()">
+  <div class="rv-card" style="max-width:400px;margin:20px;background:#fff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.1);padding:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:1px solid #eee;padding-bottom:12px">
+      <h3 style="margin:0;font-size:1.1rem">تسجيل دفعة سداد للصنايعي</h3>
+      <button type="button" class="btn ghost sm" onclick="closePaymentModal()" style="padding:4px 8px"><i class="fa fa-times"></i></button>
+    </div>
+    <form method="POST" action="" id="paymentForm">
+      @csrf
+      <div style="margin-bottom:12px; font-size:13px">
+        <strong>الصنايعي:</strong> <span id="payModalWorkerName"></span><br>
+        <strong>المتبقي عليه:</strong> <span id="payModalRemaining" style="color:var(--pos,#10b981); font-weight:bold"></span>
+      </div>
+      
+      <div class="field" style="margin-bottom:12px">
+        <label>المبلغ (ج.م) *</label>
+        <input type="number" name="amount" id="payModalAmount" step="0.01" min="0.01" required style="width:100%">
+        <small class="muted">بادر بتغيير المبلغ إذا كان السداد جزئياً.</small>
+      </div>
+
+      <div class="field" style="margin-bottom:12px">
+        <label>الخزنة / المحفظة *</label>
+        <select name="account_id" required style="width:100%">
+          <option value="">اختر الخزنة...</option>
+          @foreach($wallets ?? [] as $w)
+            <option value="{{ $w->id }}">{{ $w->name }} ({{ \App\Support\Money::format($w->balance) }})</option>
+          @endforeach
+        </select>
+      </div>
+      
+      <div class="field" style="margin-bottom:12px">
+        <label>البيان / ملاحظات <span class="muted">(اختياري)</span></label>
+        <input type="text" name="notes" placeholder="تفاصيل الدفعة..." style="width:100%">
+      </div>
+
+      <div class="field" style="margin-bottom:16px">
+        <label>التاريخ *</label>
+        <input type="date" name="date" value="{{ today()->format('Y-m-d') }}" required style="width:100%">
+      </div>
+      
+      <div style="text-align:left">
+        <button type="button" class="btn ghost" onclick="closePaymentModal()">إلغاء</button>
+        <button type="submit" class="btn" style="background:var(--pos,#10b981); border-color:var(--pos,#10b981); color:#fff">تسجيل السداد</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{-- Bulk Payment Modal --}}
+<div class="rv-modal" id="bulkPaymentModal" onclick="if(event.target===this) closeBulkPaymentModal()">
+  <div class="rv-card" style="max-width:400px;margin:20px;background:#fff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.1);padding:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:1px solid #eee;padding-bottom:12px">
+      <h3 style="margin:0;font-size:1.1rem">تسجيل سداد مجمع للصنايعي</h3>
+      <button type="button" class="btn ghost sm" onclick="closeBulkPaymentModal()" style="padding:4px 8px"><i class="fa fa-times"></i></button>
+    </div>
+    <form method="POST" action="{{ route('workers.pay_bulk') }}" id="bulkPaymentForm">
+      @csrf
+      <input type="hidden" name="worker_name" id="bulkModalWorkerNameInput">
+      
+      <div style="margin-bottom:12px; font-size:13px">
+        <strong>الصنايعي:</strong> <span id="bulkModalWorkerName"></span><br>
+        <strong>إجمالي المتبقي له:</strong> <span id="bulkModalRemaining" style="color:var(--pos,#10b981); font-weight:bold"></span>
+      </div>
+      
+      <div class="field" style="margin-bottom:12px">
+        <label>المبلغ المراد سداده (ج.م) *</label>
+        <input type="number" name="amount" id="bulkModalAmount" step="0.01" min="0.01" required style="width:100%">
+        <small class="muted">سيتم توزيع هذا المبلغ تلقائياً على بنود هذا الصنايعي.</small>
+      </div>
+
+      <div class="field" style="margin-bottom:12px">
+        <label>الخزنة / المحفظة *</label>
+        <select name="account_id" required style="width:100%">
+          <option value="">اختر الخزنة...</option>
+          @foreach($wallets ?? [] as $w)
+            <option value="{{ $w->id }}">{{ $w->name }} ({{ \App\Support\Money::format($w->balance) }})</option>
+          @endforeach
+        </select>
+      </div>
+      
+      <div class="field" style="margin-bottom:12px">
+        <label>البيان / ملاحظات <span class="muted">(اختياري)</span></label>
+        <input type="text" name="notes" placeholder="تفاصيل الدفعة المجمعة..." style="width:100%">
+      </div>
+
+      <div class="field" style="margin-bottom:16px">
+        <label>التاريخ *</label>
+        <input type="date" name="date" value="{{ today()->format('Y-m-d') }}" required style="width:100%">
+      </div>
+      
+      <div style="text-align:left">
+        <button type="button" class="btn ghost" onclick="closeBulkPaymentModal()">إلغاء</button>
+        <button type="submit" class="btn" style="background:var(--pos,#10b981); border-color:var(--pos,#10b981); color:#fff; font-weight:bold">تأكيد السداد المجمع</button>
       </div>
     </form>
   </div>

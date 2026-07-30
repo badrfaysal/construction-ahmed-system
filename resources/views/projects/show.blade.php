@@ -350,6 +350,7 @@
     <div class="f-select-wrap">
       <select id="expenses-band-filter" class="f-select" style="min-width:200px">
         <option value="">كل البنود</option>
+        <option value="null">عام (بدون بند)</option>
         @foreach($expBands as $band)
           <option value="{{ $band->id }}">{{ $band->name }}</option>
         @endforeach
@@ -369,7 +370,7 @@
     $bColor = $expBandColorMap[$bId === null ? 'null' : $bId] ?? '#f8fafc';
     $bNetCost = $bandMats->sum(fn($m) => $m->netCost());
   @endphp
-  <div class="table-card exp-band-section" data-band="{{ $bId ?? '' }}" style="margin-bottom:14px">
+  <div class="table-card exp-band-section" data-band="{{ $bId ?? 'null' }}" style="margin-bottom:14px">
     <div class="mat-band-header" style="background:{{ $bColor }}; cursor:pointer; user-select:none" onclick="const t = this.nextElementSibling; const c = this.querySelector('.chev'); if(t.style.display==='none'){t.style.display='block';c.style.transform='rotate(180deg)';}else{t.style.display='none';c.style.transform='rotate(0deg)';}">
       <div style="display:flex;align-items:center;gap:10px">
         <svg class="chev" style="transition:transform 0.2s" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-chevron-down"/></svg>
@@ -416,6 +417,9 @@
                 @endif
               </td>
               <td class="no-print">
+                <a href="{{ route('materials.edit', $m->id) }}" class="btn ghost sm" title="تعديل">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                </a>
                 @if(auth()->user()->isAdmin())
                   <button type="button" class="btn ghost danger sm" title="عكس الحركة" onclick="openItemDeleteModal('{{ route('materials.destroy', $m->id) }}')">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-trash"/></svg>
@@ -796,6 +800,7 @@
     <div class="f-select-wrap">
       <select id="materials-band-filter" class="f-select" style="min-width:200px">
         <option value="">كل البنود</option>
+        <option value="null">عام (بدون بند)</option>
         @foreach($matBands as $band)
           <option value="{{ $band->id }}">{{ $band->name }}</option>
         @endforeach
@@ -816,7 +821,7 @@
     $bColor = $bandColorMap[$bId === null ? 'null' : $bId] ?? '#f8fafc';
     $bNetCost = $bandMats->sum(fn($m) => $m->netCost());
   @endphp
-  <div class="table-card mat-band-section" data-band="{{ $bId ?? '' }}" style="margin-bottom:14px">
+  <div class="table-card mat-band-section" data-band="{{ $bId ?? 'null' }}" style="margin-bottom:14px">
     <div class="mat-band-header" style="background:{{ $bColor }}; cursor:pointer; user-select:none" onclick="const t = this.nextElementSibling; const c = this.querySelector('.chev'); if(t.style.display==='none'){t.style.display='block';c.style.transform='rotate(180deg)';}else{t.style.display='none';c.style.transform='rotate(0deg)';}">
       <div style="display:flex;align-items:center;gap:10px">
         <svg class="chev" style="transition:transform 0.2s" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-chevron-down"/></svg>
@@ -861,6 +866,9 @@
                 @endif
               </td>
               <td class="no-print">
+                <a href="{{ route('materials.edit', $m->id) }}" class="btn ghost sm" title="تعديل">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                </a>
                 @if(auth()->user()->isAdmin())
                   <button type="button" class="btn ghost danger sm" title="عكس الحركة" onclick="openItemDeleteModal('{{ route('materials.destroy', $m->id) }}')">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-trash"/></svg>

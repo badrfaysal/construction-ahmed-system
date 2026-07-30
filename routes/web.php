@@ -78,6 +78,8 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::get('/materials', [MaterialController::class, 'index'])->name('materials.index');
     Route::get('/materials/create', [MaterialController::class, 'create'])->name('materials.create');
     Route::post('/materials', [MaterialController::class, 'store'])->name('materials.store');
+    Route::get('/materials/{material}/edit', [MaterialController::class, 'edit'])->name('materials.edit');
+    Route::put('/materials/{material}', [MaterialController::class, 'update'])->name('materials.update');
     Route::delete('/materials/{material}', [MaterialController::class, 'destroy'])->name('materials.destroy');
     
     // Material Invoices
@@ -146,6 +148,7 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     // work progresses and hits the wallet the moment it's recorded
     Route::get('/workers/{worker}/payments', [WorkerPaymentController::class, 'show'])->name('workers.payments');
     Route::post('/workers/{worker}/payments', [WorkerPaymentController::class, 'store'])->name('workers.payments.store');
+    Route::post('/workers/bulk-pay', [WorkerPaymentController::class, 'payBulk'])->name('workers.pay_bulk');
     // تبديل الفني — يثبّت الأول على المدفوع ويضيف فني جديد يكمّل الباقي
     Route::post('/workers/{worker}/swap', [WorkerPaymentController::class, 'swap'])->name('workers.swap');
 
