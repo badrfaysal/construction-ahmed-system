@@ -60,6 +60,10 @@
             <td>{{ $m->date->format('Y-m-d') }}</td>
             <td>
               {{ $m->item }}
+              @if($m->isMisc())
+                @if($m->notes)<br><small class="muted" style="font-size:12.5px;font-weight:500;">{{ $m->notes }}</small>@endif
+                @if($m->contract_type && $m->contract_type !== 'lump_sum') <br><small class="muted" style="font-size:11px">({{ $m->contractTypeAr() }})</small> @endif
+              @endif
               @if($m->returnedQty() > 0)
                 <span style="color:var(--neg);font-size:10.5px">(مرتجع {{ \App\Support\Money::format($m->returnedQty(), 1) }})</span>
               @endif

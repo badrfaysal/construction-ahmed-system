@@ -64,7 +64,7 @@
         إضافة خامة
       </button>
 
-      <div class="section-label" style="margin-top:10px">مصروفات وبنود فرعية — اختياري (مقاولة باطن / نقل / أعمال إضافية...)</div>
+      <div class="section-label" style="margin-top:10px">بنود فرعية — اختياري (مقاولة باطن / نقل / أعمال إضافية...)</div>
       <div id="band-misc-list"></div>
       <button type="button" class="btn ghost sm" style="margin:6px 0 18px" onclick="addBandMisc()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
@@ -84,7 +84,7 @@
         </div>
         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px">
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-            <input type="radio" name="payment_status" value="paid" checked onchange="toggleBandPay(this.value)">
+            <input type="radio" name="payment_status" value="paid" onchange="toggleBandPay(this.value)">
             <span>دفع بالكامل</span>
           </label>
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
@@ -92,7 +92,7 @@
             <span>جزئي (دفع جزء + باقي دين)</span>
           </label>
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-            <input type="radio" name="payment_status" value="deferred" onchange="toggleBandPay(this.value)">
+            <input type="radio" name="payment_status" value="deferred" checked onchange="toggleBandPay(this.value)">
             <span>آجل بالكامل (دين)</span>
           </label>
         </div>

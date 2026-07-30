@@ -294,7 +294,7 @@
     
     <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px">
       <label class="neo-radio-pill">
-        <input type="radio" name="payment_status" value="paid" {{ old('payment_status', 'paid') === 'paid' ? 'checked' : '' }} onchange="togglePaidAmt(this.value)">
+        <input type="radio" name="payment_status" value="paid" {{ old('payment_status') === 'paid' ? 'checked' : '' }} onchange="togglePaidAmt(this.value)">
         <span>دفع نقدي بالكامل</span>
       </label>
       <label class="neo-radio-pill">
@@ -302,7 +302,7 @@
         <span>دفع جزء و تبقي دين</span>
       </label>
       <label class="neo-radio-pill">
-        <input type="radio" name="payment_status" value="deferred" {{ old('payment_status') === 'deferred' ? 'checked' : '' }} onchange="togglePaidAmt(this.value)">
+        <input type="radio" name="payment_status" value="deferred" {{ old('payment_status', 'deferred') === 'deferred' ? 'checked' : '' }} onchange="togglePaidAmt(this.value)">
         <span>آجل بالكامل (دين)</span>
       </label>
     </div>

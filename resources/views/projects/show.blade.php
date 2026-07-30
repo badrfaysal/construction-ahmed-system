@@ -167,11 +167,14 @@
   <button type="button" class="tab active" data-tab="bands" onclick="switchProjectTab('bands')">
     البنود والمراحل <span class="cnt">{{ $project->bands->count() }}</span>
   </button>
-  <button type="button" class="tab" data-tab="installments" onclick="switchProjectTab('installments')">
-    الماليات
+  <button type="button" class="tab" data-tab="expenses" onclick="switchProjectTab('expenses')">
+    بنود فرعية <span class="cnt">{{ $project->materials->filter->isMisc()->count() }}</span>
   </button>
   <button type="button" class="tab" data-tab="materials" onclick="switchProjectTab('materials')">
-    الخامات والمصروفات الفرعية <span class="cnt">{{ $project->materials->count() }}</span>
+    الخامات <span class="cnt">{{ $project->materials->reject->isMisc()->count() }}</span>
+  </button>
+  <button type="button" class="tab" data-tab="installments" onclick="switchProjectTab('installments')">
+    الماليات
   </button>
   <button type="button" class="tab" data-tab="returns" onclick="switchProjectTab('returns')">
     المرتجعات <span class="cnt">{{ $project->materials->sum(fn($m) => $m->returns->count()) }}</span>
@@ -304,6 +307,139 @@
   @endif
 </div>
 </div>{{-- /tab-panel: bands --}}
+
+<div class="tab-panel" data-panel="expenses" style="display:none">
+<div class="section-label no-print" style="display:flex;justify-content:space-between;align-items:center;margin-top:0">
+  <span>بنود فرعية</span>
+  <div class="btn-row">
+    <button type="button" class="btn ghost sm" onclick="printExpenses()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-print"/></svg>
+      طباعة
+    </button>
+    <a href="{{ route('expenses.create', $project) }}" class="btn sm">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
+      بند فرعي جديد
+    </a>
+  </div>
+</div>
+
+@php
+  $expenses = $project->materials->filter->isMisc();
+@endphp
+@if($expenses->count())
+@php
+  $expBands = $expenses->map(fn($m) => $m->band)->filter()->unique('id');
+  $expBandPalette = [
+    '#eff6ff',
+    '#f0fdf4',
+    '#fefce8',
+    '#fdf4ff',
+    '#fff7ed',
+    '#f0fdfa',
+  ];
+  $expBandColorMap = [];
+  $eci = 0;
+  foreach ($expenses->pluck('band_id')->unique() as $bId) {
+      $expBandColorMap[$bId ?? 'null'] = $expBandPalette[$eci % count($expBandPalette)];
+      $eci++;
+  }
+@endphp
+<div class="filter-bar no-print" style="margin-bottom:16px;padding:12px 16px;">
+  <div class="f-field">
+    <label>فلترة بالبند</label>
+    <div class="f-select-wrap">
+      <select id="expenses-band-filter" class="f-select" style="min-width:200px">
+        <option value="">كل البنود</option>
+        @foreach($expBands as $band)
+          <option value="{{ $band->id }}">{{ $band->name }}</option>
+        @endforeach
+      </select>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chevron-down"/></svg>
+    </div>
+  </div>
+</div>
+
+@php
+  $expByBand = $expenses->sortByDesc('date')->groupBy('band_id');
+  $totalExpNetCost = $expenses->sum(fn($m) => $m->netCost());
+@endphp
+@foreach($expByBand as $bId => $bandMats)
+  @php
+    $bObj = $bandMats->first()->band;
+    $bColor = $expBandColorMap[$bId === null ? 'null' : $bId] ?? '#f8fafc';
+    $bNetCost = $bandMats->sum(fn($m) => $m->netCost());
+  @endphp
+  <div class="table-card exp-band-section" data-band="{{ $bId ?? '' }}" style="margin-bottom:14px">
+    <div class="mat-band-header" style="background:{{ $bColor }}; cursor:pointer; user-select:none" onclick="const t = this.nextElementSibling; const c = this.querySelector('.chev'); if(t.style.display==='none'){t.style.display='block';c.style.transform='rotate(180deg)';}else{t.style.display='none';c.style.transform='rotate(0deg)';}">
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg class="chev" style="transition:transform 0.2s" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-chevron-down"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-hardhat"/></svg>
+        <strong>{{ $bObj?->name ?? 'بنود فرعية عامة' }}</strong>
+        <span class="tag gray sm">{{ $bandMats->count() }} بند</span>
+      </div>
+      <div class="tnum" style="font-weight:700">إجمالي: {{ \App\Support\Money::format($bNetCost) }} ج.م</div>
+    </div>
+    <div class="table-scroll" style="display:none">
+      <table>
+        <thead>
+          <tr style="background:{{ $bColor }}">
+            <th>البند الفرعي</th>
+            <th>المورد</th>
+            <th class="num">الكمية</th>
+            <th class="num"><span class="price-cost">التكلفة</span></th>
+            <th class="num"><span class="price-sell">سعر البيع</span></th>
+            <th class="num">المرتجع</th>
+            <th class="num">الإجمالي الصافي</th>
+            <th>التاريخ</th>
+            <th class="no-print"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach($bandMats as $m)
+            <tr class="exp-row" data-band="{{ $m->band_id }}">
+              <td>
+                <strong>{{ $m->item }}</strong>
+                @if($m->notes)
+                  <div class="muted" style="font-size:13px;font-weight:500;margin-top:2px">{{ $m->notes }}</div>
+                @endif
+              </td>
+              <td class="muted">{{ ($m->supplier?->name ?? ($m->band_worker_id ? '—' : $m->supplier_name)) ?: '—' }}</td>
+              <td class="num">{{ number_format($m->qty, 1) }}</td>
+              <td class="num price-cost">{{ \App\Support\Money::format($m->unit_price) }}</td>
+              <td class="num price-sell">{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
+              <td class="num {{ $m->returnedQty() > 0 ? '' : 'muted' }}">{{ \App\Support\Money::format($m->returnedQty(), 1) }}</td>
+              <td class="num"><strong>{{ \App\Support\Money::format($m->netCost()) }}</strong></td>
+              <td class="muted">
+                {{ $m->date->format('Y-m-d') }}
+                @if($m->invoice_id)
+                  <a href="{{ route('material_invoices.show', $m->invoice_id) }}" class="tag sm" style="margin-right:4px">فاتورة</a>
+                @endif
+              </td>
+              <td class="no-print">
+                @if(auth()->user()->isAdmin())
+                  <button type="button" class="btn ghost danger sm" title="عكس الحركة" onclick="openItemDeleteModal('{{ route('materials.destroy', $m->id) }}')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-trash"/></svg>
+                  </button>
+                @endif
+              </td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+    </div>
+  </div>
+@endforeach
+<div class="mat-total-strip">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-coins"/></svg>
+  إجمالي البنود الفرعية الصافية:
+  <strong class="tnum">{{ \App\Support\Money::format($totalExpNetCost) }} ج.م</strong>
+</div>
+@else
+  <div class="table-card" style="margin-bottom:24px">
+    <div class="empty-state"><h4>لا توجد بنود فرعية مسجلة</h4></div>
+  </div>
+@endif
+</div>{{-- /tab-panel: expenses --}}
 
 <div class="tab-panel" data-panel="installments" style="display:none">
 
@@ -620,16 +756,12 @@
 
 <div class="tab-panel" data-panel="materials" style="display:none">
 <div class="section-label no-print" style="display:flex;justify-content:space-between;align-items:center;margin-top:0">
-  <span>الخامات والمصروفات الفرعية</span>
+  <span>الخامات</span>
   <div class="btn-row">
     <button type="button" class="btn ghost sm" onclick="printMaterials()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-print"/></svg>
       طباعة
     </button>
-    <a href="{{ route('expenses.create', $project) }}" class="btn ghost sm">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
-      مصروفات وبنود فرعية
-    </a>
     <a href="{{ route('materials.create', ['project_id' => $project->id]) }}" class="btn sm">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg>
       خامة جديدة
@@ -637,9 +769,12 @@
   </div>
 </div>
 
-@if($project->materials->count())
 @php
-  $matBands = $project->materials->map(fn($m) => $m->band)->filter()->unique('id');
+  $pureMaterials = $project->materials->reject->isMisc();
+@endphp
+@if($pureMaterials->count())
+@php
+  $matBands = $pureMaterials->map(fn($m) => $m->band)->filter()->unique('id');
   $bandPalette = [
     '#eff6ff', // أزرق فاتح
     '#f0fdf4', // أخضر فاتح
@@ -650,7 +785,7 @@
   ];
   $bandColorMap = [];
   $ci = 0;
-  foreach ($project->materials->pluck('band_id')->unique() as $bId) {
+  foreach ($pureMaterials->pluck('band_id')->unique() as $bId) {
       $bandColorMap[$bId ?? 'null'] = $bandPalette[$ci % count($bandPalette)];
       $ci++;
   }
@@ -670,10 +805,10 @@
   </div>
 </div>
 @endif
-@if($project->materials->count())
+@if($pureMaterials->count())
 @php
-  $matsByBand = $project->materials->sortByDesc('date')->groupBy('band_id');
-  $totalNetCost = $project->materials->sum(fn($m) => $m->netCost());
+  $matsByBand = $pureMaterials->sortByDesc('date')->groupBy('band_id');
+  $totalNetCost = $pureMaterials->sum(fn($m) => $m->netCost());
 @endphp
 @foreach($matsByBand as $bId => $bandMats)
   @php
@@ -711,7 +846,7 @@
             <tr class="mat-row" data-band="{{ $m->band_id }}">
               <td>
                 <strong>{{ $m->item }}</strong>
-                @if($m->isMisc())<span class="tag gray sm" style="margin-right:6px">مصروفات وبنود فرعية</span>@endif
+                @if($m->isMisc())<span class="tag gray sm" style="margin-right:6px">بند فرعي</span>@endif
               </td>
               <td class="muted">{{ $m->supplier?->name ?? '—' }}</td>
               <td class="num">{{ number_format($m->qty, 1) }}</td>
@@ -978,7 +1113,7 @@
   // الصنايعية: كل فني ونسبة تحصيله، الأعلى تعاقدًا أولًا
   $rptWorkers = $project->bands->flatMap(fn ($b) => $b->workers)->sortByDesc('amount')->values();
 
-  // ── تحليل الخامات: أعلى الأصناف بالتكلفة (خامات حقيقية فقط، بدون مصروفات وبنود فرعية) ──
+  // ── تحليل الخامات: أعلى الأصناف بالتكلفة (خامات حقيقية فقط، بدون بنود فرعية) ──
   $realMaterials = $project->materials->where('category', '!=', 'misc');
   $rptTopMaterials = $realMaterials
     ->groupBy('item')
@@ -1308,7 +1443,7 @@
               @endphp
               @if($genMatCount > 0)
                 <tr>
-                  <td>مصروفات وبنود فرعية وخامات عامة</td>
+                  <td>بنود فرعية وخامات عامة</td>
                   <td class="num">{{ \App\Support\Money::format($genMatClientTotal) }}</td>
                   <td class="num">{{ \App\Support\Money::format($genMatCost) }}</td>
                   <td class="num" style="color:{{ $genMatProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($genMatProfit) }}</td>
@@ -1370,9 +1505,14 @@
       document.body.classList.add('printing-materials');
       window.print();
     }
+    function printExpenses() {
+      document.body.classList.add('printing-expenses');
+      window.print();
+    }
     window.addEventListener('afterprint', () => {
       document.body.classList.remove('printing-profit');
       document.body.classList.remove('printing-materials');
+      document.body.classList.remove('printing-expenses');
     });
   </script>
   @endpush
@@ -1535,6 +1675,24 @@ document.getElementById('materials-band-filter')?.addEventListener('change', fun
     }
   });
 });
+
+document.getElementById('expenses-band-filter')?.addEventListener('change', function() {
+  const val = this.value;
+  const sections = document.querySelectorAll('.exp-band-section');
+  sections.forEach(sec => {
+    if(val === '' || sec.dataset.band === val) {
+      sec.style.display = '';
+      if(val !== '') {
+        const t = sec.querySelector('.table-scroll');
+        const c = sec.querySelector('.chev');
+        if(t) t.style.display = 'block';
+        if(c) c.style.transform = 'rotate(180deg)';
+      }
+    } else {
+      sec.style.display = 'none';
+    }
+  });
+});
 </script>
 
 {{-- Modal for Project Discount --}}
@@ -1663,7 +1821,7 @@ function initFinancialCharts() {
     new Chart(costCtx, {
       type: 'bar',
       data: {
-        labels: ['خامات', 'مصنعيات', 'مصروفات وبنود فرعية', 'عمولات'],
+        labels: ['خامات', 'مصنعيات', 'بنود فرعية', 'عمولات'],
         datasets: [{
           label: 'التكلفة',
           data: [{{ $bandMaterialsCost ?: 0 }}, {{ $laborCost ?: 0 }}, {{ $generalMaterialsCost ?: 0 }}, {{ $marketersCost ?: 0 }}],

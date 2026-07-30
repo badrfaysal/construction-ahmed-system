@@ -35,6 +35,14 @@ class BandWorker extends Model
         return $this->hasMany(WorkerPayment::class, 'band_worker_id')->orderByDesc('date');
     }
 
+    // المصروفات/النثريات اللي الصنايعي اشتراها أو صرفها من جيبه (مسجلة כآجل) والمفروض نسددها له
+    public function deferredExpenses(): HasMany
+    {
+        return $this->hasMany(Material::class, 'band_worker_id')
+                    ->where('category', 'misc')
+                    ->where('payment_status', 'deferred');
+    }
+
     public function contractTypeAr(): string
     {
         return match ($this->contract_type) {
@@ -62,18 +70,23 @@ class BandWorker extends Model
         return (float) $this->payments->sum(fn ($p) => $p->amount + $p->discount);
     }
 
-    // اللي لسه مستحق للصنايعي (علينا) = تعاقده ناقص اللي اتسوّى — never negative
+    // إجمالي المصروفات الآجلة اللي الصنايعي صرفها ولسه ما اخدهاش كاش
+    public function deferredExpensesTotal(): float
+    {
+        return (float) $this->deferredExpenses->sum(fn($m) => $m->netCost());
+    }
+
+    // اللي لسه مستحق للصنايعي (علينا) = تعاقده + مصروفاته الآجلة ناقص اللي اتسوّى — never negative
     public function remaining(): float
     {
-        return max((float) $this->amount - $this->paidTotal(), 0);
+        return max((float) $this->amount + $this->deferredExpensesTotal() - $this->paidTotal(), 0);
     }
 
     // اللي مستحق لينا عند الصنايعي (دين عليه): لو الخصومات اللي عملناها له
-    // زوّدت المسوّى فوق قيمة تعاقده (مثلاً خصمنا عليه غرامة أكبر من المتبقي)،
-    // الفرق ده بيبقى فلوس ليها عندنا الحق نستردها منه في تعاقد جاي.
+    // زوّدت المسوّى فوق قيمة تعاقده + مصروفاته
     public function owedToUs(): float
     {
-        return max($this->paidTotal() - (float) $this->amount, 0);
+        return max($this->paidTotal() - ((float) $this->amount + $this->deferredExpensesTotal()), 0);
     }
 
     // نفس base الاستخدام في clientPrice() — عشان tradeProfit()+percentageProfit()

@@ -43,8 +43,10 @@ class MaterialObserver
         // Record debt for unpaid portion (partial or deferred). Based on the
         // gross purchase — a later return reduces this debt via
         // MaterialReturnObserver, so it must not already be netted here.
+        // NOTE: If this is an expense paid by a craftsman (band_worker_id is set),
+        // we do NOT create a supplier debt. It is tracked as craftsman dues instead.
         $debtAmount = $material->grossCost() - $walletAmount;
-        if ($debtAmount > 0) {
+        if ($debtAmount > 0 && !$material->band_worker_id) {
             SupplierDebt::create([
                 'project_id'   => $material->project_id,
                 'band_id'      => $material->band_id,
@@ -106,7 +108,7 @@ class MaterialObserver
         // gross debt minus the debt that was already cancelled via returns
         $debtAmount = $material->grossCost() - $walletAmount - $material->returnsDebtDrop();
 
-        if ($debtAmount > 0) {
+        if ($debtAmount > 0 && !$material->band_worker_id) {
             if ($debt) {
                 $debt->update([
                     'project_id'   => $material->project_id,

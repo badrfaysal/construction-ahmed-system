@@ -5,7 +5,8 @@
 @section('content')
 @php
   $project   = $worker->band->project;
-  $contract  = (float) $worker->amount;
+  $expenses  = $worker->deferredExpensesTotal();
+  $contract  = (float) $worker->amount + $expenses;
   $paid      = $worker->paidTotal();
   $remaining = $worker->remaining();
   $owedToUs  = $worker->owedToUs();
@@ -36,6 +37,9 @@
   <div class="card stat">
     <div class="top"><span class="label">المتعاقد عليه</span></div>
     <div class="val tnum">{{ \App\Support\Money::format($contract) }} <small>ج.م</small></div>
+    @if($expenses > 0)
+      <div class="note" style="font-size:11px; margin-top:4px; color:var(--muted)">يتضمن {{ \App\Support\Money::format($expenses) }} ج.م مصنعيات إضافية (بنود فرعية)</div>
+    @endif
   </div>
   <div class="card stat">
     <div class="top"><span class="label">المسوّى (مدفوع + خصم)</span></div>
@@ -154,6 +158,42 @@
       </div>
     @endif
   </div>
+
+  {{-- Expenses history --}}
+  @if($worker->deferredExpenses->count())
+  <div class="table-card" style="margin-top:20px">
+    <div class="section-label" style="margin:14px 18px 0">سجل الأعمال الإضافية (بنود فرعية مسجلة باسم الفني)</div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>التاريخ</th>
+            <th>البيان</th>
+            <th class="num">المبلغ</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach($worker->deferredExpenses as $m)
+            <tr>
+              <td class="muted">{{ $m->date->format('Y-m-d') }}</td>
+              <td>
+                {{ $m->item }}
+                @if($m->notes)<div class="muted" style="font-size:12.5px;font-weight:500;margin-top:2px">{{ $m->notes }}</div>@endif
+              </td>
+              <td class="num">{{ \App\Support\Money::format($m->netCost()) }}</td>
+            </tr>
+          @endforeach
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2">الإجمالي</td>
+            <td class="num" style="color:var(--accent)">{{ \App\Support\Money::format($expenses) }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+  @endif
 </div>
 
 {{-- تبديل الفني — متاح طول ما لسه فاضل مستحق يتسلّم لحد تاني --}}

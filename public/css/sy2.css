@@ -524,6 +524,11 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
   body.printing-materials .tab-panel { display:none!important; }
   body.printing-materials .tab-panel[data-panel="materials"] { display:block!important; }
 
+  body.printing-expenses .page-head { display:none!important; }
+  body.printing-expenses .tabs { display:none!important; }
+  body.printing-expenses .tab-panel { display:none!important; }
+  body.printing-expenses .tab-panel[data-panel="expenses"] { display:block!important; }
+
   /* Compact the printed document (كشف حساب / عرض سعر) so it fits as few pages as possible */
   .statement{box-shadow:none;border:none;max-width:100%}
   .st-head{padding:10px 16px}

@@ -257,6 +257,8 @@ class MaterialController extends Controller
         $activeBand  = $bands->firstWhere('status', 'active');
         $defaultSup  = $project->defaultSupervisionPct();
         $wallets     = Account::selectable();
+        $itemNames   = self::knownItemNames();
+        $unitNames   = self::knownUnitNames();
         
         $supplierNames = \App\Models\Supplier::select('name')->distinct()->pluck('name')
             ->merge(\App\Models\Material::whereNotNull('supplier_name')->where('supplier_name', '!=', '')->distinct()->pluck('supplier_name'))
@@ -264,66 +266,177 @@ class MaterialController extends Controller
 
         $craftsmenNames = \App\Models\BandWorker::select('name')->whereNotNull('name')->where('name', '!=', '')->distinct()->pluck('name')->sort()->values();
 
-        return view('materials.expense', compact('project', 'bands', 'activeBand', 'defaultSup', 'wallets', 'supplierNames', 'craftsmenNames'));
+        return view('materials.expense', compact('project', 'bands', 'activeBand', 'defaultSup', 'wallets', 'supplierNames', 'craftsmenNames', 'itemNames', 'unitNames'));
     }
 
     // Save a misc expense as a Material row (category=misc) so it flows through
     // the wallet, client statement, and cost statement exactly like a purchase.
     public function storeExpense(Request $request, Project $project)
     {
+        $partyType  = $request->input('party_type', 'craftsman');
         $isDeferred = $request->input('payment_type') === 'deferred';
-        $data = $request->validate([
-            'band_id'         => ['nullable', 'exists:sy2_project_bands,id'],
-            'account_id'      => [$isDeferred ? 'nullable' : 'required', 'nullable', 'integer', 'exists:sy2_accounts,id'],
-            'item'            => ['required', 'string', 'max:255'],
-            'supplier_name'   => ['required', 'string', 'max:255'],
-            'contract_type'   => ['nullable', 'string', 'in:lump_sum,per_meter,per_piece'],
-            'qty'             => ['nullable', 'numeric', 'min:0'],
-            'amount'          => ['required', 'numeric', 'min:0'],
-            'sell_price'      => ['required', 'numeric', 'min:0'],
-            'supervision_pct' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'date'            => ['required', 'date'],
-        ]);
 
-        if ($project->hasWholeProjectInstallmentContract()) {
-            throw ValidationException::withMessages([
-                'band_id' => 'تم تقسيط المشروع بالكامل — لا يمكن تسجيل خامات أو مصروفات جديدة لهذا المشروع.',
+        // ── Shared validation ──
+        $sharedRules = [
+            'band_id'      => ['required', 'exists:sy2_project_bands,id'],
+            'item'         => ['required', 'string', 'max:255'],
+            'date'         => ['required', 'date'],
+            'account_id'   => [$isDeferred ? 'nullable' : 'required', 'nullable', 'integer', 'exists:sy2_accounts,id'],
+            'notes'        => ['nullable', 'string'],
+            'party_type'   => ['required', 'string', 'in:supplier,craftsman'],
+            'payment_type' => ['required', 'string', 'in:immediate,deferred'],
+        ];
+
+        // ── Per-type validation ──
+        if ($partyType === 'craftsman') {
+            $rules = array_merge($sharedRules, [
+                'supplier_name'   => ['required', 'string', 'max:255'],
+                'contract_type'   => ['nullable', 'string', 'in:lump_sum,per_meter,per_piece'],
+                'qty'             => ['nullable', 'numeric', 'min:0'],
+                'amount'          => ['required', 'numeric', 'min:0'],
+                'sell_price'      => ['required', 'numeric', 'min:0'],
+                'supervision_pct' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            ]);
+        } else {
+            $rules = array_merge($sharedRules, [
+                'sup_supplier_name'              => ['required', 'string', 'max:255'],
+                'sup_items'                      => ['required', 'array', 'min:1'],
+                'sup_items.*.item'               => ['required', 'string', 'max:255'],
+                'sup_items.*.unit'               => ['required', 'string', 'max:50'],
+                'sup_items.*.qty'                => ['required', 'numeric', 'min:0.01'],
+                'sup_items.*.unit_price'         => ['required', 'numeric', 'min:0'],
+                'sup_items.*.sell_price'         => ['required', 'numeric', 'min:0'],
+                'sup_items.*.supervision_pct'    => ['nullable', 'numeric', 'min:0', 'max:100'],
             ]);
         }
 
-        if (! empty($data['band_id'])) {
-            $band = ProjectBand::find($data['band_id']);
-            if ($band && $band->hasInstallmentContract()) {
-                throw ValidationException::withMessages([
-                    'band_id' => 'البند "' . $band->name . '" داخل في عقد تقسيط — اعمل بند جديد باسم جديد.',
-                ]);
-            }
+        $data = $request->validate($rules);
+
+        // ── Project / Band checks ──
+        if ($project->hasWholeProjectInstallmentContract()) {
+            throw ValidationException::withMessages([
+                'band_id' => 'تم تقسيط المشروع بالكامل — لا يمكن تسجيل بنود فرعية جديدة.',
+            ]);
         }
 
-        $ctype = $data['contract_type'] ?? null;
-        $unit = $ctype === 'per_meter' ? 'متر' : ($ctype === 'per_piece' ? 'قطعة' : 'مبلغ');
-        $qty = ($ctype && $ctype !== 'lump_sum' && !empty($data['qty']) && $data['qty'] > 0) ? (float) $data['qty'] : 1;
+        $band = ProjectBand::find($data['band_id']);
+        if ($band && $band->hasInstallmentContract()) {
+            throw ValidationException::withMessages([
+                'band_id' => 'البند "' . $band->name . '" داخل في عقد تقسيط — اعمل بند جديد باسم جديد.',
+            ]);
+        }
 
-        DB::transaction(fn () => Material::create([
-            'project_id'      => $project->id,
-            'band_id'         => $data['band_id'] ?? null,
-            'account_id'      => $isDeferred ? null : ($data['account_id'] ?? null),
-            'supplier_name'   => $data['supplier_name'] ?? null,
-            'contract_type'   => $ctype,
-            'category'        => 'misc',
-            'item'            => $data['item'],
-            'unit'            => $unit,
-            'qty'             => $qty,
-            'unit_price'      => $data['amount'],
-            'sell_price'      => $data['sell_price'],
-            'supervision_pct' => $data['supervision_pct'] ?? 0,
-            'date'            => $data['date'],
-            'payment_status'  => $isDeferred ? 'deferred' : 'paid',
-            'paid_amount'     => $isDeferred ? 0 : ($qty * (float)$data['amount']),
-        ]));
+        // ═══════════════════════════════════════════════
+        // (A) مصنعية — صنايعي
+        // ═══════════════════════════════════════════════
+        if ($partyType === 'craftsman') {
+            $ctype = $data['contract_type'] ?? null;
+            $unit  = $ctype === 'per_meter' ? 'متر' : ($ctype === 'per_piece' ? 'قطعة' : 'مبلغ');
+            $qty   = ($ctype && $ctype !== 'lump_sum' && !empty($data['qty']) && $data['qty'] > 0) ? (float) $data['qty'] : 1;
+
+            $worker = \App\Models\BandWorker::whereHas('band', fn($q) => $q->where('project_id', $project->id))
+                        ->where('name', $data['supplier_name'])
+                        ->first();
+            if (!$worker) {
+                throw ValidationException::withMessages([
+                    'supplier_name' => 'الصنايعي غير مسجل في أي بند بهذا المشروع. يرجى تسجيله أولاً.',
+                ]);
+            }
+
+            DB::transaction(fn () => Material::create([
+                'project_id'      => $project->id,
+                'band_id'         => $data['band_id'],
+                'band_worker_id'  => $worker->id,
+                'account_id'      => $isDeferred ? null : ($data['account_id'] ?? null),
+                'supplier_name'   => $data['supplier_name'],
+                'contract_type'   => $ctype,
+                'category'        => 'misc',
+                'item'            => $data['item'],
+                'unit'            => $unit,
+                'qty'             => $qty,
+                'unit_price'      => $data['amount'],
+                'sell_price'      => $data['sell_price'],
+                'supervision_pct' => $data['supervision_pct'] ?? 0,
+                'date'            => $data['date'],
+                'notes'           => $data['notes'] ?? null,
+                'payment_status'  => $isDeferred ? 'deferred' : 'paid',
+                'paid_amount'     => $isDeferred ? 0 : ($qty * (float)$data['amount']),
+            ]));
+
+            return redirect()->route('projects.show', $project)
+                ->with('success', 'تم تسجيل البند الفرعي (مصنعية).');
+        }
+
+        // ═══════════════════════════════════════════════
+        // (B) خامات — مورد (فاتورة مجمعة)
+        // ═══════════════════════════════════════════════
+        $supplierName = $data['sup_supplier_name'];
+        $items = $data['sup_items'];
+
+        // Find or create supplier
+        $supplier = \App\Models\Supplier::firstOrCreate(
+            ['name' => $supplierName],
+            ['phone' => null, 'activity' => 'بند فرعي']
+        );
+
+        // Calculate total cost
+        $totalCost = 0;
+        foreach ($items as $item) {
+            $totalCost += (float) $item['qty'] * (float) $item['unit_price'];
+        }
+
+        $paymentStatus = $isDeferred ? 'deferred' : 'paid';
+        $paidAmount    = $isDeferred ? 0 : $totalCost;
+
+        $invoiceName = 'بند فرعي: ' . $data['item'] . ' — ' . $data['date'];
+        // Ensure unique invoice name
+        $suffix = 1;
+        $originalName = $invoiceName;
+        while (\App\Models\MaterialInvoice::where('name', $invoiceName)->exists()) {
+            $invoiceName = $originalName . ' (' . $suffix++ . ')';
+        }
+
+        $count = DB::transaction(function () use ($project, $data, $supplier, $items, $totalCost, $paidAmount, $paymentStatus, $invoiceName, $isDeferred) {
+            $invoice = \App\Models\MaterialInvoice::create([
+                'project_id'   => $project->id,
+                'supplier_id'  => $supplier->id,
+                'account_id'   => $isDeferred ? null : ($data['account_id'] ?? null),
+                'date'         => $data['date'],
+                'name'         => $invoiceName,
+                'total_amount' => $totalCost,
+                'paid_amount'  => $paidAmount,
+            ]);
+
+            $count = 0;
+            foreach ($items as $item) {
+                $itemCost = (float)$item['qty'] * (float)$item['unit_price'];
+                $itemPaid = $paymentStatus === 'paid' ? $itemCost : 0;
+
+                Material::create([
+                    'project_id'      => $project->id,
+                    'band_id'         => $data['band_id'],
+                    'account_id'      => $isDeferred ? null : ($data['account_id'] ?? null),
+                    'supplier_id'     => $supplier->id,
+                    'invoice_id'      => $invoice->id,
+                    'category'        => 'misc',
+                    'item'            => $item['item'],
+                    'unit'            => $item['unit'],
+                    'qty'             => $item['qty'],
+                    'unit_price'      => $item['unit_price'],
+                    'sell_price'      => $item['sell_price'],
+                    'supervision_pct' => $item['supervision_pct'] ?? 0,
+                    'date'            => $data['date'],
+                    'notes'           => $data['notes'] ?? null,
+                    'payment_status'  => $paymentStatus,
+                    'paid_amount'     => $itemPaid,
+                ]);
+                $count++;
+            }
+            return $count;
+        });
 
         return redirect()->route('projects.show', $project)
-            ->with('success', 'تم تسجيل المصروف النثري.');
+            ->with('success', "تم تسجيل البند الفرعي ({$count} صنف خامات).");
     }
 
     public function destroy(Request $request, Material $material)

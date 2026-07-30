@@ -11,9 +11,9 @@ class Material extends Model
     protected $table = 'sy2_materials';
 
     protected $fillable = [
-        'project_id', 'band_id', 'account_id', 'supplier_id', 'supplier_name', 'contract_type', 'invoice_id', 'category',
+        'project_id', 'band_id', 'band_worker_id', 'account_id', 'supplier_id', 'supplier_name', 'contract_type', 'invoice_id', 'category',
         'item', 'unit', 'qty', 'unit_price', 'sell_price', 'supervision_pct',
-        'date', 'payment_status', 'paid_amount',
+        'date', 'payment_status', 'paid_amount', 'notes'
     ];
 
     // A miscellaneous expense (نثري) — tips, transport, meals — vs a real
@@ -46,6 +46,11 @@ class Material extends Model
     public function band(): BelongsTo
     {
         return $this->belongsTo(ProjectBand::class, 'band_id');
+    }
+
+    public function worker(): BelongsTo
+    {
+        return $this->belongsTo(BandWorker::class, 'band_worker_id');
     }
 
     public function invoice(): BelongsTo

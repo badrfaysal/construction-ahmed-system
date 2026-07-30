@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 @section('title', 'كشف حساب بند: ' . $band->name)
 @section('page-title', 'كشف حساب البند')
 
@@ -51,11 +51,19 @@
     </div>
 
     {{-- Materials --}}
-    <div class="st-sec">الخامات ({{ $band->materials->count() }})</div>
+    @php
+      $realMaterials = $band->materials->where('category', '!=', 'misc')->sortBy('date');
+      $subBands = $band->materials->where('category', 'misc')->sortBy('date');
+      $realMatCost = $realMaterials->sum(fn($m) => $m->netCost());
+      $subBandsCost = $subBands->sum(fn($m) => $m->netCost());
+    @endphp
+
+    {{-- Real Materials --}}
+    <div class="st-sec">الخامات ({{ $realMaterials->count() }})</div>
     <table class="st-table">
       <thead><tr><th>التاريخ</th><th>الصنف</th><th>المورد</th><th class="num">الكمية</th><th class="num">سعر الشراء</th><th class="num">سعر العميل</th><th class="num">التكلفة</th></tr></thead>
       <tbody>
-        @forelse($band->materials->sortBy('date') as $m)
+        @forelse($realMaterials as $m)
           <tr>
             <td>{{ $m->date->format('Y-m-d') }}</td>
             <td>
@@ -75,10 +83,66 @@
         @endforelse
         <tr class="sub">
           <td colspan="6" style="text-align:left">إجمالي تكلفة الخامات</td>
-          <td class="num">{{ \App\Support\Money::format($materialCost) }} ج.م</td>
+          <td class="num">{{ \App\Support\Money::format($realMatCost) }} ج.م</td>
         </tr>
       </tbody>
     </table>
+
+    {{-- Sub-bands --}}
+    @if($subBands->count() > 0)
+    <div class="st-sec" style="margin-top:24px;">البنود الفرعية ({{ $subBands->count() }})</div>
+    <table class="st-table">
+      <thead><tr><th>التاريخ</th><th>الصنف</th><th>الجهة</th><th class="num">الكمية</th><th class="num">السعر</th><th class="num">سعر العميل</th><th class="num">التكلفة</th></tr></thead>
+      <tbody>
+        @php $lastInvoiceId = null; @endphp
+        @foreach($subBands as $m)
+          @if($m->invoice_id && str_starts_with($m->invoice?->name ?? '', 'بند فرعي:'))
+            @if($lastInvoiceId !== $m->invoice_id)
+              <tr style="background-color: var(--bg-hover);">
+                <td>{{ $m->date->format('Y-m-d') }}</td>
+                <td colspan="6" style="font-weight:bold; color:var(--accent);">
+                  بند فرعي: {{ explode(' — ', str_replace('بند فرعي: ', '', $m->invoice->name))[0] }}
+                </td>
+              </tr>
+              @php $lastInvoiceId = $m->invoice_id; @endphp
+            @endif
+            <tr>
+              <td></td>
+              <td style="padding-right: 20px;">
+                <span style="color:var(--text-muted);margin-left:4px;">-</span> {{ $m->item }}
+                @if($m->notes)<br><small class="muted" style="font-size:12.5px;font-weight:500;">{{ $m->notes }}</small>@endif
+                @if($m->contract_type && $m->contract_type !== 'lump_sum') <br><small class="muted" style="font-size:11px">({{ $m->contractTypeAr() }})</small> @endif
+              </td>
+              <td class="muted">{{ $m->supplier?->name ?? $m->supplier_name ?? '—' }}</td>
+              <td class="num">{{ ($m->contract_type === 'lump_sum') ? '—' : \App\Support\Money::format($m->netQty(), 1) . ' ' . $m->unit }}</td>
+              <td class="num">{{ \App\Support\Money::format($m->unit_price) }}</td>
+              <td class="num">{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
+              <td class="num"><b>{{ \App\Support\Money::format($m->netCost()) }}</b></td>
+            </tr>
+          @else
+            @php $lastInvoiceId = null; @endphp
+            <tr>
+              <td>{{ $m->date->format('Y-m-d') }}</td>
+              <td>
+                {{ $m->item }}
+                @if($m->notes)<br><small class="muted" style="font-size:12.5px;font-weight:500;">{{ $m->notes }}</small>@endif
+                @if($m->contract_type && $m->contract_type !== 'lump_sum') <br><small class="muted" style="font-size:11px">({{ $m->contractTypeAr() }})</small> @endif
+              </td>
+              <td class="muted">{{ $m->supplier?->name ?? $m->supplier_name ?? '—' }}</td>
+              <td class="num">{{ ($m->contract_type === 'lump_sum') ? '—' : \App\Support\Money::format($m->netQty(), 1) . ' ' . $m->unit }}</td>
+              <td class="num">{{ \App\Support\Money::format($m->unit_price) }}</td>
+              <td class="num">{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
+              <td class="num"><b>{{ \App\Support\Money::format($m->netCost()) }}</b></td>
+            </tr>
+          @endif
+        @endforeach
+        <tr class="sub">
+          <td colspan="6" style="text-align:left">إجمالي تكلفة البنود الفرعية</td>
+          <td class="num">{{ \App\Support\Money::format($subBandsCost) }} ج.م</td>
+        </tr>
+      </tbody>
+    </table>
+    @endif
 
     {{-- Labor --}}
     <div class="st-sec">المصنعية ({{ $band->workers->count() ?: ($band->labor_amount > 0 ? 1 : 0) }})</div>

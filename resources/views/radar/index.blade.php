@@ -16,126 +16,130 @@
 
 {{-- Top Action Bar & Stats --}}
 <div class="no-print" style="margin-bottom:20px;">
-  <div style="background:var(--ink-1); color:#fff; border-radius:12px; padding:16px 24px; display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; box-shadow:var(--shadow-md);">
-    <button class="btn primary" onclick="openOperationModal()" style="font-size:16px; font-weight:bold; padding:10px 24px; border-radius:30px; background:#10b981; border-color:#10b981; color:#fff;">
-      + بدء العملية
-    </button>
-    <div style="text-align:left; direction:ltr;">
-      <h3 style="margin:0; font-size:20px; display:flex; align-items:center; justify-content:flex-end; gap:8px;">
+  <div style="background: #fff; border-radius: 16px; padding: 24px 28px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
+    <div style="text-align:right;">
+      <h3 style="margin:0; font-size:20px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:12px;">
+        <div style="background: #eff6ff; color: #3b82f6; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="22" height="22"><use href="#i-zap"/></svg>
+        </div>
         تنفيذ حركة يدوية
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><use href="#i-zap"/></svg>
       </h3>
-      <div style="font-size:13px; color:var(--ink-4); margin-top:4px; direction:rtl;">
-        <span style="color:#10b981; font-weight:bold; background:rgba(16,185,129,0.1); padding:2px 4px; border-radius:4px;">إيداع</span> يتسجل كـ دين عليك للمودع | 
-        <span style="color:#ef4444; font-weight:bold; background:rgba(239,68,68,0.1); padding:2px 4px; border-radius:4px;">صرف</span> يتسجل كـ مستحق على المستلم | 
-        <span style="color:#3b82f6; font-weight:bold; background:rgba(59,130,246,0.1); padding:2px 4px; border-radius:4px;">تحويل</span> بين المحافظ
+      <div style="font-size:13.5px; color:#64748b; margin-top:12px; font-weight:600; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+        <span style="color:#059669; background:#d1fae5; padding:4px 10px; border-radius:8px;">إيداع</span> يتسجل كدين عليك للمودع 
+        <span style="color:#cbd5e1; margin:0 4px;">|</span>
+        <span style="color:#e11d48; background:#ffe4e6; padding:4px 10px; border-radius:8px;">صرف</span> يتسجل كمستحق على المستلم 
+        <span style="color:#cbd5e1; margin:0 4px;">|</span>
+        <span style="color:#2563eb; background:#dbeafe; padding:4px 10px; border-radius:8px;">تحويل</span> بين المحافظ
       </div>
     </div>
+    <button class="btn primary" onclick="openOperationModal()" style="font-size:16px; font-weight:bold; padding:14px 28px; border-radius:12px; background:#10b981; border-color:#10b981; color:#fff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.2s;">
+      <i class="fa fa-plus" style="margin-inline-end:8px;"></i> بدء العملية
+    </button>
   </div>
 
-  <div style="display:grid; grid-template-columns:1fr 1.5fr 1.5fr 1.5fr; gap:16px;">
-    {{-- Canceled --}}
-    <div style="background:#475569; color:#fff; border-radius:10px; padding:16px; position:relative; overflow:hidden;">
-      <div style="position:absolute; left:-20px; bottom:-20px; opacity:0.1; transform:scale(2);">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="100" height="100"><use href="#i-pie-chart"/></svg>
+  <div class="grid radar-stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+    {{-- Incoming --}}
+    <div class="vstat radar-stat-green">
+      <div class="top"><span class="label">التدفقات الداخلة</span>
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-down"/></svg></span>
       </div>
-      <div style="font-size:14px; font-weight:bold; text-align:left; margin-bottom:8px;">عمليات ملغاة</div>
-      <div style="font-size:24px; font-weight:bold; text-align:left; margin-bottom:12px;">{{ $canceledCount }}</div>
-      <div style="font-size:10px; opacity:0.8; text-align:right; border-top:1px dashed rgba(255,255,255,0.2); padding-top:8px;">
-        عدد الحركات اليدوية اللي اتعمل لها إلغاء في نفس الفترة
+      <div class="val tnum">{{ \App\Support\Money::format($totalIn) }} <small>ج.م</small></div>
+      <div class="note" style="line-height:1.4; opacity:0.85; margin-top:8px;">
+        كل فلوس دخلت الحسابات: إيرادات فعلية + تسويات.
       </div>
-    </div>
-    
-    {{-- Transfers --}}
-    <div style="background:#2563eb; color:#fff; border-radius:10px; padding:16px; position:relative; overflow:hidden;">
-      <div style="position:absolute; left:-20px; bottom:-20px; opacity:0.1; transform:scale(2);">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="100" height="100"><use href="#i-pie-chart"/></svg>
-      </div>
-      <div style="font-size:14px; font-weight:bold; text-align:left; margin-bottom:8px;">إجمالي التحويلات</div>
-      <div style="font-size:24px; font-weight:bold; text-align:left; margin-bottom:12px;">{{ \App\Support\Money::format($totalTransfers) }} ج</div>
-      <div style="font-size:10px; opacity:0.8; text-align:right; border-top:1px dashed rgba(255,255,255,0.2); padding-top:8px;">
-        فلوس انتقلت بين حسابات الشركة نفسها (من خزنة لمحفظة مثلاً) — مش دخلت ولا خرجت فعلياً
-      </div>
+      <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-down"/></svg>
     </div>
 
     {{-- Outgoing --}}
-    <div style="background:#16a34a; color:#fff; border-radius:10px; padding:16px; position:relative; overflow:hidden;">
-      <div style="position:absolute; left:-20px; bottom:-20px; opacity:0.1; transform:scale(2);">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="100" height="100"><use href="#i-pie-chart"/></svg>
+    <div class="vstat radar-stat-red">
+      <div class="top"><span class="label">التدفقات الخارجة</span>
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-activity"/></svg></span>
       </div>
-      <div style="font-size:14px; font-weight:bold; text-align:left; margin-bottom:8px;">حجم التدفقات الخارجة</div>
-      <div style="font-size:24px; font-weight:bold; text-align:left; margin-bottom:12px;">{{ \App\Support\Money::format($totalOut) }} ج</div>
-      <div style="font-size:10px; opacity:0.8; text-align:right; border-top:1px dashed rgba(255,255,255,0.2); padding-top:8px;">
-        كل فلوس خرجت من الحسابات: مصروفات + رواتب + خصومات + عهد موظفين + إعدامات ديون وأي صرف تاني. أشمل من "إجمالي المصروفات" في شاشة التقارير لإنها بتستبعد بعض البنود دي كأرقام منفصلة
+      <div class="val tnum">{{ \App\Support\Money::format($totalOut) }} <small>ج.م</small></div>
+      <div class="note" style="line-height:1.4; opacity:0.85; margin-top:8px;">
+        كل فلوس خرجت من الحسابات: مصروفات، رواتب، خصومات، وغيرها.
       </div>
+      <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-activity"/></svg>
     </div>
 
-    {{-- Incoming --}}
-    <div style="background:#dc2626; color:#fff; border-radius:10px; padding:16px; position:relative; overflow:hidden;">
-      <div style="position:absolute; left:-20px; bottom:-20px; opacity:0.1; transform:scale(2);">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="100" height="100"><use href="#i-pie-chart"/></svg>
+    {{-- Transfers --}}
+    <div class="vstat radar-stat-blue">
+      <div class="top"><span class="label">إجمالي التحويلات</span>
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-activity"/></svg></span>
       </div>
-      <div style="font-size:14px; font-weight:bold; text-align:left; margin-bottom:8px;">حجم التدفقات الداخلة</div>
-      <div style="font-size:24px; font-weight:bold; text-align:left; margin-bottom:12px;">{{ \App\Support\Money::format($totalIn) }} ج</div>
-      <div style="font-size:10px; opacity:0.8; text-align:right; border-top:1px dashed rgba(255,255,255,0.2); padding-top:8px;">
-        كل فلوس دخلت الحسابات: إيرادات فعلية + تسويات (إيداعات مسجلة كدين على الشركة). أشمل من "إجمالي الإيرادات" في شاشة التقارير لإنها بتفصل التسويات
+      <div class="val tnum">{{ \App\Support\Money::format($totalTransfers) }} <small>ج.م</small></div>
+      <div class="note" style="line-height:1.4; opacity:0.85; margin-top:8px;">
+        فلوس انتقلت بين حسابات الشركة نفسها (مثلاً من خزنة لمحفظة).
       </div>
+      <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-activity"/></svg>
+    </div>
+
+    {{-- Canceled --}}
+    <div class="vstat radar-stat-gray">
+      <div class="top"><span class="label">عمليات ملغاة</span>
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-pie-chart"/></svg></span>
+      </div>
+      <div class="val tnum">{{ $canceledCount }} <small>حركة</small></div>
+      <div class="note" style="line-height:1.4; opacity:0.85; margin-top:8px;">
+        عدد الحركات اليدوية التي تم إلغاؤها في نفس الفترة.
+      </div>
+      <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-pie-chart"/></svg>
     </div>
   </div>
 </div>
 
-<div class="form-card no-print" style="margin-bottom: 20px;">
+<div class="form-card no-print" style="margin-bottom: 24px; padding: 20px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 2px 10px rgba(0,0,0,0.02); background:#fff;">
   <form method="GET" action="{{ route('radar.index') }}" id="filter-form">
-    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); padding-bottom:16px; margin-bottom:16px;">
-      <h3 style="margin:0; font-size:16px; display:flex; align-items:center; gap:8px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="color:var(--brand)"><use href="#i-list"/></svg>
+    
+    <div style="border-bottom:1px solid #e2e8f0; padding-bottom:16px; margin-bottom:20px;">
+      <h3 style="margin:0; font-size:18px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:8px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20" style="color:#3b82f6"><use href="#i-list"/></svg>
         سجل الحركات التفصيلي
       </h3>
-      
-      <div style="display:flex; gap:12px; align-items:center;">
-        <div style="display:flex; gap:8px; align-items:center; background:#f1f5f9; padding:4px; border-radius:8px;">
-          @php $ranges = ['all' => 'الكل', 'today' => 'اليوم', 'yesterday' => 'أمس', 'month' => 'الشهر ده']; @endphp
-          @foreach($ranges as $val => $label)
-            <label style="margin:0; cursor:pointer;">
-              <input type="radio" name="period" value="{{ $val }}" style="display:none;" onchange="document.getElementById('filter-form').submit()" {{ $period === $val ? 'checked' : '' }}>
-              <div style="padding:6px 16px; border-radius:6px; font-size:13px; font-weight:600; {{ $period === $val ? 'background:var(--ink-1); color:#fff;' : 'color:var(--ink-2);' }}">
-                {{ $label }}
-              </div>
-            </label>
-          @endforeach
-          <label style="margin:0; cursor:pointer;">
-            <input type="radio" name="period" value="custom" style="display:none;" onchange="document.getElementById('filter-form').submit()" {{ $period === 'custom' ? 'checked' : '' }}>
-            <div style="padding:6px 16px; border-radius:6px; font-size:13px; font-weight:600; {{ $period === 'custom' ? 'background:var(--ink-1); color:#fff;' : 'color:var(--ink-2);' }}">
-              تصفية <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><use href="#i-filter"/></svg>
-            </div>
-          </label>
-        </div>
-        
-        <div id="custom-dates" style="display: {{ $period === 'custom' ? 'flex' : 'none' }}; gap: 8px;">
-          <input type="date" name="date_to" value="{{ request('date_to') }}" style="height:34px; padding:0 8px; font-size:13px;" placeholder="إلى تاريخ">
-          <input type="date" name="date_from" value="{{ request('date_from') }}" style="height:34px; padding:0 8px; font-size:13px;" placeholder="من تاريخ">
-          <button type="submit" class="btn sm" style="height:34px;">تطبيق</button>
-        </div>
-      </div>
     </div>
     
-    <div class="row2">
-      <div class="field" style="margin: 0;">
-        <select name="action" onchange="this.form.submit()">
+    <div style="display:flex; gap:16px; align-items:center; width:100%; flex-wrap:wrap;">
+      
+      <div class="field" style="margin: 0; flex: 1; min-width: 180px;">
+        <select name="action" onchange="this.form.submit()" style="width:100%; height:44px; padding-top:0; padding-bottom:0; background-color:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; color:#0f172a; font-weight:600; font-size:13.5px;">
           <option value="">كل الإجراءات</option>
-          <option value="created" {{ request('action') === 'created' ? 'selected' : '' }}>إنشاء</option>
-          <option value="updated" {{ request('action') === 'updated' ? 'selected' : '' }}>تعديل</option>
-          <option value="deleted" {{ request('action') === 'deleted' ? 'selected' : '' }}>حذف / إلغاء</option>
+          <option value="created" {{ request('action') === 'created' ? 'selected' : '' }}>إنشاء (Created)</option>
+          <option value="updated" {{ request('action') === 'updated' ? 'selected' : '' }}>تعديل (Updated)</option>
+          <option value="deleted" {{ request('action') === 'deleted' ? 'selected' : '' }}>حذف / إلغاء (Deleted)</option>
         </select>
       </div>
 
-      <div class="field" style="margin: 0;">
-        <select name="user_id" onchange="this.form.submit()">
+      <div class="field" style="margin: 0; flex: 1; min-width: 180px;">
+        <select name="user_id" onchange="this.form.submit()" style="width:100%; height:44px; padding-top:0; padding-bottom:0; background-color:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; color:#0f172a; font-weight:600; font-size:13.5px;">
           <option value="">كل المستخدمين</option>
           @foreach($users as $user)
             <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
           @endforeach
         </select>
+      </div>
+
+      <div style="display:flex; gap:6px; align-items:center; background:#f1f5f9; padding:6px; border-radius:12px; border: 1px solid #e2e8f0; flex: 2; min-width: 350px;">
+        @php $ranges = ['all' => 'الكل', 'today' => 'اليوم', 'yesterday' => 'أمس', 'month' => 'الشهر ده']; @endphp
+        @foreach($ranges as $val => $label)
+          <label style="margin:0; cursor:pointer; flex:1;">
+            <input type="radio" name="period" value="{{ $val }}" style="display:none;" onchange="document.getElementById('filter-form').submit()" {{ $period === $val ? 'checked' : '' }}>
+            <div style="text-align:center; padding:8px 0; border-radius:8px; font-size:13px; font-weight:bold; transition:all 0.2s; {{ $period === $val ? 'background:#3b82f6; color:#fff; box-shadow:0 2px 8px rgba(59,130,246,0.35);' : 'color:#475569;' }}">
+              {{ $label }}
+            </div>
+          </label>
+        @endforeach
+        <label style="margin:0; cursor:pointer; flex:1;">
+          <input type="radio" name="period" value="custom" style="display:none;" onchange="document.getElementById('filter-form').submit()" {{ $period === 'custom' ? 'checked' : '' }}>
+          <div style="text-align:center; padding:8px 0; border-radius:8px; font-size:13px; font-weight:bold; transition:all 0.2s; {{ $period === 'custom' ? 'background:#3b82f6; color:#fff; box-shadow:0 2px 8px rgba(59,130,246,0.35);' : 'color:#475569;' }}">
+            تصفية <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12" style="margin-right:2px; vertical-align:middle;"><use href="#i-filter"/></svg>
+          </div>
+        </label>
+      </div>
+      
+      <div id="custom-dates" style="display: {{ $period === 'custom' ? 'flex' : 'none' }}; gap: 10px; flex: 1.5; min-width: 300px;">
+        <input type="date" name="date_to" value="{{ request('date_to') }}" style="flex:1; height:44px; padding:0 12px; font-size:13.5px; border-radius:10px; border:1px solid #cbd5e1; background:#f8fafc; color:#0f172a;" placeholder="إلى تاريخ">
+        <input type="date" name="date_from" value="{{ request('date_from') }}" style="flex:1; height:44px; padding:0 12px; font-size:13.5px; border-radius:10px; border:1px solid #cbd5e1; background:#f8fafc; color:#0f172a;" placeholder="من تاريخ">
+        <button type="submit" class="btn primary" style="height:44px; padding:0 24px; border-radius:10px; font-weight:bold; background:#3b82f6; border-color:#3b82f6; color:#fff; font-size:14px; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);">تطبيق</button>
       </div>
     </div>
   </form>
@@ -340,35 +344,33 @@
 
 {{-- Operation Modal (Deposit / Withdrawal / Transfer) --}}
 <div class="modal-overlay" id="operation-modal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal-box" style="max-width:550px; padding:0; overflow:hidden;">
-    <div style="background:var(--ink-1); color:#fff; padding:16px 20px; display:flex; justify-content:space-between; align-items:center;">
+  <div class="modal-box" style="max-width:550px">
+    <div class="modal-head">
       <h4 style="margin:0; display:flex; align-items:center; gap:8px;">
-        <div style="background:rgba(255,255,255,0.1); width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><use href="#i-plus"/></svg>
-        </div>
-        تنفيذ حركة يدوية (إيداع/صرف/تحويل)
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><use href="#i-zap"/></svg>
+        تنفيذ حركة يدوية
       </h4>
-      <button class="btn ghost sm" style="color:#fff;" onclick="document.getElementById('operation-modal').classList.remove('open')">✕</button>
+      <button class="btn ghost sm" onclick="document.getElementById('operation-modal').classList.remove('open')">✕</button>
     </div>
     
-    <div style="padding:20px;">
-      <div style="font-weight:bold; margin-bottom:8px;">نوع الحركة المطلوبة:</div>
+    <div class="modal-body">
+      <div style="font-weight:bold; margin-bottom:8px; font-size: 13px;">نوع الحركة:</div>
       <div style="display:flex; gap:10px; margin-bottom:12px;">
-        <button type="button" class="op-type-btn" data-type="withdrawal" onclick="setOpType('withdrawal')" style="flex:1; padding:8px; border:2px solid #ef4444; background:#fef2f2; color:#ef4444; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+        <button type="button" class="op-type-btn btn" data-type="withdrawal" onclick="setOpType('withdrawal')" style="flex:1;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><use href="#i-down"/></svg>
           صرف
         </button>
-        <button type="button" class="op-type-btn" data-type="deposit" onclick="setOpType('deposit')" style="flex:1; padding:8px; border:2px solid #10b981; background:#fff; color:#10b981; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+        <button type="button" class="op-type-btn btn ghost" data-type="deposit" onclick="setOpType('deposit')" style="flex:1;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="transform:rotate(180deg)"><use href="#i-down"/></svg>
           إيداع
         </button>
-        <button type="button" class="op-type-btn" data-type="transfer" onclick="setOpType('transfer')" style="flex:1; padding:8px; border:2px solid #3b82f6; background:#fff; color:#3b82f6; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+        <button type="button" class="op-type-btn btn ghost" data-type="transfer" onclick="setOpType('transfer')" style="flex:1;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><use href="#i-activity"/></svg>
           تحويل
         </button>
       </div>
       
-      <div id="op-hint" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:10px 12px; border-radius:8px; font-size:12px; display:flex; gap:8px; margin-bottom:20px;">
+      <div id="op-hint" style="background:var(--ink-1); color:#fff; padding:10px 12px; border-radius:8px; font-size:12px; display:flex; gap:8px; margin-bottom:20px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="flex-shrink:0;"><use href="#i-info"/></svg>
         <span>بيتخصم المبلغ من الخزنة + بيتسجل دين على المستلم في المستحقات.</span>
       </div>
@@ -380,13 +382,13 @@
         <input type="hidden" name="date" value="{{ today()->format('Y-m-d') }}">
         
         <div class="field">
-          <label style="color:#ef4444; font-weight:bold;" id="dw-amount-label">المبلغ (ج.م) *</label>
-          <input type="number" name="amount" min="0.01" step="0.01" required style="border:1px solid #ef4444;">
+          <label id="dw-amount-label">المبلغ (ج.م) *</label>
+          <input type="number" name="amount" min="0.01" step="0.01" required>
         </div>
         
         <div class="field">
-          <label style="color:#ef4444; font-weight:bold;" id="dw-wallet-label">سحب من خزنة *</label>
-          <select name="account_id" required style="border:1px solid #ef4444;">
+          <label id="dw-wallet-label">سحب من خزنة *</label>
+          <select name="account_id" required>
             <option value="">اختر الخزنة...</option>
             @foreach($wallets as $w)
               <option value="{{ $w->id }}">{{ $w->name }} ({{ \App\Support\Money::format($w->balance) }})</option>
@@ -396,26 +398,25 @@
         
         <div class="row2">
           <div class="field">
-            <label style="color:#3b82f6; font-weight:bold;" id="dw-party-label">اسم المستلم (هيتسجل عليه مستحق) *</label>
+            <label id="dw-party-label">اسم المستلم (هيتسجل عليه مستحق) *</label>
             <input type="text" name="party" id="dw-party-input" required placeholder="الاسم ...">
           </div>
           <div class="field">
-            <label style="color:#3b82f6; font-weight:bold;">رقم الهاتف (اختياري)</label>
+            <label>رقم الهاتف (اختياري)</label>
             <input type="text" name="phone" id="dw-phone-input" placeholder="الرقم (اختياري)...">
           </div>
         </div>
         
         <div class="field">
-          <label style="font-weight:bold;">البيان / الملاحظات <span class="muted">(اختياري)</span></label>
+          <label>البيان / الملاحظات <span class="muted">(اختياري)</span></label>
           <input type="text" name="description" placeholder="سبب الحركة (اختياري)...">
         </div>
         
         <div class="btn-row" style="margin-top:20px;">
-          <button type="submit" class="btn primary" style="background:#10b981; border-color:#10b981; width:100%; justify-content:center;">
+          <button type="submit" class="btn primary" style="width:100%; justify-content:center;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><use href="#i-check"/></svg>
-            تنفيذ وإتمام العملية
+            تنفيذ العملية
           </button>
-          <button type="button" class="btn ghost" onclick="document.getElementById('operation-modal').classList.remove('open')" style="width:100%; margin-top:8px; justify-content:center;">✕ إلغاء</button>
         </div>
       </form>
 
@@ -425,14 +426,14 @@
         <input type="hidden" name="date" value="{{ today()->format('Y-m-d') }}">
         
         <div class="field">
-          <label style="color:#3b82f6; font-weight:bold;">المبلغ (ج.م) *</label>
-          <input type="number" name="amount" min="0.01" step="0.01" required style="border:1px solid #3b82f6;">
+          <label>المبلغ (ج.م) *</label>
+          <input type="number" name="amount" min="0.01" step="0.01" required>
         </div>
         
         <div class="row2">
           <div class="field">
-            <label style="color:#ef4444; font-weight:bold;">سحب من خزنة *</label>
-            <select name="from_account_id" required style="border:1px solid #ef4444;">
+            <label>سحب من خزنة *</label>
+            <select name="from_account_id" required>
               <option value="">اختر الخزنة...</option>
               @foreach($wallets as $w)
                 <option value="{{ $w->id }}">{{ $w->name }} ({{ \App\Support\Money::format($w->balance) }})</option>
@@ -440,8 +441,8 @@
             </select>
           </div>
           <div class="field">
-            <label style="color:#10b981; font-weight:bold;">إيداع في خزنة *</label>
-            <select name="to_account_id" required style="border:1px solid #10b981;">
+            <label>إيداع في خزنة *</label>
+            <select name="to_account_id" required>
               <option value="">اختر الخزنة...</option>
               @foreach($wallets as $w)
                 <option value="{{ $w->id }}">{{ $w->name }} ({{ \App\Support\Money::format($w->balance) }})</option>
@@ -451,16 +452,15 @@
         </div>
         
         <div class="field">
-          <label style="font-weight:bold;">البيان / الملاحظات <span class="muted">(اختياري)</span></label>
+          <label>البيان / الملاحظات <span class="muted">(اختياري)</span></label>
           <input type="text" name="description" placeholder="سبب التحويل (اختياري)...">
         </div>
         
         <div class="btn-row" style="margin-top:20px;">
-          <button type="submit" class="btn primary" style="background:#10b981; border-color:#10b981; width:100%; justify-content:center;">
+          <button type="submit" class="btn primary" style="width:100%; justify-content:center;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><use href="#i-check"/></svg>
-            تنفيذ وإتمام التحويل
+            تنفيذ التحويل
           </button>
-          <button type="button" class="btn ghost" onclick="document.getElementById('operation-modal').classList.remove('open')" style="width:100%; margin-top:8px; justify-content:center;">✕ إلغاء</button>
         </div>
       </form>
     </div>
@@ -548,55 +548,39 @@ function openOperationModal() {
 function setOpType(type) {
   const btns = document.querySelectorAll('.op-type-btn');
   btns.forEach(b => {
-    b.style.background = '#fff';
-    // Reset borders depending on original color
-    if (b.dataset.type === 'withdrawal') { b.style.borderColor = '#ef4444'; b.style.color = '#ef4444'; }
-    if (b.dataset.type === 'deposit') { b.style.borderColor = '#10b981'; b.style.color = '#10b981'; }
-    if (b.dataset.type === 'transfer') { b.style.borderColor = '#3b82f6'; b.style.color = '#3b82f6'; }
+    b.classList.remove('primary');
+    b.classList.add('ghost');
   });
   
   const activeBtn = document.querySelector(`.op-type-btn[data-type="${type}"]`);
+  if (activeBtn) {
+    activeBtn.classList.remove('ghost');
+    activeBtn.classList.add('primary');
+  }
   
   const hint = document.getElementById('op-hint');
   const dwForm = document.getElementById('dw-form');
   const trForm = document.getElementById('tr-form');
   
   if (type === 'withdrawal') {
-    activeBtn.style.background = '#fef2f2';
     hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="flex-shrink:0;"><use href="#i-info"/></svg><span>بيتخصم المبلغ من الخزنة + بيتسجل دين على المستلم في المستحقات.</span>';
     
     document.getElementById('dw-kind').value = 'withdrawal';
-    document.getElementById('dw-amount-label').style.color = '#ef4444';
-    document.querySelector('#dw-form input[name="amount"]').style.borderColor = '#ef4444';
-    
     document.getElementById('dw-wallet-label').innerHTML = 'سحب من خزنة *';
-    document.getElementById('dw-wallet-label').style.color = '#ef4444';
-    document.querySelector('#dw-form select[name="account_id"]').style.borderColor = '#ef4444';
-    
     document.getElementById('dw-party-label').innerHTML = 'اسم المستلم (هيتسجل عليه مستحق) *';
-    document.getElementById('dw-party-label').style.color = '#3b82f6';
     
     dwForm.style.display = 'block';
     trForm.style.display = 'none';
   } else if (type === 'deposit') {
-    activeBtn.style.background = '#ecfdf5';
     hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="flex-shrink:0;"><use href="#i-info"/></svg><span>بيزيد المبلغ في الخزنة + بيتسجل دين عليك للمودع في المستحقات.</span>';
     
     document.getElementById('dw-kind').value = 'deposit';
-    document.getElementById('dw-amount-label').style.color = '#10b981';
-    document.querySelector('#dw-form input[name="amount"]').style.borderColor = '#10b981';
-    
     document.getElementById('dw-wallet-label').innerHTML = 'إيداع في خزنة *';
-    document.getElementById('dw-wallet-label').style.color = '#10b981';
-    document.querySelector('#dw-form select[name="account_id"]').style.borderColor = '#10b981';
-    
     document.getElementById('dw-party-label').innerHTML = 'اسم المودع (هيتسجل ليه دين) *';
-    document.getElementById('dw-party-label').style.color = '#3b82f6';
     
     dwForm.style.display = 'block';
     trForm.style.display = 'none';
   } else {
-    activeBtn.style.background = '#eff6ff';
     hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="flex-shrink:0;"><use href="#i-info"/></svg><span>نقل رصيد بين الخزائن وحسابات البنوك التابعة للشركة.</span>';
     
     dwForm.style.display = 'none';
@@ -704,6 +688,72 @@ async function submitTxForm(evt, prefix) {
 }
 </script>
 <style>
+  .radar-stats-grid {
+    gap: 20px !important;
+  }
+  .radar-stats-grid .vstat {
+    padding: 18px 20px;
+    border-radius: 16px;
+    min-height: 110px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    position: relative;
+    overflow: hidden;
+  }
+  .radar-stats-grid .vstat .val {
+    font-size: 24px;
+    font-weight: 800;
+    margin-top: 6px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .radar-stats-grid .vstat .val small {
+    font-size: 13px;
+    opacity: 0.9;
+  }
+  .radar-stats-grid .vstat .label {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .radar-stats-grid .vstat .note {
+    font-size: 11.5px;
+    margin-top: 6px;
+    line-height: 1.4 !important;
+    opacity: 0.9;
+    max-width: 90%;
+  }
+  .radar-stats-grid .vstat .ic {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.25);
+  }
+  .radar-stats-grid .vstat .ic svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  /* Fix the huge inline SVG taking up space */
+  .radar-stats-grid .vstat .vstat-bg {
+    position: absolute;
+    bottom: -15px;
+    left: -15px;
+    width: 100px;
+    height: 100px;
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 0;
+    transform: rotate(-10deg);
+  }
+  
+  .radar-stat-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+  .radar-stat-red { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+  .radar-stat-blue { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+  .radar-stat-gray { background: linear-gradient(135deg, #64748b 0%, #475569 100%); }
+
   @media print {
     body { background: #fff !important; }
     .table-wrap { box-shadow: none !important; border: 1px solid #ddd; }
