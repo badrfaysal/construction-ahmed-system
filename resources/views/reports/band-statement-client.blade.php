@@ -16,6 +16,8 @@
 
 @php
   $actualTotal = $band->actualClientTotal();
+  $clientPaid = $band->clientPayments()->sum('amount');
+  $clientRemaining = $actualTotal - $clientPaid;
 @endphp
 
 <div class="statement">
@@ -42,6 +44,8 @@
     {{-- Summary --}}
     <div class="st-summary">
       <div class="st-box tot"><div class="l">إجمالي المستحق</div><div class="v">{{ \App\Support\Money::format($actualTotal) }} ج.م</div></div>
+      <div class="st-box"><div class="l">المدفوع للبند</div><div class="v" style="color:var(--pos)">{{ \App\Support\Money::format($clientPaid) }} ج.م</div></div>
+      <div class="st-box {{ $clientRemaining <= 0 ? 'paid' : 'due' }}"><div class="l">المتبقي</div><div class="v">{{ \App\Support\Money::format($clientRemaining) }} ج.م</div></div>
     </div>
 
     {{-- Materials --}}
@@ -97,7 +101,9 @@
     {{-- Final summary --}}
     <div class="st-final">
       <table>
-        <tr class="big"><td>إجمالي مستحق العميل عن البند</td><td style="text-align:left">{{ \App\Support\Money::format($actualTotal) }} ج.م</td></tr>
+        <tr><td class="muted">إجمالي مستحق العميل عن البند</td><td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($actualTotal) }} ج.م</td></tr>
+        <tr><td class="muted">إجمالي المدفوع للبند</td><td style="text-align:left;font-weight:700;color:var(--pos)">{{ \App\Support\Money::format($clientPaid) }} ج.م</td></tr>
+        <tr class="big"><td>المتبقي</td><td style="text-align:left;color:{{ $clientRemaining <= 0 ? 'var(--pos)' : 'var(--neg)' }}">{{ \App\Support\Money::format($clientRemaining) }} ج.م</td></tr>
       </table>
     </div>
   </div>
