@@ -41,17 +41,26 @@
         <span class="bell-badge">{{ $owedWorkers->count() }}</span>
       </button>
     @endif
-    <a href="{{ route('reports.statement', $project) }}" class="btn ghost">كشف حساب العميل</a>
-    <a href="{{ route('reports.statement.summary', $project) }}" class="btn ghost">كشف حساب مختصر</a>
+    <a href="{{ route('reports.statement', $project) }}" class="btn ghost sm" style="padding: 8px;" title="كشف حساب العميل">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-users"/></svg>
+    </a>
+    <a href="{{ route('reports.statement.summary', $project) }}" class="btn ghost sm" style="padding: 8px;" title="كشف حساب مختصر">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-clipboard"/></svg>
+    </a>
     @if(auth()->user()->canSeeFinancials())
-      <a href="{{ route('reports.company', $project) }}" class="btn ghost">كشف حساب الشركة</a>
+      <a href="{{ route('reports.company', $project) }}" class="btn ghost sm" style="padding: 8px;" title="كشف حساب الشركة">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-bar-chart"/></svg>
+      </a>
     @endif
     @if($project->warranty)
-      <a href="{{ route('warranties.show', $project) }}" class="btn ghost">الضمان</a>
+      <a href="{{ route('warranties.show', $project) }}" class="btn ghost sm" style="padding: 8px;" title="الضمان">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-shield"/></svg>
+      </a>
     @endif
     <div style="position:relative;" id="statusDropdown">
-      <button type="button" class="btn ghost" onclick="const m = document.getElementById('statusMenu'); m.style.display = m.style.display === 'none' ? 'flex' : 'none'; event.stopPropagation();">
-        تغيير الحالة ▾
+      <button type="button" class="btn ghost sm" style="padding: 8px; display: flex; align-items: center; gap: 2px;" title="تغيير الحالة" onclick="const m = document.getElementById('statusMenu'); m.style.display = m.style.display === 'none' ? 'flex' : 'none'; event.stopPropagation();">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-activity"/></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-chevron-down"/></svg>
       </button>
       <div id="statusMenu" class="dropdown-menu" style="display:none; position:absolute; top:100%; left:0; background:var(--surface); border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 16px rgba(0,0,0,0.1); z-index:100; min-width:150px; padding:6px; flex-direction:column; gap:4px; margin-top:4px;">
         @if($project->status !== 'active')
@@ -77,8 +86,12 @@
         }
       });
     </script>
-    <a href="{{ route('projects.edit', $project) }}" class="btn ghost">تعديل</a>
-    <a href="{{ route('projects.index') }}" class="btn ghost">رجوع</a>
+    <a href="{{ route('projects.edit', $project) }}" class="btn ghost sm" style="padding: 8px;" title="تعديل">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-settings"/></svg>
+    </a>
+    <a href="{{ route('projects.index') }}" class="btn ghost sm" style="padding: 8px;" title="رجوع">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-arrow" style="transform: rotate(180deg)"/></svg>
+    </a>
   </div>
 </div>
 
@@ -230,7 +243,7 @@
               <td>
                 @if($hasSubBands)
                   <span style="cursor:pointer; display:inline-flex; align-items:center; color:var(--link); margin-inline-end:4px" onclick="const r = this.closest('tr').nextElementSibling; if(r.style.display==='none'){r.style.display='table-row';this.querySelector('svg').style.transform='rotate(180deg)';}else{r.style.display='none';this.querySelector('svg').style.transform='rotate(0deg)';}">
-                    <svg style="transition:transform 0.2s; transform:rotate(180deg)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-chevron-down"/></svg>
+                    <svg style="transition:transform 0.2s; transform:rotate(0deg)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-chevron-down"/></svg>
                   </span>
                 @endif
                 @if($isDone)
@@ -254,23 +267,27 @@
               <td class="num" style="color:{{ $profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
                 {{ \App\Support\Money::format($profit) }}
               </td>
-              <td style="display:flex;gap:6px;align-items:center">
+              <td style="display:flex;gap:4px;align-items:center;justify-content:flex-end;">
                 @if($isOwner)
-                  <a href="{{ route('bands.statement', $band) }}" class="btn ghost sm">كشف حساب الشركة</a>
+                  <a href="{{ route('bands.statement', $band) }}" class="btn ghost sm" style="padding:6px; color:var(--ink-2);" title="كشف حساب الشركة">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-bar-chart"/></svg>
+                  </a>
                 @endif
-                <a href="{{ route('bands.statement.client', $band) }}" class="btn ghost sm">كشف حساب العميل</a>
-                <a href="{{ route('bands.edit', $band) }}" class="btn ghost sm">تعديل</a>
+                <a href="{{ route('bands.statement.client', $band) }}" class="btn ghost sm" style="padding:6px; color:var(--ink-2);" title="كشف حساب العميل">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-users"/></svg>
+                </a>
+                <a href="{{ route('bands.edit', $band) }}" class="btn ghost sm" style="padding:6px; color:var(--ink-2);" title="تعديل البند">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-settings"/></svg>
+                </a>
                 @if(auth()->user()->canManage() && ! $isDone)
-                  <button type="button" class="btn ghost sm" style="color:var(--pos);border-color:var(--pos)"
-                          onclick="openFinishBand({{ $band->id }}, '{{ addslashes($band->name) }}')">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-check"/></svg>
-                    إنهاء البند
+                  <button type="button" class="btn ghost sm" style="padding:6px; color:var(--pos); border-color:var(--pos);" title="إنهاء البند" onclick="openFinishBand({{ $band->id }}, '{{ addslashes($band->name) }}')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-check-circle"/></svg>
                   </button>
                 @endif
               </td>
             </tr>
             @if($hasSubBands)
-              <tr class="sub-bands-row" style="background-color: #f8fafc;">
+              <tr class="sub-bands-row" style="background-color: #f8fafc; display: none;">
                 <td colspan="8" style="padding: 0;">
                   <div style="padding: 10px 30px; border-right: 4px solid #cbd5e1;">
                     <h5 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; color: #475569; font-weight: 700; display:flex; align-items:center; gap:6px;">

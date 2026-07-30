@@ -374,9 +374,10 @@ class MaterialController extends Controller
             ]));
 
             if ($request->input('action') === 'save_and_add') {
-                return redirect()->back()
+                return redirect()->route('expenses.create', $project)
                     ->withInput($request->except(['item', 'amount', 'sell_price', 'notes', 'qty', 'sup_items']))
-                    ->with('success', 'تم التسجيل بنجاح. يمكنك إضافة البند التالي.');
+                    ->with('success', 'تم التسجيل بنجاح. يمكنك إضافة البند التالي.')
+                    ->with('looping', true);
             }
 
             return redirect()->route('projects.show', $project)
@@ -408,9 +409,10 @@ class MaterialController extends Controller
             ]));
 
             if ($request->input('action') === 'save_and_add') {
-                return redirect()->back()
+                return redirect()->route('expenses.create', $project)
                     ->withInput($request->except(['item', 'amount', 'sell_price', 'notes', 'qty', 'sup_items']))
-                    ->with('success', 'تم التسجيل بنجاح. يمكنك إضافة البند التالي.');
+                    ->with('success', 'تم التسجيل بنجاح. يمكنك إضافة البند التالي.')
+                    ->with('looping', true);
             }
 
             return redirect()->route('projects.show', $project)
@@ -486,9 +488,10 @@ class MaterialController extends Controller
         });
 
         if ($request->input('action') === 'save_and_add') {
-            return redirect()->back()
+            return redirect()->route('expenses.create', $project)
                 ->withInput($request->except(['item', 'amount', 'sell_price', 'notes', 'qty', 'sup_items']))
-                ->with('success', "تم التسجيل بنجاح ({$count} صنف). يمكنك إضافة البند التالي.");
+                ->with('success', "تم التسجيل بنجاح ({$count} صنف). يمكنك إضافة البند التالي.")
+                ->with('looping', true);
         }
 
         return redirect()->route('projects.show', $project)

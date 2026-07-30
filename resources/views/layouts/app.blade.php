@@ -394,6 +394,15 @@
     const form = e.target;
     if (!(form instanceof HTMLFormElement)) return;
     if (form.hasAttribute('data-no-loading')) return;
+
+    if (e.submitter && e.submitter.name) {
+      const hidden = document.createElement('input');
+      hidden.type = 'hidden';
+      hidden.name = e.submitter.name;
+      hidden.value = e.submitter.value;
+      form.appendChild(hidden);
+    }
+
     show();
     form.querySelectorAll('button[type="submit"], button:not([type])').forEach(function (btn) {
       if (!btn.disabled) btn.disabled = true;
