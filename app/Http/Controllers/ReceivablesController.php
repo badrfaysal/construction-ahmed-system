@@ -55,7 +55,7 @@ class ReceivablesController extends Controller
                 'discount'      => $discount,
                 'remaining'     => $remaining,
                 'excess'        => $project->hasInstallmentContract() ? $remaining : null,
-                'book_profit'   => max(0, $billed - $project->totalSpent()),
+                'book_profit'   => max(0, $billed - $project->computeTotalCost()),
                 'earned_profit' => max(0, $collected - $project->totalSpent()),
             ];
         })->filter(fn ($r) => $r->billed > 0 || $r->remaining > 0);

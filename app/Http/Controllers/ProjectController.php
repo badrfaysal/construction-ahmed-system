@@ -171,11 +171,12 @@ class ProjectController extends Controller
         $collected = $project->totalCollected();
         $remaining = max($project->amountDue(), 0);
 
-        $generalMaterialsCost = $project->generalMaterials()->sum(fn ($m) => $m->netCost());
-        $allMaterialsCost = $project->materials->sum(fn ($m) => $m->netCost());
+        $generalMaterialsCost = $project->generalMaterials()->whereNull('band_worker_id')->sum(fn ($m) => $m->netCost());
+        $allMaterialsCost = $project->materials->whereNull('band_worker_id')->sum(fn ($m) => $m->netCost());
         $bandMaterialsCost = $allMaterialsCost - $generalMaterialsCost;
         
-        $laborCost = $project->bands->sum('labor_amount');
+        $piecemealLaborCost = $project->materials->whereNotNull('band_worker_id')->sum(fn ($m) => $m->netCost());
+        $laborCost = $project->bands->sum('labor_amount') + $piecemealLaborCost;
         $marketersCost = (float) $project->transactions()->where('ref_type', 'marketer_commission')->sum('amount');
         
         $projectMarketers = $project->transactions()
@@ -191,7 +192,7 @@ class ProjectController extends Controller
             })
             ->values();
 
-        $totalCost = $project->totalSpent();
+        $totalCost = $project->computeTotalCost();
 
         return view('projects.show', compact('project', 'wallets', 'marketers', 
             'collected', 'remaining', 'generalMaterialsCost', 'bandMaterialsCost', 

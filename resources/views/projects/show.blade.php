@@ -217,7 +217,9 @@
         <tbody>
           @foreach($project->bands as $band)
             @php
-              $matCost = $band->materialCost();
+              $piecemealBandLabor = $project->materials->whereNotNull('band_worker_id')->where('band_id', $band->id)->sum(fn($m) => $m->netCost());
+              $matCost = $band->materialCost() - $piecemealBandLabor;
+              $bandLaborCost = $band->labor_amount + $piecemealBandLabor;
               $profit  = $band->profit();
               $isDone  = $band->status === 'done';
               $bandActual = $band->actualClientTotal();
@@ -247,7 +249,7 @@
               </td>
               <td class="num muted">{{ \App\Support\Money::format($band->client_price) }}</td>
               <td class="num"><strong>{{ \App\Support\Money::format($bandActual) }}</strong></td>
-              <td class="num">{{ \App\Support\Money::format($band->labor_amount) }}</td>
+              <td class="num">{{ \App\Support\Money::format($bandLaborCost) }}</td>
               <td class="num">{{ \App\Support\Money::format($matCost) }}</td>
               <td class="num" style="color:{{ $profit >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
                 {{ \App\Support\Money::format($profit) }}
@@ -328,12 +330,15 @@
           @endforeach
         </tbody>
         <tfoot>
+          @php
+            $piecemealLaborCost = $project->materials->whereNotNull('band_worker_id')->sum(fn($m) => $m->netCost());
+          @endphp
           <tr>
             <td colspan="2"><strong>الإجماليات للبنود</strong></td>
             <td class="num muted"><strong>{{ \App\Support\Money::format($project->bands->sum('client_price')) }}</strong><div class="muted" style="font-size:11px">متفق عليه</div></td>
             <td class="num"><strong>{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->actualClientTotal())) }}</strong><div class="muted" style="font-size:11px">فاتورة فعلية</div></td>
-            <td class="num"><strong>{{ \App\Support\Money::format($project->bands->sum('labor_amount')) }}</strong><div class="muted" style="font-size:11px">مصنعية</div></td>
-            <td class="num"><strong>{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->materialCost())) }}</strong><div class="muted" style="font-size:11px">مواد</div></td>
+            <td class="num"><strong>{{ \App\Support\Money::format($project->bands->sum('labor_amount') + $piecemealLaborCost) }}</strong><div class="muted" style="font-size:11px">مصنعية</div></td>
+            <td class="num"><strong>{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->materialCost()) - $piecemealLaborCost) }}</strong><div class="muted" style="font-size:11px">مواد</div></td>
             <td class="num" style="color:{{ $project->bands->sum(fn($b) => $b->profit()) >= 0 ? 'var(--pos)' : 'var(--neg)' }}">
               <strong>{{ \App\Support\Money::format($project->bands->sum(fn($b) => $b->profit())) }}</strong>
               <div class="muted" style="font-size:11px">الربح قبل الخصم</div>
@@ -1133,9 +1138,10 @@
 @if($isOwner)
 <div class="tab-panel" data-panel="reports" style="display:none; padding: 24px;">
 @php
-  $rptMatCost = $project->materials->sum(fn($m) => $m->netCost());
-  $rptLaborCost = (float) $project->bands->sum('labor_amount');
-  $rptTotalCost = $totalCost; // Uses $totalSpent() which includes marketers
+  $rptMatCost = $project->materials->whereNull('band_worker_id')->sum(fn($m) => $m->netCost());
+  $piecemealLaborCost = $project->materials->whereNotNull('band_worker_id')->sum(fn($m) => $m->netCost());
+  $rptLaborCost = (float) $project->bands->sum('labor_amount') + $piecemealLaborCost;
+  $rptTotalCost = $totalCost; // Uses computeTotalCost() which includes marketers
   $rptClientTotal = $actualValue; 
   $rptProfit = $totalProfit; // Matches top card
   
