@@ -21,8 +21,13 @@
     <div class="val tnum" style="color:{{ $totalRemaining > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($totalRemaining) }} <small>ج.م</small></div>
   </div>
 </div>
+<div class="tabs" style="margin-bottom: 20px; display: flex; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 10px;">
+  <a href="{{ request()->fullUrlWithQuery(['status' => 'due']) }}" class="btn {{ request('status', 'due') == 'due' ? 'primary' : 'ghost' }}" style="border-radius: 20px; padding: 6px 16px;">المستحق (عليه باقي)</a>
+  <a href="{{ request()->fullUrlWithQuery(['status' => 'paid']) }}" class="btn {{ request('status') == 'paid' ? 'primary' : 'ghost' }}" style="border-radius: 20px; padding: 6px 16px;">المسدد (خالص)</a>
+</div>
 
 <form method="GET" class="filter-bar">
+  <input type="hidden" name="status" value="{{ request('status', 'due') }}">
   <div class="f-field">
     <label>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>

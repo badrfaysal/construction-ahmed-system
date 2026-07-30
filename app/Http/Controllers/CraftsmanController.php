@@ -31,6 +31,16 @@ class CraftsmanController extends Controller
             $workers = $workers->filter(fn ($w) => trim((string) $w->specialty) === $specialty);
         }
 
+        // فلتر حالة السداد (مستحق / مسدد)
+        $status = $request->get('status', 'due');
+        $workers = $workers->filter(function ($w) use ($status) {
+            $remaining = round($w->remaining(), 2);
+            if ($status === 'paid') {
+                return $remaining <= 0;
+            }
+            return $remaining > 0;
+        });
+
         $ratings = \App\Models\CraftsmanRating::all()->keyBy('craftsman_name');
 
         $groups = [];
