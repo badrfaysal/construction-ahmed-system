@@ -620,17 +620,16 @@ body{background:linear-gradient(180deg,#eef2f9 0%,#e9eef7 100%)}
 .btn{background:linear-gradient(135deg,var(--accent-2),var(--accent));border-color:var(--accent);
   box-shadow:0 2px 8px rgba(37,99,235,.28)}
 .btn:hover{background:linear-gradient(135deg,var(--accent),var(--accent-ink));border-color:var(--accent-ink);
-  box-shadow:0 4px 14px rgba(37,99,235,.36);transform:translateY(-1px)}
-.btn:active{transform:translateY(0)}
+  box-shadow:0 4px 14px rgba(37,99,235,.36)}
 .btn.pos{background:linear-gradient(135deg,var(--pos-2),var(--pos));box-shadow:0 2px 8px rgba(18,147,106,.28)}
 .btn.warn{background:linear-gradient(135deg,var(--warn-2),var(--warn));box-shadow:0 2px 8px rgba(201,130,26,.28)}
 .btn.danger{background:linear-gradient(135deg,var(--neg-2),var(--neg));box-shadow:0 2px 8px rgba(214,59,44,.28)}
 .btn.ghost{background:var(--surface);box-shadow:var(--shadow-sm)}
-.btn.ghost:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);transform:translateY(-1px)}
+.btn.ghost:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
 /* ghost+danger معًا (زرار حذف صغير داخل فورم) — لازم ياخد شكل واضح مميّز عن
    الـ ghost العادي، مش يتبلع فيه بسبب تساوي الأولوية بين الكلاسين */
 .btn.ghost.danger{background:var(--surface);color:var(--neg);border-color:var(--neg);box-shadow:none}
-.btn.ghost.danger:hover{background:var(--neg);color:#fff;border-color:var(--neg);transform:translateY(-1px)}
+.btn.ghost.danger:hover{background:var(--neg);color:#fff;border-color:var(--neg)}
 
 /* ---- عنوان الصفحة: شريط لوني جانبي للتوجيه البصري السريع ---- */
 .page-head h3{position:relative;padding-inline-start:14px}
@@ -785,7 +784,7 @@ tbody tr:hover{background:var(--accent-soft)}
 
 /* ── جرس إشعارات حقيقي (بدل بانر تحذير عريض) ── */
 .bell-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:10px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2);cursor:pointer;transition:.15s;flex-shrink:0}
-.bell-btn:hover{background:var(--warn-soft,#fef3e2);border-color:var(--warn,#c9821a);color:var(--warn,#c9821a);transform:translateY(-1px)}
+.bell-btn:hover{background:var(--warn-soft,#fef3e2);border-color:var(--warn,#c9821a);color:var(--warn,#c9821a)}
 .bell-btn svg{width:19px;height:19px}
 .bell-badge{position:absolute;top:-6px;inset-inline-end:-6px;min-width:19px;height:19px;padding:0 4px;border-radius:999px;background:var(--neg,#dc2626);color:#fff;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--surface);animation:bellPulse 1.8s ease-in-out infinite}
 @keyframes bellPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
@@ -854,7 +853,7 @@ th .price-cost,th .price-sell{font-weight:700;font-size:11px}
 .rate-star-btn.on svg{fill:#f59e0b}
 .rate-star-btn:hover,.rate-star-btn:hover ~ .rate-star-btn{color:#f59e0b}
 .rate-star-btn:hover svg{fill:#fbbf24}
-.rate-star-btn:active{transform:scale(.85)}
+.rate-star-btn:active{}
 .rate-notes-inp{flex:1;min-width:120px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font-size:12px}
 
 /* ── Debts: supplier grouping ── */

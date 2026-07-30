@@ -500,11 +500,11 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
             <a href="{{ route('installments.index') }}" class="rv-act main" style="grid-column:span 2"><i class="fa fa-file-contract"></i> فتح صفحة الأقساط</a>
           @endif
           @if($hasExcess || (!$hasCont && !$isPaid))
-            <button class="rv-act" id="rv-full-{{ $proj->id }}" onclick="recvFull({{ $proj->id }}, {{ $payAmount }})" style="grid-column:span 2; border-color:var(--ink)"><i class="fa fa-check-double"></i> سداد {{ $hasCont ? 'المستحق الإضافي' : 'كلي' }}</button>
-            <button class="rv-act" id="rv-partial-{{ $proj->id }}" onclick="recvPartial({{ $proj->id }})" style="grid-column:span 2"><i class="fa fa-money-bill"></i> سداد جزئي</button>
+            <button class="rv-act" id="rv-full-{{ $proj->id }}" onclick="recvFull({{ $proj->id }}, {{ $payAmount }})" style="grid-column:span 2; border-color:var(--ink)"><i class="fa fa-check-double"></i> تحصيل {{ $hasCont ? 'المستحق الإضافي' : 'كلي' }}</button>
+            <button class="rv-act" id="rv-partial-{{ $proj->id }}" onclick="recvPartial({{ $proj->id }})" style="grid-column:span 2"><i class="fa fa-money-bill"></i> تحصيل جزئي</button>
 
           @elseif(!$hasCont && $isPaid)
-            <span class="rv-act done" style="grid-column:span 2"><i class="fa fa-check-circle"></i> تم السداد الكامل</span>
+            <span class="rv-act done" style="grid-column:span 2"><i class="fa fa-check-circle"></i> تم التحصيل الكامل</span>
           @endif
           <button class="rv-act" onclick="openDiscountPanel({{ $proj->id }})"><i class="fa fa-percent"></i> منح خصم</button>
           <button class="rv-act" onclick="waRecv('{{ $clientPhone }}','{{ addslashes($proj->name) }}',{{ $row->remaining }})"><i class="fa-brands fa-whatsapp"></i> واتساب</button>
@@ -589,7 +589,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
             <form method="POST" action="{{ route('receivables.pay', $proj) }}">
               @csrf
               <div class="rv-presets">
-                <span class="rv-preset hot" onclick="setAmt({{ $proj->id }}, {{ $payAmount }})">سداد كامل — {{ \App\Support\Money::format($payAmount) }} ج</span>
+                <span class="rv-preset hot" onclick="setAmt({{ $proj->id }}, {{ $payAmount }})">تحصيل كامل — {{ \App\Support\Money::format($payAmount) }} ج</span>
                 <span class="rv-preset" onclick="setAmt({{ $proj->id }}, {{ round($payAmount * 0.5, 2) }})">النصف — {{ \App\Support\Money::format($payAmount * 0.5) }} ج</span>
                 <span class="rv-preset" onclick="setAmt({{ $proj->id }}, {{ round($payAmount * 0.25, 2) }})">الربع — {{ \App\Support\Money::format($payAmount * 0.25) }} ج</span>
               </div>
@@ -697,7 +697,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
           @else
             <div class="rv-empty">
               لا توجد تحصيلات مسجلة بعد
-              @if($payAmount > 0.009)<div style="margin-top:4px;font-size:.73rem">استخدم <strong>سداد كلي</strong> أو <strong>سداد جزئي</strong> أعلاه</div>@endif
+              @if($payAmount > 0.009)<div style="margin-top:4px;font-size:.73rem">استخدم <strong>تحصيل كلي</strong> أو <strong>تحصيل جزئي</strong> أعلاه</div>@endif
             </div>
           @endif
         @endif
