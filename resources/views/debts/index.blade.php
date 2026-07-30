@@ -79,9 +79,16 @@
   @endif
 </form>
 
+<div class="tabs-container" style="margin-bottom: 20px;">
+  <div class="tabs" style="border-bottom: 1px solid var(--line); display:flex; gap:16px;">
+    <div class="tab-btn active" id="tab-btn-supplier" onclick="switchTab('supplier-tab')" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid var(--brand); font-weight:bold; color:var(--brand)">ديون الموردين</div>
+    <div class="tab-btn" id="tab-btn-manual" onclick="switchTab('manual-tab')" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid transparent; font-weight:bold; color:var(--mut)">عهد وديون أخرى</div>
+  </div>
+</div>
+
+<div id="supplier-tab" class="tab-content" style="display:block;">
 @if($debts->count())
   @php $bySupplier = $debts->groupBy(fn($d) => $d->supplier_id ?? 0); @endphp
-
   @foreach($bySupplier as $supplierId => $supplierDebts)
     @php
       $supplier = $supplierDebts->first()->supplier;
@@ -90,7 +97,6 @@
       $sRemaining = $supplierDebts->sum(fn($d) => $d->remaining());
       $hasUnpaid  = $supplierDebts->filter(fn($d) => $d->status !== 'paid')->count() > 0;
     @endphp
-
     <div class="supplier-debt-group" style="margin-bottom:20px">
       {{-- Supplier Header --}}
       <div class="supplier-debt-head" style="cursor:pointer;transition:background 0.2s" onclick="toggleSupplierDebts('{{ $supplierId }}')" onmouseover="this.style.background='var(--surface-hover)'" onmouseout="this.style.background=''">
@@ -128,7 +134,6 @@
           @endif
         </div>
       </div>
-
       {{-- Supplier Debts Table --}}
       <div class="table-scroll" id="supplier-debts-{{ $supplierId }}" style="display:none;margin-top:-1px;border-top-left-radius:0;border-top-right-radius:0;">
         <table>
@@ -177,14 +182,57 @@
     </div>
   @endforeach
 @else
-  <div class="table-card">
+  <div class="table-card" style="margin-bottom:20px">
     <div class="empty-state">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-check-circle"/></svg>
-      <h4>لا توجد ديون</h4>
-      <p>لا يوجد مستحق على الشركة للموردين حالياً</p>
+      <h4>لا توجد ديون موردين</h4>
     </div>
   </div>
 @endif
+
+</div> <!-- end supplier-tab -->
+
+<div id="manual-tab" class="tab-content" style="display:none;">
+@if(isset($manualDebts) && $manualDebts->count() > 0)
+  <h4 style="margin:20px 0 10px; border-bottom:1px solid var(--border); padding-bottom:8px;">عهد وديون أخرى (حركات يدوية)</h4>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>التاريخ</th>
+          <th>الجهة / الشخص</th>
+          <th>البيان</th>
+          <th class="num">المبلغ</th>
+          <th class="num">المسدد</th>
+          <th class="num">المتبقي</th>
+          <th>الحالة</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach($manualDebts as $debt)
+          <tr>
+            <td class="muted">{{ $debt->date->format('Y-m-d') }}</td>
+            <td><strong>{{ $debt->party }}</strong></td>
+            <td class="muted">{{ $debt->description ?: '—' }}</td>
+            <td class="num">{{ \App\Support\Money::format($debt->total_amount) }}</td>
+            <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($debt->paid_amount) }}</td>
+            <td class="num" style="color:var(--neg)"><strong>{{ \App\Support\Money::format($debt->remaining()) }}</strong></td>
+            <td><span class="tag {{ $debt->statusTag() }}">{{ $debt->statusAr() }}</span></td>
+            <td>
+              @if($debt->status !== 'paid')
+                <button class="btn ghost sm" onclick="openManualPayModal({{ $debt->id }}, {{ $debt->remaining() }}, '{{ addslashes($debt->party . ($debt->description ? ' - ' . $debt->description : '')) }}')">
+                  سداد
+                </button>
+              @endif
+            </td>
+          </tr>
+        @endforeach
+      </tbody>
+    </table>
+  </div>
+@endif
+</div> <!-- end manual-tab -->
 
 {{-- Pay Single Debt Modal --}}
 <div id="pay-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);align-items:center;justify-content:center">
@@ -236,8 +284,44 @@
   </div>
 </div>
 
+{{-- Pay Manual Debt Modal --}}
+<div id="manual-pay-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:14px;padding:28px;width:min(460px,96vw)">
+    <h4 style="margin:0 0 4px">سداد عهدة / دين أخرى</h4>
+    <p id="manual-pay-desc" class="muted" style="margin:0 0 20px;font-size:.85rem"></p>
+    <form id="manual-pay-form" method="POST">
+      @csrf
+      <div class="field">
+        <label>المبلغ المسدد (ج.م) *</label>
+        <input type="number" name="amount" id="manual-pay-amount" min="0.01" step="0.01" required>
+        <small class="muted" id="manual-pay-max-note"></small>
+      </div>
+      @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true])
+      <div class="field">
+        <label>تاريخ السداد *</label>
+        <input type="date" name="pay_date" value="{{ today()->toDateString() }}" required>
+      </div>
+      <div class="btn-row" style="margin-top:16px">
+        <button type="submit" class="btn pos">تسجيل السداد</button>
+        <button type="button" class="btn ghost" onclick="document.getElementById('manual-pay-modal').style.display='none'">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 @push('scripts')
 <script>
+function openManualPayModal(id, remaining, desc) {
+  document.getElementById('manual-pay-desc').textContent = desc;
+  document.getElementById('manual-pay-amount').max = remaining;
+  document.getElementById('manual-pay-amount').value = remaining;
+  document.getElementById('manual-pay-max-note').textContent = 'الحد الأقصى: ' + remaining.toLocaleString('ar-EG') + ' ج.م';
+  document.getElementById('manual-pay-form').action = '/debts/manual/' + id + '/pay';
+  const walletSelect = document.querySelector('#manual-pay-form select[name="account_id"]');
+  if (walletSelect) walletSelect.selectedIndex = 0;
+  document.getElementById('manual-pay-modal').style.display = 'flex';
+}
+
 function openPayModal(id, remaining, desc) {
   document.getElementById('pay-desc').textContent = desc;
   document.getElementById('pay-amount').max = remaining;
@@ -268,6 +352,28 @@ function toggleSupplierDebts(supplierId) {
   } else {
     el.style.display = 'none';
   }
+}
+
+function switchTab(tabId) {
+  // Hide all tab content
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  
+  // Remove active class from all tab buttons
+  document.querySelectorAll('.tab-btn').forEach(el => {
+    el.classList.remove('active');
+    el.style.borderBottomColor = 'transparent';
+    el.style.color = 'var(--mut)';
+  });
+  
+  // Show target tab
+  document.getElementById(tabId).style.display = 'block';
+  
+  // Add active styling to clicked button
+  const btnId = tabId === 'supplier-tab' ? 'tab-btn-supplier' : 'tab-btn-manual';
+  const btn = document.getElementById(btnId);
+  btn.classList.add('active');
+  btn.style.borderBottomColor = 'var(--brand)';
+  btn.style.color = 'var(--brand)';
 }
 </script>
 @endpush

@@ -251,6 +251,14 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
   </div>
 </div>
 
+<div class="tabs-container" style="margin-bottom: 20px;">
+  <div class="tabs" style="border-bottom: 1px solid var(--line); display:flex; gap:16px;">
+    <div class="tab-btn active" id="tab-btn-project" onclick="switchTab('project-tab')" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid var(--brand); font-weight:bold; color:var(--brand)">مستحقات المشاريع</div>
+    <div class="tab-btn" id="tab-btn-manual-recv" onclick="switchTab('manual-recv-tab')" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid transparent; font-weight:bold; color:var(--mut)">سلف ومستحقات أخرى</div>
+  </div>
+</div>
+
+<div id="project-tab" class="tab-content" style="display:block;">
 {{-- الجدول الرئيسي --}}
 <div class="rv-box">
   <div class="rv-boxhead">
@@ -352,7 +360,54 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
       أضف بنوداً ومواد للمشاريع لتظهر هنا المستحقات
     </div>
   @endif
+</div> <!-- end rv-box -->
+</div> <!-- end project-tab -->
+
+<div id="manual-recv-tab" class="tab-content" style="display:none;">
+{{-- سلف ومستحقات أخرى (حركات يدوية) --}}
+@if(isset($manualReceivables) && $manualReceivables->count())
+<div class="rv-box">
+  <div class="rv-boxhead" style="background:var(--bg2)">
+    <h2><i class="fa fa-hand-holding-dollar" style="color:var(--ok)"></i> سلف ومستحقات أخرى (حركات يدوية)</h2>
+    <span class="c" style="font-weight:700">إجمالي المتبقي: {{ \App\Support\Money::format($manualReceivables->sum(fn($r) => $r->remaining())) }} ج.م</span>
+  </div>
+  <table class="rv-tbl">
+    <thead>
+      <tr>
+        <th>التاريخ</th>
+        <th>الجهة / الشخص</th>
+        <th>البيان</th>
+        <th>المبلغ</th>
+        <th>المسدد</th>
+        <th>المتبقي</th>
+        <th>الحالة</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach($manualReceivables as $recv)
+        <tr>
+          <td class="muted">{{ $recv->date->format('Y-m-d') }}</td>
+          <td><strong>{{ $recv->party }}</strong></td>
+          <td class="muted">{{ $recv->description ?: '—' }}</td>
+          <td style="font-weight:600">{{ \App\Support\Money::format($recv->total_amount) }}</td>
+          <td style="color:var(--ok);font-weight:600">{{ \App\Support\Money::format($recv->paid_amount) }}</td>
+          <td style="color:var(--bad);font-weight:700">{{ \App\Support\Money::format($recv->remaining()) }}</td>
+          <td><span class="tag {{ $recv->statusTag() }}">{{ $recv->statusAr() }}</span></td>
+          <td>
+            @if($recv->status !== 'paid')
+              <button class="rv-pill" onclick="openManualRecvPayModal({{ $recv->id }}, {{ $recv->remaining() }}, '{{ addslashes($recv->party . ($recv->description ? ' - ' . $recv->description : '')) }}')">
+                تحصيل
+              </button>
+            @endif
+          </td>
+        </tr>
+      @endforeach
+    </tbody>
+  </table>
 </div>
+@endif
+</div> <!-- end manual-recv-tab -->
 
 {{-- أقساط متأخرة --}}
 @if($overdueInstallments->count())
@@ -708,8 +763,54 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
   </div>
 </div>
 
+{{-- Pay Manual Receivable Modal --}}
+<div class="rv-modal" id="manual-recv-pay-modal" onclick="if(event.target===this) closeManualRecvPayModal()">
+  <div class="rv-card" style="max-width:460px">
+    <div class="rv-mhead">
+      <div class="nm">تحصيل سلفة / مستحق</div>
+      <button type="button" class="rv-x" onclick="closeManualRecvPayModal()">×</button>
+    </div>
+    <div class="rv-mbody" style="padding:16px 18px">
+      <p id="manual-recv-pay-desc" class="muted" style="margin:0 0 20px;font-size:.85rem;color:var(--mut)"></p>
+      <form id="manual-recv-pay-form" method="POST">
+        @csrf
+        <div class="rv-pay" style="border:none;padding:0;background:none">
+          <label>المبلغ المحصل (ج.م) *</label>
+          <input type="number" name="amount" id="manual-recv-pay-amount" min="0.01" step="0.01" required>
+          <small class="muted" id="manual-recv-pay-max-note" style="display:block;margin-top:4px"></small>
+          
+          <label style="margin-top:12px">المحفظة *</label>
+          @include('partials._wallet-select', ['wallets' => $wallets, 'bare' => true, 'required' => true, 'selectStyle' => 'width:100%'])
+          
+          <label style="margin-top:12px">تاريخ التحصيل *</label>
+          <input type="date" name="pay_date" value="{{ today()->toDateString() }}" required>
+          
+          <button type="submit" class="rv-submit" style="margin-top:20px"><i class="fa fa-check"></i> تسجيل التحصيل</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 @push('scripts')
 <script>
+function openManualRecvPayModal(id, remaining, desc) {
+  document.getElementById('manual-recv-pay-desc').textContent = desc;
+  document.getElementById('manual-recv-pay-amount').max = remaining;
+  document.getElementById('manual-recv-pay-amount').value = remaining;
+  document.getElementById('manual-recv-pay-max-note').textContent = 'الحد الأقصى: ' + remaining.toLocaleString('ar-EG') + ' ج.م';
+  document.getElementById('manual-recv-pay-form').action = '/receivables/manual/' + id + '/pay';
+  const walletSelect = document.querySelector('#manual-recv-pay-form select[name="account_id"]');
+  if (walletSelect) walletSelect.selectedIndex = 0;
+  
+  document.getElementById('manual-recv-pay-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeManualRecvPayModal() {
+  document.getElementById('manual-recv-pay-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
 /* ── مودال خفيف (من غير Bootstrap) ─────────── */
 function openModal(id) {
   document.getElementById('modal' + id).classList.add('open');
@@ -953,6 +1054,28 @@ function printInvoice(id, d) {
   </body></html>`);
   win.document.close();
   setTimeout(() => { win.focus(); win.print(); }, 400);
+}
+
+function switchTab(tabId) {
+  // Hide all tab content
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  
+  // Remove active class from all tab buttons
+  document.querySelectorAll('.tab-btn').forEach(el => {
+    el.classList.remove('active');
+    el.style.borderBottomColor = 'transparent';
+    el.style.color = 'var(--mut)';
+  });
+  
+  // Show target tab
+  document.getElementById(tabId).style.display = 'block';
+  
+  // Add active styling to clicked button
+  const btnId = tabId === 'project-tab' ? 'tab-btn-project' : 'tab-btn-manual-recv';
+  const btn = document.getElementById(btnId);
+  btn.classList.add('active');
+  btn.style.borderBottomColor = 'var(--brand)';
+  btn.style.color = 'var(--brand)';
 }
 </script>
 @endpush

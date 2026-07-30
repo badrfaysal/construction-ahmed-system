@@ -64,7 +64,44 @@ class DebtController extends Controller
             'overdue_count'  => $baseQuery->clone()->where('status', '!=', 'paid')->whereNotNull('due_date')->where('due_date', '<', today())->count(),
         ];
 
-        return view('debts.index', compact('debts', 'projects', 'suppliers', 'wallets', 'totals'));
+        $manualDebts = \App\Models\ManualDebt::where('type', 'debt')->orderByDesc('date')->get();
+
+        return view('debts.index', compact('debts', 'projects', 'suppliers', 'wallets', 'totals', 'manualDebts'));
+    }
+
+    public function payManual(Request $request, \App\Models\ManualDebt $debt)
+    {
+        $data = $request->validate([
+            'amount'     => ['required', 'numeric', 'min:0.01', 'max:' . $debt->remaining()],
+            'account_id' => ['required', 'integer', 'exists:sy2_accounts,id'],
+            'pay_date'   => ['required', 'date'],
+        ]);
+
+        DB::transaction(function () use ($debt, $data) {
+            $newPaid = (float) $debt->paid_amount + (float) $data['amount'];
+            $newStatus = $newPaid >= (float) $debt->total_amount ? 'paid' : 'partial';
+
+            $debt->update([
+                'paid_amount' => $newPaid,
+                'status'      => $newStatus,
+            ]);
+
+            Transaction::create([
+                'project_id'  => null,
+                'band_id'     => null,
+                'account_id'  => $data['account_id'],
+                'direction'   => 'out',
+                'type'        => 'سداد دين يدوي',
+                'party'       => $debt->party,
+                'amount'      => (float) $data['amount'],
+                'date'        => $data['pay_date'],
+                'description' => 'سداد عهدة/دين لـ: ' . $debt->party,
+                'ref_type'    => 'manual_debt',
+                'ref_id'      => $debt->id,
+            ]);
+        });
+
+        return back()->with('success', 'تم تسجيل سداد الدين بنجاح.');
     }
 
     // Partially or fully pay off a debt

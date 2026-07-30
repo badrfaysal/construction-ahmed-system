@@ -56,6 +56,33 @@ class RadarController extends Controller
         $transactionIds = $logs->pluck('transaction_id')->filter()->unique();
         $liveIds = \App\Models\Transaction::whereIn('id', $transactionIds)->pluck('id')->flip();
 
-        return view('radar.index', compact('logs', 'users', 'period', 'liveIds', 'wallets'));
+        // Calculate statistics for the top cards based on the selected period
+        // We use Transaction model for live data (in, out, transfers) and AuditLog for canceled operations.
+        $txQuery = \App\Models\Transaction::query();
+        $canceledQuery = \App\Models\AuditLog::where('action', 'deleted');
+
+        if ($period === 'today') {
+            $txQuery->whereBetween('created_at', [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()]);
+            $canceledQuery->whereBetween('happened_at', [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()]);
+        } elseif ($period === 'yesterday') {
+            $txQuery->whereBetween('created_at', [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()]);
+            $canceledQuery->whereBetween('happened_at', [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()]);
+        } elseif ($period === 'custom') {
+            if ($request->filled('date_from')) {
+                $txQuery->where('created_at', '>=', Carbon::parse($request->date_from)->startOfDay());
+                $canceledQuery->where('happened_at', '>=', Carbon::parse($request->date_from)->startOfDay());
+            }
+            if ($request->filled('date_to')) {
+                $txQuery->where('created_at', '<=', Carbon::parse($request->date_to)->endOfDay());
+                $canceledQuery->where('happened_at', '<=', Carbon::parse($request->date_to)->endOfDay());
+            }
+        }
+
+        $totalIn = (clone $txQuery)->where('direction', 'in')->where('ref_type', '!=', 'transfer')->sum('amount');
+        $totalOut = (clone $txQuery)->where('direction', 'out')->where('ref_type', '!=', 'transfer')->sum('amount');
+        $totalTransfers = (clone $txQuery)->where('ref_type', 'transfer')->where('direction', 'out')->sum('amount'); // Count one side only
+        $canceledCount = $canceledQuery->whereIn('ref_type', ['manual', 'client_payment', 'transfer'])->count(); // mostly manual actions
+
+        return view('radar.index', compact('logs', 'users', 'period', 'liveIds', 'wallets', 'totalIn', 'totalOut', 'totalTransfers', 'canceledCount'));
     }
 }

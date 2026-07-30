@@ -244,8 +244,9 @@
               </td>
               <td style="display:flex;gap:6px;align-items:center">
                 @if($isOwner)
-                  <a href="{{ route('bands.statement', $band) }}" class="btn ghost sm">كشف حساب</a>
+                  <a href="{{ route('bands.statement', $band) }}" class="btn ghost sm">كشف حساب الشركة</a>
                 @endif
+                <a href="{{ route('bands.statement.client', $band) }}" class="btn ghost sm">كشف حساب العميل</a>
                 <a href="{{ route('bands.edit', $band) }}" class="btn ghost sm">تعديل</a>
                 @if(auth()->user()->canManage() && ! $isDone)
                   <button type="button" class="btn ghost sm" style="color:var(--pos);border-color:var(--pos)"

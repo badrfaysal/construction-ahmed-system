@@ -159,6 +159,94 @@
 .qlink:hover .ic {
     transform: scale(1.1);
 }
+
+/* Profit Section CSS */
+.profit-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+.profit-card {
+    border-radius: 12px;
+    padding: 24px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+}
+.profit-card-blue {
+    background: #0f6c9c; /* Matches screenshot blue */
+}
+.profit-card-green {
+    background: #0d8159; /* Matches screenshot green */
+}
+.profit-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 2;
+}
+.profit-card .card-title {
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.profit-card .card-value {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    direction: ltr;
+    text-align: right;
+    position: relative;
+    z-index: 2;
+}
+.profit-card .card-subtitle {
+    font-size: 13px;
+    opacity: 0.9;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 2;
+}
+.profit-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 16px;
+    position: relative;
+    z-index: 2;
+}
+.profit-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.profit-list li:last-child {
+    border-bottom: none;
+}
+.profit-list li .val {
+    font-weight: 700;
+}
+.profit-list li.total-row {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffdf00; /* Yellow */
+    border-bottom: none;
+    padding-top: 12px;
+}
+
+@media (max-width: 900px) {
+    .profit-section {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 
 {{-- شريط الفلتر الزمني --}}
@@ -169,6 +257,7 @@
         <a href="{{ route('dashboard', ['month' => 'all']) }}" class="btn ghost sm {{ $monthFilter === 'all' ? 'active' : '' }}" style="margin: 0">الكل (بدون فلتر)</a>
     </form>
 </div>
+
 
 {{-- Summary stats row --}}
 <div class="cols-top" style="margin-bottom:30px;">
@@ -266,6 +355,40 @@
 
 </div>
 
+        {{-- روابط سريعة (Full Width) --}}
+        <div class="card card-pad" style="display: flex; flex-direction: column; padding: 24px; margin-top: 40px;">
+          <div class="section-label" style="margin:0 0 16px; font-size: 15px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; color: #3b82f6;"><use href="#i-send"/></svg>
+            إجراءات سريعة
+          </div>
+          <div class="qlinks" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;">
+            <a class="qlink" href="{{ route('projects.create') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
+              <span class="ic ic-blue" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg></span>
+              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 13px;">مشروع</span>
+            </a>
+            <a class="qlink" href="{{ route('materials.create') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
+              <span class="ic ic-teal" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg></span>
+              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 13px;">خامة</span>
+            </a>
+            <a class="qlink" href="{{ route('receivables.index') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
+              <span class="ic ic-green" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span>
+              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 13px;">تحصيل</span>
+            </a>
+            <a class="qlink" href="{{ route('quotes.create') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
+              <span class="ic ic-purple" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg></span>
+              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 13px;">عرض سعر</span>
+            </a>
+            <a class="qlink" href="{{ route('installments.index') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
+              <span class="ic ic-gold" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span>
+              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 13px;">أقساط</span>
+            </a>
+            <a class="qlink" href="{{ route('transactions.index') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
+              <span class="ic ic-amber" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg></span>
+              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 13px;">السجل</span>
+            </a>
+          </div>
+        </div>
+
 <div style="display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; margin-top: 40px;">
 
     {{-- Main Area: Accounts --}}
@@ -307,44 +430,136 @@
             </div>
             @endforeach
         </div>
+
+        <h3 style="margin-top:40px; margin-bottom:15px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg>
+            تفاصيل الأرباح
+        </h3>
+        
+        {{-- Profit Details Section --}}
+        <div class="profit-section">
+            {{-- الربح الدفتري (على الورق) - Right Card --}}
+            <div class="profit-card profit-card-blue">
+                <div class="card-header">
+                    <div class="card-title">
+                        الربح الدفتري (على الورق)
+                    </div>
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-doc"/></svg>
+                </div>
+                <div class="card-value">{{ \App\Support\Money::format($bookProfit) }} ج</div>
+                <div class="card-subtitle">إجمالي الإيرادات - إجمالي الخصومات ({{ \App\Support\Money::format($totalDiscount) }} ج)</div>
+                
+                <ul class="profit-list">
+                    <li>
+                        <span class="lbl" style="font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> 
+                            مصادر الإيرادات
+                        </span>
+                    </li>
+                    <li>
+                        <span class="lbl">أرباح التجاري (فرق الشراء والبيع)</span>
+                        <span class="val">{{ \App\Support\Money::format($totalTradeProfit) }} ج</span>
+                    </li>
+                    <li>
+                        <span class="lbl">أرباح نسبة الإشراف</span>
+                        <span class="val">{{ \App\Support\Money::format($totalPercentageProfit) }} ج</span>
+                    </li>
+                    <li>
+                        <span class="lbl">أرباح منظومة التقسيط (الفوائد)</span>
+                        <span class="val">{{ \App\Support\Money::format($totalInstallmentProfit) }} ج</span>
+                    </li>
+                    <li class="total-row">
+                        <span class="lbl">إجمالي الإيرادات</span>
+                        <span class="val">{{ \App\Support\Money::format($totalRevenuesForView) }} ج</span>
+                    </li>
+                </ul>
+                <svg style="position: absolute; left: -20px; bottom: -20px; width: 180px; height: 180px; color: rgba(255,255,255,0.06); transform: rotate(-15deg); pointer-events:none; z-index: 1;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-doc"/></svg>
+            </div>
+
+            {{-- الربح الحقيقي (المحصل) - Left Card --}}
+            <div class="profit-card profit-card-green">
+                <div class="card-header">
+                    <div class="card-title">
+                        الربح الحقيقي (المحصل)
+                    </div>
+                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-cash"/></svg>
+                </div>
+                <div class="card-value">{{ \App\Support\Money::format($realProfit) }} ج</div>
+                <div class="card-subtitle">المبلغ الآمن للتوزيع على الشركاء</div>
+                
+                <ul class="profit-list">
+                    <li>
+                        <span class="lbl" style="font-weight: 700;">= مقارنة مع الدفتري</span>
+                    </li>
+                    <li>
+                        <span class="lbl">الربح الدفتري</span>
+                        <span class="val">{{ \App\Support\Money::format($bookProfit) }} ج</span>
+                    </li>
+                    <li>
+                        <span class="lbl">الربح الحقيقي</span>
+                        <span class="val">{{ \App\Support\Money::format($realProfit) }} ج</span>
+                    </li>
+                    <li class="total-row">
+                        <span class="lbl">الفرق (أرباح لم تُحصل بعد)</span>
+                        <span class="val">{{ \App\Support\Money::format($uncollectedProfit) }} ج</span>
+                    </li>
+                </ul>
+                <svg style="position: absolute; left: -20px; bottom: -20px; width: 180px; height: 180px; color: rgba(255,255,255,0.06); transform: rotate(-15deg); pointer-events:none; z-index: 1;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-cash"/></svg>
+            </div>
+        </div>
+        </div>
+        
+        {{-- Discounts and Losses Section --}}
+        <div class="discounts-card" style="margin-top:30px; margin-bottom:30px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; border-right: 4px solid #ef4444; overflow: hidden; box-shadow: 0 4px 15px -3px rgba(0,0,0,0.05);">
+            <div style="padding: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #b91c1c;">تفاصيل الخصومات والخسائر</h3>
+                </div>
+                
+                <div class="disc-list" style="display: flex; flex-direction: column;">
+                    
+                    {{-- Row 1 (Client Discounts) --}}
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+                        <div style="text-align: left; font-weight: 700; color: #ef4444;">{{ \App\Support\Money::format($totalDiscount) }} ج</div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 700; color: #1e293b;">خصومات للعملاء</div>
+                            <div style="font-size: 12px; color: #94a3b8;">تخفيضات على المبيعات</div>
+                        </div>
+                    </div>
+
+                    {{-- Row 2 (Marketer Commissions) --}}
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+                        <div style="text-align: left; font-weight: 700; color: #ef4444;">{{ \App\Support\Money::format($totalMarketerCommissions) }} ج</div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 700; color: #1e293b;">عمولات المسوقين</div>
+                            <div style="font-size: 12px; color: #94a3b8;">عمولات البيع والتسويق</div>
+                        </div>
+                    </div>
+
+                    {{-- Row 3 (Return Losses) --}}
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+                        <div style="text-align: left; font-weight: 700; color: #ef4444;">{{ \App\Support\Money::format($totalReturnLosses) }} ج</div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 700; color: #1e293b;">خسائر المرتجعات</div>
+                            <div style="font-size: 12px; color: #94a3b8;">فرق التكلفة في المرتجعات</div>
+                        </div>
+                    </div>
+
+                    {{-- Total Row --}}
+                    <div style="display: flex; justify-content: space-between; padding-top: 16px; margin-top: 8px;">
+                        <div style="text-align: left; font-size: 18px; font-weight: 800; color: #dc2626;">{{ \App\Support\Money::format($totalDiscountsAndLosses) }} ج</div>
+                        <div style="text-align: right; font-size: 18px; font-weight: 800; color: #1e293b;">إجمالي الخصومات</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
     </div>
 
     {{-- Sidebar: Quick Links & Recent Tx --}}
     <div style="display: flex; flex-direction: column; gap: 24px;">
 
-        {{-- روابط سريعة --}}
-        <div class="card card-pad" style="display: flex; flex-direction: column; padding: 24px;">
-          <div class="section-label" style="margin:0 0 16px; font-size: 15px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; color: #3b82f6;"><use href="#i-send"/></svg>
-            إجراءات سريعة
-          </div>
-          <div class="qlinks" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
-            <a class="qlink" href="{{ route('projects.create') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
-              <span class="ic ic-blue" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg></span>
-              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 12px;">مشروع</span>
-            </a>
-            <a class="qlink" href="{{ route('materials.create') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
-              <span class="ic ic-teal" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg></span>
-              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 12px;">خامة</span>
-            </a>
-            <a class="qlink" href="{{ route('receivables.index') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
-              <span class="ic ic-green" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span>
-              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 12px;">تحصيل</span>
-            </a>
-            <a class="qlink" href="{{ route('quotes.create') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
-              <span class="ic ic-purple" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg></span>
-              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 12px;">عرض سعر</span>
-            </a>
-            <a class="qlink" href="{{ route('installments.index') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
-              <span class="ic ic-gold" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span>
-              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 12px;">أقساط</span>
-            </a>
-            <a class="qlink" href="{{ route('transactions.index') }}" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; text-align: center; transition: all 0.2s;">
-              <span class="ic ic-amber" style="margin: 0 auto 8px; width: 32px; height: 32px; font-size: 16px; display: flex; align-items: center; justify-content: center; border-radius: 8px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg></span>
-              <span class="lbl" style="font-weight: 600; color: #334155; font-size: 12px;">السجل</span>
-            </a>
-          </div>
-        </div>
 
         {{-- آخر الحركات --}}
         <div class="card" style="overflow:hidden; display: flex; flex-direction: column;">

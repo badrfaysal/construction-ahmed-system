@@ -114,12 +114,14 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::get('/receivables', [ReceivablesController::class, 'index'])->name('receivables.index');
     // تسجيل تحصيل مباشر من العميل (جزئي/كامل) + حذف تحصيل
     Route::post('/receivables/{project}/pay', [ReceivablesController::class, 'pay'])->name('receivables.pay');
+    Route::post('/receivables/manual/{receivable}/pay', [ReceivablesController::class, 'payManual'])->name('receivables.manual.pay');
     // منح خصم على إجمالي المشروع
     Route::post('/projects/{project}/discount', \App\Http\Controllers\ProjectDiscountController::class)->name('projects.discount');
 
     // Supplier debts — what we owe suppliers (الديون)
     Route::get('/debts', [DebtController::class, 'index'])->name('debts.index');
     Route::post('/debts/{debt}/pay', [DebtController::class, 'pay'])->name('debts.pay');
+    Route::post('/debts/manual/{debt}/pay', [DebtController::class, 'payManual'])->name('debts.manual.pay');
     Route::post('/debts/supplier/{supplierId}/pay', [DebtController::class, 'paySupplier'])->name('debts.supplier.pay');
     Route::delete('/debts/{debt}', [DebtController::class, 'destroy'])->name('debts.destroy');
 
@@ -200,6 +202,7 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
         Route::get('/accounts/{account}/statement', [WalletController::class, 'statement'])->name('accounts.statement');
         // Band statement (كشف حساب البند) — shows real cost & profit
         Route::get('/bands/{band}/statement', [ReportController::class, 'bandStatement'])->name('bands.statement');
+        Route::get('/bands/{band}/statement-client', [ReportController::class, 'bandStatementClient'])->name('bands.statement.client');
         // Company cost statement (كشف حساب الشركة) — per-project real cost breakdown
         Route::get('/projects/{project}/company-statement', [ReportController::class, 'companyStatement'])->name('reports.company');
 

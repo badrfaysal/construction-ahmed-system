@@ -397,6 +397,14 @@ class ReportController extends Controller
         return view('reports.band-statement', compact('band'));
     }
 
+    // Printable client statement for a single band
+    public function bandStatementClient(ProjectBand $band)
+    {
+        $band->load(['project.client', 'materials', 'workers']);
+
+        return view('reports.band-statement-client', compact('band'));
+    }
+
     // تقدير تكلفة مشروع جديد بالاعتماد على مشروع سابق كمرجع: اختار مشروع
     // (مثلاً شقة 100م) وشوف بالظبط كل بند اشتغلت فيه، وكل خامة اشتريتها له
     // بكميتها وتكلفتها، عشان لو جالك مشروع تاني بنفس المساحة يبقى عندك تقدير

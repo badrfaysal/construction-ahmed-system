@@ -84,8 +84,45 @@ class ReceivablesController extends Controller
         ];
 
         $wallets = Account::selectable();
+        
+        $manualReceivables = \App\Models\ManualDebt::where('type', 'receivable')->orderByDesc('date')->get();
 
-        return view('receivables.index', compact('rows', 'overdueInstallments', 'upcomingInstallments', 'totals', 'wallets'));
+        return view('receivables.index', compact('rows', 'overdueInstallments', 'upcomingInstallments', 'totals', 'wallets', 'manualReceivables'));
+    }
+
+    public function payManual(Request $request, \App\Models\ManualDebt $receivable)
+    {
+        $data = $request->validate([
+            'amount'     => ['required', 'numeric', 'min:0.01', 'max:' . $receivable->remaining()],
+            'account_id' => ['required', 'integer', 'exists:sy2_accounts,id'],
+            'pay_date'   => ['required', 'date'],
+        ]);
+
+        DB::transaction(function () use ($receivable, $data) {
+            $newPaid = (float) $receivable->paid_amount + (float) $data['amount'];
+            $newStatus = $newPaid >= (float) $receivable->total_amount ? 'paid' : 'partial';
+
+            $receivable->update([
+                'paid_amount' => $newPaid,
+                'status'      => $newStatus,
+            ]);
+
+            Transaction::create([
+                'project_id'  => null,
+                'band_id'     => null,
+                'account_id'  => $data['account_id'],
+                'direction'   => 'in',
+                'type'        => 'تحصيل مستحق يدوي',
+                'party'       => $receivable->party,
+                'amount'      => (float) $data['amount'],
+                'date'        => $data['pay_date'],
+                'description' => 'تحصيل سلفة/مستحق من: ' . $receivable->party,
+                'ref_type'    => 'manual_receivable',
+                'ref_id'      => $receivable->id,
+            ]);
+        });
+
+        return back()->with('success', 'تم تسجيل التحصيل بنجاح.');
     }
 
     // تسجيل تحصيل مباشر من العميل على مشروع (دفعة جزئية أو سداد كامل للمتبقي).

@@ -95,10 +95,35 @@ class DashboardController extends Controller
         }
         $recentTransactions = $recentTransactionsQuery->limit(5)->get();
 
+        // Profits Calculations
+        $totalBilled = $projects->sum(fn($p) => $p->grossClientTotal());
+        $totalSpent  = $projects->sum(fn($p) => $p->totalSpent());
+        $totalCollectedFromProjects = $projects->sum(fn($p) => $p->totalCollected());
+        $totalDiscount = $projects->sum(fn($p) => $p->totalDiscount());
+        
+        $totalTradeProfit       = $projects->sum(fn ($p) => $p->tradeProfit());
+        $totalPercentageProfit  = $projects->sum(fn ($p) => $p->percentageProfit());
+        $totalInstallmentProfit = $projects->sum(fn ($p) => $p->totalInstallmentInterest());
+
+        $totalRevenuesForView = $totalTradeProfit + $totalPercentageProfit + $totalInstallmentProfit;
+        
+        // الربح الدفتري = إجمالي الأرباح (الإيرادات) - الخصومات
+        $bookProfit = $totalRevenuesForView - $totalDiscount;
+        // الربح الحقيقي = ما تم تحصيله فعلاً - ما تم صرفه فعلاً
+        $realProfit = $totalCollectedFromProjects - $totalSpent;
+        $uncollectedProfit = $bookProfit - $realProfit;
+
+        $totalMarketerCommissions = (float) \App\Models\Transaction::where('ref_type', 'marketer_commission')->sum('amount');
+        $totalReturnLosses = (float) \App\Models\MaterialReturn::with('material')->get()->sum(fn($r) => $r->loss());
+        $totalDiscountsAndLosses = $totalDiscount + $totalMarketerCommissions + $totalReturnLosses;
+
         return view('dashboard.index', compact(
             'activeProjects', 'installmentContractsDue',
             'accountsBalance', 'directReceivables', 'installmentReceivables', 'supplierDebtsRemaining', 'unpaidLabor', 'clientOverpayments', 'netCapital',
-            'monthFilter', 'isFiltered', 'accounts', 'recentTransactions'
+            'monthFilter', 'isFiltered', 'accounts', 'recentTransactions',
+            'bookProfit', 'realProfit', 'uncollectedProfit', 'totalDiscount',
+            'totalInstallmentProfit', 'totalTradeProfit', 'totalPercentageProfit', 'totalRevenuesForView',
+            'totalMarketerCommissions', 'totalReturnLosses', 'totalDiscountsAndLosses'
         ));
     }
 }
