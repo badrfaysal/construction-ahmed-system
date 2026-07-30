@@ -24,8 +24,18 @@ class WalletController extends Controller
 
     public function index()
     {
-        // Redirect to radar as it's the new unified screen
-        return redirect()->route('radar.index');
+        $wallets = Account::selectable();
+        
+        $manual = Transaction::with('account')
+            ->where('ref_type', 'manual')
+            ->orWhere('ref_type', 'transfer')
+            ->orderByDesc('date')
+            ->orderByDesc('id')
+            ->paginate(15);
+            
+        $balance = $wallets->firstWhere('id', Account::WALLET_ID)?->balance ?? 0;
+
+        return view('wallet.index', compact('wallets', 'manual', 'balance'));
     }
 
     public function store(Request $request)

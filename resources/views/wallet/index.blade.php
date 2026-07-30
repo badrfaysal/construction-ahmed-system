@@ -55,10 +55,14 @@
 
 <div class="grid cols-2" style="align-items:start;gap:20px">
   {{-- Record a manual money move --}}
-  <form method="POST" action="{{ route('wallet.store') }}">
-    @csrf
-    <div class="form-card" style="max-width:none">
-      <div class="section-label" style="margin-top:0">تسجيل حركة يدوية</div>
+  <div class="form-card" style="max-width:none">
+    <div class="section-label" style="margin-top:0;display:flex;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:15px">
+      <button type="button" class="btn ghost sm active" id="tab-btn-manual" onclick="switchWalletTab('manual')" style="font-weight:700">حركة يدوية</button>
+      <button type="button" class="btn ghost sm" id="tab-btn-transfer" onclick="switchWalletTab('transfer')" style="font-weight:700">تحويل بين المحافظ</button>
+    </div>
+
+    <form method="POST" action="{{ route('wallet.store') }}" id="tab-manual">
+      @csrf
       <div class="field">
         <label>نوع الحركة *</label>
         <select name="kind" id="wallet-kind" required onchange="updateKind()">
@@ -69,7 +73,7 @@
         <p class="muted" id="kind-hint" style="margin-top:6px;font-size:12px"></p>
       </div>
       <div class="field">
-        @include('partials._wallet-select', ['wallets' => $wallets, 'label' => 'المحفظة *', 'required' => true, 'hint' => 'الحركة هتخصم/تضيف على المحفظة دي، وهتظهر في سجل السيستم الأول بعلامة 🏗️ [مقاولات].', 'selectStyle' => 'width:100%'])
+        @include('partials._wallet-select', ['wallets' => $wallets, 'label' => 'المحفظة *', 'required' => true, 'selectStyle' => 'width:100%'])
       </div>
       <div class="row2">
         <div class="field">
@@ -92,8 +96,49 @@
       <div class="btn-row" style="margin-top:8px">
         <button type="submit" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check"/></svg>حفظ الحركة</button>
       </div>
+    </form>
+
+  <form method="POST" action="{{ route('wallet.transfer') }}" id="tab-transfer" style="display:none">
+    @csrf
+    <div class="row2">
+      <div class="field">
+        <label>من محفظة (صادر) *</label>
+        <select name="from_account_id" required>
+          <option value="">— اختر المحفظة —</option>
+          @foreach($wallets as $w)
+            <option value="{{ $w->id }}">{{ $w->name }} ({{ \App\Support\Money::format($w->balance) }} ج.م)</option>
+          @endforeach
+        </select>
+      </div>
+      <div class="field">
+        <label>إلى محفظة (وارد) *</label>
+        <select name="to_account_id" required>
+          <option value="">— اختر المحفظة —</option>
+          @foreach($wallets as $w)
+            <option value="{{ $w->id }}">{{ $w->name }} ({{ \App\Support\Money::format($w->balance) }} ج.م)</option>
+          @endforeach
+        </select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>المبلغ (ج.م) *</label>
+        <input type="number" name="amount" value="{{ old('amount') }}" min="0.01" step="0.01" required>
+      </div>
+      <div class="field">
+        <label>التاريخ *</label>
+        <input type="date" name="date" value="{{ old('date', today()->format('Y-m-d')) }}" required>
+      </div>
+    </div>
+    <div class="field">
+      <label>ملاحظات التخويل</label>
+      <input type="text" name="description" value="{{ old('description') }}" placeholder="تفاصيل إضافية (اختياري)">
+    </div>
+    <div class="btn-row" style="margin-top:8px">
+      <button type="submit" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-refresh"/></svg>تنفيذ التحويل</button>
     </div>
   </form>
+    </div>
 
   {{-- Manual entries history --}}
   <div class="table-card">
@@ -160,6 +205,19 @@ function updateKind() {
   document.getElementById('party-input').placeholder = m.partyPh;
 }
 updateKind();
+
+function switchWalletTab(tab) {
+  document.getElementById('tab-manual').style.display = (tab === 'manual') ? 'block' : 'none';
+  document.getElementById('tab-transfer').style.display = (tab === 'transfer') ? 'block' : 'none';
+  
+  if(tab === 'manual') {
+    document.getElementById('tab-btn-manual').classList.add('active');
+    document.getElementById('tab-btn-transfer').classList.remove('active');
+  } else {
+    document.getElementById('tab-btn-transfer').classList.add('active');
+    document.getElementById('tab-btn-manual').classList.remove('active');
+  }
+}
 </script>
 @endpush
 @endsection

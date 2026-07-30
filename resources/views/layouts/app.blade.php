@@ -158,12 +158,12 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>
         <span>الرادار (سجل العمليات)</span>
       </a>
-    {{-- @if(auth()->user()->isAdmin())
+    @if(auth()->user()->isAdmin())
     <a class="nav-item {{ request()->routeIs('wallet.*') ? 'active' : '' }}" href="{{ route('wallet.index') }}" style="--ic:#d4a13d">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>
       <span>المحفظة</span>
     </a>
-    @endif --}}
+    @endif 
     
     <a class="nav-item {{ request()->routeIs('material_invoices.*') ? 'active' : '' }}" href="{{ route('material_invoices.index') }}" style="--ic:#d97706">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
