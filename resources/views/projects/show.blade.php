@@ -221,9 +221,16 @@
               $profit  = $band->profit();
               $isDone  = $band->status === 'done';
               $bandActual = $band->actualClientTotal();
+              $bandExpenses = $project->materials->filter->isMisc()->where('band_id', $band->id);
+              $hasSubBands = $bandExpenses->count() > 0;
             @endphp
             <tr class="{{ $isDone ? 'band-row-done' : '' }}">
               <td>
+                @if($hasSubBands)
+                  <span style="cursor:pointer; display:inline-flex; align-items:center; color:var(--link); margin-inline-end:4px" onclick="const r = this.closest('tr').nextElementSibling; if(r.style.display==='none'){r.style.display='table-row';this.querySelector('svg').style.transform='rotate(180deg)';}else{r.style.display='none';this.querySelector('svg').style.transform='rotate(0deg)';}">
+                    <svg style="transition:transform 0.2s; transform:rotate(180deg)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-chevron-down"/></svg>
+                  </span>
+                @endif
                 @if($isDone)
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--pos)" stroke-width="2.5" style="vertical-align:-2px;margin-inline-end:4px"><use href="#i-check-circle"/></svg>
                 @endif
@@ -260,6 +267,64 @@
                 @endif
               </td>
             </tr>
+            @if($hasSubBands)
+              <tr class="sub-bands-row" style="background-color: #f8fafc;">
+                <td colspan="8" style="padding: 0;">
+                  <div style="padding: 10px 30px; border-right: 4px solid #cbd5e1;">
+                    <h5 style="margin-top: 0; margin-bottom: 10px; font-size: 14px; color: #475569; font-weight: 700; display:flex; align-items:center; gap:6px;">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-hardhat"/></svg>
+                      البنود الفرعية (مصروفات)
+                    </h5>
+                    <table style="margin: 0; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 6px;">
+                      <thead>
+                        <tr style="background:#f1f5f9">
+                          <th>البند الفرعي</th>
+                          <th>المورد</th>
+                          <th class="num">الكمية</th>
+                          <th class="num"><span class="price-cost">التكلفة</span></th>
+                          <th class="num"><span class="price-sell">سعر البيع</span></th>
+                          <th class="num">المرتجع</th>
+                          <th class="num price-cost">إجمالي التكلفة</th>
+                          <th class="num price-sell">إجمالي البيع</th>
+                          <th>التاريخ</th>
+                          <th class="no-print"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @foreach($bandExpenses as $m)
+                          <tr>
+                            <td>
+                              <strong>{{ $m->item }}</strong>
+                              @if($m->notes)
+                                <div class="muted" style="font-size:13px;font-weight:500;margin-top:2px">{{ $m->notes }}</div>
+                              @endif
+                            </td>
+                            <td class="muted">{{ ($m->supplier?->name ?? ($m->band_worker_id ? '—' : $m->supplier_name)) ?: '—' }}</td>
+                            <td class="num">{{ number_format($m->qty, 1) }}</td>
+                            <td class="num price-cost">{{ \App\Support\Money::format($m->unit_price) }}</td>
+                            <td class="num price-sell">{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
+                            <td class="num {{ $m->returnedQty() > 0 ? '' : 'muted' }}">{{ \App\Support\Money::format($m->returnedQty(), 1) }}</td>
+                            <td class="num price-cost"><strong>{{ \App\Support\Money::format($m->netCost()) }}</strong></td>
+                            <td class="num price-sell"><strong>{{ \App\Support\Money::format($m->netClientCost()) }}</strong></td>
+                            <td class="muted">
+                              {{ $m->date->format('Y-m-d') }}
+                              @if($m->invoice_id)
+                                <a href="{{ route('material_invoices.show', $m->invoice_id) }}" class="tag sm" style="margin-right:4px">فاتورة</a>
+                              @endif
+                            </td>
+                            <td class="no-print">
+                              <a href="{{ route('materials.edit', $m->id) }}" class="btn ghost sm" title="تعديل">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                              </a>
+                            </td>
+                          </tr>
+                        @endforeach
+                      </tbody>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            @endif
           @endforeach
         </tbody>
         <tfoot>
@@ -373,14 +438,18 @@
   <div class="table-card exp-band-section" data-band="{{ $bId ?? 'null' }}" style="margin-bottom:14px">
     <div class="mat-band-header" style="background:{{ $bColor }}; cursor:pointer; user-select:none" onclick="const t = this.nextElementSibling; const c = this.querySelector('.chev'); if(t.style.display==='none'){t.style.display='block';c.style.transform='rotate(180deg)';}else{t.style.display='none';c.style.transform='rotate(0deg)';}">
       <div style="display:flex;align-items:center;gap:10px">
-        <svg class="chev" style="transition:transform 0.2s" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-chevron-down"/></svg>
+        <svg class="chev" style="transition:transform 0.2s; transform:rotate(180deg)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-chevron-down"/></svg>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-hardhat"/></svg>
         <strong>{{ $bObj?->name ?? 'بنود فرعية عامة' }}</strong>
         <span class="tag gray sm">{{ $bandMats->count() }} بند</span>
       </div>
-      <div class="tnum" style="font-weight:700">إجمالي: {{ \App\Support\Money::format($bNetCost) }} ج.م</div>
+      <div class="tnum" style="font-weight:700">
+        <span class="price-cost">إجمالي التكلفة: {{ \App\Support\Money::format($bNetCost) }} ج.م</span>
+        @php $bNetSell = $bandMats->sum(fn($m) => $m->netClientCost()); @endphp
+        <span class="price-sell" style="margin-right:12px">إجمالي البيع: {{ \App\Support\Money::format($bNetSell) }} ج.م</span>
+      </div>
     </div>
-    <div class="table-scroll" style="display:none">
+    <div class="table-scroll" style="display:block">
       <table>
         <thead>
           <tr style="background:{{ $bColor }}">
@@ -390,7 +459,8 @@
             <th class="num"><span class="price-cost">التكلفة</span></th>
             <th class="num"><span class="price-sell">سعر البيع</span></th>
             <th class="num">المرتجع</th>
-            <th class="num">الإجمالي الصافي</th>
+            <th class="num price-cost">إجمالي التكلفة</th>
+            <th class="num price-sell">إجمالي البيع</th>
             <th>التاريخ</th>
             <th class="no-print"></th>
           </tr>
@@ -409,7 +479,8 @@
               <td class="num price-cost">{{ \App\Support\Money::format($m->unit_price) }}</td>
               <td class="num price-sell">{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
               <td class="num {{ $m->returnedQty() > 0 ? '' : 'muted' }}">{{ \App\Support\Money::format($m->returnedQty(), 1) }}</td>
-              <td class="num"><strong>{{ \App\Support\Money::format($m->netCost()) }}</strong></td>
+              <td class="num price-cost"><strong>{{ \App\Support\Money::format($m->netCost()) }}</strong></td>
+              <td class="num price-sell"><strong>{{ \App\Support\Money::format($m->netClientCost()) }}</strong></td>
               <td class="muted">
                 {{ $m->date->format('Y-m-d') }}
                 @if($m->invoice_id)
@@ -436,7 +507,8 @@
 <div class="mat-total-strip">
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-coins"/></svg>
   إجمالي البنود الفرعية الصافية:
-  <strong class="tnum">{{ \App\Support\Money::format($totalExpNetCost) }} ج.م</strong>
+  <strong class="tnum price-cost">{{ \App\Support\Money::format($totalExpNetCost) }} ج.م (تكلفة)</strong>
+  <strong class="tnum price-sell" style="margin-right:15px">{{ \App\Support\Money::format($expenses->sum(fn($m) => $m->netClientCost())) }} ج.م (بيع)</strong>
 </div>
 @else
   <div class="table-card" style="margin-bottom:24px">
@@ -824,14 +896,18 @@
   <div class="table-card mat-band-section" data-band="{{ $bId ?? 'null' }}" style="margin-bottom:14px">
     <div class="mat-band-header" style="background:{{ $bColor }}; cursor:pointer; user-select:none" onclick="const t = this.nextElementSibling; const c = this.querySelector('.chev'); if(t.style.display==='none'){t.style.display='block';c.style.transform='rotate(180deg)';}else{t.style.display='none';c.style.transform='rotate(0deg)';}">
       <div style="display:flex;align-items:center;gap:10px">
-        <svg class="chev" style="transition:transform 0.2s" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-chevron-down"/></svg>
+        <svg class="chev" style="transition:transform 0.2s; transform:rotate(180deg)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-chevron-down"/></svg>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-hardhat"/></svg>
         <strong>{{ $bObj?->name ?? 'خامات بدون بند' }}</strong>
         <span class="tag gray sm">{{ $bandMats->count() }} صنف</span>
       </div>
-      <div class="tnum" style="font-weight:700">إجمالي: {{ \App\Support\Money::format($bNetCost) }} ج.م</div>
+      <div class="tnum" style="font-weight:700">
+        <span class="price-cost">إجمالي التكلفة: {{ \App\Support\Money::format($bNetCost) }} ج.م</span>
+        @php $bNetSell = $bandMats->sum(fn($m) => $m->netClientCost()); @endphp
+        <span class="price-sell" style="margin-right:12px">إجمالي البيع: {{ \App\Support\Money::format($bNetSell) }} ج.م</span>
+      </div>
     </div>
-    <div class="table-scroll" style="display:none">
+    <div class="table-scroll" style="display:block">
       <table>
         <thead>
           <tr style="background:{{ $bColor }}">
@@ -841,7 +917,8 @@
             <th class="num"><span class="price-cost">سعر الشراء (تكلفة)</span></th>
             <th class="num"><span class="price-sell">سعر البيع</span></th>
             <th class="num">المرتجع</th>
-            <th class="num">الإجمالي الصافي</th>
+            <th class="num price-cost">إجمالي التكلفة</th>
+            <th class="num price-sell">إجمالي البيع</th>
             <th>التاريخ</th>
             <th class="no-print"></th>
           </tr>
@@ -858,7 +935,8 @@
               <td class="num price-cost">{{ \App\Support\Money::format($m->unit_price) }}</td>
               <td class="num price-sell">{{ \App\Support\Money::format($m->clientUnitPrice()) }}</td>
               <td class="num {{ $m->returnedQty() > 0 ? '' : 'muted' }}">{{ \App\Support\Money::format($m->returnedQty(), 1) }}</td>
-              <td class="num"><strong>{{ \App\Support\Money::format($m->netCost()) }}</strong></td>
+              <td class="num price-cost"><strong>{{ \App\Support\Money::format($m->netCost()) }}</strong></td>
+              <td class="num price-sell"><strong>{{ \App\Support\Money::format($m->netClientCost()) }}</strong></td>
               <td class="muted">
                 {{ $m->date->format('Y-m-d') }}
                 @if($m->invoice_id)
@@ -886,7 +964,8 @@
 <div class="mat-total-strip">
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-coins"/></svg>
   إجمالي تكلفة الخامات الصافية:
-  <strong class="tnum">{{ \App\Support\Money::format($totalNetCost) }} ج.م</strong>
+  <strong class="tnum price-cost">{{ \App\Support\Money::format($totalNetCost) }} ج.م (تكلفة)</strong>
+  <strong class="tnum price-sell" style="margin-right:15px">{{ \App\Support\Money::format($materials->sum(fn($m) => $m->netClientCost())) }} ج.م (بيع)</strong>
 </div>
 @else
   <div class="table-card" style="margin-bottom:24px">
@@ -1019,7 +1098,7 @@
                   <div style="font-size:12px">{{ rtrim(rtrim(number_format($row->worker->contract_qty, 2), '0'), '.') }} × {{ \App\Support\Money::format((float)$row->worker->contract_unit_rate) }}</div>
                 @endif
               </td>
-              <td class="num">{{ \App\Support\Money::format($row->worker->amount) }}</td>
+              <td class="num">{{ \App\Support\Money::format($row->worker->totalEntitlement()) }}</td>
               <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }}</td>
               <td class="num" style="color:{{ $remaining > 0 ? 'var(--amber, #b45309)' : 'var(--pos)' }}">{{ \App\Support\Money::format($remaining) }}</td>
               <td>

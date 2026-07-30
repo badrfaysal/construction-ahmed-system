@@ -71,15 +71,31 @@ class BandWorker extends Model
     }
 
     // إجمالي المصروفات الآجلة اللي الصنايعي صرفها ولسه ما اخدهاش كاش
+    // إجمالي المصروفات (أو بنود المصنعية الإضافية) المسجلة له كآجل
     public function deferredExpensesTotal(): float
     {
         return (float) $this->deferredExpenses->sum(fn($m) => $m->netCost());
     }
 
+    // إجمالي كل المصروفات/بنود المصنعية اللي اتسجلت باسمه (سواء آجل أو نقدي)
+    public function allExpensesTotal(): float
+    {
+        return (float) $this->hasMany(Material::class, 'band_worker_id')
+                            ->where('category', 'misc')
+                            ->get()
+                            ->sum(fn($m) => $m->netCost());
+    }
+
+    // إجمالي المستحق الكلي = مبلغ التعاقد الأساسي + المصروفات الآجلة
+    public function totalEntitlement(): float
+    {
+        return (float) $this->amount + $this->deferredExpensesTotal();
+    }
+
     // اللي لسه مستحق للصنايعي (علينا) = تعاقده + مصروفاته الآجلة ناقص اللي اتسوّى — never negative
     public function remaining(): float
     {
-        return max((float) $this->amount + $this->deferredExpensesTotal() - $this->paidTotal(), 0);
+        return max($this->totalEntitlement() - $this->paidTotal(), 0);
     }
 
     // اللي مستحق لينا عند الصنايعي (دين عليه): لو الخصومات اللي عملناها له

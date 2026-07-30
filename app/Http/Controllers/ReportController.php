@@ -373,7 +373,7 @@ class ReportController extends Controller
         // نثريات/خامات عامة على المشروع (band_id null) — لو جمعنا على البنود
         // بس، أي خامة مسجلة من غير بند بتختفي من التكلفة والربح خالص هنا،
         // مع إن $totalBilled أصلاً بيحسبها (actualClientTotal يشملها)
-        $totalCost      = $project->totalSpent();
+        $totalCost      = $project->computeTotalCost();
         $totalBilled    = $project->grossClientTotal();
         $totalCollected = $project->totalCollected();
         $totalProfit    = $project->profit();

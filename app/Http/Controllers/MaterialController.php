@@ -373,6 +373,12 @@ class MaterialController extends Controller
                 'paid_amount'     => $isDeferred ? 0 : ($qty * (float)$data['amount']),
             ]));
 
+            if ($request->input('action') === 'save_and_add') {
+                return redirect()->back()
+                    ->withInput($request->except(['item', 'amount', 'sell_price', 'notes', 'qty', 'sup_items']))
+                    ->with('success', 'تم التسجيل بنجاح. يمكنك إضافة البند التالي.');
+            }
+
             return redirect()->route('projects.show', $project)
                 ->with('success', 'تم تسجيل البند الفرعي (مصنعية).');
         }
@@ -400,6 +406,12 @@ class MaterialController extends Controller
                 'payment_status'  => $isDeferred ? 'deferred' : 'paid',
                 'paid_amount'     => $isDeferred ? 0 : (float)$data['amount'],
             ]));
+
+            if ($request->input('action') === 'save_and_add') {
+                return redirect()->back()
+                    ->withInput($request->except(['item', 'amount', 'sell_price', 'notes', 'qty', 'sup_items']))
+                    ->with('success', 'تم التسجيل بنجاح. يمكنك إضافة البند التالي.');
+            }
 
             return redirect()->route('projects.show', $project)
                 ->with('success', 'تم تسجيل البند الفرعي (عام).');
@@ -472,6 +484,12 @@ class MaterialController extends Controller
             }
             return $count;
         });
+
+        if ($request->input('action') === 'save_and_add') {
+            return redirect()->back()
+                ->withInput($request->except(['item', 'amount', 'sell_price', 'notes', 'qty', 'sup_items']))
+                ->with('success', "تم التسجيل بنجاح ({$count} صنف). يمكنك إضافة البند التالي.");
+        }
 
         return redirect()->route('projects.show', $project)
             ->with('success', "تم تسجيل البند الفرعي ({$count} صنف خامات).");

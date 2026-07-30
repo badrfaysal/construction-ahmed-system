@@ -174,7 +174,8 @@
       <input type="text" name="notes" value="{{ old('notes') }}" placeholder="أي تفاصيل إضافية...">
     </div>
     <div class="btn-row" style="margin-top:8px">
-      <button type="submit" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check"/></svg>حفظ البند الفرعي</button>
+      <button type="submit" name="action" value="save" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-check"/></svg>حفظ البند الفرعي</button>
+      <button type="submit" name="action" value="save_and_add" class="btn secondary">حفظ وإضافة المزيد</button>
       <a href="{{ route('projects.show', $project) }}" class="btn ghost">إلغاء</a>
     </div>
   </div>

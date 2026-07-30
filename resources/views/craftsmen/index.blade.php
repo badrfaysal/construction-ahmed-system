@@ -165,7 +165,7 @@
                   <span style="font-size:12px">({{ rtrim(rtrim(number_format($a->contract_qty, 2), '0'), '.') }} × {{ \App\Support\Money::format($a->contract_unit_rate) }})</span>
                 @endif
               </td>
-              <td class="num">{{ \App\Support\Money::format((float)$a->amount + $a->deferredExpensesTotal()) }}</td>
+              <td class="num">{{ \App\Support\Money::format($a->totalEntitlement()) }}</td>
               <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($paid) }}</td>
               <td class="num" style="color:{{ $remaining > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($remaining) }}</td>
               <td>
