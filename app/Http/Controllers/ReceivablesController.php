@@ -86,17 +86,23 @@ class ReceivablesController extends Controller
             ->orderBy('due_date')
             ->get();
 
+        $manualReceivables = \App\Models\ManualDebt::where('type', 'receivable')->orderByDesc('date')->get();
+
+        $manualTotals = [
+            'total'     => $manualReceivables->sum('total_amount'),
+            'collected' => $manualReceivables->sum('paid_amount'),
+            'remaining' => $manualReceivables->sum(fn($r) => $r->total_amount - $r->paid_amount),
+        ];
+
         $totals = [
-            'total_billed'    => $rows->sum('billed'),
-            'total_collected' => $rows->sum('collected'),
-            'total_remaining' => $rows->sum('remaining'),
+            'total_billed'    => $rows->sum('billed') + $manualTotals['total'],
+            'total_collected' => $rows->sum('collected') + $manualTotals['collected'],
+            'total_remaining' => $rows->sum('remaining') + $manualTotals['remaining'],
             'book_profit'     => $rows->sum('book_profit'),
             'earned_profit'   => $rows->sum('earned_profit'),
         ];
 
         $wallets = Account::selectable();
-        
-        $manualReceivables = \App\Models\ManualDebt::where('type', 'receivable')->orderByDesc('date')->get();
 
         return view('receivables.index', compact('rows', 'overdueInstallments', 'upcomingInstallments', 'totals', 'wallets', 'manualReceivables'));
     }

@@ -83,6 +83,17 @@ class DashboardController extends Controller
 
         $unpaidLabor = max($totalWorkerContracted - $totalWorkerPaidAndDiscount, 0);
 
+        $manualDebtsDue = (float) \App\Models\ManualDebt::where('status', '!=', 'paid')
+            ->where('type', 'debt')
+            ->sum(\Illuminate\Support\Facades\DB::raw('total_amount - paid_amount'));
+
+        $manualReceivables = (float) \App\Models\ManualDebt::where('status', '!=', 'paid')
+            ->where('type', 'receivable')
+            ->sum(\Illuminate\Support\Facades\DB::raw('total_amount - paid_amount'));
+
+        $directReceivables += $manualReceivables;
+        $supplierDebtsRemaining += $manualDebtsDue;
+
         $netCapital = $accountsBalance + $directReceivables + $installmentReceivables - $supplierDebtsRemaining - $unpaidLabor - $clientOverpayments;
 
         // Fetch all accounts

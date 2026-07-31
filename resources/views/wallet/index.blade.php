@@ -67,8 +67,7 @@
         <label>نوع الحركة *</label>
         <select name="kind" id="wallet-kind" required onchange="updateKind()">
           <option value="capital">تغذية رأس مال (وارد +)</option>
-          <option value="withdrawal">مسحوبات شخصية (صادر −)</option>
-          <option value="admin_expense">مصروف إداري عام (صادر −)</option>
+          <option value="capital_out">صرف من رأس المال (صادر −)</option>
         </select>
         <p class="muted" id="kind-hint" style="margin-top:6px;font-size:12px"></p>
       </div>
@@ -194,8 +193,7 @@
 <script>
 const KIND_META = {
   capital:       { hint: 'فلوس دخلت الشركة (رأس مال / تمويل) — بتزوّد الرصيد.', partyLabel: 'مصدر التمويل', partyPh: 'مثال: رأس المال / صاحب الشركة' },
-  withdrawal:    { hint: 'سحب أرباح أو مبلغ شخصي من الخزنة — بيقلّل الرصيد.',   partyLabel: 'المستفيد',      partyPh: 'مثال: صاحب الشركة' },
-  admin_expense: { hint: 'مصروف عام مش تابع لمشروع (إيجار، موبايل، ...) — بيقلّل الرصيد.', partyLabel: 'بند المصروف', partyPh: 'مثال: إيجار المكتب' },
+  capital_out:   { hint: 'صرف أو سحب من رأس المال — بيقلّل الرصيد.',   partyLabel: 'المستفيد / الجهة',      partyPh: 'مثال: سحب نقدي' },
 };
 function updateKind() {
   const k = document.getElementById('wallet-kind').value;

@@ -18,7 +18,9 @@ class WalletController extends Controller
 {
     private const KINDS = [
         'capital'       => ['direction' => 'in',  'type' => 'تغذية رأس مال'],
-        'withdrawal'    => ['direction' => 'out', 'type' => 'مسحوبات شخصية'],
+        'capital_out'   => ['direction' => 'out', 'type' => 'صرف من رأس المال'],
+        'deposit'       => ['direction' => 'in',  'type' => 'إيداع'],
+        'withdrawal'    => ['direction' => 'out', 'type' => 'صرف'],
         'admin_expense' => ['direction' => 'out', 'type' => 'مصروف إداري عام'],
     ];
 
@@ -27,7 +29,10 @@ class WalletController extends Controller
         $wallets = Account::selectable();
         
         $manual = Transaction::with('account')
-            ->where('ref_type', 'manual')
+            ->where(function ($q) {
+                $q->where('ref_type', 'manual')
+                  ->whereNotIn('type', ['إيداع', 'صرف']);
+            })
             ->orWhere('ref_type', 'transfer')
             ->orderByDesc('date')
             ->orderByDesc('id')
@@ -49,7 +54,7 @@ class WalletController extends Controller
         ];
 
         $data = $request->validate([
-            'kind'        => ['required', 'in:capital,withdrawal,admin_expense'],
+            'kind'        => ['required', 'in:capital,capital_out,deposit,withdrawal,admin_expense'],
             'account_id'  => ['required', 'integer', 'exists:sy2_accounts,id'],
             'amount'      => ['required', 'numeric', 'min:0.01'],
             'date'        => ['required', 'date'],
@@ -76,9 +81,19 @@ class WalletController extends Controller
                 'ref_id'      => null,
             ]);
 
-            if ($data['kind'] !== 'capital') {
+            if ($data['kind'] === 'withdrawal' || $data['kind'] === 'admin_expense') {
                 \App\Models\ManualDebt::create([
                     'type'         => 'receivable',
+                    'party'        => $data['party'],
+                    'description'  => $data['description'] ?? null,
+                    'total_amount' => $data['amount'],
+                    'paid_amount'  => 0,
+                    'status'       => 'pending',
+                    'date'         => $data['date'],
+                ]);
+            } elseif ($data['kind'] === 'deposit') {
+                \App\Models\ManualDebt::create([
+                    'type'         => 'debt',
                     'party'        => $data['party'],
                     'description'  => $data['description'] ?? null,
                     'total_amount' => $data['amount'],
