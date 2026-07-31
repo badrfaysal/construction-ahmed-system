@@ -76,15 +76,17 @@ class WalletController extends Controller
                 'ref_id'      => null,
             ]);
 
-            \App\Models\ManualDebt::create([
-                'type'         => $data['kind'] === 'capital' ? 'debt' : 'receivable',
-                'party'        => $data['party'],
-                'description'  => $data['description'] ?? null,
-                'total_amount' => $data['amount'],
-                'paid_amount'  => 0,
-                'status'       => 'pending',
-                'date'         => $data['date'],
-            ]);
+            if ($data['kind'] !== 'capital') {
+                \App\Models\ManualDebt::create([
+                    'type'         => 'receivable',
+                    'party'        => $data['party'],
+                    'description'  => $data['description'] ?? null,
+                    'total_amount' => $data['amount'],
+                    'paid_amount'  => 0,
+                    'status'       => 'pending',
+                    'date'         => $data['date'],
+                ]);
+            }
         });
 
         return back()->with('success', 'تم تسجيل الحركة بنجاح.');
