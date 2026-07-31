@@ -348,8 +348,17 @@ class MaterialController extends Controller
                         ->where('name', $data['supplier_name'])
                         ->first();
             if (!$worker) {
-                throw ValidationException::withMessages([
-                    'supplier_name' => 'الصنايعي غير مسجل في أي بند بهذا المشروع. يرجى تسجيله أولاً.',
+                // إنشاء الصنايعي تلقائياً في البند الحالي (لكي يمكن إضافته للبند الفرعي فقط)
+                // ونجعل تكلفته الأساسية صفر، لأن التكلفة ستُحسب من خلال البند الفرعي (Material)
+                $worker = \App\Models\BandWorker::create([
+                    'project_band_id' => $data['band_id'],
+                    'name'            => $data['supplier_name'],
+                    'specialty'       => 'صنايعي بند فرعي',
+                    'contract_type'   => 'lump_sum',
+                    'amount'          => 0,
+                    'sell_amount'     => 0,
+                    'supervision_pct' => 0,
+                    'start_date'      => $data['date'],
                 ]);
             }
 

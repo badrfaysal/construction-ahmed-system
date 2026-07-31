@@ -72,10 +72,19 @@ class DashboardController extends Controller
             ->selectRaw('SUM(sy2_supplier_debts.total_amount - sy2_supplier_debts.paid_amount) as r')
             ->value('r') ?? 0);
 
-        $totalWorkerContracted = (float) \DB::table('sy2_band_workers')
+        $totalWorkerBase = (float) \DB::table('sy2_band_workers')
             ->join('sy2_project_bands', 'sy2_band_workers.project_band_id', '=', 'sy2_project_bands.id')
             ->join('sy2_projects', 'sy2_project_bands.project_id', '=', 'sy2_projects.id')
             ->sum('sy2_band_workers.amount');
+
+        $totalWorkerDeferred = (float) \DB::table('sy2_materials')
+            ->join('sy2_projects', 'sy2_materials.project_id', '=', 'sy2_projects.id')
+            ->whereNotNull('sy2_materials.band_worker_id')
+            ->where('sy2_materials.category', 'misc')
+            ->where('sy2_materials.payment_status', 'deferred')
+            ->sum(\DB::raw('sy2_materials.qty * sy2_materials.unit_price'));
+
+        $totalWorkerContracted = $totalWorkerBase + $totalWorkerDeferred;
 
         $totalWorkerPaidAndDiscount = (float) \DB::table('sy2_worker_payments')
             ->join('sy2_projects', 'sy2_worker_payments.project_id', '=', 'sy2_projects.id')
