@@ -40,6 +40,14 @@ class WalletController extends Controller
 
     public function store(Request $request)
     {
+        $messages = [
+            'kind.required'       => 'يرجى اختيار نوع الحركة.',
+            'account_id.required' => 'يرجى اختيار المحفظة.',
+            'amount.required'     => 'يرجى إدخال المبلغ.',
+            'date.required'       => 'يرجى تحديد التاريخ.',
+            'party.required'      => 'يرجى كتابة الجهة / المصدر لهذه الحركة.',
+        ];
+
         $data = $request->validate([
             'kind'        => ['required', 'in:capital,withdrawal,admin_expense'],
             'account_id'  => ['required', 'integer', 'exists:sy2_accounts,id'],
@@ -47,7 +55,7 @@ class WalletController extends Controller
             'date'        => ['required', 'date'],
             'party'       => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
-        ]);
+        ], $messages);
 
         $kind = self::KINDS[$data['kind']];
 
@@ -97,13 +105,21 @@ class WalletController extends Controller
 
     public function transfer(Request $request)
     {
+        $messages = [
+            'from_account_id.required' => 'يرجى اختيار المحفظة المحول منها.',
+            'to_account_id.required'   => 'يرجى اختيار المحفظة المحول إليها.',
+            'to_account_id.different'  => 'لا يمكن التحويل لنفس المحفظة.',
+            'amount.required'          => 'يرجى إدخال المبلغ.',
+            'date.required'            => 'يرجى تحديد التاريخ.',
+        ];
+
         $data = $request->validate([
             'from_account_id' => ['required', 'integer', 'exists:sy2_accounts,id'],
             'to_account_id'   => ['required', 'integer', 'exists:sy2_accounts,id', 'different:from_account_id'],
             'amount'          => ['required', 'numeric', 'min:0.01'],
             'date'            => ['required', 'date'],
             'description'     => ['nullable', 'string', 'max:1000'],
-        ]);
+        ], $messages);
 
         $from = Account::findOrFail($data['from_account_id']);
         $to = Account::findOrFail($data['to_account_id']);

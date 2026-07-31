@@ -86,8 +86,8 @@
         </div>
       </div>
       <div class="field">
-        <label id="party-label">الجهة / المصدر</label>
-        <input type="text" name="party" id="party-input" value="{{ old('party') }}">
+        <label id="party-label">الجهة / المصدر *</label>
+        <input type="text" name="party" id="party-input" value="{{ old('party') }}" required>
       </div>
       <div class="field">
         <label>ملاحظات</label>
