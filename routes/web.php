@@ -158,6 +158,7 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     // their bands/projects, with what they're still owed
     Route::get('/craftsmen', [CraftsmanController::class, 'index'])->name('craftsmen.index');
     Route::post('/craftsmen/{name}/rate', [CraftsmanController::class, 'rate'])->name('craftsmen.rate');
+    Route::get('/craftsmen/{name}/statement', [CraftsmanController::class, 'statement'])->name('craftsmen.statement');
 
     // Alerts / monitoring (التنبيهات)
     Route::get('/alerts', [AlertController::class, 'index'])->name('alerts.index');

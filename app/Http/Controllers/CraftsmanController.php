@@ -135,6 +135,145 @@ class CraftsmanController extends Controller
         return view('craftsmen.index', compact('craftsmen', 'totalRemaining', 'totalPaid', 'projects', 'specialties', 'wallets'));
     }
 
+    public function statement(\Illuminate\Http\Request $request, $name)
+    {
+        $query = BandWorker::with(['payments', 'band.project', 'deferredExpenses']);
+
+        if ($pid = $request->get('project_id')) {
+            $query->whereHas('band', fn ($q) => $q->where('project_id', $pid));
+        }
+
+        $workers = $query->get();
+        
+        // Re-run grouping to find the requested canonical name
+        $groups = [];
+        foreach ($workers as $w) {
+            $rawName = trim($w->name);
+            $phone = trim($w->phone ?? '');
+            
+            if ($rawName === '') continue;
+
+            $normalized = ItemNameMatcher::normalize($rawName);
+            $matchedIndex = null;
+
+            foreach ($groups as $i => $g) {
+                if ($phone !== '' && in_array($phone, $g['phones'], true)) {
+                    $matchedIndex = $i; break;
+                }
+                if (ItemNameMatcher::similarity($g['normalized'], $normalized) >= 0.8) {
+                    $matchedIndex = $i; break;
+                }
+            }
+
+            if ($matchedIndex === null) {
+                $groups[] = [
+                    'canonical'  => $rawName,
+                    'normalized' => $normalized,
+                    'phones'     => $phone !== '' ? [$phone] : [],
+                    'items'      => [$w],
+                ];
+            } else {
+                $groups[$matchedIndex]['items'][] = $w;
+                if ($phone !== '' && ! in_array($phone, $groups[$matchedIndex]['phones'], true)) {
+                    $groups[$matchedIndex]['phones'][] = $phone;
+                }
+                if (mb_strlen($rawName) > mb_strlen($groups[$matchedIndex]['canonical'])) {
+                    $groups[$matchedIndex]['canonical'] = $rawName;
+                }
+            }
+        }
+
+        $targetGroup = null;
+        foreach ($groups as $g) {
+            if ($g['canonical'] === $name || $g['normalized'] === ItemNameMatcher::normalize($name)) {
+                $targetGroup = $g;
+                $name = $g['canonical']; // Ensure exact canonical name is used for display
+                break;
+            }
+        }
+
+        if (! $targetGroup) {
+            return back()->with('error', 'الصنايعي غير موجود أو ليس له عمليات مسجلة بالبحث الحالي.');
+        }
+
+        $rows = collect($targetGroup['items']);
+        $ledger = collect();
+
+        foreach ($rows as $w) {
+            if ($w->amount > 0) {
+                $ledger->push([
+                    'date' => $w->start_date ? $w->start_date->format('Y-m-d') : $w->created_at->format('Y-m-d'),
+                    'type' => 'استحقاق مصنعية',
+                    'description' => 'مصنعية بند: ' . ($w->band->name ?? 'بدون بند') . ' (' . ($w->band->project->name ?? '') . ')',
+                    'credit' => (float) $w->amount,
+                    'debit' => 0,
+                    'project' => $w->band->project->name ?? '',
+                ]);
+            }
+
+            foreach ($w->deferredExpenses as $exp) {
+                $ledger->push([
+                    'date' => $exp->date ? $exp->date->format('Y-m-d') : $exp->created_at->format('Y-m-d'),
+                    'type' => 'استحقاق مصروفات',
+                    'description' => 'مصروفات/نثريات: ' . $exp->name . ' (' . ($w->band->project->name ?? '') . ')',
+                    'credit' => (float) $exp->netCost(),
+                    'debit' => 0,
+                    'project' => $w->band->project->name ?? '',
+                ]);
+            }
+
+            foreach ($w->payments as $pay) {
+                if ($pay->amount > 0) {
+                    $ledger->push([
+                        'date' => $pay->date ? $pay->date->format('Y-m-d') : clone $pay->created_at->format('Y-m-d'),
+                        'type' => 'دفعة نقدية',
+                        'description' => 'سداد لـ: ' . ($w->band->name ?? 'بدون بند') . ' (' . ($w->band->project->name ?? '') . ')',
+                        'credit' => 0,
+                        'debit' => (float) $pay->amount,
+                        'project' => $w->band->project->name ?? '',
+                    ]);
+                }
+                if ($pay->discount > 0) {
+                    $ledger->push([
+                        'date' => $pay->date ? $pay->date->format('Y-m-d') : clone $pay->created_at->format('Y-m-d'),
+                        'type' => 'خصم',
+                        'description' => 'خصم من حساب مصنعية ' . ($w->band->name ?? 'بدون بند') . ' (' . ($w->band->project->name ?? '') . ')',
+                        'credit' => 0,
+                        'debit' => (float) $pay->discount,
+                        'project' => $w->band->project->name ?? '',
+                    ]);
+                }
+            }
+        }
+
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        // Sort chronologically by date
+        $ledger = $ledger->sortBy(function($item) {
+            return $item['date'] . '-' . ($item['credit'] > 0 ? '0' : '1'); // Credits before debits on same day
+        })->values();
+
+        $openingBalance = 0;
+        $filteredLedger = collect();
+
+        foreach ($ledger as $item) {
+            if ($dateFrom && $item['date'] < $dateFrom) {
+                $openingBalance += $item['credit'] - $item['debit'];
+            } elseif ($dateTo && $item['date'] > $dateTo) {
+                // Ignore future items
+            } else {
+                $filteredLedger->push($item);
+            }
+        }
+
+        $projects = Project::orderBy('name')->get(['id', 'name']);
+        
+        return view('craftsmen.statement', compact(
+            'name', 'filteredLedger', 'openingBalance', 'projects'
+        ));
+    }
+
     public function rate(\Illuminate\Http\Request $request, string $name)
     {
         $validated = $request->validate([

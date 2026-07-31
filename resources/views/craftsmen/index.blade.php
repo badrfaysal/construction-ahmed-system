@@ -122,11 +122,12 @@
           @if($c->owed_to_us > 0)
             <div><div class="muted" style="font-size:12px;color:var(--warn,#c9821a)">مستحق لينا</div><div class="tnum" style="font-weight:700;color:var(--warn,#c9821a)">{{ \App\Support\Money::format($c->owed_to_us) }}</div></div>
           @endif
-          @if($c->remaining > 0)
-            <div style="display:flex;align-items:center;margin-right:10px;">
+          <div style="display:flex;align-items:center;margin-right:10px;gap:8px">
+            @if($c->remaining > 0)
               <button type="button" class="btn primary sm" style="background:var(--pos,#10b981); border-color:var(--pos,#10b981); font-weight:bold" onclick="openBulkPaymentModal('{{ addslashes($c->name) }}', {{ $c->remaining }})">سداد مجمع</button>
-            </div>
-          @endif
+            @endif
+            <a href="{{ route('craftsmen.statement', $c->name) }}" class="btn ghost sm" style="border:1px solid var(--border); font-weight:bold"><i class="fa fa-file-invoice" style="margin-left:4px"></i> كشف حساب</a>
+          </div>
         </div>
         <form action="{{ route('craftsmen.rate', $c->name) }}" method="POST" class="craftsman-rate-form">
           @csrf
