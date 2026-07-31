@@ -103,6 +103,7 @@ class CraftsmanController extends Controller
                     'owed_to_us'     => (float) $rows->sum(fn ($w) => $w->owedToUs()),
                     'payments_count' => $rows->sum(fn ($w) => $w->payments->count()),
                     'start_date'     => $rows->min('start_date'),
+                    'latest_added'   => $rows->max('created_at'),
                     'rating'         => $ratingObj?->rating ?? 0,
                     'notes'          => $ratingObj?->notes ?? '',
                     // One line per band assignment, newest-worked first
@@ -110,14 +111,16 @@ class CraftsmanController extends Controller
                 ];
             });
 
-        $craftsmen = (match ($request->get('sort', 'remaining_desc')) {
+        $craftsmen = (match ($request->get('sort', 'newest')) {
+            'remaining_desc'  => $craftsmen->sortByDesc('remaining'),
             'paid_desc'       => $craftsmen->sortByDesc('paid'),
             'contracted_desc' => $craftsmen->sortByDesc('contracted'),
             'projects_desc'   => $craftsmen->sortByDesc('projects'),
             'name'            => $craftsmen->sortBy('name'),
             'rating_desc'     => $craftsmen->sortByDesc('rating'),
             'rating_asc'      => $craftsmen->sortBy('rating'),
-            default           => $craftsmen->sortByDesc('remaining'),
+            'newest'          => $craftsmen->sortByDesc('latest_added'),
+            default           => $craftsmen->sortByDesc('latest_added'),
         })->values();
 
         $totalRemaining = $craftsmen->sum('remaining');

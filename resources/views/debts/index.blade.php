@@ -68,10 +68,11 @@
     </div>
     <input type="hidden" name="date_from" id="date_from" value="{{ request('date_from') }}">
     <input type="hidden" name="date_to" id="date_to" value="{{ request('date_to') }}">
+    <input type="hidden" name="tab" id="tab_input" value="{{ request('tab') }}">
   </div>
   @include('partials._sort-select', ['options' => [
-    'due_asc'     => 'الأقرب استحقاقًا',
     'newest'      => 'الأحدث إضافة',
+    'due_asc'     => 'الأقرب استحقاقًا',
     'amount_desc' => 'الأعلى قيمة',
     'amount_asc'  => 'الأقل قيمة',
   ]])
@@ -186,13 +187,12 @@
 
 <div class="tabs-container" style="margin-bottom: 20px;">
   <div class="tabs" style="border-bottom: 1px solid var(--line); display:flex; gap:16px;">
-    <div class="tab-btn {{ request('status') !== 'paid' && !request('tab') ? 'active' : '' }}" id="tab-btn-supplier" onclick="if('{{request('status')}}'==='paid'){window.location.href='?status='}else{switchTab('supplier-tab')}" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid {{ request('status') !== 'paid' && !request('tab') ? 'var(--brand)' : 'transparent' }}; font-weight:bold; color:{{ request('status') !== 'paid' && !request('tab') ? 'var(--brand)' : 'var(--mut)' }}">ديون الموردين</div>
-    <div class="tab-btn {{ request('tab') === 'manual' ? 'active' : '' }}" id="tab-btn-manual" onclick="if('{{request('status')}}'==='paid'){window.location.href='?status=&tab=manual'}else{switchTab('manual-tab')}" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid {{ request('tab') === 'manual' ? 'var(--brand)' : 'transparent' }}; font-weight:bold; color:{{ request('tab') === 'manual' ? 'var(--brand)' : 'var(--mut)' }}; display:{{ request('status') === 'paid' ? 'none' : 'block' }}">عهد وديون أخرى</div>
-    <a href="{{ request()->fullUrlWithQuery(['status' => 'paid']) }}" class="tab-btn {{ request('status') === 'paid' ? 'active' : '' }}" style="padding: 10px 16px; text-decoration:none; border-bottom: 2px solid {{ request('status') === 'paid' ? 'var(--brand)' : 'transparent' }}; font-weight:bold; color:{{ request('status') === 'paid' ? 'var(--brand)' : 'var(--mut)' }}">المسدد (السجل)</a>
+    <div class="tab-btn {{ !request('tab') || request('tab') === 'supplier' ? 'active' : '' }}" id="tab-btn-supplier" onclick="switchTab('supplier-tab')" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid {{ !request('tab') || request('tab') === 'supplier' ? 'var(--brand)' : 'transparent' }}; font-weight:bold; color:{{ !request('tab') || request('tab') === 'supplier' ? 'var(--brand)' : 'var(--mut)' }}">ديون الموردين</div>
+    <div class="tab-btn {{ request('tab') === 'manual' ? 'active' : '' }}" id="tab-btn-manual" onclick="switchTab('manual-tab')" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid {{ request('tab') === 'manual' ? 'var(--brand)' : 'transparent' }}; font-weight:bold; color:{{ request('tab') === 'manual' ? 'var(--brand)' : 'var(--mut)' }}">عهد وديون أخرى</div>
   </div>
 </div>
 
-<div id="supplier-tab" class="tab-content" style="display:{{ request('tab') === 'manual' ? 'none' : 'block' }};">
+<div id="supplier-tab" class="tab-content" style="display:{{ !request('tab') || request('tab') === 'supplier' ? 'block' : 'none' }};">
 @if($debts->count())
   @php $bySupplier = $debts->groupBy(fn($d) => $d->supplier_id ?? 0); @endphp
   @foreach($bySupplier as $supplierId => $supplierDebts)
@@ -298,7 +298,7 @@
 
 </div> <!-- end supplier-tab -->
 
-<div id="manual-tab" class="tab-content" style="display:{{ request('tab') === 'manual' || request('status') === 'paid' ? 'block' : 'none' }};">
+<div id="manual-tab" class="tab-content" style="display:{{ request('tab') === 'manual' ? 'block' : 'none' }};">
 @if(isset($manualDebts) && $manualDebts->count() > 0)
   <h4 style="margin:20px 0 10px; border-bottom:1px solid var(--border); padding-bottom:8px;">عهد وديون أخرى (حركات يدوية)</h4>
   <div class="table-scroll">
@@ -517,6 +517,10 @@ function switchTab(tabId) {
   btn.classList.add('active');
   btn.style.borderBottomColor = 'var(--brand)';
   btn.style.color = 'var(--brand)';
+  
+  if(document.getElementById('tab_input')) {
+    document.getElementById('tab_input').value = tabId === 'manual-tab' ? 'manual' : 'supplier';
+  }
 }
 </script>
 @endpush

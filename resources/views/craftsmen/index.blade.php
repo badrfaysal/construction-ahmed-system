@@ -59,6 +59,7 @@
     </div>
   </div>
   @include('partials._sort-select', ['options' => [
+    'newest'          => 'الأحدث إضافة',
     'remaining_desc'  => 'الأعلى مستحقًا',
     'paid_desc'       => 'الأعلى مدفوعًا',
     'contracted_desc' => 'الأعلى تعاقدًا',

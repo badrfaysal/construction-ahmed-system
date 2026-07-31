@@ -65,7 +65,22 @@ class DebtController extends Controller
             'overdue_count'  => $baseQuery->clone()->where('status', '!=', 'paid')->whereNotNull('due_date')->where('due_date', '<', today())->count(),
         ];
 
-        $manualDebts = \App\Models\ManualDebt::where('type', 'debt')->orderByDesc('date')->get();
+        $manualQuery = \App\Models\ManualDebt::where('type', 'debt')->orderByDesc('date');
+
+        if ($status = $request->get('status')) {
+            $manualQuery->where('status', $status);
+        } else {
+            $manualQuery->where('status', '!=', 'paid');
+        }
+
+        if ($dateFrom = $request->get('date_from')) {
+            $manualQuery->whereDate('date', '>=', $dateFrom);
+        }
+        if ($dateTo = $request->get('date_to')) {
+            $manualQuery->whereDate('date', '<=', $dateTo);
+        }
+
+        $manualDebts = $manualQuery->get();
 
         return view('debts.index', compact('debts', 'projects', 'suppliers', 'wallets', 'totals', 'manualDebts'));
     }
