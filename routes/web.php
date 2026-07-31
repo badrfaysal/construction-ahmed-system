@@ -116,16 +116,16 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::get('/receivables', [ReceivablesController::class, 'index'])->name('receivables.index');
     // تسجيل تحصيل مباشر من العميل (جزئي/كامل) + حذف تحصيل
     Route::post('/receivables/{project}/pay', [ReceivablesController::class, 'pay'])->name('receivables.pay');
-    Route::post('/receivables/manual/{receivable}/pay', [ReceivablesController::class, 'payManual'])->name('receivables.manual.pay');
     Route::post('/receivables/manual/party/pay', [ReceivablesController::class, 'payManualParty'])->name('receivables.manual.party.pay');
+    Route::post('/receivables/manual/{receivable}/pay', [ReceivablesController::class, 'payManual'])->name('receivables.manual.pay');
     // منح خصم على إجمالي المشروع
     Route::post('/projects/{project}/discount', \App\Http\Controllers\ProjectDiscountController::class)->name('projects.discount');
 
     // Supplier debts — what we owe suppliers (الديون)
     Route::get('/debts', [DebtController::class, 'index'])->name('debts.index');
     Route::post('/debts/{debt}/pay', [DebtController::class, 'pay'])->name('debts.pay');
-    Route::post('/debts/manual/{debt}/pay', [DebtController::class, 'payManual'])->name('debts.manual.pay');
     Route::post('/debts/manual/party/pay', [DebtController::class, 'payManualParty'])->name('debts.manual.party.pay');
+    Route::post('/debts/manual/{debt}/pay', [DebtController::class, 'payManual'])->name('debts.manual.pay');
     Route::post('/debts/supplier/{supplierId}/pay', [DebtController::class, 'paySupplier'])->name('debts.supplier.pay');
     Route::delete('/debts/{debt}', [DebtController::class, 'destroy'])->name('debts.destroy');
 

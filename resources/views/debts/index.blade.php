@@ -432,7 +432,7 @@
   <div style="background:var(--surface);border-radius:14px;padding:28px;width:min(460px,96vw)">
     <h4 style="margin:0 0 4px">سداد فاتورة</h4>
     <p id="pay-desc" class="muted" style="margin:0 0 20px;font-size:.85rem"></p>
-    <form id="pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+    <form id="pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.7'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
       @csrf
       <div class="field">
         <label>المبلغ المدفوع (ج.م) *</label>
@@ -457,7 +457,7 @@
   <div style="background:var(--surface);border-radius:14px;padding:28px;width:min(460px,96vw)">
     <h4 style="margin:0 0 4px">سداد ديون المورد</h4>
     <p id="supplier-pay-name" class="muted" style="margin:0 0 20px;font-size:.85rem"></p>
-    <form id="supplier-pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+    <form id="supplier-pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.7'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
       @csrf
       <div class="field">
         <label>المبلغ المدفوع (ج.م) *</label>
@@ -482,7 +482,7 @@
   <div style="background:var(--surface);border-radius:14px;padding:28px;width:min(460px,96vw)">
     <h4 style="margin:0 0 4px">سداد عهدة / دين أخرى</h4>
     <p id="manual-pay-desc" class="muted" style="margin:0 0 20px;font-size:.85rem"></p>
-    <form id="manual-pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+    <form id="manual-pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.7'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
       @csrf
       <div class="field">
         <label style="margin-bottom:8px;display:block">المبلغ المسدد (ج.م) *</label>
@@ -524,7 +524,7 @@
 <div id="manual-party-pay-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);align-items:center;justify-content:center" onclick="if(event.target===this) this.style.display='none'">
   <div style="background:var(--surface);border-radius:14px;padding:28px;width:min(460px,96vw)">
     <h4 style="margin:0 0 4px">سداد ديون <span id="manual-party-pay-name"></span></h4>
-    <form id="manual-party-pay-form" method="POST" action="{{ route('debts.manual.party.pay') }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+    <form id="manual-party-pay-form" method="POST" action="{{ route('debts.manual.party.pay') }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.7'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
       @csrf
       <input type="hidden" name="party_name" id="manual-party-pay-party">
       <div class="field" style="margin-top:20px">

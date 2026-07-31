@@ -247,6 +247,7 @@ class ReceivablesController extends Controller
 
         DB::transaction(function () use ($receivables, $data, $partyName) {
             $remainingPay = (float) $data['amount'];
+            $transactions = [];
             
             foreach ($receivables as $recv) {
                 if ($remainingPay <= 0) break;
@@ -262,7 +263,7 @@ class ReceivablesController extends Controller
                     'status'      => $newStatus,
                 ]);
 
-                Transaction::create([
+                $transactions[] = [
                     'project_id'  => $recv->project_id,
                     'band_id'     => $recv->band_id,
                     'account_id'  => $data['account_id'],
@@ -274,9 +275,15 @@ class ReceivablesController extends Controller
                     'description' => 'تحصيل: ' . $recv->description,
                     'ref_type'    => 'manual_recv',
                     'ref_id'      => $recv->id,
-                ]);
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ];
 
                 $remainingPay -= $pay;
+            }
+
+            if (!empty($transactions)) {
+                Transaction::insert($transactions);
             }
         });
 

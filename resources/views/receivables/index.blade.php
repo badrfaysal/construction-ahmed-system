@@ -522,7 +522,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
         <div style="font-weight:700;color:var(--bad)">{{ \App\Support\Money::format($inst->amount) }} ج</div>
         <div class="s">استحق: {{ $inst->due_date->format('d/m/Y') }}</div>
       </div>
-      <form method="POST" action="{{ route('installments.markPaid', $inst) }}" class="no-print" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+      <form method="POST" action="{{ route('installments.markPaid', $inst) }}" class="no-print" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.7'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
         @csrf
         <button type="submit" style="padding:6px 13px;background:var(--ink);color:#fff;border:none;border-radius:7px;font-weight:700;font-size:.75rem;cursor:pointer">تحصيل</button>
       </form>
@@ -644,7 +644,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
               <span><i class="fa fa-percent"></i> منح خصم للمشروع</span>
               <button type="button" class="rv-x" style="color:var(--soft);font-size:1rem" onclick="hideDiscountPanel({{ $proj->id }})">×</button>
             </div>
-            <form method="POST" action="{{ route('projects.discount', $proj) }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+            <form method="POST" action="{{ route('projects.discount', $proj) }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.7'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
               @csrf
               <div style="font-size:.75rem;color:var(--mut);margin-bottom:10px">
                 إجمالي الخصومات الحالية: <strong>{{ \App\Support\Money::format($proj->discounts->sum('amount')) }} ج.م</strong>
@@ -682,7 +682,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
               </div>
             @endif
             @if($payAmount > 0.009)
-            <form method="POST" action="{{ route('receivables.pay', $proj) }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+            <form method="POST" action="{{ route('receivables.pay', $proj) }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.7'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
               @csrf
               <div class="rv-presets">
                 <span class="rv-preset hot" onclick="setAmt({{ $proj->id }}, {{ $payAmount }})">تحصيل كامل — {{ \App\Support\Money::format($payAmount) }} ج</span>
@@ -868,7 +868,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
     </div>
     <div class="rv-mbody" style="padding:16px 18px">
       <p id="manual-recv-pay-desc" class="muted" style="margin:0 0 20px;font-size:.85rem;color:var(--mut)"></p>
-      <form id="manual-recv-pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+      <form id="manual-recv-pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.7'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
         @csrf
         <div class="rv-pay" style="border:none;padding:0;background:none">
           <label style="margin-bottom:8px;display:block">المبلغ المحصل (ج.م) *</label>
@@ -914,7 +914,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
       <button type="button" class="rv-x" onclick="closePartyBulkPay()">×</button>
     </div>
     <div class="rv-mbody" style="padding:16px 18px">
-      <form id="manual-party-pay-form" method="POST" action="{{ route('receivables.manual.party.pay') }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+      <form id="manual-party-pay-form" method="POST" action="{{ route('receivables.manual.party.pay') }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.7'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
         @csrf
         <input type="hidden" name="party_name" id="manual-party-pay-party">
         <div class="rv-pay" style="border:none;padding:0;background:none">
