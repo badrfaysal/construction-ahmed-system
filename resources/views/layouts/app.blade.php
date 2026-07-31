@@ -100,6 +100,7 @@
   <g id="i-chevron-down"><polyline points="6 9 12 15 18 9"/></g>
 </defs></svg>
 
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
 <aside class="sidebar">
   <div class="brand" style="position:relative">
     <div class="logo">
@@ -294,6 +295,9 @@
 <div class="main">
   {{-- Sticky top bar with page title and user info --}}
   <div class="topbar">
+    <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" style="margin-inline-end:12px;" aria-label="القائمة">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
     <div class="page-ic" style="background:{{ $T[2] }};color:{{ $T[0] }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#{{ $T[4] }}"/></svg>
     </div>
@@ -429,6 +433,22 @@
     toggleBtn.addEventListener('click', () => {
       document.body.classList.toggle('sidebar-collapsed');
       localStorage.setItem('sy2-sidebar', document.body.classList.contains('sidebar-collapsed') ? '1' : '0');
+    });
+  }
+
+  // Mobile sidebar logic
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  const sidebarOverlay = document.getElementById('sidebar-overlay');
+  
+  if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', () => {
+      document.body.classList.add('sidebar-open');
+    });
+  }
+  
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', () => {
+      document.body.classList.remove('sidebar-open');
     });
   }
   // Restore state on load (add this script directly to prevent FOUC, but doing it here is fine since body is already parsing)
