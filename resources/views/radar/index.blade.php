@@ -619,7 +619,7 @@ function setOpType(type) {
   }
 }
 
-// Modify dw-form onsubmit to handle phone number logic securely
+// Modify dw-form onsubmit to handle phone number logic securely and prevent double submission
 document.getElementById('dw-form').addEventListener('submit', function(e) {
   const phoneInput = document.getElementById('dw-phone-input');
   const partyInput = document.getElementById('dw-party-input');
@@ -627,6 +627,25 @@ document.getElementById('dw-form').addEventListener('submit', function(e) {
   
   if (phone && !partyInput.value.includes(phone)) {
     partyInput.value = partyInput.value.trim() + ' (' + phone + ')';
+  }
+
+  const btn = document.getElementById('dw-submit-btn');
+  if (btn) {
+    // Small timeout to allow form submission to proceed before disabling
+    setTimeout(() => {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> جاري التنفيذ...';
+    }, 10);
+  }
+});
+
+document.getElementById('tr-form').addEventListener('submit', function(e) {
+  const btn = document.getElementById('tr-submit-btn');
+  if (btn) {
+    setTimeout(() => {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> جاري التنفيذ...';
+    }, 10);
   }
 });
 

@@ -301,14 +301,14 @@
 <div id="manual-tab" class="tab-content" style="display:{{ request('tab') === 'manual' ? 'block' : 'none' }};">
 @if(isset($manualDebts) && $manualDebts->count() > 0)
   <h4 style="margin:20px 0 10px; border-bottom:1px solid var(--border); padding-bottom:8px;">عهد وديون أخرى (حركات يدوية)</h4>
+  @php $groupedDebts = $manualDebts->groupBy('party'); @endphp
   <div class="table-scroll">
     <table>
       <thead>
         <tr>
-          <th>التاريخ</th>
           <th>الجهة / الشخص</th>
-          <th>البيان</th>
-          <th class="num">المبلغ</th>
+          <th>عدد التعاملات</th>
+          <th class="num">إجمالي المبلغ</th>
           <th class="num">المسدد</th>
           <th class="num">المتبقي</th>
           <th>الحالة</th>
@@ -316,27 +316,114 @@
         </tr>
       </thead>
       <tbody>
-        @foreach($manualDebts as $debt)
-          <tr>
-            <td class="muted">{{ $debt->date->format('Y-m-d') }}</td>
-            <td><strong>{{ $debt->party }}</strong></td>
-            <td class="muted">{{ $debt->description ?: '—' }}</td>
-            <td class="num">{{ \App\Support\Money::format($debt->total_amount) }}</td>
-            <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($debt->paid_amount) }}</td>
-            <td class="num" style="color:var(--neg)"><strong>{{ \App\Support\Money::format($debt->remaining()) }}</strong></td>
-            <td><span class="tag {{ $debt->statusTag() }}">{{ $debt->statusAr() }}</span></td>
+        @foreach($groupedDebts as $partyName => $partyItems)
+          @php
+            $partyTotal     = $partyItems->sum('total_amount');
+            $partyPaid      = $partyItems->sum('paid_amount');
+            $partyRemaining = $partyItems->sum(fn($r) => $r->remaining());
+            $partyCount     = $partyItems->count();
+            $allPaid        = $partyItems->every(fn($r) => $r->status === 'paid');
+            $partyKey       = 'mdebt-' . md5($partyName);
+          @endphp
+          <tr data-status="{{ $allPaid ? 'paid' : 'pending' }}" style="cursor:pointer; background: {{ $allPaid ? 'var(--bg-main)' : '' }}" onclick="openPartyModal('{{ $partyKey }}')">
+            <td><strong>{{ $partyName }}</strong></td>
+            <td><span style="background:var(--bg2);padding:2px 10px;border-radius:6px;font-size:.75rem;font-weight:700">{{ $partyCount }}</span></td>
+            <td class="num">{{ \App\Support\Money::format($partyTotal) }}</td>
+            <td class="num" style="color:var(--pos)">{{ \App\Support\Money::format($partyPaid) }}</td>
+            <td class="num" style="color:var(--neg)"><strong>{{ \App\Support\Money::format($partyRemaining) }}</strong></td>
             <td>
-              @if($debt->status !== 'paid')
-                <button class="btn ghost sm" onclick="openManualPayModal({{ $debt->id }}, {{ $debt->remaining() }}, '{{ addslashes($debt->party . ($debt->description ? ' - ' . $debt->description : '')) }}')">
-                  سداد
-                </button>
+              @if($allPaid)
+                <span class="tag green sm">مسدد بالكامل</span>
+              @else
+                <span class="tag yellow sm">معلق</span>
               @endif
+            </td>
+            <td>
+              <button class="btn ghost sm" style="font-size:0.75rem">التفاصيل</button>
             </td>
           </tr>
         @endforeach
       </tbody>
     </table>
   </div>
+
+{{-- توليد المودلز الخاصة بتفاصيل كل جهة/شخص للعهد والديون --}}
+@foreach($groupedDebts as $partyName => $partyItems)
+  @php
+    $partyTotal     = $partyItems->sum('total_amount');
+    $partyPaid      = $partyItems->sum('paid_amount');
+    $partyRemaining = $partyItems->sum(fn($r) => $r->remaining());
+    $partyKey       = 'mdebt-' . md5($partyName);
+  @endphp
+  <div class="rv-modal" id="modal-{{ $partyKey }}" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);align-items:center;justify-content:center" onclick="if(event.target===this) document.getElementById('modal-{{ $partyKey }}').style.display='none'">
+    <div class="rv-card" style="background:var(--surface);border-radius:14px;width:min(800px,96vw);max-height:90vh;overflow-y:auto;padding:0;">
+      <div class="rv-mhead" style="padding:16px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <h3 style="margin:0; font-size:1.2rem; color:var(--text); display:flex; align-items:center; gap:8px;">
+            <i class="fa fa-user-circle" style="color:var(--main)"></i> {{ $partyName }}
+          </h3>
+          <div style="display:flex; gap:10px; margin-right:15px;">
+            <button type="button" style="background:var(--warn); color:#000; padding:4px 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="openPartyBulkPay('{{ addslashes($partyName) }}', {{ $partyRemaining }}, 'partial', '{{ $partyKey }}')">
+              سداد جزئي
+            </button>
+            <button type="button" style="background:var(--ok); color:#fff; padding:4px 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="openPartyBulkPay('{{ addslashes($partyName) }}', {{ $partyRemaining }}, 'full', '{{ $partyKey }}')">
+              سداد كلي للعميل
+            </button>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:15px;">
+          <div style="display:flex; gap:10px;">
+            <span style="background:var(--pos); color:#fff; padding:3px 10px; border-radius:4px; font-size:0.8rem; font-weight:bold;">
+              المسدد: {{ \App\Support\Money::format($partyPaid) }} ج.م
+            </span>
+            <span style="background:var(--neg); color:#fff; padding:3px 10px; border-radius:4px; font-size:0.8rem; font-weight:bold;">
+              المتبقي: {{ \App\Support\Money::format($partyRemaining) }} ج.م
+            </span>
+          </div>
+          <button type="button" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--soft)" onclick="document.getElementById('modal-{{ $partyKey }}').style.display='none'">×</button>
+        </div>
+      </div>
+      <div class="rv-mbody" style="padding:0;">
+        <table style="margin:0; border-radius:0; border:none; box-shadow:none;">
+          <thead>
+            <tr style="background:#f8f9fa;">
+              <th>التاريخ</th>
+              <th>البيان</th>
+              <th class="num">المبلغ</th>
+              <th class="num">المسدد</th>
+              <th class="num">المتبقي</th>
+              <th>الحالة</th>
+              <th>إجراءات الدفع</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach($partyItems as $debt)
+              <tr>
+                <td class="muted">{{ $debt->date->format('Y-m-d') }}</td>
+                <td class="muted"><strong>{{ $debt->description ?: '—' }}</strong></td>
+                <td class="num" style="font-weight:600;">{{ \App\Support\Money::format($debt->total_amount) }}</td>
+                <td class="num" style="color:var(--pos); font-weight:600;">{{ \App\Support\Money::format($debt->paid_amount) }}</td>
+                <td class="num" style="color:var(--neg); font-weight:700;"><strong>{{ \App\Support\Money::format($debt->remaining()) }}</strong></td>
+                <td><span class="tag {{ $debt->statusTag() }} sm">{{ $debt->statusAr() }}</span></td>
+                <td>
+                  @if($debt->status !== 'paid')
+                    <button class="btn ghost sm" onclick="
+                      document.getElementById('modal-{{ $partyKey }}').style.display='none';
+                      openManualPayModal({{ $debt->id }}, {{ $debt->remaining() }}, '{{ addslashes($debt->party . ($debt->description ? ' - ' . $debt->description : '')) }}')
+                    ">
+                      سداد
+                    </button>
+                  @endif
+                </td>
+              </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+@endforeach
+
 @endif
 </div> <!-- end manual-tab -->
 
@@ -345,7 +432,7 @@
   <div style="background:var(--surface);border-radius:14px;padding:28px;width:min(460px,96vw)">
     <h4 style="margin:0 0 4px">سداد فاتورة</h4>
     <p id="pay-desc" class="muted" style="margin:0 0 20px;font-size:.85rem"></p>
-    <form id="pay-form" method="POST">
+    <form id="pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
       @csrf
       <div class="field">
         <label>المبلغ المدفوع (ج.م) *</label>
@@ -370,7 +457,7 @@
   <div style="background:var(--surface);border-radius:14px;padding:28px;width:min(460px,96vw)">
     <h4 style="margin:0 0 4px">سداد ديون المورد</h4>
     <p id="supplier-pay-name" class="muted" style="margin:0 0 20px;font-size:.85rem"></p>
-    <form id="supplier-pay-form" method="POST">
+    <form id="supplier-pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
       @csrf
       <div class="field">
         <label>المبلغ المدفوع (ج.م) *</label>
@@ -395,11 +482,29 @@
   <div style="background:var(--surface);border-radius:14px;padding:28px;width:min(460px,96vw)">
     <h4 style="margin:0 0 4px">سداد عهدة / دين أخرى</h4>
     <p id="manual-pay-desc" class="muted" style="margin:0 0 20px;font-size:.85rem"></p>
-    <form id="manual-pay-form" method="POST">
+    <form id="manual-pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
       @csrf
       <div class="field">
-        <label>المبلغ المسدد (ج.م) *</label>
-        <input type="number" name="amount" id="manual-pay-amount" min="0.01" step="0.01" required>
+        <label style="margin-bottom:8px;display:block">المبلغ المسدد (ج.م) *</label>
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <button type="button" class="btn pos sm" id="manual-pay-full-btn" onclick="
+            document.getElementById('manual-pay-amount').value = document.getElementById('manual-pay-amount').max;
+            document.getElementById('manual-pay-amount').readOnly = true;
+            this.classList.add('pos'); this.classList.remove('ghost');
+            document.getElementById('manual-pay-partial-btn').classList.add('ghost');
+            document.getElementById('manual-pay-partial-btn').classList.remove('warn');
+          ">سداد كلي</button>
+          
+          <button type="button" class="btn ghost sm" id="manual-pay-partial-btn" onclick="
+            document.getElementById('manual-pay-amount').value = '';
+            document.getElementById('manual-pay-amount').readOnly = false;
+            document.getElementById('manual-pay-amount').focus();
+            this.classList.add('warn'); this.classList.remove('ghost');
+            document.getElementById('manual-pay-full-btn').classList.add('ghost');
+            document.getElementById('manual-pay-full-btn').classList.remove('pos');
+          ">سداد جزئي</button>
+        </div>
+        <input type="number" name="amount" id="manual-pay-amount" min="0.01" step="0.01" required readonly>
         <small class="muted" id="manual-pay-max-note"></small>
       </div>
       @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true])
@@ -410,6 +515,31 @@
       <div class="btn-row" style="margin-top:16px">
         <button type="submit" class="btn pos">تسجيل السداد</button>
         <button type="button" class="btn ghost" onclick="document.getElementById('manual-pay-modal').style.display='none'">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{-- Pay Manual Debt Party (Bulk) Modal --}}
+<div id="manual-party-pay-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);align-items:center;justify-content:center" onclick="if(event.target===this) this.style.display='none'">
+  <div style="background:var(--surface);border-radius:14px;padding:28px;width:min(460px,96vw)">
+    <h4 style="margin:0 0 4px">سداد ديون <span id="manual-party-pay-name"></span></h4>
+    <form id="manual-party-pay-form" method="POST" action="{{ route('debts.manual.party.pay') }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+      @csrf
+      <input type="hidden" name="party_name" id="manual-party-pay-party">
+      <div class="field" style="margin-top:20px">
+        <label>المبلغ المسدد (ج.م) *</label>
+        <input type="number" name="amount" id="manual-party-pay-amount" min="0.01" step="0.01" required>
+        <small class="muted" id="manual-party-pay-max-note"></small>
+      </div>
+      @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true, 'fieldName' => 'account_id'])
+      <div class="field">
+        <label>تاريخ السداد *</label>
+        <input type="date" name="pay_date" value="{{ today()->toDateString() }}" required>
+      </div>
+      <div class="btn-row" style="margin-top:16px">
+        <button type="submit" class="btn pos">تسجيل السداد للعميل</button>
+        <button type="button" class="btn ghost" onclick="document.getElementById('manual-party-pay-modal').style.display='none'">إلغاء</button>
       </div>
     </form>
   </div>
@@ -451,18 +581,54 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
     });
-  }
 });
+
+function openPartyModal(key) {
+  const modal = document.getElementById('modal-' + key);
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+}
 
 function openManualPayModal(id, remaining, desc) {
   document.getElementById('manual-pay-desc').textContent = desc;
   document.getElementById('manual-pay-amount').max = remaining;
   document.getElementById('manual-pay-amount').value = remaining;
+  document.getElementById('manual-pay-amount').readOnly = true; // Default to full
+  
+  const fullBtn = document.getElementById('manual-pay-full-btn');
+  const partBtn = document.getElementById('manual-pay-partial-btn');
+  if(fullBtn && partBtn) {
+    fullBtn.className = 'btn pos sm';
+    partBtn.className = 'btn ghost sm';
+  }
+
   document.getElementById('manual-pay-max-note').textContent = 'الحد الأقصى: ' + remaining.toLocaleString('ar-EG') + ' ج.م';
   document.getElementById('manual-pay-form').action = '/debts/manual/' + id + '/pay';
+  
+  // Reset submit button state in case it was disabled previously
+  const submitBtn = document.querySelector('#manual-pay-form button[type=submit]');
+  if(submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'تسجيل الدفع'; }
+
   const walletSelect = document.querySelector('#manual-pay-form select[name="account_id"]');
   if (walletSelect) walletSelect.selectedIndex = 0;
   document.getElementById('manual-pay-modal').style.display = 'flex';
+}
+
+function openPartyBulkPay(partyName, remaining, mode, partyKey) {
+  // Hide party modal
+  document.getElementById('modal-' + partyKey).style.display = 'none';
+  
+  document.getElementById('manual-party-pay-name').textContent = partyName;
+  document.getElementById('manual-party-pay-party').value = partyName;
+  document.getElementById('manual-party-pay-amount').max = remaining;
+  document.getElementById('manual-party-pay-amount').value = mode === 'full' ? remaining : '';
+  document.getElementById('manual-party-pay-max-note').textContent = 'الحد الأقصى: ' + remaining.toLocaleString('ar-EG') + ' ج.م';
+  
+  const submitBtn = document.querySelector('#manual-party-pay-form button[type=submit]');
+  if(submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'تسجيل السداد للعميل'; }
+
+  document.getElementById('manual-party-pay-modal').style.display = 'flex';
 }
 
 function openPayModal(id, remaining, desc) {

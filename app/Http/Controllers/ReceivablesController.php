@@ -222,4 +222,64 @@ class ReceivablesController extends Controller
 
         return back()->with('success', 'تم تسجيل تحصيل ' . number_format($data['amount']) . ' ج من العميل.');
     }
+
+    public function payManualParty(Request $request)
+    {
+        $partyName = $request->input('party_name');
+        
+        $receivables = ManualReceivable::where('party', $partyName)
+            ->where('status', '!=', 'paid')
+            ->orderBy('date')
+            ->orderBy('id')
+            ->get();
+
+        $totalRemaining = $receivables->sum(fn($r) => $r->remaining());
+
+        if ($totalRemaining <= 0) {
+            return back()->with('error', 'لا يوجد مستحقات معلقة لهذه الجهة/الشخص.');
+        }
+
+        $data = $request->validate([
+            'amount'     => ['required', 'numeric', 'min:0.01', 'max:' . $totalRemaining],
+            'account_id' => ['required', 'integer', 'exists:sy2_accounts,id'],
+            'pay_date'   => ['required', 'date'],
+        ]);
+
+        DB::transaction(function () use ($receivables, $data, $partyName) {
+            $remainingPay = (float) $data['amount'];
+            
+            foreach ($receivables as $recv) {
+                if ($remainingPay <= 0) break;
+                
+                $recvRemaining = $recv->remaining();
+                $pay = min($remainingPay, $recvRemaining);
+
+                $newPaid = (float) $recv->paid_amount + $pay;
+                $newStatus = $newPaid >= (float) $recv->total_amount ? 'paid' : 'partial';
+                
+                $recv->update([
+                    'paid_amount' => $newPaid,
+                    'status'      => $newStatus,
+                ]);
+
+                Transaction::create([
+                    'project_id'  => $recv->project_id,
+                    'band_id'     => $recv->band_id,
+                    'account_id'  => $data['account_id'],
+                    'direction'   => 'in',
+                    'type'        => 'تحصيل سلفة/مستحق يدوي',
+                    'party'       => $partyName,
+                    'amount'      => $pay,
+                    'date'        => $data['pay_date'],
+                    'description' => 'تحصيل: ' . $recv->description,
+                    'ref_type'    => 'manual_recv',
+                    'ref_id'      => $recv->id,
+                ]);
+
+                $remainingPay -= $pay;
+            }
+        });
+
+        return back()->with('success', "تم تحصيل مبلغ " . number_format($data['amount'], 2) . " ج.م من " . $partyName . " بنجاح.");
+    }
 }

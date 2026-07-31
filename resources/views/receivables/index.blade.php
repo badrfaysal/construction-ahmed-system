@@ -376,6 +376,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
 <div id="manual-recv-tab" class="tab-content" style="display:none;">
 {{-- سلف ومستحقات أخرى (حركات يدوية) --}}
 @if(isset($manualReceivables) && $manualReceivables->count())
+@php $groupedRecv = $manualReceivables->groupBy('party'); @endphp
 <div class="rv-box">
   <div class="rv-boxhead" style="background:var(--bg2)">
     <h2><i class="fa fa-hand-holding-dollar" style="color:var(--ok)"></i> سلف ومستحقات أخرى (حركات يدوية)</h2>
@@ -384,10 +385,9 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
   <table class="rv-tbl" id="manual-table">
     <thead>
       <tr>
-        <th>التاريخ</th>
         <th>الجهة / الشخص</th>
-        <th>البيان</th>
-        <th>المبلغ</th>
+        <th>عدد التعاملات</th>
+        <th>إجمالي المبلغ</th>
         <th>المسدد</th>
         <th>المتبقي</th>
         <th>الحالة</th>
@@ -395,27 +395,113 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
       </tr>
     </thead>
     <tbody id="manual-tbody">
-      @foreach($manualReceivables as $recv)
-        <tr data-status="{{ $recv->status }}">
-          <td class="muted">{{ $recv->date->format('Y-m-d') }}</td>
-          <td><strong>{{ $recv->party }}</strong></td>
-          <td class="muted">{{ $recv->description ?: '—' }}</td>
-          <td style="font-weight:600">{{ \App\Support\Money::format($recv->total_amount) }}</td>
-          <td style="color:var(--ok);font-weight:600">{{ \App\Support\Money::format($recv->paid_amount) }}</td>
-          <td style="color:var(--bad);font-weight:700">{{ \App\Support\Money::format($recv->remaining()) }}</td>
-          <td><span class="tag {{ $recv->statusTag() }}">{{ $recv->statusAr() }}</span></td>
+      @foreach($groupedRecv as $partyName => $partyItems)
+        @php
+          $partyTotal     = $partyItems->sum('total_amount');
+          $partyPaid      = $partyItems->sum('paid_amount');
+          $partyRemaining = $partyItems->sum(fn($r) => $r->remaining());
+          $partyCount     = $partyItems->count();
+          $allPaid        = $partyItems->every(fn($r) => $r->status === 'paid');
+          $partyKey       = 'mrecv-' . md5($partyName);
+        @endphp
+        <tr data-status="{{ $allPaid ? 'paid' : 'pending' }}" style="cursor:pointer" onclick="openPartyModal('{{ $partyKey }}')">
+          <td><strong>{{ $partyName }}</strong></td>
+          <td><span style="background:var(--bg2);padding:2px 10px;border-radius:6px;font-size:.75rem;font-weight:700">{{ $partyCount }}</span></td>
+          <td style="font-weight:600">{{ \App\Support\Money::format($partyTotal) }}</td>
+          <td style="color:var(--ok);font-weight:600">{{ \App\Support\Money::format($partyPaid) }}</td>
+          <td style="color:var(--bad);font-weight:700">{{ \App\Support\Money::format($partyRemaining) }}</td>
           <td>
-            @if($recv->status !== 'paid')
-              <button class="rv-pill" onclick="openManualRecvPayModal({{ $recv->id }}, {{ $recv->remaining() }}, '{{ addslashes($recv->party . ($recv->description ? ' - ' . $recv->description : '')) }}')">
-                تحصيل
-              </button>
+            @if($allPaid)
+              <span class="tag green sm">مسدد بالكامل</span>
+            @else
+              <span class="tag yellow sm">معلق</span>
             @endif
+          </td>
+          <td>
+            <button class="rv-pill" style="font-size:0.75rem">التفاصيل</button>
           </td>
         </tr>
       @endforeach
     </tbody>
   </table>
 </div>
+
+{{-- توليد المودلز الخاصة بتفاصيل كل جهة/شخص --}}
+@foreach($groupedRecv as $partyName => $partyItems)
+  @php
+    $partyTotal     = $partyItems->sum('total_amount');
+    $partyPaid      = $partyItems->sum('paid_amount');
+    $partyRemaining = $partyItems->sum(fn($r) => $r->remaining());
+    $partyKey       = 'mrecv-' . md5($partyName);
+  @endphp
+  <div class="rv-modal" id="modal-{{ $partyKey }}" onclick="if(event.target===this) document.getElementById('modal-{{ $partyKey }}').style.display='none'">
+    <div class="rv-card" style="max-width:800px; padding:0;">
+      <div class="rv-mhead" style="padding:16px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <h3 style="margin:0; font-size:1.2rem; color:var(--text); display:flex; align-items:center; gap:8px;">
+            <i class="fa fa-user-circle" style="color:var(--main)"></i> {{ $partyName }}
+          </h3>
+          <div style="display:flex; gap:10px; margin-right:15px;">
+            <button type="button" style="background:var(--warn); color:#000; padding:4px 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="openPartyBulkPay('{{ addslashes($partyName) }}', {{ $partyRemaining }}, 'partial', '{{ $partyKey }}')">
+              تحصيل جزئي
+            </button>
+            <button type="button" style="background:var(--ok); color:#fff; padding:4px 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="openPartyBulkPay('{{ addslashes($partyName) }}', {{ $partyRemaining }}, 'full', '{{ $partyKey }}')">
+              تحصيل كلي للعميل
+            </button>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:15px;">
+          <div style="display:flex; gap:10px;">
+            <span style="background:var(--ok); color:#fff; padding:3px 10px; border-radius:4px; font-size:0.8rem; font-weight:bold;">
+              المدفوع: {{ \App\Support\Money::format($partyPaid) }} ج.م
+            </span>
+            <span style="background:var(--bad); color:#fff; padding:3px 10px; border-radius:4px; font-size:0.8rem; font-weight:bold;">
+              المتبقي: {{ \App\Support\Money::format($partyRemaining) }} ج.م
+            </span>
+          </div>
+          <button type="button" class="rv-x" onclick="document.getElementById('modal-{{ $partyKey }}').style.display='none'">×</button>
+        </div>
+      </div>
+      <div class="rv-mbody" style="padding:0;">
+        <table class="rv-tbl" style="margin:0; border-radius:0;">
+          <thead>
+            <tr style="background:#f8f9fa;">
+              <th>التاريخ</th>
+              <th>البيان</th>
+              <th>المبلغ</th>
+              <th>المسدد</th>
+              <th>المتبقي</th>
+              <th>الحالة</th>
+              <th>إجراءات الدفع</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach($partyItems as $recv)
+              <tr>
+                <td class="muted">{{ $recv->date->format('Y-m-d') }}</td>
+                <td class="muted"><strong>{{ $recv->description ?: '—' }}</strong></td>
+                <td style="font-weight:600;">{{ \App\Support\Money::format($recv->total_amount) }}</td>
+                <td style="color:var(--ok); font-weight:600;">{{ \App\Support\Money::format($recv->paid_amount) }}</td>
+                <td style="color:var(--bad); font-weight:700;">{{ \App\Support\Money::format($recv->remaining()) }}</td>
+                <td><span class="tag {{ $recv->statusTag() }} sm">{{ $recv->statusAr() }}</span></td>
+                <td>
+                  @if($recv->status !== 'paid')
+                    <button class="rv-pill" onclick="
+                      document.getElementById('modal-{{ $partyKey }}').style.display='none';
+                      openManualRecvPayModal({{ $recv->id }}, {{ $recv->remaining() }}, '{{ addslashes($recv->party . ($recv->description ? ' - ' . $recv->description : '')) }}')
+                    ">
+                      تحصيل
+                    </button>
+                  @endif
+                </td>
+              </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+@endforeach
 @endif
 </div> <!-- end manual-recv-tab -->
 
@@ -436,7 +522,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
         <div style="font-weight:700;color:var(--bad)">{{ \App\Support\Money::format($inst->amount) }} ج</div>
         <div class="s">استحق: {{ $inst->due_date->format('d/m/Y') }}</div>
       </div>
-      <form method="POST" action="{{ route('installments.markPaid', $inst) }}" class="no-print">
+      <form method="POST" action="{{ route('installments.markPaid', $inst) }}" class="no-print" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
         @csrf
         <button type="submit" style="padding:6px 13px;background:var(--ink);color:#fff;border:none;border-radius:7px;font-weight:700;font-size:.75rem;cursor:pointer">تحصيل</button>
       </form>
@@ -558,7 +644,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
               <span><i class="fa fa-percent"></i> منح خصم للمشروع</span>
               <button type="button" class="rv-x" style="color:var(--soft);font-size:1rem" onclick="hideDiscountPanel({{ $proj->id }})">×</button>
             </div>
-            <form method="POST" action="{{ route('projects.discount', $proj) }}">
+            <form method="POST" action="{{ route('projects.discount', $proj) }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
               @csrf
               <div style="font-size:.75rem;color:var(--mut);margin-bottom:10px">
                 إجمالي الخصومات الحالية: <strong>{{ \App\Support\Money::format($proj->discounts->sum('amount')) }} ج.م</strong>
@@ -596,7 +682,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
               </div>
             @endif
             @if($payAmount > 0.009)
-            <form method="POST" action="{{ route('receivables.pay', $proj) }}">
+            <form method="POST" action="{{ route('receivables.pay', $proj) }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
               @csrf
               <div class="rv-presets">
                 <span class="rv-preset hot" onclick="setAmt({{ $proj->id }}, {{ $payAmount }})">تحصيل كامل — {{ \App\Support\Money::format($payAmount) }} ج</span>
@@ -782,11 +868,29 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
     </div>
     <div class="rv-mbody" style="padding:16px 18px">
       <p id="manual-recv-pay-desc" class="muted" style="margin:0 0 20px;font-size:.85rem;color:var(--mut)"></p>
-      <form id="manual-recv-pay-form" method="POST">
+      <form id="manual-recv-pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
         @csrf
         <div class="rv-pay" style="border:none;padding:0;background:none">
-          <label>المبلغ المحصل (ج.م) *</label>
-          <input type="number" name="amount" id="manual-recv-pay-amount" min="0.01" step="0.01" required>
+          <label style="margin-bottom:8px;display:block">المبلغ المحصل (ج.م) *</label>
+          <div style="display:flex;gap:10px;margin-bottom:12px">
+            <button type="button" class="btn pos sm" id="manual-recv-pay-full-btn" onclick="
+              document.getElementById('manual-recv-pay-amount').value = document.getElementById('manual-recv-pay-amount').max;
+              document.getElementById('manual-recv-pay-amount').readOnly = true;
+              this.classList.add('pos'); this.classList.remove('ghost');
+              document.getElementById('manual-recv-pay-partial-btn').classList.add('ghost');
+              document.getElementById('manual-recv-pay-partial-btn').classList.remove('warn');
+            ">تحصيل كلي</button>
+            
+            <button type="button" class="btn ghost sm" id="manual-recv-pay-partial-btn" onclick="
+              document.getElementById('manual-recv-pay-amount').value = '';
+              document.getElementById('manual-recv-pay-amount').readOnly = false;
+              document.getElementById('manual-recv-pay-amount').focus();
+              this.classList.add('warn'); this.classList.remove('ghost');
+              document.getElementById('manual-recv-pay-full-btn').classList.add('ghost');
+              document.getElementById('manual-recv-pay-full-btn').classList.remove('pos');
+            ">تحصيل جزئي</button>
+          </div>
+          <input type="number" name="amount" id="manual-recv-pay-amount" min="0.01" step="0.01" required readonly>
           <small class="muted" id="manual-recv-pay-max-note" style="display:block;margin-top:4px"></small>
           
           <label style="margin-top:12px">المحفظة *</label>
@@ -802,19 +906,83 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
   </div>
 </div>
 
+{{-- Pay Manual Receivable Party (Bulk) Modal --}}
+<div class="rv-modal" id="manual-party-pay-modal" onclick="if(event.target===this) closePartyBulkPay()">
+  <div class="rv-card" style="max-width:460px">
+    <div class="rv-mhead">
+      <div class="nm">تحصيل ديون <span id="manual-party-pay-name"></span></div>
+      <button type="button" class="rv-x" onclick="closePartyBulkPay()">×</button>
+    </div>
+    <div class="rv-mbody" style="padding:16px 18px">
+      <form id="manual-party-pay-form" method="POST" action="{{ route('receivables.manual.party.pay') }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.disabled=true; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+        @csrf
+        <input type="hidden" name="party_name" id="manual-party-pay-party">
+        <div class="rv-pay" style="border:none;padding:0;background:none">
+          <label style="margin-bottom:8px;display:block">المبلغ المحصل (ج.م) *</label>
+          <input type="number" name="amount" id="manual-party-pay-amount" min="0.01" step="0.01" required>
+          <small class="muted" id="manual-party-pay-max-note" style="display:block;margin-top:4px"></small>
+          
+          <label style="margin-top:12px">المحفظة *</label>
+          @include('partials._wallet-select', ['wallets' => $wallets, 'bare' => true, 'required' => true, 'selectStyle' => 'width:100%', 'fieldName' => 'account_id'])
+          
+          <label style="margin-top:12px">تاريخ التحصيل *</label>
+          <input type="date" name="pay_date" value="{{ today()->toDateString() }}" required>
+          
+          <button type="submit" class="rv-submit" style="margin-top:20px"><i class="fa fa-check"></i> تسجيل التحصيل للعميل</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 @push('scripts')
 <script>
 function openManualRecvPayModal(id, remaining, desc) {
   document.getElementById('manual-recv-pay-desc').textContent = desc;
   document.getElementById('manual-recv-pay-amount').max = remaining;
   document.getElementById('manual-recv-pay-amount').value = remaining;
+  document.getElementById('manual-recv-pay-amount').readOnly = true;
+  
+  const fullBtn = document.getElementById('manual-recv-pay-full-btn');
+  const partBtn = document.getElementById('manual-recv-pay-partial-btn');
+  if(fullBtn && partBtn) {
+    fullBtn.className = 'btn pos sm';
+    partBtn.className = 'btn ghost sm';
+  }
+
   document.getElementById('manual-recv-pay-max-note').textContent = 'الحد الأقصى: ' + remaining.toLocaleString('ar-EG') + ' ج.م';
   document.getElementById('manual-recv-pay-form').action = '/receivables/manual/' + id + '/pay';
+  
+  const submitBtn = document.querySelector('#manual-recv-pay-form button[type=submit]');
+  if(submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fa fa-check"></i> تسجيل التحصيل'; }
+
   const walletSelect = document.querySelector('#manual-recv-pay-form select[name="account_id"]');
   if (walletSelect) walletSelect.selectedIndex = 0;
   
   document.getElementById('manual-recv-pay-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+function openPartyBulkPay(partyName, remaining, mode, partyKey) {
+  // Hide party modal
+  document.getElementById('modal-' + partyKey).style.display = 'none';
+  
+  document.getElementById('manual-party-pay-name').textContent = partyName;
+  document.getElementById('manual-party-pay-party').value = partyName;
+  document.getElementById('manual-party-pay-amount').max = remaining;
+  document.getElementById('manual-party-pay-amount').value = mode === 'full' ? remaining : '';
+  document.getElementById('manual-party-pay-max-note').textContent = 'الحد الأقصى: ' + remaining.toLocaleString('ar-EG') + ' ج.م';
+  
+  const submitBtn = document.querySelector('#manual-party-pay-form button[type=submit]');
+  if(submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fa fa-check"></i> تسجيل التحصيل للعميل'; }
+
+  document.getElementById('manual-party-pay-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePartyBulkPay() {
+  document.getElementById('manual-party-pay-modal').classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 function closeManualRecvPayModal() {
@@ -835,6 +1003,13 @@ document.addEventListener('keydown', e => {
     m.classList.remove('open'); document.body.style.overflow = '';
   });
 });
+
+function openPartyModal(key) {
+  const modal = document.getElementById('modal-' + key);
+  if (modal) {
+    modal.style.display = 'flex';
+  }
+}
 
 /* ── فورم التحصيل ──────────────────────────── */
 function showPayPanel(id) {

@@ -222,4 +222,64 @@ class DebtController extends Controller
         $debt->delete();
         return back()->with('success', 'تم حذف الدين.');
     }
+
+    public function payManualParty(Request $request)
+    {
+        $partyName = $request->input('party_name');
+        
+        $debts = \App\Models\ManualDebt::where('party', $partyName)
+            ->where('status', '!=', 'paid')
+            ->orderBy('date')
+            ->orderBy('id')
+            ->get();
+
+        $totalRemaining = $debts->sum(fn($d) => $d->remaining());
+
+        if ($totalRemaining <= 0) {
+            return back()->with('error', 'لا يوجد ديون معلقة لهذه الجهة/الشخص.');
+        }
+
+        $data = $request->validate([
+            'amount'     => ['required', 'numeric', 'min:0.01', 'max:' . $totalRemaining],
+            'account_id' => ['required', 'integer', 'exists:sy2_accounts,id'],
+            'pay_date'   => ['required', 'date'],
+        ]);
+
+        DB::transaction(function () use ($debts, $data, $partyName) {
+            $remainingPay = (float) $data['amount'];
+            
+            foreach ($debts as $debt) {
+                if ($remainingPay <= 0) break;
+                
+                $debtRemaining = $debt->remaining();
+                $pay = min($remainingPay, $debtRemaining);
+
+                $newPaid = (float) $debt->paid_amount + $pay;
+                $newStatus = $newPaid >= (float) $debt->total_amount ? 'paid' : 'partial';
+                
+                $debt->update([
+                    'paid_amount' => $newPaid,
+                    'status'      => $newStatus,
+                ]);
+
+                Transaction::create([
+                    'project_id'  => $debt->project_id,
+                    'band_id'     => $debt->band_id,
+                    'account_id'  => $data['account_id'],
+                    'direction'   => 'out',
+                    'type'        => 'سداد عهدة/دين يدوي',
+                    'party'       => $partyName,
+                    'amount'      => $pay,
+                    'date'        => $data['pay_date'],
+                    'description' => 'سداد: ' . $debt->description,
+                    'ref_type'    => 'manual_debt',
+                    'ref_id'      => $debt->id,
+                ]);
+
+                $remainingPay -= $pay;
+            }
+        });
+
+        return back()->with('success', "تم سداد مبلغ " . number_format($data['amount'], 2) . " ج.م لـ " . $partyName . " بنجاح.");
+    }
 }
