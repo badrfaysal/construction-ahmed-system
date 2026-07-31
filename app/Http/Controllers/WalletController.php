@@ -16,10 +16,10 @@ use Illuminate\Support\Facades\DB;
 // TransactionObserver and moves the wallet like any other entry.
 class WalletController extends Controller
 {
-    // The two generic manual kinds → their fixed direction and label
     private const KINDS = [
-        'deposit'    => ['direction' => 'in',  'type' => 'إيداع / تسوية'],
-        'withdrawal' => ['direction' => 'out', 'type' => 'صرف / مصروف'],
+        'capital'       => ['direction' => 'in',  'type' => 'تغذية رأس مال'],
+        'withdrawal'    => ['direction' => 'out', 'type' => 'مسحوبات شخصية'],
+        'admin_expense' => ['direction' => 'out', 'type' => 'مصروف إداري عام'],
     ];
 
     public function index()
@@ -41,7 +41,7 @@ class WalletController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'kind'        => ['required', 'in:deposit,withdrawal'],
+            'kind'        => ['required', 'in:capital,withdrawal,admin_expense'],
             'account_id'  => ['required', 'integer', 'exists:sy2_accounts,id'],
             'amount'      => ['required', 'numeric', 'min:0.01'],
             'date'        => ['required', 'date'],
@@ -69,7 +69,7 @@ class WalletController extends Controller
             ]);
 
             \App\Models\ManualDebt::create([
-                'type'         => $data['kind'] === 'deposit' ? 'debt' : 'receivable',
+                'type'         => $data['kind'] === 'capital' ? 'debt' : 'receivable',
                 'party'        => $data['party'],
                 'description'  => $data['description'] ?? null,
                 'total_amount' => $data['amount'],
