@@ -435,62 +435,62 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
     $partyKey       = 'mrecv-' . md5($partyName);
   @endphp
   <div class="rv-modal" id="modal-{{ $partyKey }}" onclick="if(event.target===this) document.getElementById('modal-{{ $partyKey }}').style.display='none'">
-    <div class="rv-card" style="max-width:800px; padding:0;">
-      <div class="rv-mhead" style="padding:16px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <h3 style="margin:0; font-size:1.2rem; color:var(--text); display:flex; align-items:center; gap:8px;">
-            <i class="fa fa-user-circle" style="color:var(--main)"></i> {{ $partyName }}
+    <div class="rv-card" style="max-width:1200px; width:95%; padding:0; border-radius:12px; overflow:hidden;">
+      <div class="rv-mhead" style="padding:25px 30px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:25px; background:var(--surface);">
+        <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+          <h3 style="margin:0; font-size:1.4rem; color:var(--text); display:flex; align-items:center; gap:10px; white-space:nowrap;">
+            <i class="fa fa-user-circle" style="color:var(--main); font-size:1.6rem;"></i> {{ $partyName }}
           </h3>
-          <div style="display:flex; gap:10px; margin-right:15px;">
-            <button type="button" style="background:var(--warn); color:#000; padding:4px 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="openPartyBulkPay('{{ addslashes($partyName) }}', {{ $partyRemaining }}, 'partial', '{{ $partyKey }}')">
-              تحصيل جزئي
+          <div style="display:flex; gap:15px; margin-right:20px;">
+            <button type="button" style="background:var(--warn); color:#000; padding:8px 18px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; white-space:nowrap; font-size:0.95rem;" onclick="openPartyBulkPay('{{ addslashes($partyName) }}', {{ $partyRemaining }}, 'partial', '{{ $partyKey }}')">
+              <i class="fa fa-money-bill-wave" style="margin-left:5px;"></i> تحصيل جزئي
             </button>
-            <button type="button" style="background:var(--ok); color:#fff; padding:4px 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="openPartyBulkPay('{{ addslashes($partyName) }}', {{ $partyRemaining }}, 'full', '{{ $partyKey }}')">
-              تحصيل كلي للعميل
+            <button type="button" style="background:var(--ok); color:#fff; padding:8px 18px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; white-space:nowrap; font-size:0.95rem;" onclick="openPartyBulkPay('{{ addslashes($partyName) }}', {{ $partyRemaining }}, 'full', '{{ $partyKey }}')">
+              <i class="fa fa-check-double" style="margin-left:5px;"></i> تحصيل كلي للعميل
             </button>
           </div>
         </div>
-        <div style="display:flex; align-items:center; gap:15px;">
-          <div style="display:flex; gap:10px;">
-            <span style="background:var(--ok); color:#fff; padding:3px 10px; border-radius:4px; font-size:0.8rem; font-weight:bold;">
+        <div style="display:flex; align-items:center; gap:25px; flex-wrap:wrap;">
+          <div style="display:flex; gap:15px;">
+            <span style="background:rgba(16, 185, 129, 0.1); color:var(--ok); padding:8px 16px; border-radius:6px; font-size:1rem; font-weight:bold; white-space:nowrap; border:1px solid var(--ok);">
               المدفوع: {{ \App\Support\Money::format($partyPaid) }} ج.م
             </span>
-            <span style="background:var(--bad); color:#fff; padding:3px 10px; border-radius:4px; font-size:0.8rem; font-weight:bold;">
+            <span style="background:rgba(239, 68, 68, 0.1); color:var(--bad); padding:8px 16px; border-radius:6px; font-size:1rem; font-weight:bold; white-space:nowrap; border:1px solid var(--bad);">
               المتبقي: {{ \App\Support\Money::format($partyRemaining) }} ج.م
             </span>
           </div>
-          <button type="button" class="rv-x" onclick="document.getElementById('modal-{{ $partyKey }}').style.display='none'">×</button>
+          <button type="button" class="rv-x" onclick="document.getElementById('modal-{{ $partyKey }}').style.display='none'" style="font-size:1.8rem; padding:0 10px;">×</button>
         </div>
       </div>
-      <div class="rv-mbody" style="padding:0;">
-        <table class="rv-tbl" style="margin:0; border-radius:0;">
+      <div class="rv-mbody" style="padding:30px; background:var(--bg);">
+        <table class="rv-tbl" style="margin:0; border-radius:10px; overflow:hidden; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
           <thead>
-            <tr style="background:#f8f9fa;">
-              <th>التاريخ</th>
-              <th>البيان</th>
-              <th>المبلغ</th>
-              <th>المسدد</th>
-              <th>المتبقي</th>
-              <th>الحالة</th>
-              <th>إجراءات الدفع</th>
+            <tr style="background:var(--surface);">
+              <th style="padding:15px 20px;">التاريخ</th>
+              <th style="padding:15px 20px;">البيان</th>
+              <th style="padding:15px 20px;">المبلغ</th>
+              <th style="padding:15px 20px;">المسدد</th>
+              <th style="padding:15px 20px;">المتبقي</th>
+              <th style="padding:15px 20px;">الحالة</th>
+              <th style="padding:15px 20px;">إجراءات الدفع</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody style="background:#fff;">
             @foreach($partyItems as $recv)
               <tr>
-                <td class="muted">{{ $recv->date->format('Y-m-d') }}</td>
-                <td class="muted"><strong>{{ $recv->description ?: '—' }}</strong></td>
-                <td style="font-weight:600;">{{ \App\Support\Money::format($recv->total_amount) }}</td>
-                <td style="color:var(--ok); font-weight:600;">{{ \App\Support\Money::format($recv->paid_amount) }}</td>
-                <td style="color:var(--bad); font-weight:700;">{{ \App\Support\Money::format($recv->remaining()) }}</td>
-                <td><span class="tag {{ $recv->statusTag() }} sm">{{ $recv->statusAr() }}</span></td>
-                <td>
+                <td class="muted" style="padding:15px 20px; border-bottom:1px solid var(--border);">{{ $recv->date->format('Y-m-d') }}</td>
+                <td class="muted" style="padding:15px 20px; border-bottom:1px solid var(--border);"><strong>{{ $recv->description ?: '—' }}</strong></td>
+                <td style="font-weight:600; padding:15px 20px; border-bottom:1px solid var(--border);">{{ \App\Support\Money::format($recv->total_amount) }}</td>
+                <td style="color:var(--ok); font-weight:600; padding:15px 20px; border-bottom:1px solid var(--border);">{{ \App\Support\Money::format($recv->paid_amount) }}</td>
+                <td style="color:var(--bad); font-weight:700; padding:15px 20px; border-bottom:1px solid var(--border);">{{ \App\Support\Money::format($recv->remaining()) }}</td>
+                <td style="padding:15px 20px; border-bottom:1px solid var(--border);"><span class="tag {{ $recv->statusTag() }} sm" style="font-size:0.85rem; padding:4px 10px;">{{ $recv->statusAr() }}</span></td>
+                <td style="padding:15px 20px; border-bottom:1px solid var(--border);">
                   @if($recv->status !== 'paid')
-                    <button class="rv-pill" onclick="
+                    <button class="rv-pill" style="padding:6px 16px; font-weight:bold; font-size:0.85rem;" onclick="
                       document.getElementById('modal-{{ $partyKey }}').style.display='none';
                       openManualRecvPayModal({{ $recv->id }}, {{ $recv->remaining() }}, '{{ addslashes($recv->party . ($recv->description ? ' - ' . $recv->description : '')) }}')
                     ">
-                      تحصيل
+                      <i class="fa fa-hand-holding-dollar" style="margin-left:4px;"></i> تحصيل
                     </button>
                   @endif
                 </td>
