@@ -95,16 +95,16 @@ class ReceivablesController extends Controller
         ];
 
         $totals = [
-            'total_billed'    => $rows->sum('billed') + $manualTotals['total'],
-            'total_collected' => $rows->sum('collected') + $manualTotals['collected'],
-            'total_remaining' => $rows->sum('remaining') + $manualTotals['remaining'],
+            'total_billed'    => $rows->sum('billed'),
+            'total_collected' => $rows->sum('collected'),
+            'total_remaining' => $rows->sum('remaining'),
             'book_profit'     => $rows->sum('book_profit'),
             'earned_profit'   => $rows->sum('earned_profit'),
         ];
 
         $wallets = Account::selectable();
 
-        return view('receivables.index', compact('rows', 'overdueInstallments', 'upcomingInstallments', 'totals', 'wallets', 'manualReceivables'));
+        return view('receivables.index', compact('rows', 'overdueInstallments', 'upcomingInstallments', 'totals', 'wallets', 'manualReceivables', 'manualTotals'));
     }
 
     public function payManual(Request $request, \App\Models\ManualDebt $receivable)

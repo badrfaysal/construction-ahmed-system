@@ -59,17 +59,16 @@ class DebtController extends Controller
             $baseQuery->where('project_id', $pid);
         }
         $manualTotalsQuery = \App\Models\ManualDebt::where('type', 'debt');
+        $manualTotals = [
+            'total_debt'  => (float) $manualTotalsQuery->clone()->where('status', '!=', 'paid')->sum('total_amount'),
+            'paid_so_far' => (float) $manualTotalsQuery->clone()->where('status', '!=', 'paid')->sum('paid_amount'),
+            'remaining'   => (float) $manualTotalsQuery->clone()->where('status', '!=', 'paid')->selectRaw('SUM(total_amount - paid_amount) as r')->value('r'),
+        ];
 
         $totals = [
-            'total_debt'     => (float) $baseQuery->clone()->where('status', '!=', 'paid')->sum('total_amount')
-                              + (float) $manualTotalsQuery->clone()->where('status', '!=', 'paid')->sum('total_amount'),
-            
-            'paid_so_far'    => (float) $baseQuery->clone()->where('status', '!=', 'paid')->sum('paid_amount')
-                              + (float) $manualTotalsQuery->clone()->where('status', '!=', 'paid')->sum('paid_amount'),
-            
-            'remaining'      => (float) $baseQuery->clone()->where('status', '!=', 'paid')->selectRaw('SUM(total_amount - paid_amount) as r')->value('r')
-                              + (float) $manualTotalsQuery->clone()->where('status', '!=', 'paid')->selectRaw('SUM(total_amount - paid_amount) as r')->value('r'),
-            
+            'total_debt'     => (float) $baseQuery->clone()->where('status', '!=', 'paid')->sum('total_amount'),
+            'paid_so_far'    => (float) $baseQuery->clone()->where('status', '!=', 'paid')->sum('paid_amount'),
+            'remaining'      => (float) $baseQuery->clone()->where('status', '!=', 'paid')->selectRaw('SUM(total_amount - paid_amount) as r')->value('r'),
             'overdue_count'  => $baseQuery->clone()->where('status', '!=', 'paid')->whereNotNull('due_date')->where('due_date', '<', today())->count(),
         ];
 
@@ -90,7 +89,7 @@ class DebtController extends Controller
 
         $manualDebts = $manualQuery->get();
 
-        return view('debts.index', compact('debts', 'projects', 'suppliers', 'wallets', 'totals', 'manualDebts'));
+        return view('debts.index', compact('debts', 'projects', 'suppliers', 'wallets', 'totals', 'manualDebts', 'manualTotals'));
     }
 
     public function payManual(Request $request, \App\Models\ManualDebt $debt)

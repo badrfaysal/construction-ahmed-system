@@ -11,11 +11,11 @@
 <div class="grid cols-3" style="margin-bottom:24px">
   <div class="card stat">
     <div class="top"><span class="label">إجمالي الديون المتبقية</span></div>
-    <div class="val tnum" style="color:var(--neg)">{{ \App\Support\Money::format($totals['remaining']) }} <small>ج.م</small></div>
+    <div class="val tnum" style="color:var(--neg)">{{ \App\Support\Money::format($totals['remaining'] + $manualTotals['remaining']) }} <small>ج.م</small></div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">تم سداده حتى الآن</span></div>
-    <div class="val tnum" style="color:var(--pos)">{{ \App\Support\Money::format($totals['paid_so_far']) }} <small>ج.م</small></div>
+    <div class="val tnum" style="color:var(--pos)">{{ \App\Support\Money::format($totals['paid_so_far'] + $manualTotals['paid_so_far']) }} <small>ج.م</small></div>
   </div>
   <div class="card stat">
     <div class="top"><span class="label">ديون متأخرة</span></div>

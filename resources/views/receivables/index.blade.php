@@ -225,21 +225,21 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
     <div class="top"><span class="label">إجمالي المفوتر</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg></span>
     </div>
-    <div class="val tnum">{{ \App\Support\Money::format($totals['total_billed']) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($totals['total_billed'] + $manualTotals['total']) }} <small>ج.م</small></div>
     <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg>
   </div>
   <div class="vstat vstat-teal">
     <div class="top"><span class="label">المحصّل من العملاء</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span>
     </div>
-    <div class="val tnum">{{ \App\Support\Money::format($totals['total_collected']) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($totals['total_collected'] + $manualTotals['collected']) }} <small>ج.م</small></div>
     <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>
   </div>
   <div class="vstat vstat-red">
     <div class="top"><span class="label">المتبقي على العملاء</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg></span>
     </div>
-    <div class="val tnum">{{ \App\Support\Money::format($totals['total_remaining']) }} <small>ج.م</small></div>
+    <div class="val tnum">{{ \App\Support\Money::format($totals['total_remaining'] + $manualTotals['remaining']) }} <small>ج.م</small></div>
     <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>
   </div>
   <div class="vstat vstat-amber">
@@ -313,7 +313,12 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
           @endphp
           <tr onclick="openModal({{ $row->project->id }})"
               data-name="{{ mb_strtolower($row->project->name . ' ' . $row->project->client->name) }}"
-              data-status="{{ $isPaid ? 'paid' : 'active' }}">
+              data-status="{{ $isPaid ? 'paid' : 'active' }}"
+              data-billed="{{ $row->billed }}"
+              data-discount="{{ $row->discount }}"
+              data-collected="{{ $row->collected }}"
+              data-remaining="{{ $row->remaining }}"
+              data-profit="{{ $row->book_profit }}">
             <td style="text-align:right;padding-right:16px">
               <strong style="display:block;font-size:.87rem">{{ $row->project->name }}</strong>
               <small style="color:var(--mut)">{{ $row->project->client->name }}</small>
@@ -342,12 +347,13 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
       </tbody>
       <tfoot>
         <tr>
-          <td style="text-align:right;padding-right:16px">الإجمالي ({{ $rows->count() }} مشروع)</td>
-          <td>{{ \App\Support\Money::format($totals['total_billed']) }}</td>
-          <td style="color:var(--ok)">{{ \App\Support\Money::format($totals['total_collected']) }}</td>
-          <td style="color:{{ $totals['total_remaining'] > 0 ? 'var(--bad)' : 'var(--ok)' }}">{{ \App\Support\Money::format($totals['total_remaining']) }}</td>
-          <td>{{ $totals['total_billed'] > 0 ? round($totals['total_collected'] / $totals['total_billed'] * 100) : 0 }}%</td>
-          <td style="color:var(--mut)">{{ \App\Support\Money::format($totals['book_profit']) }}</td>
+          <td style="text-align:right;padding-right:16px" id="ft-title">الإجمالي ({{ $rows->count() }} مشروع)</td>
+          <td id="ft-billed">{{ \App\Support\Money::format($totals['total_billed']) }}</td>
+          <td style="color:var(--amber)" id="ft-discount">0.00</td>
+          <td style="color:var(--ok)" id="ft-collected">{{ \App\Support\Money::format($totals['total_collected']) }}</td>
+          <td style="color:{{ $totals['total_remaining'] > 0 ? 'var(--bad)' : 'var(--ok)' }}" id="ft-remaining">{{ \App\Support\Money::format($totals['total_remaining']) }}</td>
+          <td id="ft-pct">{{ $totals['total_billed'] > 0 ? round($totals['total_collected'] / $totals['total_billed'] * 100) : 0 }}%</td>
+          <td style="color:var(--mut)" id="ft-profit">{{ \App\Support\Money::format($totals['book_profit']) }}</td>
           <td></td>
         </tr>
       </tfoot>
@@ -949,6 +955,8 @@ function filterMain() {
   const q = document.getElementById('main-search') ? document.getElementById('main-search').value.toLowerCase().trim() : '';
   let visible = 0;
   
+  let sumBilled = 0, sumDiscount = 0, sumCollected = 0, sumRemaining = 0, sumProfit = 0;
+  
   document.querySelectorAll('#main-tbody tr').forEach(row => {
     const st = row.dataset.status;
     const matchStatus = (activeStatus === 'all') 
@@ -956,8 +964,40 @@ function filterMain() {
                      || (st === activeStatus);
     const show = (!q || row.dataset.name.includes(q)) && matchStatus;
     row.style.display = show ? '' : 'none';
-    if (show) visible++;
+    if (show) {
+      visible++;
+      sumBilled += parseFloat(row.dataset.billed) || 0;
+      sumDiscount += parseFloat(row.dataset.discount) || 0;
+      sumCollected += parseFloat(row.dataset.collected) || 0;
+      sumRemaining += parseFloat(row.dataset.remaining) || 0;
+      sumProfit += parseFloat(row.dataset.profit) || 0;
+    }
   });
+  
+  const fmt = n => Number(n).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  const ftTitle = document.getElementById('ft-title');
+  if (ftTitle) ftTitle.innerText = `الإجمالي (${visible} مشروع)`;
+  
+  const ftBilled = document.getElementById('ft-billed');
+  if (ftBilled) ftBilled.innerText = fmt(sumBilled);
+  
+  const ftDiscount = document.getElementById('ft-discount');
+  if (ftDiscount) ftDiscount.innerText = fmt(sumDiscount);
+  
+  const ftCollected = document.getElementById('ft-collected');
+  if (ftCollected) ftCollected.innerText = fmt(sumCollected);
+  
+  const ftRemaining = document.getElementById('ft-remaining');
+  if (ftRemaining) {
+    ftRemaining.innerText = fmt(sumRemaining);
+    ftRemaining.style.color = sumRemaining > 0 ? 'var(--bad)' : 'var(--ok)';
+  }
+  
+  const ftPct = document.getElementById('ft-pct');
+  if (ftPct) ftPct.innerText = sumBilled > 0 ? Math.round((sumCollected / sumBilled) * 100) + '%' : '0%';
+  
+  const ftProfit = document.getElementById('ft-profit');
+  if (ftProfit) ftProfit.innerText = fmt(sumProfit);
   
   document.querySelectorAll('#manual-tbody tr').forEach(row => {
     const partyCell = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
