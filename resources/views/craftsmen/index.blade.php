@@ -175,9 +175,13 @@
               <td class="num" style="color:{{ $remaining > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($remaining) }}</td>
               <td>
                 <div style="display:flex; gap:4px">
-                  <button type="button" class="btn primary sm" style="background:var(--pos,#10b981); border-color:var(--pos,#10b981);" onclick="openPaymentModal({{ $a->id }}, '{{ htmlspecialchars($a->name, ENT_QUOTES) }}', {{ $remaining }})">سداد</button>
+                  @if($remaining > 0)
+                    <button type="button" class="btn primary sm" style="background:var(--pos,#10b981); border-color:var(--pos,#10b981);" onclick="openPaymentModal({{ $a->id }}, '{{ htmlspecialchars($a->name, ENT_QUOTES) }}', {{ $remaining }})">سداد</button>
+                  @endif
                   <a href="{{ route('workers.payments', $a) }}" class="btn ghost sm">الدفعات</a>
-                  <button type="button" class="btn ghost sm" style="color:var(--warn,#c9821a)" onclick="openDiscountModal({{ $a->id }}, '{{ htmlspecialchars($a->name, ENT_QUOTES) }}', {{ $remaining }})">خصم</button>
+                  @if($remaining > 0)
+                    <button type="button" class="btn ghost sm" style="color:var(--warn,#c9821a)" onclick="openDiscountModal({{ $a->id }}, '{{ htmlspecialchars($a->name, ENT_QUOTES) }}', {{ $remaining }})">خصم</button>
+                  @endif
                 </div>
               </td>
             </tr>
