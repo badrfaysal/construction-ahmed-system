@@ -227,7 +227,8 @@ class ReceivablesController extends Controller
     {
         $partyName = $request->input('party_name');
         
-        $receivables = ManualReceivable::where('party', $partyName)
+        $receivables = \App\Models\ManualDebt::where('type', 'receivable')
+            ->where('party', $partyName)
             ->where('status', '!=', 'paid')
             ->orderBy('date')
             ->orderBy('id')

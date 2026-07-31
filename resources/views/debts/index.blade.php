@@ -230,7 +230,7 @@
           </div>
           @if($hasUnpaid)
             <div style="display:flex;gap:6px;margin-right:8px">
-              <button class="btn pos sm" onclick="event.stopPropagation(); openSupplierPay({{ $supplierId }}, {{ $sRemaining }}, '{{ addslashes($supplier?->name ?? 'بدون مورد') }}', 'full')">
+              <button class="btn sm" style="background:#198754; color:#fff; border:none;" onclick="event.stopPropagation(); openSupplierPay({{ $supplierId }}, {{ $sRemaining }}, '{{ addslashes($supplier?->name ?? 'بدون مورد') }}', 'full')">
                 سداد كلي
               </button>
               <button class="btn ghost sm" onclick="event.stopPropagation(); openSupplierPay({{ $supplierId }}, {{ $sRemaining }}, '{{ addslashes($supplier?->name ?? 'بدون مورد') }}', 'partial')">
@@ -366,7 +366,7 @@
             <button type="button" style="background:var(--warn); color:#000; padding:4px 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="openPartyBulkPay('{{ addslashes($partyName) }}', {{ $partyRemaining }}, 'partial', '{{ $partyKey }}')">
               سداد جزئي
             </button>
-            <button type="button" style="background:var(--ok); color:#fff; padding:4px 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="openPartyBulkPay('{{ addslashes($partyName) }}', {{ $partyRemaining }}, 'full', '{{ $partyKey }}')">
+            <button type="button" style="background:#198754; color:#fff; padding:4px 12px; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="openPartyBulkPay('{{ addslashes($partyName) }}', {{ $partyRemaining }}, 'full', '{{ $partyKey }}')">
               سداد كلي للعميل
             </button>
           </div>
@@ -432,7 +432,7 @@
   <div style="background:var(--surface);border-radius:14px;padding:28px;width:min(460px,96vw)">
     <h4 style="margin:0 0 4px">سداد فاتورة</h4>
     <p id="pay-desc" class="muted" style="margin:0 0 20px;font-size:.85rem"></p>
-    <form id="pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.7'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+    <form id="pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.8'; b.style.color='#fff'; b.style.backgroundColor='#0d6efd'; b.style.borderColor='#0d6efd'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
       @csrf
       <div class="field">
         <label>المبلغ المدفوع (ج.م) *</label>
@@ -457,7 +457,7 @@
   <div style="background:var(--surface);border-radius:14px;padding:28px;width:min(460px,96vw)">
     <h4 style="margin:0 0 4px">سداد ديون المورد</h4>
     <p id="supplier-pay-name" class="muted" style="margin:0 0 20px;font-size:.85rem"></p>
-    <form id="supplier-pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.7'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+    <form id="supplier-pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.8'; b.style.color='#fff'; b.style.backgroundColor='#0d6efd'; b.style.borderColor='#0d6efd'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
       @csrf
       <div class="field">
         <label>المبلغ المدفوع (ج.م) *</label>
@@ -482,17 +482,17 @@
   <div style="background:var(--surface);border-radius:14px;padding:28px;width:min(460px,96vw)">
     <h4 style="margin:0 0 4px">سداد عهدة / دين أخرى</h4>
     <p id="manual-pay-desc" class="muted" style="margin:0 0 20px;font-size:.85rem"></p>
-    <form id="manual-pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.7'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+    <form id="manual-pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.8'; b.style.color='#fff'; b.style.backgroundColor='#0d6efd'; b.style.borderColor='#0d6efd'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
       @csrf
       <div class="field">
         <label style="margin-bottom:8px;display:block">المبلغ المسدد (ج.م) *</label>
         <div style="display:flex;gap:10px;margin-bottom:12px">
-          <button type="button" class="btn pos sm" id="manual-pay-full-btn" onclick="
+          <button type="button" class="btn sm" style="background:#198754; color:#fff; border:none;" id="manual-pay-full-btn" onclick="
             document.getElementById('manual-pay-amount').value = document.getElementById('manual-pay-amount').max;
             document.getElementById('manual-pay-amount').readOnly = true;
-            this.classList.add('pos'); this.classList.remove('ghost');
+            this.style.background = '#198754'; this.style.color = '#fff';
+            document.getElementById('manual-pay-partial-btn').style.background = '';
             document.getElementById('manual-pay-partial-btn').classList.add('ghost');
-            document.getElementById('manual-pay-partial-btn').classList.remove('warn');
           ">سداد كلي</button>
           
           <button type="button" class="btn ghost sm" id="manual-pay-partial-btn" onclick="
@@ -524,7 +524,7 @@
 <div id="manual-party-pay-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);align-items:center;justify-content:center" onclick="if(event.target===this) this.style.display='none'">
   <div style="background:var(--surface);border-radius:14px;padding:28px;width:min(460px,96vw)">
     <h4 style="margin:0 0 4px">سداد ديون <span id="manual-party-pay-name"></span></h4>
-    <form id="manual-party-pay-form" method="POST" action="{{ route('debts.manual.party.pay') }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.7'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+    <form id="manual-party-pay-form" method="POST" action="{{ route('debts.manual.party.pay') }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.8'; b.style.color='#fff'; b.style.backgroundColor='#0d6efd'; b.style.borderColor='#0d6efd'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
       @csrf
       <input type="hidden" name="party_name" id="manual-party-pay-party">
       <div class="field" style="margin-top:20px">
@@ -581,6 +581,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
     });
+  }
 });
 
 function openPartyModal(key) {

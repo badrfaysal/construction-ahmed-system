@@ -90,7 +90,7 @@
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-settings"/></svg>
     </a>
     <a href="{{ route('projects.index') }}" class="btn ghost sm" style="padding: 8px;" title="رجوع">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-arrow" style="transform: rotate(180deg)"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform: rotate(180deg);"><use href="#i-arrow"/></svg>
     </a>
   </div>
 </div>
