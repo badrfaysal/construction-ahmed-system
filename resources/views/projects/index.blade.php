@@ -129,10 +129,17 @@
                 @elseif($p->status === 'canceled')
                   <span class="tag red sm"><span class="dot"></span>ملغي</span>
                 @elseif($activeBands->count() > 0)
-                  <div style="display: flex; gap: 4px; flex-wrap: wrap; max-width: 200px;">
-                    @foreach($activeBands as $band)
-                      <span class="tag blue sm"><span class="dot"></span>{{ $band->name }}</span>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap; max-width: 250px; align-items: center;">
+                    @foreach($activeBands->take(1) as $band)
+                      <span class="tag blue sm" style="max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $band->name }}">
+                        <span class="dot"></span>{{ $band->name }}
+                      </span>
                     @endforeach
+                    @if($activeBands->count() > 1)
+                      <span class="tag sm" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; cursor: help;" title="{{ $activeBands->skip(1)->pluck('name')->join('، ') }}">
+                        +{{ $activeBands->count() - 1 }} أخرى
+                      </span>
+                    @endif
                   </div>
                 @else
                   <span class="tag gray sm">جاري</span>
