@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Expense;
 use App\Models\InstallmentContract;
 use App\Models\InstallmentPayment;
 use App\Models\Material;
@@ -12,6 +13,7 @@ use App\Models\ProjectDiscount;
 use App\Models\Settings;
 use App\Models\Transaction;
 use App\Models\WorkerPayment;
+use App\Observers\ExpenseObserver;
 use App\Observers\InstallmentContractObserver;
 use App\Observers\InstallmentPaymentObserver;
 use App\Observers\MaterialInvoiceObserver;
@@ -40,6 +42,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Expense::observe(ExpenseObserver::class);
+
         // سجل الحركات (transactions) is never entered by hand — these observers
         // keep it in sync automatically whenever materials, payments, or wages happen
         Material::observe(MaterialObserver::class);

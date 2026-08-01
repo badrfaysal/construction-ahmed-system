@@ -126,6 +126,9 @@ class TransactionController extends Controller
 
         DB::transaction(function () use ($transaction) {
             switch ($transaction->ref_type) {
+                case 'expense':
+                    \App\Models\Expense::find($transaction->ref_id)?->delete();
+                    break;
                 case 'material':
                     Material::find($transaction->ref_id)?->delete();
                     break;

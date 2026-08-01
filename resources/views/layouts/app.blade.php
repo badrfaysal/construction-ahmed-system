@@ -135,6 +135,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-credit-card"/></svg>
       <span>الديون</span>
     </a> 
+    <a class="nav-item {{ request()->routeIs('general_expenses.*') ? 'active' : '' }}" href="{{ route('general_expenses.index') }}" style="--ic:#eab308">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
+      <span>المصروفات العامة</span>
+    </a>
      <a class="nav-item {{ request()->routeIs('craftsmen.*') ? 'active' : '' }}" href="{{ route('craftsmen.index') }}" style="--ic:#ca8a04">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-tool"/></svg>
       <span>الصنايعية ومستحقاتهم</span>

@@ -208,9 +208,11 @@
         @php
           $totalDisc = $project->totalDiscount();
           $marketersCommission = (float) $project->transactions()->where('ref_type', 'marketer_commission')->sum('amount');
+          $projectExpenses = (float) $project->transactions()->where('ref_type', 'project_expense')->sum('amount');
         @endphp
         <tr><td class="muted" style="color:var(--amber)">الخصومات الممنوحة للعميل</td><td style="text-align:left;font-weight:700;color:var(--amber)">{{ $totalDisc > 0 ? '-' : '' }}{{ \App\Support\Money::format($totalDisc) }} ج.م</td></tr>
         <tr><td class="muted" style="color:var(--neg)">عمولة المسوقين</td><td style="text-align:left;font-weight:700;color:var(--neg)">{{ $marketersCommission > 0 ? '-' : '' }}{{ \App\Support\Money::format($marketersCommission) }} ج.م</td></tr>
+        <tr><td class="muted" style="color:var(--neg)">المصروفات العامة للمشروع</td><td style="text-align:left;font-weight:700;color:var(--neg)">{{ $projectExpenses > 0 ? '-' : '' }}{{ \App\Support\Money::format($projectExpenses) }} ج.م</td></tr>
         <tr class="big"><td>صافي الربح</td><td style="text-align:left">{{ \App\Support\Money::format($totalProfit) }} ج.م</td></tr>
       </table>
     </div>

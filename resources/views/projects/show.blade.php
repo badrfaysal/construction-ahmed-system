@@ -650,6 +650,14 @@
     </div>
     <svg class="pay-opt-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg>
   </button>
+  <button type="button" class="pay-opt" style="cursor:pointer;text-align:start;background:var(--surface);border:1px solid var(--line);width:100%" onclick="document.getElementById('project-expense-modal').classList.add('open')">
+    <div class="pay-opt-ic" style="color:#64748b;background:#f1f5f9"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-plus"/></svg></div>
+    <div class="pay-opt-body">
+      <div class="pay-opt-t">مصروف عام للمشروع</div>
+      <div class="pay-opt-s">إضافة مصروف يخصم من أرباح المشروع ولا يتحمله العميل</div>
+    </div>
+    <svg class="pay-opt-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-arrow"/></svg>
+  </button>
 </div>
 
 {{-- مودال تحصيل دفعة سريعة من العميل — من غير ما تسيب صفحة المشروع --}}
@@ -737,6 +745,43 @@
     </form>
   </div>
 </div>
+
+{{-- مودال إضافة مصروف عام للمشروع --}}
+<div class="modal-overlay" id="project-expense-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box" style="max-width:460px">
+    <div class="modal-head">
+      <h4 style="margin:0">إضافة مصروف عام للمشروع</h4>
+      <button class="btn ghost sm" onclick="document.getElementById('project-expense-modal').classList.remove('open')">✕</button>
+    </div>
+    <form method="POST" action="{{ route('general_expenses.store') }}">
+      @csrf
+      <input type="hidden" name="project_id" value="{{ $project->id }}">
+      <div class="modal-body">
+        <div class="field">
+          <label>البيان / اسم المصروف <span class="req">*</span></label>
+          <input type="text" name="description" required placeholder="مثال: رسوم تراخيص، نقل عام للمشروع...">
+        </div>
+        <div class="field">
+          <label>المبلغ (ج.م) <span class="req">*</span></label>
+          <input type="number" name="amount" min="0.01" step="0.01" required>
+        </div>
+        <div class="field">
+          <label>التاريخ <span class="req">*</span></label>
+          <input type="date" name="date" value="{{ today()->format('Y-m-d') }}" required>
+        </div>
+        @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true])
+        <div class="field">
+          <label>ملاحظات</label>
+          <input type="text" name="notes" placeholder="اختياري">
+        </div>
+      </div>
+      <div class="btn-row" style="padding:0 20px 20px">
+        <button type="submit" class="btn pos">تسجيل المصروف</button>
+        <button type="button" class="btn ghost" onclick="document.getElementById('project-expense-modal').classList.remove('open')">إلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
 <div class="table-card" style="margin-bottom:24px">
   @php $contract = $project->contracts->first(); @endphp
   @if($contract)
@@ -800,6 +845,49 @@
   }
   $allClientPays = $directPays->concat($contractPays)->sortByDesc(fn ($p) => $p->date)->values();
 @endphp
+
+@if($project->projectExpenses->count())
+  <div class="section-label" style="margin-top:0;color:var(--ink)">
+    المصروفات العامة للمشروع (تخصم من الأرباح ولا يتحملها العميل)
+  </div>
+  <div class="table-card" style="margin-bottom:24px">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>التاريخ</th>
+            <th>البيان</th>
+            <th>الخزنة</th>
+            <th class="num">المبلغ</th>
+            <th>ملاحظات</th>
+            <th class="num"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach($project->projectExpenses as $exp)
+            <tr>
+              <td><span class="tag gray">{{ $exp->date->format('Y-m-d') }}</span></td>
+              <td style="font-weight:600; color:var(--ink)">{{ $exp->description }}</td>
+              <td>{{ $exp->account->name }}</td>
+              <td class="num" style="color:var(--neg); font-weight:700;">{{ \App\Support\Money::format($exp->amount) }}</td>
+              <td style="color:var(--mut); font-size:13px">{{ $exp->notes ?: '—' }}</td>
+              <td class="num" style="width:60px">
+                <form method="POST" action="{{ route('general_expenses.destroy', $exp->id) }}" onsubmit="return confirm('تأكيد حذف المصروف؟ سيتم إرجاع المبلغ للخزنة.')">
+                  @csrf
+                  @method('DELETE')
+                  <button type="submit" class="btn ghost sm" style="color:#ef4444; padding:6px">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                  </button>
+                </form>
+              </td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+    </div>
+  </div>
+@endif
+
 @if($project->discounts->count())
   <div class="section-label" style="margin-top:0;color:var(--ink)">
     الخصومات الممنوحة للعميل

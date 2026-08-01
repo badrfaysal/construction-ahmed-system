@@ -23,6 +23,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\MarketerController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\WorkerPaymentController;
@@ -86,6 +87,11 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::get('/material-invoices', [\App\Http\Controllers\MaterialInvoiceController::class, 'index'])->name('material_invoices.index');
     Route::get('/material-invoices/{invoice}', [\App\Http\Controllers\MaterialInvoiceController::class, 'show'])->name('material_invoices.show');
     Route::delete('/material-invoices/{invoice}', [\App\Http\Controllers\MaterialInvoiceController::class, 'destroy'])->name('material_invoices.destroy');
+
+    // General Expenses (المصروفات العامة)
+    Route::get('/general-expenses', [ExpenseController::class, 'index'])->name('general_expenses.index');
+    Route::post('/general-expenses', [ExpenseController::class, 'store'])->name('general_expenses.store');
+    Route::delete('/general-expenses/{expense}', [ExpenseController::class, 'destroy'])->name('general_expenses.destroy');
 
     // Miscellaneous expenses (المصروفات النثرية) — tips/transport/meals, billed like materials
     Route::get('/projects/{project}/expenses/create', [MaterialController::class, 'createExpense'])->name('expenses.create');

@@ -125,6 +125,16 @@ class ReportController extends Controller
             $topDiscountProject = null;
         }
 
+        $generalExpensesQuery = Expense::whereNull('project_id');
+        if ($from) $generalExpensesQuery->where('date', '>=', $from);
+        if ($to) $generalExpensesQuery->where('date', '<=', $to);
+        
+        $totalGeneralExpenses = (float) $generalExpensesQuery->sum('amount');
+        $generalExpensesDistribution = $generalExpensesQuery->get()->groupBy('description')
+            ->map(fn($group) => $group->sum('amount'))
+            ->sortDesc()
+            ->take(5);
+
         // ---- Monthly cash flow chart (same grouping as AnalyticsController::index()) ----
         $txQuery = Transaction::select(
             DB::raw("DATE_FORMAT(date, '%Y-%m') as month"),
@@ -275,7 +285,8 @@ class ReportController extends Controller
             'technicians',
             'topPurchasedMaterials', 'topReturnedMaterials',
             'lowestProjectsByDiscount',
-            'totalMarketerCommissions', 'topMarketers', 'lowestMarketers'
+            'totalMarketerCommissions', 'topMarketers', 'lowestMarketers',
+            'totalGeneralExpenses', 'generalExpensesDistribution'
         ));
     }
 

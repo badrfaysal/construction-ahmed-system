@@ -52,10 +52,14 @@ class Project extends Model
         return $this->hasMany(Installment::class, 'project_id')->orderBy('sort_order');
     }
 
-    // عقود التقسيط الخاصة بالمشروع (النظام الجديد) — عادةً عقد واحد لكل مشروع
     public function contracts(): HasMany
     {
         return $this->hasMany(InstallmentContract::class, 'project_id')->latest('id');
+    }
+
+    public function projectExpenses(): HasMany
+    {
+        return $this->hasMany(Expense::class, 'project_id');
     }
 
     // العقد النشط الحالي للمشروع (آخر عقد اتعمل)
@@ -267,7 +271,8 @@ class Project extends Model
         $materialCost = $this->materials->sum(fn ($m) => $m->netCost());
         $laborCost    = $this->bands->sum('labor_amount');
         $marketersCost = (float) $this->transactions()->where('ref_type', 'marketer_commission')->sum('amount');
-        return $materialCost + $laborCost + $marketersCost;
+        $projectExpensesCost = (float) $this->transactions()->where('ref_type', 'project_expense')->sum('amount');
+        return $materialCost + $laborCost + $marketersCost + $projectExpensesCost;
     }
 
     // الربح التجاري الكلي للمشروع (فرق الشراء من البيع بس، من غير نسبة

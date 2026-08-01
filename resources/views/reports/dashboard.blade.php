@@ -137,6 +137,16 @@
     <div class="val tnum">{{ \App\Support\Money::format($totalMarketerCommissions ?? 0) }} <small>ج.م</small></div>
     <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg>
   </div>
+
+  <div class="vstat vstat-red">
+    <div class="top">
+      <span class="label">المصروفات العامة</span>
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span>
+    </div>
+    <div class="val tnum">{{ \App\Support\Money::format($totalGeneralExpenses ?? 0) }} <small>ج.م</small></div>
+    <div class="note" style="color:rgba(255,255,255,0.8); margin-top:8px;">إجمالي المصروفات خارج المشاريع</div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
+  </div>
 </div>
 
 {{-- ═══ Charts Grid: 4 compact cards ═══ --}}
@@ -289,6 +299,47 @@
           @endforelse
         </tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+{{-- ═══ General Expenses Section ═══ --}}
+<div style="margin-bottom:24px;">
+  <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+    <div style="width:32px; height:32px; border-radius:8px; background:#fef2f2; display:grid; place-items:center;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><use href="#i-receipt"/></svg>
+    </div>
+    <h3 style="margin:0; font-size:1.15rem; color:var(--ink);">تفاصيل المصروفات العامة</h3>
+  </div>
+  
+  <div class="grid cols-2">
+    <div class="table-card">
+      <div class="table-top"><h4>توزيع المصروفات أعلى بنود المصروفات</h4></div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>#</th><th>البيان</th><th class="num">المبلغ</th></tr></thead>
+          <tbody>
+            @if(isset($generalExpensesDistribution) && $generalExpensesDistribution->count() > 0)
+              @foreach($generalExpensesDistribution as $cat => $amount)
+                <tr>
+                  <td><span style="width:22px;height:22px;border-radius:50%;background:{{ ['#ef4444','#f87171','#fca5a5','#fecaca','#fee2e2'][$loop->index % 5] }};color:{{ $loop->index < 3 ? '#fff' : '#b91c1c' }};display:grid;place-items:center;font-size:10px;font-weight:700">{{ $loop->index+1 }}</span></td>
+                  <td style="font-weight:600;">{{ $cat }}</td>
+                  <td class="num" style="font-weight:700;color:var(--bad)">{{ \App\Support\Money::format($amount) }}</td>
+                </tr>
+              @endforeach
+            @else
+              <tr><td colspan="3" class="muted" style="text-align:center;padding:16px">لا توجد بيانات للمصروفات في هذه الفترة</td></tr>
+            @endif
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="card card-pad" style="padding:14px 16px; display:flex; flex-direction:column; justify-content:center; align-items:center; background:linear-gradient(135deg, var(--bg2), #fff);">
+      <div style="font-size:12px; font-weight:700; color:var(--mut); margin-bottom:12px; text-transform:uppercase; letter-spacing:1px;">إجمالي المصروفات العامة لهذه الفترة</div>
+      <div class="tnum" style="font-size:2.8rem; font-weight:800; color:var(--bad); line-height:1;">{{ \App\Support\Money::format($totalGeneralExpenses ?? 0) }}</div>
+      <div style="font-size:13px; color:var(--mut); margin-top:8px;">جنيهاً مصرياً</div>
+      <a href="{{ route('general_expenses.index') }}" class="btn secondary" style="margin-top:24px;">عرض تفاصيل وسجل المصروفات</a>
     </div>
   </div>
 </div>
