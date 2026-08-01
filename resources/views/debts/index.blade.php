@@ -148,7 +148,7 @@
     }
     .filter-bar .tabs .tab[href*="pending"].active { color: var(--warn); }
     .filter-bar .tabs .tab[href*="partial"].active { color: var(--accent); }
-    .filter-bar .tabs .tab[href*="paid"].active { color: var(--pos); }
+    .filter-bar .tabs .tab[href*="paid"].active { color: #fff; background: var(--pos); }
     
     .filter-bar .f-select, .filter-bar input[type="date"] { 
       height: 42px; 

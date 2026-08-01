@@ -329,7 +329,7 @@
   </a>
 
   {{-- 6. مصنعيات الفنيين --}}
-  <a class="vstat vstat-amber" href="{{ route('labor.index') }}">
+  <a class="vstat vstat-amber" href="{{ route('craftsmen.index') }}">
       <div class="top">
         <span class="label">مصنعيات الفنيين</span>
         <span class="ic">
