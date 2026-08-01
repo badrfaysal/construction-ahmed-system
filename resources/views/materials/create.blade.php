@@ -634,7 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Restore old data if validation failed (rebuild dynamic groups/items)
   const oldGroups = @json(old('groups', []));
   const oldAccountId = '{{ old('account_id') }}';
-  const oldPaymentStatus = '{{ old('payment_status', 'paid') }}';
+  const oldPaymentStatus = '{{ old('payment_status', 'deferred') }}';
 
   if (oldGroups && Object.keys(oldGroups).length > 0) {
     // لو في old data من validation error، ابني المجموعات والأصناف منها
