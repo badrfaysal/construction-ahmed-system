@@ -201,10 +201,37 @@ class CraftsmanController extends Controller
 
         foreach ($rows as $w) {
             if ($w->amount > 0) {
+                $mainDesc = '';
+                $details = [];
+                
+                if (!empty($w->notes)) {
+                    $mainDesc = 'أجر عن: ' . $w->notes;
+                    $details[] = 'بند: ' . ($w->band->name ?? 'بدون بند');
+                } else {
+                    $mainDesc = 'مصنعية: ' . ($w->band->name ?? 'بدون بند');
+                }
+                
+                $details[] = 'مشروع: ' . ($w->band->project->name ?? 'بدون مشروع');
+
+                if ($w->specialty) {
+                    $details[] = "تخصص: {$w->specialty}";
+                }
+                
+                if ($w->contract_qty > 0 && $w->contract_type !== 'lump_sum') {
+                    $details[] = "الكمية: " . (float)$w->contract_qty . " " . $w->contractTypeAr();
+                } elseif ($w->contract_type === 'lump_sum') {
+                    $details[] = 'مقاولة مقطوعة';
+                }
+
+                $desc = '<strong>' . $mainDesc . '</strong>';
+                if (count($details) > 0) {
+                    $desc .= '<br><small class="muted" style="font-size:11.5px;">' . implode(' | ', $details) . '</small>';
+                }
+
                 $ledger->push([
                     'date' => $w->start_date ? $w->start_date->format('Y-m-d') : $w->created_at->format('Y-m-d'),
                     'type' => 'استحقاق مصنعية',
-                    'description' => 'مصنعية بند: ' . ($w->band->name ?? 'بدون بند') . ' (' . ($w->band->project->name ?? '') . ')',
+                    'description' => $desc,
                     'credit' => (float) $w->amount,
                     'debit' => 0,
                     'project' => $w->band->project->name ?? '',
@@ -212,10 +239,25 @@ class CraftsmanController extends Controller
             }
 
             foreach ($w->deferredExpenses as $exp) {
+                $itemName = $exp->item ?? $exp->name ?? 'بدون اسم';
+                
+                $mainDesc = 'شراء: ' . $itemName;
+                $details = [];
+                $details[] = 'مشروع: ' . ($w->band->project->name ?? 'بدون مشروع');
+                
+                if (!empty($exp->notes)) {
+                    $details[] = 'ملاحظات: ' . $exp->notes;
+                }
+
+                $desc = '<strong>' . $mainDesc . '</strong>';
+                if (count($details) > 0) {
+                    $desc .= '<br><small class="muted" style="font-size:11.5px;">' . implode(' | ', $details) . '</small>';
+                }
+
                 $ledger->push([
                     'date' => $exp->date ? $exp->date->format('Y-m-d') : $exp->created_at->format('Y-m-d'),
                     'type' => 'استحقاق مصروفات',
-                    'description' => 'مصروفات/نثريات: ' . $exp->name . ' (' . ($w->band->project->name ?? '') . ')',
+                    'description' => $desc,
                     'credit' => (float) $exp->netCost(),
                     'debit' => 0,
                     'project' => $w->band->project->name ?? '',
@@ -224,20 +266,45 @@ class CraftsmanController extends Controller
 
             foreach ($w->payments as $pay) {
                 if ($pay->amount > 0) {
+                    $mainDesc = 'سداد دفعة نقدية';
+                    $details = [];
+                    
+                    if (!empty($pay->notes)) {
+                        $mainDesc = 'سداد: ' . $pay->notes;
+                    }
+                    
+                    $details[] = 'مشروع: ' . ($w->band->project->name ?? 'بدون مشروع');
+                    $details[] = 'بند: ' . ($w->band->name ?? 'بدون بند');
+
+                    $payDesc = '<strong>' . $mainDesc . '</strong>';
+                    if (count($details) > 0) {
+                        $payDesc .= '<br><small class="muted" style="font-size:11.5px;">' . implode(' | ', $details) . '</small>';
+                    }
+
                     $ledger->push([
                         'date' => $pay->date ? $pay->date->format('Y-m-d') : clone $pay->created_at->format('Y-m-d'),
                         'type' => 'دفعة نقدية',
-                        'description' => 'سداد لـ: ' . ($w->band->name ?? 'بدون بند') . ' (' . ($w->band->project->name ?? '') . ')',
+                        'description' => $payDesc,
                         'credit' => 0,
                         'debit' => (float) $pay->amount,
                         'project' => $w->band->project->name ?? '',
                     ]);
                 }
                 if ($pay->discount > 0) {
+                    $mainDesc = 'خصم من الحساب';
+                    $details = [];
+                    $details[] = 'مشروع: ' . ($w->band->project->name ?? 'بدون مشروع');
+                    $details[] = 'بند: ' . ($w->band->name ?? 'بدون بند');
+                    
+                    $payDesc = '<strong>' . $mainDesc . '</strong>';
+                    if (count($details) > 0) {
+                        $payDesc .= '<br><small class="muted" style="font-size:11.5px;">' . implode(' | ', $details) . '</small>';
+                    }
+
                     $ledger->push([
                         'date' => $pay->date ? $pay->date->format('Y-m-d') : clone $pay->created_at->format('Y-m-d'),
                         'type' => 'خصم',
-                        'description' => 'خصم من حساب مصنعية ' . ($w->band->name ?? 'بدون بند') . ' (' . ($w->band->project->name ?? '') . ')',
+                        'description' => $payDesc,
                         'credit' => 0,
                         'debit' => (float) $pay->discount,
                         'project' => $w->band->project->name ?? '',

@@ -158,7 +158,7 @@
           <tr>
             <td style="white-space:nowrap;">{{ $row['date'] }}</td>
             <td>{{ $row['type'] }}</td>
-            <td>{{ $row['description'] }}</td>
+            <td>{!! $row['description'] !!}</td>
             <td class="num" style="color:var(--pos, #10b981); font-weight:600">{{ $row['credit'] > 0 ? \App\Support\Money::format($row['credit']) : '-' }}</td>
             <td class="num" style="color:var(--neg, #ef4444); font-weight:600">{{ $row['debit'] > 0 ? \App\Support\Money::format($row['debit']) : '-' }}</td>
             <td class="num" style="font-weight: bold; color: {{ $runningBalance > 0 ? 'var(--neg)' : 'var(--pos)' }}">
