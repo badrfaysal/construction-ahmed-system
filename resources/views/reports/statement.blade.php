@@ -94,6 +94,12 @@
             $subBands = $band->materials->where('category', 'misc')->sortBy('date');
           @endphp
 
+          <tr style="background-color: #1e3a8a; color: white;">
+            <td colspan="7" style="font-size: 1.15em; font-weight: 800; padding: 12px 15px;">
+              {{ $band->name }}
+            </td>
+          </tr>
+
           {{-- Real Materials --}}
           @if($realMaterials->isNotEmpty())
             <tr><td colspan="7" style="background:var(--bg);font-weight:600;font-size:0.85em;color:var(--text-muted);padding-right:20px;">الخامات</td></tr>

@@ -491,9 +491,20 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
 /* ---- Print ---- */
 @media print{
   @page{size:A4;margin:9mm}
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  tr, td, th {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  thead {
+    display: table-header-group;
+  }
   .sidebar,.topbar,.no-print,.modal-overlay{display:none!important}
   .main{margin:0}
-  body{background:#fff;font-size:11px}
+  body{background:#fff;font-size:11px; zoom: 0.93;}
   .page-wrap{padding:0}
 
   /* Printing the profit modal (كارت الربح المتحقق): hide the rest of the
@@ -550,11 +561,12 @@ tfoot td{padding:14px 16px;font-size:13.5px;border-top:2px solid var(--line);bac
   .st-table th{padding:5px 9px;font-size:9.5px}
   .st-table td{padding:4px 9px;font-size:10px}
   .st-table .grp td{font-size:10px;padding:5px 9px}
-  .st-final{margin-top:10px}
-  .st-final table{min-width:0}
+  .st-final{margin-top:10px; page-break-inside: avoid; break-inside: avoid;}
+  .st-final-blocks{page-break-inside: avoid; break-inside: avoid;}
+  .st-final table{min-width:0; page-break-inside: avoid; break-inside: avoid;}
   .st-final td{padding:4px 14px;font-size:11px}
   .st-final tr.big td{font-size:12px}
-  .st-foot{padding:8px 16px;font-size:9px}
+  .st-foot{padding:8px 16px;font-size:9px; page-break-inside: avoid; break-inside: avoid;}
   .qnote{font-size:10px}
 }
 

@@ -93,13 +93,20 @@
             $matClientTotal = $band->materialClientCost();
             $laborClientTotal = $band->laborClientPrice();
           @endphp
+          @if($matClientTotal > 0 || $laborClientTotal > 0)
+          <tr style="background-color: #1e3a8a; color: white;">
+            <td colspan="3" style="font-size: 1.1em; font-weight: bold; padding: 12px 15px;">
+              {{ $band->name }}
+            </td>
+          </tr>
+          @endif
           @if($matClientTotal > 0)
             @php
               $matProfit = $band->materialPercentageProfit();
               $matPct = $band->materials->count() > 0 ? $band->materials->avg('supervision_pct') : 0;
             @endphp
             <tr>
-              <td><strong>{{ $band->name }} (خامات)</strong></td>
+              <td style="padding-inline-start: 25px;"><span style="color:var(--text-muted);">-</span> <strong>خامات</strong></td>
               <td class="col-sup">
                 {{ (float) number_format($matPct, 1) }}%
                 @if($matProfit > 0)
@@ -115,7 +122,7 @@
               $laborPct = $band->workers->count() > 0 ? $band->workers->avg('supervision_pct') : (float) $band->labor_supervision_pct;
             @endphp
             <tr>
-              <td><strong>{{ $band->name }} (مصنعية)</strong></td>
+              <td style="padding-inline-start: 25px;"><span style="color:var(--text-muted);">-</span> <strong>مصنعية</strong></td>
               <td class="col-sup">
                 {{ (float) number_format($laborPct, 1) }}%
                 @if($laborProfit > 0)
