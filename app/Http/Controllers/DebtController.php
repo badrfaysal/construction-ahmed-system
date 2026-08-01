@@ -211,8 +211,8 @@ class DebtController extends Controller
                 $remaining -= $pay;
             }
         });
-
-        return back()->with('success', 'تم تسجيل الدفع للمورد ' . $supplier->name . '.');
+        $supplierName = $supplier ? $supplier->name : 'بدون مورد';
+        return back()->with('success', 'تم تسجيل الدفع للمورد: ' . $supplierName . '.');
     }
 
     // Delete a debt (admin use — e.g. data entry error)
