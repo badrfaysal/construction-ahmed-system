@@ -149,14 +149,14 @@
   <table class="table" style="min-width:1000px">
     <thead>
       <tr>
-        <th style="padding-right:20px;">#</th>
-        <th>نوع الحركة</th>
-        <th class="num">المبلغ</th>
-        <th style="text-align:center">الطرف الخارجي</th>
-        <th style="text-align:center">مسار الحركة (FLOW)</th>
-        <th>البيان والمشروع</th>
-        <th>تاريخ التنفيذ</th>
-        <th class="no-print">إجراء</th>
+        <th style="padding-right:20px; width: 60px;">#</th>
+        <th style="width: 150px;">نوع الحركة</th>
+        <th class="num" style="width: 140px;">المبلغ</th>
+        <th style="text-align:center; width: 160px;">الطرف الخارجي</th>
+        <th style="text-align:center; width: 220px;">مسار الحركة (FLOW)</th>
+        <th style="width: auto; min-width: 280px;">البيان والمشروع</th>
+        <th style="width: 110px;">تاريخ التنفيذ</th>
+        <th class="no-print" style="width: 90px;">إجراء</th>
       </tr>
     </thead>
     <tbody>
@@ -286,7 +286,7 @@
             </div>
           </td>
 
-          <td style="max-width:250px">
+          <td style="padding: 12px 16px;">
             <div style="display:flex; gap:8px;">
               <span style="color:#94a3b8;">—</span>
               <div>

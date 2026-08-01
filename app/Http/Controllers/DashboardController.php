@@ -48,62 +48,15 @@ class DashboardController extends Controller
         // Total due from installment contracts
         $installmentContractsDue = (float) InstallmentContract::sum('remaining_balance');
 
-        $accountsBalance = (float) Account::where('status', 'active')->sum('balance');
-
-        $directReceivables = (float) $allProjects->sum(function ($p) {
-            if ($p->hasInstallmentContract()) {
-                return $p->receivableExcess();
-            }
-            return max(0, $p->cached_actual_total - $p->cached_collected - $p->cached_discount);
-        });
-
-        $installmentReceivables = $installmentContractsDue;
-
-        $clientOverpayments = (float) $allProjects->sum(function ($p) {
-            // Amount the client overpaid (collected + discount > billed)
-            if ($p->hasInstallmentContract()) {
-                return 0; // Overpayments on installments are handled differently or usually 0
-            }
-            return max(0, $p->cached_collected + $p->cached_discount - $p->cached_actual_total);
-        });
-
-        $supplierDebtsRemaining = (float) (SupplierDebt::where('sy2_supplier_debts.status', '!=', 'paid')
-            ->join('sy2_projects', 'sy2_supplier_debts.project_id', '=', 'sy2_projects.id')
-            ->selectRaw('SUM(sy2_supplier_debts.total_amount - sy2_supplier_debts.paid_amount) as r')
-            ->value('r') ?? 0);
-
-        $totalWorkerBase = (float) \DB::table('sy2_band_workers')
-            ->join('sy2_project_bands', 'sy2_band_workers.project_band_id', '=', 'sy2_project_bands.id')
-            ->join('sy2_projects', 'sy2_project_bands.project_id', '=', 'sy2_projects.id')
-            ->sum('sy2_band_workers.amount');
-
-        $totalWorkerDeferred = (float) \DB::table('sy2_materials')
-            ->join('sy2_projects', 'sy2_materials.project_id', '=', 'sy2_projects.id')
-            ->whereNotNull('sy2_materials.band_worker_id')
-            ->where('sy2_materials.category', 'misc')
-            ->where('sy2_materials.payment_status', 'deferred')
-            ->sum(\DB::raw('sy2_materials.qty * sy2_materials.unit_price'));
-
-        $totalWorkerContracted = $totalWorkerBase + $totalWorkerDeferred;
-
-        $totalWorkerPaidAndDiscount = (float) \DB::table('sy2_worker_payments')
-            ->join('sy2_projects', 'sy2_worker_payments.project_id', '=', 'sy2_projects.id')
-            ->sum(\DB::raw('sy2_worker_payments.amount + sy2_worker_payments.discount'));
-
-        $unpaidLabor = max($totalWorkerContracted - $totalWorkerPaidAndDiscount, 0);
-
-        $manualDebtsDue = (float) \App\Models\ManualDebt::where('status', '!=', 'paid')
-            ->where('type', 'debt')
-            ->sum(\Illuminate\Support\Facades\DB::raw('total_amount - paid_amount'));
-
-        $manualReceivables = (float) \App\Models\ManualDebt::where('status', '!=', 'paid')
-            ->where('type', 'receivable')
-            ->sum(\Illuminate\Support\Facades\DB::raw('total_amount - paid_amount'));
-
-        $directReceivables += $manualReceivables;
-        $supplierDebtsRemaining += $manualDebtsDue;
-
-        $netCapital = $accountsBalance + $directReceivables + $installmentReceivables - $supplierDebtsRemaining - $unpaidLabor - $clientOverpayments;
+        $capitalData = \App\Services\CapitalService::calculateCurrentCapital();
+        $netCapital = $capitalData['net_capital'];
+        
+        $accountsBalance = $capitalData['details']['accountsBalance'];
+        $directReceivables = $capitalData['details']['directReceivables'];
+        $installmentReceivables = $capitalData['details']['installmentReceivables'];
+        $supplierDebtsRemaining = $capitalData['details']['supplierDebtsRemaining'];
+        $unpaidLabor = $capitalData['details']['unpaidLabor'];
+        $clientOverpayments = $capitalData['details']['clientOverpayments'];
 
         // Fetch all accounts
         $accounts = Account::where('status', 'active')->orderBy('id')->get();
@@ -137,13 +90,18 @@ class DashboardController extends Controller
         $totalReturnLosses = (float) \App\Models\MaterialReturn::with('material')->get()->sum(fn($r) => $r->loss());
         $totalDiscountsAndLosses = $totalDiscount + $totalMarketerCommissions + $totalReturnLosses;
 
+        // Fetch snapshots for the last 30 days for the chart
+        $capitalSnapshots = \App\Models\CapitalSnapshot::where('snapshot_date', '>=', now()->subDays(30))
+            ->orderBy('snapshot_date', 'asc')
+            ->get(['snapshot_date', 'net_capital']);
+
         return view('dashboard.index', compact(
             'activeProjects', 'installmentContractsDue',
             'accountsBalance', 'directReceivables', 'installmentReceivables', 'supplierDebtsRemaining', 'unpaidLabor', 'clientOverpayments', 'netCapital',
             'monthFilter', 'isFiltered', 'accounts', 'recentTransactions',
             'bookProfit', 'realProfit', 'uncollectedProfit', 'totalDiscount',
             'totalInstallmentProfit', 'totalTradeProfit', 'totalPercentageProfit', 'totalRevenuesForView',
-            'totalMarketerCommissions', 'totalReturnLosses', 'totalDiscountsAndLosses'
+            'totalMarketerCommissions', 'totalReturnLosses', 'totalDiscountsAndLosses', 'capitalSnapshots'
         ));
     }
 }

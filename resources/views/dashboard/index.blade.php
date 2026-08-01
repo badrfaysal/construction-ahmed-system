@@ -259,6 +259,7 @@
 </div>
 
 
+
 {{-- Summary stats row --}}
 <div class="cols-top" style="margin-bottom:30px;">
 
@@ -599,4 +600,143 @@
 
 </div>
 
+{{-- الرسم البياني لنمو رأس المال --}}
+<div class="card card-pad" style="margin-bottom: 30px; padding: 24px; position: relative;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            نمو رأس المال (لقطات)
+        </h3>
+        <span class="tag blue sm" style="font-weight: 600;">آخر 30 يوم (افتراضي)</span>
+    </div>
+    
+    <div id="capital-chart" style="min-height: 300px;"></div>
+    
+    @if($capitalSnapshots->isEmpty())
+        <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.8); z-index: 10;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 8 12 12 14 14"></polyline></svg>
+            <div style="color: #64748b; font-weight: 600;">لا توجد لقطات مسجلة حتى الآن</div>
+            <div style="color: #94a3b8; font-size: 12px; margin-top: 4px;">يقوم النظام بتسجيل لقطة يومياً بشكل تلقائي</div>
+        </div>
+    @endif
+</div>
+
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var snapshots = @json($capitalSnapshots);
+    
+    if (snapshots.length > 0) {
+        // إذا كان هناك لقطة واحدة فقط، نضيف لقطة وهمية سابقة لتكوين خط مستقيم
+        if (snapshots.length === 1) {
+            let single = snapshots[0];
+            let previousDate = new Date(single.snapshot_date);
+            previousDate.setDate(previousDate.getDate() - 1);
+            let prevDateStr = previousDate.toISOString().split('T')[0];
+            
+            snapshots.unshift({
+                snapshot_date: prevDateStr,
+                net_capital: single.net_capital
+            });
+        }
+        
+        var dates = snapshots.map(item => {
+            // تنسيق التاريخ إلى يوم وشهر
+            var d = new Date(item.snapshot_date);
+            return d.getDate() + '/' + (d.getMonth() + 1);
+        });
+        
+        var values = snapshots.map(item => parseFloat(item.net_capital));
+        
+        var options = {
+            series: [{
+                name: 'رأس المال',
+                data: values
+            }],
+            chart: {
+                type: 'area',
+                height: 300,
+                fontFamily: 'inherit',
+                toolbar: { show: false },
+                zoom: { enabled: false },
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800,
+                }
+            },
+            colors: ['#3b82f6'],
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.4,
+                    opacityTo: 0.05,
+                    stops: [0, 100]
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3
+            },
+            xaxis: {
+                categories: dates,
+                axisBorder: { show: false },
+                axisTicks: { show: false },
+                labels: {
+                    style: {
+                        colors: '#94a3b8',
+                        fontSize: '11px',
+                        fontWeight: 500,
+                    }
+                }
+            },
+            yaxis: {
+                labels: {
+                    formatter: function (value) {
+                        return (value / 1000).toFixed(0) + 'k ج';
+                    },
+                    style: {
+                        colors: '#94a3b8',
+                        fontSize: '11px',
+                        fontWeight: 500,
+                    }
+                }
+            },
+            grid: {
+                borderColor: 'rgba(0,0,0,0.04)',
+                strokeDashArray: 4,
+                yaxis: { lines: { show: true } },
+                xaxis: { lines: { show: false } },
+            },
+            tooltip: {
+                theme: 'light',
+                y: {
+                    formatter: function (val) {
+                        return new Intl.NumberFormat('ar-EG').format(val) + " ج.م";
+                    }
+                }
+            },
+            markers: {
+                size: 4,
+                colors: ['#fff'],
+                strokeColors: '#3b82f6',
+                strokeWidth: 2,
+                hover: {
+                    size: 6
+                }
+            }
+        };
+
+        var chart = new ApexCharts(document.querySelector("#capital-chart"), options);
+        chart.render();
+    }
+});
+</script>
+@endpush
