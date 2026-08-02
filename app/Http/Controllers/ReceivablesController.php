@@ -104,7 +104,21 @@ class ReceivablesController extends Controller
 
         $wallets = Account::selectable();
 
-        return view('receivables.index', compact('rows', 'overdueInstallments', 'upcomingInstallments', 'totals', 'wallets', 'manualReceivables', 'manualTotals'));
+        $recentActivities = Transaction::where(function($q) {
+            $q->where('type', 'like', '%تحصيل%')
+              ->orWhere('type', 'like', '%خصم%');
+        })->whereNotNull('party')
+          ->orderByDesc('created_at')
+          ->take(8)
+          ->get();
+          
+        $activeClientsCount = $rows->where('remaining', '>', 0)->count();
+        $paidClientsCount = $rows->where('remaining', '<=', 0.009)->count();
+
+        return view('receivables.index', compact(
+            'rows', 'overdueInstallments', 'upcomingInstallments', 'totals', 'wallets', 
+            'manualReceivables', 'manualTotals', 'recentActivities', 'activeClientsCount', 'paidClientsCount'
+        ));
     }
 
     public function payManual(Request $request, \App\Models\ManualDebt $receivable)

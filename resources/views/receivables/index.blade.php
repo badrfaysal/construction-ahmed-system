@@ -11,88 +11,98 @@
 .rv { --ink:#1e293b; --mut:#64748b; --soft:#94a3b8; --ln:#e2e8f0; --bg2:#f8fafc;
       --ok:#047857; --okbg:#ecfdf5; --bad:#b91c1c; }
 
-/* ── شريط الإجماليات — أرقام مقسومة بفواصل بدل الكروت الملونة ── */
-.vstat:hover .ic {
-    transform: scale(1.15) rotate(8deg);
-    background: rgba(255, 255, 255, 0.3);
+/* ── التصميم الجديد الفاخر (Premium Redesign) ── */
+.n-card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+    padding: 24px;
 }
-.vstat .vstat-bg {
-    position: absolute;
-    left: -10px;
-    bottom: -15px;
-    width: 90px;
-    height: 90px;
-    color: rgba(255, 255, 255, 0.15);
-    z-index: 0;
-    transform: rotate(-15deg);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
+.n-tab {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
-.vstat:hover .vstat-bg {
-    transform: scale(1.2) rotate(5deg);
-    color: rgba(255, 255, 255, 0.25);
+.n-tab.active-all {
+    background: #3b82f6;
+    color: #fff;
 }
-.vstat-navy { background-image: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
-.vstat-blue { background-image: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); }
-.vstat-teal { background-image: linear-gradient(135deg, #047857 0%, #10b981 100%); }
-.vstat-green{ background-image: linear-gradient(135deg, #4338ca 0%, #8b5cf6 100%); }
-.vstat-red  { background-image: linear-gradient(135deg, #be123c 0%, #f43f5e 100%); }
-.vstat-amber{ background-image: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); }
-.vstat-gold { background-image: linear-gradient(135deg, #334155 0%, #64748b 100%); }
-.rv-totals { display:flex; flex-wrap:wrap; background:#fff; border:1px solid var(--ln);
-  border-radius:12px; margin-bottom:16px; overflow:hidden; }
-.rv-tot { flex:1; min-width:130px; padding:14px 18px; border-inline-start:1px solid var(--ln); }
-.rv-tot:first-child { border-inline-start:none; }
-.rv-tot .l { font-size:.7rem; font-weight:600; color:var(--mut); margin-bottom:3px; }
-.rv-tot .v { font-size:1.15rem; font-weight:700; color:var(--ink); }
-.rv-tot .v small { font-size:.68rem; color:var(--soft); font-weight:400; }
-.rv-tot.ok .v { color:var(--ok); }
-.rv-tot.bad .v { color:var(--bad); }
+.n-tab.active-active {
+    background: #ea580c;
+    color: #fff;
+}
+.n-tab.active-paid {
+    background: #10b981;
+    color: #fff;
+}
+.n-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.n-table th {
+    background: #f8fafc;
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #94a3b8;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: center;
+    white-space: nowrap;
+}
+.n-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 14px;
+}
+.n-table tbody tr {
+    cursor: pointer;
+    transition: 0.15s;
+}
+.n-table tbody tr:hover td {
+    background: #f8fafc;
+}
 
-/* ── صندوق الجدول ── */
-.rv-box { background:#fff; border:1px solid var(--ln); border-radius:12px; overflow:hidden; margin-bottom:18px; }
-.rv-boxhead { padding:12px 16px; display:flex; align-items:center; justify-content:space-between;
-  gap:10px; flex-wrap:wrap; border-bottom:1px solid var(--ln); }
-.rv-boxhead h2 { font-size:.95rem; font-weight:700; margin:0; color:var(--ink); }
-.rv-boxhead .c { font-size:.75rem; color:var(--soft); }
+.n-main-tab {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    color: #64748b;
+}
+.n-main-tab.active {
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
 
-.rv-filters { padding:10px 16px; border-bottom:1px solid var(--ln); display:flex;
-  align-items:center; gap:8px; flex-wrap:wrap; background:var(--bg2); }
-.rv-search { flex:1; min-width:180px; position:relative; }
-.rv-search input { width:100%; padding:7px 32px 7px 10px; border:1px solid var(--ln);
-  border-radius:8px; font-size:.83rem; background:#fff; }
-.rv-search input:focus { outline:none; border-color:var(--ink); }
-.rv-search .si { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--soft); font-size:.78rem; }
-.rv-pill { padding:5px 13px; border-radius:8px; font-size:.77rem; font-weight:600; cursor:pointer;
-  border:1px solid var(--ln); background:#fff; color:var(--mut); transition:.12s; }
-.rv-pill:hover { border-color:var(--ink); color:var(--ink); }
-.rv-pill.active { background:var(--ink); color:#fff; border-color:var(--ink); }
-
-table.rv-tbl { width:100%; border-collapse:collapse; }
-.rv-tbl th { padding:9px 14px; font-size:.7rem; font-weight:700; color:var(--soft);
-  border-bottom:1px solid var(--ln); text-align:center; background:#fff; white-space:nowrap; }
-.rv-tbl td { padding:11px 14px; font-size:.85rem; border-bottom:1px solid #f1f5f9;
-  text-align:center; vertical-align:middle; }
-.rv-tbl tbody tr { cursor:pointer; }
-.rv-tbl tbody tr:hover td { background:var(--bg2); }
-.rv-tbl tfoot td { font-weight:700; background:var(--bg2); border-top:1px solid var(--ln); font-size:.83rem; }
-
-.rv-dot { width:7px; height:7px; border-radius:99px; display:inline-block; margin-left:5px; }
-.rv-st { font-size:.74rem; font-weight:600; white-space:nowrap; }
-.rv-st.pend { color:#a16207; } .rv-st.pend .rv-dot { background:#eab308; }
-.rv-st.done { color:var(--ok); } .rv-st.done .rv-dot { background:#10b981; }
-.rv-cont-tag { font-size:.66rem; font-weight:600; color:var(--mut); border:1px solid var(--ln);
-  border-radius:6px; padding:1px 7px; display:inline-block; margin-top:3px; background:var(--bg2); }
-
-.rv-mini-prog { width:74px; height:4px; background:#eef2f7; border-radius:99px; overflow:hidden; margin:4px auto 0; }
-.rv-mini-prog i { display:block; height:100%; background:var(--ink); border-radius:99px; }
-
-/* ── قوائم الأقساط المتأخرة/القادمة — صفوف بسيطة ── */
-.rv-line { display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid #f1f5f9; font-size:.83rem; }
-.rv-line:last-child { border-bottom:none; }
-.rv-line .grow { flex:1; min-width:0; }
-.rv-line .t { font-weight:600; color:var(--ink); }
-.rv-line .s { font-size:.73rem; color:var(--mut); }
+@media print {
+    body { background: #fff !important; }
+    .page-head, .grid, .tabs-container, .no-print, .analysis-col { display: none !important; }
+    #project-tab > div { grid-template-columns: 1fr !important; gap: 0 !important; }
+    .n-card { border: none !important; box-shadow: none !important; padding: 0 !important; }
+    .n-table th, .n-table td { border: 1px solid #000 !important; font-size: 11px !important; padding: 6px !important; }
+    .n-table th { background: #f1f1f1 !important; color: #000 !important; }
+    .n-table td span { border: none !important; background: transparent !important; color: #000 !important; padding: 0 !important; }
+}
 
 /* ═══ المودال — ضيّق وطولي، كل حاجة قريبة ═══ */
 .rv-modal { position:fixed; inset:0; z-index:1050; display:none; align-items:flex-start;
@@ -203,227 +213,296 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
 @endpush
 
 @section('content')
-<div class="rv">
+<div class="rv" style="background-color: #f3f6f9; min-height: 100vh; padding-bottom: 40px; font-family: 'Cairo', sans-serif;">
 
-<div class="page-head">
-  <div>
-    <h3>المستحقات</h3>
-    <p>ما يستحقه العملاء تجاه مشاريعهم — المفوتر والمحصّل والمتبقي</p>
-  </div>
-  <div style="display:flex;gap:8px" class="no-print">
-    <button onclick="window.print()" class="btn ghost"><i class="fa fa-print" style="font-size:.85rem"></i> طباعة القائمة</button>
-    <a href="{{ route('installments.index') }}" class="btn ghost">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><use href="#i-receipt"/></svg>
-      الأقساط
-    </a>
-  </div>
+{{-- Header --}}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+        <div style="display: flex; gap: 8px; background: #e2e8f0; padding: 6px; border-radius: 12px;">
+            <button id="tab-btn-project" onclick="switchTab('project-tab')" class="n-main-tab active"><i class="fa fa-building"></i> مستحقات المشاريع</button>
+            <button id="tab-btn-manual-recv" onclick="switchTab('manual-recv-tab')" class="n-main-tab"><i class="fa fa-hand-holding-dollar"></i> سلف وديون حرة</button>
+        </div>
+
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px; display: flex; gap: 4px;">
+            <button class="n-tab" onclick="filterStatus('all', this)"><i class="fa fa-list"></i> الكل</button>
+            <button class="n-tab active-active" onclick="filterStatus('active', this)"><i class="fa fa-fire"></i> الديون النشطة</button>
+            <button class="n-tab" onclick="filterStatus('paid', this)"><i class="fa fa-check-circle"></i> المسدد</button>
+        </div>
+    </div>
+
+    {{-- Right side title --}}
+    <div style="text-align: right;">
+        <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a; display: flex; align-items: center; justify-content: flex-end; gap: 10px;">
+            مستحقات العملاء
+            <i class="fa fa-chart-pie" style="color: #3b82f6;"></i>
+        </h2>
+        <p style="margin: 4px 0 0 0; font-size: 14px; color: #64748b; font-weight: 500;">إدارة الفواتير والمدفوعات الخاصة بالعملاء</p>
+    </div>
 </div>
 
-{{-- شريط الإجماليات — كروت مربعة متدرّجة (نفس روح لوحة التحكم) --}}
-<div class="grid" style="grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom:20px">
-  <div class="vstat vstat-blue">
-    <div class="top"><span class="label">إجمالي المفوتر</span>
-      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg></span>
+{{-- 4 Stat Cards --}}
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+    {{-- Card 1: Total Remaining --}}
+    <div class="n-card" style="border-right: 4px solid #3b82f6;">
+        <div style="font-size: 14px; font-weight: 700; color: #64748b; margin-bottom: 8px; text-align: right;">إجمالي المستحقات (المتبقي لنا)</div>
+        <div style="font-size: 24px; font-weight: 800; color: #0f172a; text-align: right;">{{ \App\Support\Money::format($totals['total_remaining'] + $manualTotals['remaining']) }} <span style="font-size: 16px;">ج.م</span></div>
+        <div style="font-size: 12px; color: #94a3b8; text-align: right; margin-top: 4px;">المبالغ المتبقية بالسوق للفترة المحددة</div>
     </div>
-    <div class="val tnum">{{ \App\Support\Money::format($totals['total_billed'] + $manualTotals['total']) }} <small>ج.م</small></div>
-    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg>
-  </div>
-  <div class="vstat vstat-teal">
-    <div class="top"><span class="label">المحصّل من العملاء</span>
-      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span>
+    {{-- Card 2: Total Collected --}}
+    <div class="n-card" style="border-right: 4px solid #10b981;">
+        <div style="font-size: 14px; font-weight: 700; color: #64748b; margin-bottom: 8px; text-align: right;">المبالغ المحصلة</div>
+        <div style="font-size: 24px; font-weight: 800; color: #0f172a; text-align: right;">{{ \App\Support\Money::format($totals['total_collected'] + $manualTotals['collected']) }} <span style="font-size: 16px;">ج.م</span></div>
+        <div style="font-size: 12px; color: #94a3b8; text-align: right; margin-top: 4px;">من إجمالي الحسابات</div>
     </div>
-    <div class="val tnum">{{ \App\Support\Money::format($totals['total_collected'] + $manualTotals['collected']) }} <small>ج.م</small></div>
-    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg>
-  </div>
-  <div class="vstat vstat-red">
-    <div class="top"><span class="label">المتبقي على العملاء</span>
-      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg></span>
+    {{-- Card 3: Active Accounts --}}
+    <div class="n-card" style="border-right: 4px solid #ea580c;">
+        <div style="font-size: 14px; font-weight: 700; color: #64748b; margin-bottom: 8px; text-align: right;">حسابات نشطة</div>
+        <div style="font-size: 24px; font-weight: 800; color: #0f172a; text-align: right;">{{ $activeClientsCount }} <span style="font-size: 16px;">عميل</span></div>
+        <div style="font-size: 12px; color: #94a3b8; text-align: right; margin-top: 4px;">لديهم مستحقات معلقة</div>
     </div>
-    <div class="val tnum">{{ \App\Support\Money::format($totals['total_remaining'] + $manualTotals['remaining']) }} <small>ج.م</small></div>
-    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>
-  </div>
-  <div class="vstat vstat-amber">
-    <div class="top"><span class="label">الربح الدفتري</span>
-      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></span>
+    {{-- Card 4: Paid Accounts --}}
+    <div class="n-card" style="border-right: 4px solid #ef4444;">
+        <div style="font-size: 14px; font-weight: 700; color: #64748b; margin-bottom: 8px; text-align: right;">حسابات مكتملة السداد</div>
+        <div style="font-size: 24px; font-weight: 800; color: #0f172a; text-align: right;">{{ $paidClientsCount }} <span style="font-size: 16px;">عميل</span></div>
+        <div style="font-size: 12px; color: #94a3b8; text-align: right; margin-top: 4px;">أنهوا كافة ديونهم</div>
     </div>
-    <div class="val tnum">{{ \App\Support\Money::format($totals['book_profit']) }} <small>ج.م</small></div>
-    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg>
-  </div>
-</div>
-
-<div class="tabs-container" style="margin-bottom: 20px;">
-  <div class="tabs" style="border-bottom: 1px solid var(--line); display:flex; gap:16px;">
-    <div class="tab-btn active" id="tab-btn-project" onclick="switchTab('project-tab')" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid var(--brand); font-weight:bold; color:var(--brand)">مستحقات المشاريع</div>
-    <div class="tab-btn" id="tab-btn-manual-recv" onclick="switchTab('manual-recv-tab')" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid transparent; font-weight:bold; color:var(--mut)">سلف ومستحقات أخرى</div>
-    <div class="tab-btn" id="tab-btn-paid" onclick="showPaidGlobal(this)" style="padding: 10px 16px; cursor:pointer; border-bottom: 2px solid transparent; font-weight:bold; color:var(--mut)">المسدد (السجل)</div>
-  </div>
 </div>
 
 <div id="project-tab" class="tab-content" style="display:block;">
-{{-- الجدول الرئيسي --}}
-<div class="rv-box">
-  <div class="rv-boxhead">
-    <h2>مستحقات المشاريع</h2>
-    <span class="c">{{ $rows->count() }} مشروع — اضغط للتفاصيل والتحصيل</span>
-  </div>
+{{-- Main Grid --}}
+<div style="display: grid; grid-template-columns: 2.7fr 1fr; gap: 20px;">
+    
+    {{-- Right Column (Client List) -> Now first in HTML because 2.7fr is first --}}
+    <div class="n-card" style="padding: 0; border-top: 4px solid #0f172a;">
+        <div style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #f8fafc; border-radius: 12px 12px 0 0;">
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" style="background: #1e293b; color: white; border-radius: 8px; font-weight: 700; padding: 6px 14px; border: none; cursor: pointer; font-size: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" onclick="window.print()">
+                    <i class="fa fa-print" style="margin-left: 4px;"></i> طباعة القائمة
+                </button>
+                <form id="sort-form" method="GET" action="{{ route('receivables.index') }}">
+                    <select name="sort" onchange="document.getElementById('sort-form').submit()" style="padding: 6px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 600; color: #1e293b; background: #fff; cursor: pointer; font-size: 12px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
+                        <option value="newest" {{ request('sort', 'newest') == 'newest' ? 'selected' : '' }}>الأحدث أولاً</option>
+                        <option value="amount_desc" {{ request('sort') == 'amount_desc' ? 'selected' : '' }}>الأعلى متبقي</option>
+                        <option value="amount_asc" {{ request('sort') == 'amount_asc' ? 'selected' : '' }}>الأقل متبقي</option>
+                    </select>
+                </form>
+                <div style="position: relative; width: 240px;">
+                    <input type="text" id="main-search" oninput="filterMain()" placeholder="ابحث باسم العميل أو المشروع..." style="width: 100%; padding: 6px 12px 6px 32px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; text-align: right; background: #fff; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
+                    <i class="fa fa-search" style="position: absolute; left: 12px; top: 8px; color: #94a3b8;"></i>
+                </div>
+            </div>
+            <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                قائمة العملاء والمشاريع <i class="fa fa-users" style="color: #3b82f6;"></i>
+            </h3>
+        </div>
 
-  <form class="rv-filters no-print" method="GET" action="{{ route('receivables.index') }}">
-    <div class="rv-search">
-      <input type="text" id="main-search" placeholder="ابحث بالمشروع أو العميل..." oninput="filterMain()">
-      <i class="fa fa-search si"></i>
-    </div>
-    <!-- Removed pills as per user request to strictly separate unpaid/paid into tabs -->
+        <div style="overflow-x: auto;">
+            <table class="n-table" id="main-table">
+                <thead>
+                    <tr>
+                        <th style="text-align: right; padding-right: 24px;"><i class="fa fa-user-tag"></i> العميل / المشروع</th>
+                        <th><i class="fa fa-percent"></i> التحصيل</th>
+                        <th><i class="fa fa-file-invoice"></i> إجمالي الحساب</th>
+                        <th style="color: #10b981;"><i class="fa fa-check-double"></i> المدفوع</th>
+                        <th style="color: #ef4444;"><i class="fa fa-triangle-exclamation"></i> المتبقي</th>
+                        <th><i class="fa fa-circle-info"></i> الحالة</th>
+                    </tr>
+                </thead>
+                <tbody id="main-tbody">
+                    @foreach($rows as $row)
+                        @php
+                            $isPaid = $row->remaining <= 0.009;
+                            $pct    = $row->billed > 0 ? round($row->collected / $row->billed * 100) : 0;
+                            $firstLetter = mb_substr($row->project->client->name, 0, 1);
+                            $colors = ['#3b82f6', '#ea580c', '#8b5cf6', '#10b981', '#f43f5e', '#0ea5e9'];
+                            $avatarColor = $colors[$loop->index % 6];
+                        @endphp
+                        <tr class="rv-row-item" onclick="openModal({{ $row->project->id }})"
+                            data-name="{{ mb_strtolower($row->project->name . ' ' . $row->project->client->name) }}"
+                            data-status="{{ $isPaid ? 'paid' : 'active' }}">
+                            <td style="text-align: right; padding-right: 24px;">
+                                <div style="display: flex; align-items: center; justify-content: flex-start; gap: 12px;">
+                                    <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, {{ $avatarColor }} 0%, #0f172a 150%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                        {{ $firstLetter }}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 800; color: #0f172a; font-size: 13px;">{{ $row->project->client->name }}</div>
+                                        <div style="color: #64748b; font-size: 11px; margin-top: 3px; font-weight: 600;"><i class="fa fa-briefcase" style="color: #cbd5e1; margin-left: 2px;"></i> {{ $row->project->name }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span style="font-size: 12px; font-weight: 800; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">{{ $pct }}%</span>
+                            </td>
+                            <td style="color: #475569; font-weight: 700; font-size: 14px;">{{ \App\Support\Money::format($row->billed) }} ج</td>
+                            <td style="color: #10b981; font-weight: 800; font-size: 14px;">{{ \App\Support\Money::format($row->collected) }} ج</td>
+                            <td style="color: #ef4444; font-weight: 800; font-size: 15px;">{{ \App\Support\Money::format($row->remaining) }} ج</td>
+                            <td>
+                                @if($isPaid)
+                                    <span style="background: #ecfdf5; color: #047857; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; border: 1px solid #a7f3d0;"><i class="fa fa-check"></i> مسدد</span>
+                                @else
+                                    <span style="background: #fffbeb; color: #b45309; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; border: 1px solid #fde68a;"><i class="fa fa-clock"></i> قيد الانتظار</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="no-results" style="display:none; text-align: center; padding: 40px; color: #94a3b8;">
+            <i class="fa fa-search" style="font-size: 32px; margin-bottom: 12px; display: block; color: #cbd5e1;"></i>
+            <strong style="display: block; font-size: 15px; color: #64748b;">لا توجد نتائج مطابقة لبحثك</strong>
+        </div>
 
-    <div style="display:flex; align-items:center; gap:6px; margin-right:auto; flex-wrap:nowrap;">
-      <select name="sort" onchange="this.form.submit()" style="padding:4px 8px; border:1px solid var(--ln); border-radius:6px; font-size:0.75rem; background:#fff;">
-        <option value="newest" {{ request('sort', 'newest') == 'newest' ? 'selected' : '' }}>الأحدث إضافة</option>
-        <option value="amount_desc" {{ request('sort') == 'amount_desc' ? 'selected' : '' }}>الأعلى متبقي</option>
-        <option value="amount_asc" {{ request('sort') == 'amount_asc' ? 'selected' : '' }}>الأقل متبقي</option>
-      </select>
-      <label style="font-size:0.75rem; color:var(--mut); font-weight:600">من:</label>
-      <input type="date" name="date_from" value="{{ request('date_from') }}" onchange="this.form.submit()" style="padding:4px 8px; border:1px solid var(--ln); border-radius:6px; font-size:0.75rem;">
-      <label style="font-size:0.75rem; color:var(--mut); font-weight:600">إلى:</label>
-      <input type="date" name="date_to" value="{{ request('date_to') }}" onchange="this.form.submit()" style="padding:4px 8px; border:1px solid var(--ln); border-radius:6px; font-size:0.75rem;">
-      @if(request()->hasAny(['date_from', 'date_to', 'sort']))
-        <a href="{{ route('receivables.index') }}" style="font-size:0.75rem; color:var(--bad); text-decoration:none; margin-right:8px; font-weight:bold;">مسح</a>
-      @endif
     </div>
-  </form>
 
-  @if($rows->count())
-  <div style="overflow-x:auto">
-    <table class="rv-tbl" id="main-table">
-      <thead>
-        <tr>
-          <th style="text-align:right;padding-right:16px">المشروع / العميل</th>
-          <th>المفوتر</th>
-          <th>الخصم</th>
-          <th>المحصّل</th>
-          <th>المتبقي</th>
-          <th>التحصيل</th>
-          <th>ربح دفتري</th>
-          <th>الحالة</th>
-        </tr>
-      </thead>
-      <tbody id="main-tbody">
-        @foreach($rows as $row)
-          @php
-            $pct    = $row->billed > 0 ? round($row->collected / $row->billed * 100) : 0;
-            $isPaid = $row->remaining <= 0.009;
-          @endphp
-          <tr onclick="openModal({{ $row->project->id }})"
-              data-name="{{ mb_strtolower($row->project->name . ' ' . $row->project->client->name) }}"
-              data-status="{{ $isPaid ? 'paid' : 'active' }}"
-              data-billed="{{ $row->billed }}"
-              data-discount="{{ $row->discount }}"
-              data-collected="{{ $row->collected }}"
-              data-remaining="{{ $row->remaining }}"
-              data-profit="{{ $row->book_profit }}">
-            <td style="text-align:right;padding-right:16px">
-              <strong style="display:block;font-size:.87rem">{{ $row->project->name }}</strong>
-              <small style="color:var(--mut)">{{ $row->project->client->name }}</small>
-              @if($row->project->hasInstallmentContract())
-                <span class="rv-cont-tag"><i class="fa fa-file-contract"></i> عقد تقسيط</span>
-              @endif
-            </td>
-            <td style="font-weight:600">{{ \App\Support\Money::format($row->billed) }}</td>
-            <td style="color:var(--amber);font-weight:600">{{ \App\Support\Money::format($row->discount) }}</td>
-            <td style="color:var(--ok);font-weight:600">{{ \App\Support\Money::format($row->collected) }}</td>
-            <td style="color:{{ $row->remaining > 0 ? 'var(--bad)' : 'var(--ok)' }};font-weight:700">{{ \App\Support\Money::format($row->remaining) }}</td>
-            <td>
-              <span style="font-size:.75rem;font-weight:700">{{ $pct }}%</span>
-              <div class="rv-mini-prog"><i style="width:{{ min($pct,100) }}%"></i></div>
-            </td>
-            <td style="color:var(--mut)">{{ \App\Support\Money::format($row->book_profit) }}</td>
-            <td>
-              @if($isPaid)
-                <span class="rv-st done"><span class="rv-dot"></span>مسدد</span>
-              @else
-                <span class="rv-st pend"><span class="rv-dot"></span>قيد التحصيل</span>
-              @endif
-            </td>
-          </tr>
-        @endforeach
-      </tbody>
-      <tfoot>
-        <tr>
-          <td style="text-align:right;padding-right:16px" id="ft-title">الإجمالي ({{ $rows->count() }} مشروع)</td>
-          <td id="ft-billed">{{ \App\Support\Money::format($totals['total_billed']) }}</td>
-          <td style="color:var(--amber)" id="ft-discount">0.00</td>
-          <td style="color:var(--ok)" id="ft-collected">{{ \App\Support\Money::format($totals['total_collected']) }}</td>
-          <td style="color:{{ $totals['total_remaining'] > 0 ? 'var(--bad)' : 'var(--ok)' }}" id="ft-remaining">{{ \App\Support\Money::format($totals['total_remaining']) }}</td>
-          <td id="ft-pct">{{ $totals['total_billed'] > 0 ? round($totals['total_collected'] / $totals['total_billed'] * 100) : 0 }}%</td>
-          <td style="color:var(--mut)" id="ft-profit">{{ \App\Support\Money::format($totals['book_profit']) }}</td>
-          <td></td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-  <div id="no-results" style="display:none" class="rv-empty">
-    <i class="fa fa-search" style="display:block;font-size:1.4rem;margin-bottom:6px"></i>
-    لا توجد نتائج مطابقة
-  </div>
-  @else
-    <div class="rv-empty" style="padding:50px">
-      <i class="fa fa-inbox" style="display:block;font-size:2rem;margin-bottom:10px"></i>
-      <strong style="display:block;color:var(--mut);margin-bottom:4px">لا توجد مشاريع مُفوترة</strong>
-      أضف بنوداً ومواد للمشاريع لتظهر هنا المستحقات
+    {{-- Left Column (Analysis & Activities) -> Now second in HTML because 1fr is second --}}
+    <div class="analysis-col">
+        {{-- General Collection Analysis --}}
+        <div class="n-card" style="margin-bottom: 20px; border-top: 4px solid #10b981;">
+            <h3 style="font-size: 16px; font-weight: 800; color: #0f172a; text-align: right; margin: 0 0 20px 0; display: flex; align-items: center; justify-content: space-between;">
+                تحليل التحصيل العام
+                <i class="fa fa-chart-line" style="color: #10b981; background: #ecfdf5; padding: 6px; border-radius: 8px;"></i>
+            </h3>
+            
+            @php
+                $totalExpected = $totals['total_collected'] + $totals['total_remaining'];
+                $collectedPct = $totalExpected > 0 ? round(($totals['total_collected'] / $totalExpected) * 100, 1) : 0;
+                $remainingPct = $totalExpected > 0 ? round(($totals['total_remaining'] / $totalExpected) * 100, 1) : 0;
+            @endphp
+            
+            <div style="margin-bottom: 24px;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px;">
+                    <span style="background: #ecfdf5; color: #047857; padding: 2px 6px; border-radius: 4px;">{{ $collectedPct }}%</span>
+                    <span>المدفوعات المكتملة <i class="fa fa-check-circle" style="color: #10b981; margin-right: 4px;"></i></span>
+                </div>
+                <div style="height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; display: flex; justify-content: flex-end;">
+                    <div style="width: {{ $collectedPct }}%; background: linear-gradient(90deg, #34d399 0%, #059669 100%); height: 100%; border-radius: 4px;"></div>
+                </div>
+            </div>
+            
+            <div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px;">
+                    <span style="background: #fffbeb; color: #b45309; padding: 2px 6px; border-radius: 4px;">{{ $remainingPct }}%</span>
+                    <span>ديون قيد الانتظار <i class="fa fa-hourglass-half" style="color: #ea580c; margin-right: 4px;"></i></span>
+                </div>
+                <div style="height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; display: flex; justify-content: flex-end;">
+                    <div style="width: {{ $remainingPct }}%; background: linear-gradient(90deg, #fb923c 0%, #ea580c 100%); height: 100%; border-radius: 4px;"></div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Recent Activities --}}
+        <div class="n-card" style="border-top: 4px solid #8b5cf6;">
+            <h3 style="font-size: 16px; font-weight: 800; color: #0f172a; text-align: right; margin: 0 0 20px 0; display: flex; align-items: center; justify-content: space-between;">
+                آخر النشاطات
+                <i class="fa fa-bolt" style="color: #8b5cf6; background: #f3e8ff; padding: 6px 8px; border-radius: 8px;"></i>
+            </h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                @forelse($recentActivities as $act)
+                <div style="display: flex; gap: 12px; align-items: flex-start; text-align: right; direction: rtl; padding-bottom: 12px; border-bottom: 1px dashed #e2e8f0;">
+                    @if(str_contains($act->type, 'خصم'))
+                        <div style="width: 36px; height: 36px; border-radius: 10px; background: #fefce8; color: #ca8a04; border: 1px solid #fef08a; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; font-weight: bold;">
+                            <i class="fa fa-percent"></i>
+                        </div>
+                    @else
+                        <div style="width: 36px; height: 36px; border-radius: 10px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; font-weight: bold;">
+                            <i class="fa fa-arrow-down"></i>
+                        </div>
+                    @endif
+                    
+                    <div style="flex: 1;">
+                        <div style="font-size: 13px; font-weight: 800; color: #1e293b; margin-bottom: 4px;">
+                            {{ str_contains($act->type, 'خصم') ? 'خصم ممنوح' : 'عملية تحصيل' }}
+                        </div>
+                        <div style="font-size: 11px; color: #64748b; line-height: 1.6; margin-bottom: 4px;">
+                            @if(str_contains($act->type, 'خصم'))
+                                <strong style="color: #0f172a;">{{ $act->party }}</strong><br>بقيمة: <span style="color: #ea580c; font-weight: bold;">{{ \App\Support\Money::format($act->discount ?? 0) }} ج.م</span>
+                            @else
+                                <strong style="color: #0f172a;">{{ $act->party }}</strong><br>تم تحصيل: <span style="color: #10b981; font-weight: bold;">{{ \App\Support\Money::format($act->amount) }} ج.م</span>
+                            @endif
+                        </div>
+                        <div style="font-size: 10px; color: #94a3b8; font-weight: 600; text-align: left;">
+                            <i class="fa fa-clock" style="margin-left: 2px;"></i> {{ $act->created_at->diffForHumans() }}
+                        </div>
+                    </div>
+                </div>
+                @empty
+                <div style="text-align: center; color: #94a3b8; font-size: 13px; padding: 20px 0;">
+                    <i class="fa fa-inbox" style="font-size: 24px; margin-bottom: 8px; display: block; color: #cbd5e1;"></i>
+                    لا توجد نشاطات مؤخراً
+                </div>
+                @endforelse
+            </div>
+        </div>
     </div>
-  @endif
-</div> <!-- end rv-box -->
+</div>
 </div> <!-- end project-tab -->
+
 
 <div id="manual-recv-tab" class="tab-content" style="display:none;">
 {{-- سلف ومستحقات أخرى (حركات يدوية) --}}
 @if(isset($manualReceivables) && $manualReceivables->count())
 @php $groupedRecv = $manualReceivables->groupBy('party'); @endphp
-<div class="rv-box">
-  <div class="rv-boxhead" style="background:var(--bg2)">
-    <h2><i class="fa fa-hand-holding-dollar" style="color:var(--ok)"></i> سلف ومستحقات أخرى (حركات يدوية)</h2>
-    <span class="c" style="font-weight:700">إجمالي المتبقي: {{ \App\Support\Money::format($manualReceivables->sum(fn($r) => $r->remaining())) }} ج.م</span>
+<div class="n-card" style="padding: 0; border-top: 4px solid #8b5cf6;">
+  <div style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #f8fafc; border-radius: 12px 12px 0 0;">
+    <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+        سلف ومستحقات أخرى (حركات يدوية) <i class="fa fa-hand-holding-dollar" style="color: #8b5cf6;"></i>
+    </h3>
+    <span style="background: #fffbeb; color: #b45309; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 800; border: 1px solid #fde68a;">
+        إجمالي المتبقي: {{ \App\Support\Money::format($manualReceivables->sum(fn($r) => $r->remaining())) }} ج.م
+    </span>
   </div>
-  <table class="rv-tbl" id="manual-table">
-    <thead>
-      <tr>
-        <th>الجهة / الشخص</th>
-        <th>عدد التعاملات</th>
-        <th>إجمالي المبلغ</th>
-        <th>المسدد</th>
-        <th>المتبقي</th>
-        <th>الحالة</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody id="manual-tbody">
-      @foreach($groupedRecv as $partyName => $partyItems)
-        @php
-          $partyTotal     = $partyItems->sum('total_amount');
-          $partyPaid      = $partyItems->sum('paid_amount');
-          $partyRemaining = $partyItems->sum(fn($r) => $r->remaining());
-          $partyCount     = $partyItems->count();
-          $allPaid        = $partyItems->every(fn($r) => $r->status === 'paid');
-          $partyKey       = 'mrecv-' . md5($partyName);
-        @endphp
-        <tr data-status="{{ $allPaid ? 'paid' : 'pending' }}" style="cursor:pointer" onclick="openPartyModal('{{ $partyKey }}')">
-          <td><strong>{{ $partyName }}</strong></td>
-          <td><span style="background:var(--bg2);padding:2px 10px;border-radius:6px;font-size:.75rem;font-weight:700">{{ $partyCount }}</span></td>
-          <td style="font-weight:600">{{ \App\Support\Money::format($partyTotal) }}</td>
-          <td style="color:var(--ok);font-weight:600">{{ \App\Support\Money::format($partyPaid) }}</td>
-          <td style="color:var(--bad);font-weight:700">{{ \App\Support\Money::format($partyRemaining) }}</td>
-          <td>
-            @if($allPaid)
-              <span class="tag green sm">مسدد بالكامل</span>
-            @else
-              <span class="tag yellow sm">معلق</span>
-            @endif
-          </td>
-          <td>
-            <button class="rv-pill" style="font-size:0.75rem">التفاصيل</button>
-          </td>
-        </tr>
-      @endforeach
-    </tbody>
-  </table>
+  <div style="overflow-x: auto;">
+      <table class="n-table" id="manual-table">
+        <thead>
+          <tr>
+            <th style="text-align: right; padding-right: 24px;"><i class="fa fa-user"></i> الجهة / الشخص</th>
+            <th><i class="fa fa-hashtag"></i> التعاملات</th>
+            <th><i class="fa fa-file-invoice"></i> إجمالي المبلغ</th>
+            <th style="color: #10b981;"><i class="fa fa-check-double"></i> المسدد</th>
+            <th style="color: #ef4444;"><i class="fa fa-triangle-exclamation"></i> المتبقي</th>
+            <th><i class="fa fa-circle-info"></i> الحالة</th>
+          </tr>
+        </thead>
+        <tbody id="manual-tbody">
+          @foreach($groupedRecv as $partyName => $partyItems)
+            @php
+              $partyTotal     = $partyItems->sum('total_amount');
+              $partyPaid      = $partyItems->sum('paid_amount');
+              $partyRemaining = $partyItems->sum(fn($r) => $r->remaining());
+              $partyCount     = $partyItems->count();
+              $allPaid        = $partyItems->every(fn($r) => $r->status === 'paid');
+              $partyKey       = 'mrecv-' . md5($partyName);
+              $firstLetter    = mb_substr($partyName, 0, 1);
+            @endphp
+            <tr data-status="{{ $allPaid ? 'paid' : 'pending' }}" style="cursor:pointer" onclick="openPartyModal('{{ $partyKey }}')">
+              <td style="text-align: right; padding-right: 24px;">
+                  <div style="display: flex; align-items: center; justify-content: flex-start; gap: 12px;">
+                      <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6 0%, #0f172a 150%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                          {{ $firstLetter }}
+                      </div>
+                      <div style="font-weight: 800; color: #0f172a; font-size: 14px;">{{ $partyName }}</div>
+                  </div>
+              </td>
+              <td><span style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 800;">{{ $partyCount }}</span></td>
+              <td style="color: #475569; font-weight: 800; font-size: 14px;">{{ \App\Support\Money::format($partyTotal) }} ج</td>
+              <td style="color: #10b981; font-weight: 800; font-size: 14px;">{{ \App\Support\Money::format($partyPaid) }} ج</td>
+              <td style="color: #ef4444; font-weight: 800; font-size: 15px;">{{ \App\Support\Money::format($partyRemaining) }} ج</td>
+              <td>
+                @if($allPaid)
+                  <span style="background: #ecfdf5; color: #047857; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; border: 1px solid #a7f3d0;"><i class="fa fa-check"></i> مسدد</span>
+                @else
+                  <span style="background: #fffbeb; color: #b45309; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; border: 1px solid #fde68a;"><i class="fa fa-clock"></i> معلق</span>
+                @endif
+              </td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+  </div>
 </div>
 
 {{-- توليد المودلز الخاصة بتفاصيل كل جهة/شخص --}}
@@ -435,70 +514,133 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
     $partyKey       = 'mrecv-' . md5($partyName);
   @endphp
   <div class="rv-modal" id="modal-{{ $partyKey }}" onclick="if(event.target===this) document.getElementById('modal-{{ $partyKey }}').style.display='none'">
-    <div class="rv-card" style="max-width:1200px; width:95%; padding:0; border-radius:12px; overflow:hidden;">
-      <div class="rv-mhead" style="padding:25px 30px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:25px; background:var(--surface);">
-        <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
-          <h3 style="margin:0; font-size:1.4rem; color:var(--text); display:flex; align-items:center; gap:10px; white-space:nowrap;">
-            <i class="fa fa-user-circle" style="color:var(--main); font-size:1.6rem;"></i> {{ $partyName }}
+    <div style="max-width: 900px; width: 95%; background: #ffffff; border-radius: 16px; overflow: hidden; margin: 40px auto; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+      
+      {{-- Modal Header --}}
+      <div style="padding: 24px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px; border-bottom: 1px solid #f1f5f9;">
+        {{-- Right Side (Title & Tags) --}}
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <h3 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
+            <i class="fa fa-user-circle" style="color: #3b82f6;"></i> {{ $partyName }}
           </h3>
-          <div style="display:flex; gap:15px; margin-right:20px;">
-            <button type="button" style="background:var(--warn); color:#000; padding:8px 18px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; white-space:nowrap; font-size:0.95rem;" onclick="openPartyBulkPay('{{ addslashes($partyName) }}', {{ $partyRemaining }}, 'partial', '{{ $partyKey }}')">
-              <i class="fa fa-money-bill-wave" style="margin-left:5px;"></i> تحصيل جزئي
-            </button>
-            <button type="button" style="background:var(--ok); color:#fff; padding:8px 18px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; white-space:nowrap; font-size:0.95rem;" onclick="openPartyBulkPay('{{ addslashes($partyName) }}', {{ $partyRemaining }}, 'full', '{{ $partyKey }}')">
-              <i class="fa fa-check-double" style="margin-left:5px;"></i> تحصيل كلي للعميل
-            </button>
+          <div style="display: flex; gap: 8px;">
+            <span style="background: #ef4444; color: #ffffff; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+              المتبقي: {{ \App\Support\Money::format($partyRemaining) }} ج
+            </span>
+            <span style="background: #10b981; color: #ffffff; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+              المدفوع: {{ \App\Support\Money::format($partyPaid) }} ج
+            </span>
           </div>
         </div>
-        <div style="display:flex; align-items:center; gap:25px; flex-wrap:wrap;">
-          <div style="display:flex; gap:15px;">
-            <span style="background:rgba(16, 185, 129, 0.1); color:var(--ok); padding:8px 16px; border-radius:6px; font-size:1rem; font-weight:bold; white-space:nowrap; border:1px solid var(--ok);">
-              المدفوع: {{ \App\Support\Money::format($partyPaid) }} ج.م
-            </span>
-            <span style="background:rgba(239, 68, 68, 0.1); color:var(--bad); padding:8px 16px; border-radius:6px; font-size:1rem; font-weight:bold; white-space:nowrap; border:1px solid var(--bad);">
-              المتبقي: {{ \App\Support\Money::format($partyRemaining) }} ج.م
-            </span>
-          </div>
-          <button type="button" class="rv-x" onclick="document.getElementById('modal-{{ $partyKey }}').style.display='none'" style="font-size:1.8rem; padding:0 10px;">×</button>
+
+        {{-- Left Side (Action Buttons) --}}
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <button type="button" style="background: #334155; color: #ffffff; padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+            <i class="fa fa-print"></i> طباعة التفاصيل
+          </button>
+          <button type="button" style="background: #facc15; color: #000000; padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s;" onclick="openPartyBulkPay('{{ addslashes($partyName) }}', {{ $partyRemaining }}, 'partial', '{{ $partyKey }}')" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+            <i class="fa fa-money-bill-wave"></i> سداد جزئي
+          </button>
+          <button type="button" style="background: #10b981; color: #ffffff; padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s;" onclick="openPartyBulkPay('{{ addslashes($partyName) }}', {{ $partyRemaining }}, 'full', '{{ $partyKey }}')" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+            <i class="fa fa-money-bill"></i> سداد كلي للعميل
+          </button>
+          <button type="button" style="background: #ffffff; color: #10b981; padding: 8px 12px; border: 1px solid #10b981; border-radius: 8px; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onclick="waRecv('','{{ addslashes($partyName) }}',{{ $partyRemaining }})" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='#ffffff'">
+            <i class="fa-brands fa-whatsapp"></i>
+          </button>
+          <button type="button" class="rv-x" onclick="document.getElementById('modal-{{ $partyKey }}').style.display='none'" style="font-size: 1.5rem; color: #94a3b8; border: none; background: transparent; cursor: pointer; padding: 0 8px;">×</button>
         </div>
       </div>
-      <div class="rv-mbody" style="padding:30px; background:var(--bg);">
-        <table class="rv-tbl" style="margin:0; border-radius:10px; overflow:hidden; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
-          <thead>
-            <tr style="background:var(--surface);">
-              <th style="padding:15px 20px;">التاريخ</th>
-              <th style="padding:15px 20px;">البيان</th>
-              <th style="padding:15px 20px;">المبلغ</th>
-              <th style="padding:15px 20px;">المسدد</th>
-              <th style="padding:15px 20px;">المتبقي</th>
-              <th style="padding:15px 20px;">الحالة</th>
-              <th style="padding:15px 20px;">إجراءات الدفع</th>
+
+      {{-- Filters Area --}}
+      <div style="padding: 16px 24px; background: #ffffff;">
+        <div class="m-filter-bar" id="mf-{{ $partyKey }}" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          
+          {{-- Status --}}
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <button class="m-stat-btn active" data-stat="pending" onclick="applyModalFilter('{{ $partyKey }}', 'status', 'pending', this)" style="background: #2563eb; color: #ffffff; border: 1px solid #2563eb; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s;"><i class="fa fa-fire"></i> النشط</button>
+            <button class="m-stat-btn" data-stat="paid" onclick="applyModalFilter('{{ $partyKey }}', 'status', 'paid', this)" style="background: #ffffff; color: #10b981; border: 1px solid #10b981; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s;"><i class="fa fa-check-circle"></i> المسدد</button>
+            <button class="m-stat-btn" data-stat="all" onclick="applyModalFilter('{{ $partyKey }}', 'status', 'all', this)" style="background: #ffffff; color: #64748b; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s;"><i class="fa fa-list"></i> الكل</button>
+          </div>
+
+          {{-- Period --}}
+          <div style="display: flex; align-items: center;">
+            <div style="display: flex; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
+              <button class="m-per-btn active" onclick="applyModalFilter('{{ $partyKey }}', 'period', 'all', this)" style="background: #475569; color: #ffffff; border: none; border-left: 1px solid #cbd5e1; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;">الكل</button>
+              <button class="m-per-btn" onclick="applyModalFilter('{{ $partyKey }}', 'period', 'month', this)" style="background: #ffffff; color: #475569; border: none; border-left: 1px solid #cbd5e1; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;">شهر</button>
+              <button class="m-per-btn" onclick="applyModalFilter('{{ $partyKey }}', 'period', 'week', this)" style="background: #ffffff; color: #475569; border: none; border-left: 1px solid #cbd5e1; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;">أسبوع</button>
+              <button class="m-per-btn" onclick="applyModalFilter('{{ $partyKey }}', 'period', 'yesterday', this)" style="background: #ffffff; color: #475569; border: none; border-left: 1px solid #cbd5e1; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;">أمس</button>
+              <button class="m-per-btn" onclick="applyModalFilter('{{ $partyKey }}', 'period', 'today', this)" style="background: #ffffff; color: #475569; border: none; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;">اليوم</button>
+            </div>
+          </div>
+
+          {{-- Dates --}}
+          <div style="display: flex; gap: 8px; align-items: center; font-size: 12px; font-weight: 700; color: #475569;">
+            من: <input type="date" id="dfrom-{{ $partyKey }}" onchange="applyModalFilter('{{ $partyKey }}', 'custom')" style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; outline: none; font-family: inherit;">
+            إلى: <input type="date" id="dto-{{ $partyKey }}" onchange="applyModalFilter('{{ $partyKey }}', 'custom')" style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; outline: none; font-family: inherit;">
+          </div>
+        </div>
+
+        <div style="position: relative;">
+          <input type="text" id="search-{{ $partyKey }}" oninput="applyModalFilter('{{ $partyKey }}', 'search', this.value)" placeholder="ابحث في عمليات هذا العميل (اسم العملية، تاريخ)..." style="width: 100%; padding: 10px 16px 10px 40px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; color: #334155; outline: none; font-family: inherit; transition: 0.2s;" onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'" onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none'">
+          <i class="fa fa-search" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+        </div>
+      </div>
+
+      {{-- Blue Banner --}}
+      <div style="background: #2563eb; color: #ffffff; padding: 8px 24px; font-size: 14px; font-weight: 800; display: flex; justify-content: flex-start; align-items: center;">
+        إجمالي المتبقي: {{ \App\Support\Money::format($partyRemaining) }} ج
+      </div>
+
+      {{-- Table Area --}}
+      <div style="background: #ffffff; max-height: 400px; overflow-y: auto;">
+        <table class="n-table" id="mtbl-{{ $partyKey }}" style="width: 100%; margin: 0;">
+          <thead style="position: sticky; top: 0; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); z-index: 10;">
+            <tr>
+              <th style="text-align: right; padding: 12px 24px; color: #475569;">التاريخ</th>
+              <th style="text-align: right; color: #475569;">العملية / المنتج</th>
+              <th style="color: #475569;">إجمالي الفاتورة</th>
+              <th style="color: #475569;">المتبقي للدفع</th>
+              <th style="color: #475569;">إجراءات الدفع</th>
             </tr>
           </thead>
-          <tbody style="background:#fff;">
+          <tbody>
             @foreach($partyItems as $recv)
-              <tr>
-                <td class="muted" style="padding:15px 20px; border-bottom:1px solid var(--border);">{{ $recv->date->format('Y-m-d') }}</td>
-                <td class="muted" style="padding:15px 20px; border-bottom:1px solid var(--border);"><strong>{{ $recv->description ?: '—' }}</strong></td>
-                <td style="font-weight:600; padding:15px 20px; border-bottom:1px solid var(--border);">{{ \App\Support\Money::format($recv->total_amount) }}</td>
-                <td style="color:var(--ok); font-weight:600; padding:15px 20px; border-bottom:1px solid var(--border);">{{ \App\Support\Money::format($recv->paid_amount) }}</td>
-                <td style="color:var(--bad); font-weight:700; padding:15px 20px; border-bottom:1px solid var(--border);">{{ \App\Support\Money::format($recv->remaining()) }}</td>
-                <td style="padding:15px 20px; border-bottom:1px solid var(--border);"><span class="tag {{ $recv->statusTag() }} sm" style="font-size:0.85rem; padding:4px 10px;">{{ $recv->statusAr() }}</span></td>
-                <td style="padding:15px 20px; border-bottom:1px solid var(--border);">
-                  @if($recv->status !== 'paid')
-                    <button class="rv-pill" style="padding:6px 16px; font-weight:bold; font-size:0.85rem;" onclick="
-                      document.getElementById('modal-{{ $partyKey }}').style.display='none';
-                      openManualRecvPayModal({{ $recv->id }}, {{ $recv->remaining() }}, '{{ addslashes($recv->party . ($recv->description ? ' - ' . $recv->description : '')) }}')
-                    ">
-                      <i class="fa fa-hand-holding-dollar" style="margin-left:4px;"></i> تحصيل
-                    </button>
-                  @endif
+              <tr data-date="{{ $recv->date->format('Y-m-d') }}" data-status="{{ $recv->status === 'paid' ? 'paid' : 'pending' }}" data-search="{{ mb_strtolower($recv->description ?: 'عهدة / سلفة') }} {{ $recv->total_amount }} {{ $recv->date->format('Y-m-d') }}">
+                <td style="text-align: right; padding: 16px 24px; font-weight: 700; color: #334155;">{{ $recv->date->format('Y-m-d') }}</td>
+                <td style="text-align: right;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444;"></span>
+                    <i class="fa fa-briefcase" style="color: #8b5cf6;"></i>
+                    <span style="font-weight: 800; color: #0f172a; font-size: 13px;">{{ $recv->description ?: 'عهدة / سلفة' }}</span>
+                  </div>
+                </td>
+                <td style="font-weight: 700; color: #475569; font-size: 13px;">{{ \App\Support\Money::format($recv->total_amount) }} ج</td>
+                <td style="font-weight: 800; color: #ef4444; font-size: 13px;">{{ \App\Support\Money::format($recv->remaining()) }} ج</td>
+                <td>
+                  <div style="display: flex; gap: 8px; justify-content: center;">
+                    @if($recv->status !== 'paid')
+                      <button type="button" style="background: #eff6ff; color: #3b82f6; border: none; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'" onclick="
+                        document.getElementById('modal-{{ $partyKey }}').style.display='none';
+                        openManualRecvPayModal({{ $recv->id }}, {{ $recv->remaining() }}, '{{ addslashes($recv->party . ($recv->description ? ' - ' . $recv->description : '')) }}')
+                      ">
+                        <i class="fa fa-cash-register"></i> تحصيل
+                      </button>
+                      <button type="button" style="background: #fffbeb; color: #d97706; border: none; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s;" onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fffbeb'" onclick="
+                         document.getElementById('modal-{{ $partyKey }}').style.display='none';
+                      ">
+                        <i class="fa fa-percent"></i> خصم
+                      </button>
+                    @else
+                      <span style="color: #10b981; font-size: 12px; font-weight: 800;"><i class="fa fa-check-circle"></i> مسدد</span>
+                    @endif
+                  </div>
                 </td>
               </tr>
             @endforeach
           </tbody>
         </table>
       </div>
+
     </div>
   </div>
 @endforeach
@@ -570,57 +712,171 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
     $invoiceData = ['project' => $proj->name, 'client' => $proj->client->name, 'phone' => $clientPhone, 'billed' => (float) $row->billed, 'collected' => (float) $row->collected, 'remaining' => (float) $row->remaining, 'company' => $settings->company_name ?? ''];
   @endphp
   <div class="rv-modal" id="modal{{ $proj->id }}" onclick="if(event.target===this) closeModal({{ $proj->id }})">
-    <div class="rv-card">
-
-      <div class="rv-mhead">
-        <div class="nm">
-          {{ $proj->name }}
-          <small><i class="fa fa-user" style="font-size:.62rem"></i> {{ $proj->client->name }}@if($clientPhone) · <span dir="ltr">{{ $clientPhone }}</span>@endif</small>
+    <div style="max-width: 900px; width: 95%; background: #ffffff; border-radius: 16px; overflow: hidden; margin: 40px auto; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+      
+      {{-- Modal Header --}}
+      <div style="padding: 24px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px; border-bottom: 1px solid #f1f5f9;">
+        {{-- Right Side (Title & Tags) --}}
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <h3 style="margin: 0; font-size: 1.5rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
+            <i class="fa fa-building" style="color: #3b82f6;"></i> {{ $proj->name }}
+          </h3>
+          <small style="color: #64748b; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+            <i class="fa fa-user"></i> {{ $proj->client->name }} @if($clientPhone) · <span dir="ltr">{{ $clientPhone }}</span> @endif
+          </small>
+          <div style="display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
+            <span style="background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid #e2e8f0;">
+              المفوتر: {{ \App\Support\Money::format($row->billed) }} ج
+            </span>
+            <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(16, 185, 129, 0.3);">
+              المحصّل: {{ \App\Support\Money::format($row->collected) }} ج
+            </span>
+            <span style="background: {{ $isPaid ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)' }}; color: {{ $isPaid ? '#10b981' : '#ef4444' }}; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid {{ $isPaid ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)' }};">
+              المتبقي: {{ \App\Support\Money::format($row->remaining) }} ج
+            </span>
+            @if($row->discount > 0)
+            <span style="background: rgba(245, 158, 11, 0.1); color: #d97706; padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 800; border: 1px solid rgba(245, 158, 11, 0.3);">
+              إجمالي الخصومات: {{ \App\Support\Money::format($row->discount) }} ج
+            </span>
+            @endif
+          </div>
         </div>
-        <button type="button" class="rv-x" onclick="closeModal({{ $proj->id }})">×</button>
-      </div>
 
-      <div class="rv-mbody" id="recv-print-{{ $proj->id }}">
-
-        {{-- الأرقام --}}
-        <div class="rv-nums">
-          <div class="rv-num"><div class="l">المفوتر</div><div class="v">{{ \App\Support\Money::format($row->billed) }}</div></div>
-          <div class="rv-num ok"><div class="l">المحصّل</div><div class="v">{{ \App\Support\Money::format($row->collected) }}</div></div>
-          <div class="rv-num {{ $isPaid ? 'ok' : 'bad' }}"><div class="l">المتبقي</div><div class="v">{{ \App\Support\Money::format($row->remaining) }}</div></div>
-        </div>
-        <div class="rv-prog"><i style="width:{{ min($pct,100) }}%"></i></div>
-
-        {{-- الأزرار --}}
-        <div class="rv-acts no-print">
+        {{-- Left Side (Action Buttons) --}}
+        <div class="no-print" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
           @if($hasCont)
-            <a href="{{ route('installments.index') }}" class="rv-act main" style="grid-column:span 2"><i class="fa fa-file-contract"></i> فتح صفحة الأقساط</a>
+            <a href="{{ route('installments.index') }}" style="background: #2563eb; color: #ffffff; padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; text-decoration: none; transition: 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'"><i class="fa fa-file-contract"></i> صفحة الأقساط</a>
           @endif
           @if($hasExcess || (!$hasCont && !$isPaid))
-            <button class="rv-act" id="rv-full-{{ $proj->id }}" onclick="recvFull({{ $proj->id }}, {{ $payAmount }})" style="grid-column:span 2; border-color:var(--ink)"><i class="fa fa-check-double"></i> تحصيل {{ $hasCont ? 'المستحق الإضافي' : 'كلي' }}</button>
-            <button class="rv-act" id="rv-partial-{{ $proj->id }}" onclick="recvPartial({{ $proj->id }})" style="grid-column:span 2"><i class="fa fa-money-bill"></i> تحصيل جزئي</button>
-
+            <button type="button" id="rv-partial-{{ $proj->id }}" onclick="recvPartial({{ $proj->id }})" style="background: #facc15; color: #000000; padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'"><i class="fa fa-money-bill-wave"></i> تحصيل جزئي</button>
+            <button type="button" id="rv-full-{{ $proj->id }}" onclick="recvFull({{ $proj->id }}, {{ $payAmount }})" style="background: #10b981; color: #ffffff; padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'"><i class="fa fa-check-double"></i> تحصيل {{ $hasCont ? 'الزيادة' : 'كلي' }}</button>
           @elseif(!$hasCont && $isPaid)
-            <span class="rv-act done" style="grid-column:span 2"><i class="fa fa-check-circle"></i> تم التحصيل الكامل</span>
+            <span style="background: #ecfdf5; color: #047857; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 800; border: 1px solid #a7f3d0;"><i class="fa fa-check-circle"></i> مكتمل</span>
           @endif
-          <button class="rv-act" onclick="openDiscountPanel({{ $proj->id }})"><i class="fa fa-percent"></i> منح خصم</button>
-          <button class="rv-act" onclick="waRecv('{{ $clientPhone }}','{{ addslashes($proj->name) }}',{{ $row->remaining }})"><i class="fa-brands fa-whatsapp"></i> واتساب</button>
-          <button class="rv-act" onclick='printInvoice({{ $proj->id }}, @json($invoiceData))' style="grid-column:span 2"><i class="fa fa-print"></i> طباعة فاتورة</button>
+          <button type="button" style="background: #334155; color: #ffffff; padding: 8px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s;" onclick="openDiscountPanel({{ $proj->id }})" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'"><i class="fa fa-percent"></i> خصم</button>
+          <button type="button" style="background: #ffffff; color: #10b981; padding: 8px 12px; border: 1px solid #10b981; border-radius: 8px; font-size: 16px; cursor: pointer; transition: 0.2s;" onclick="waRecv('{{ $clientPhone }}','{{ addslashes($proj->name) }}',{{ $row->remaining }})" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='#ffffff'"><i class="fa-brands fa-whatsapp"></i></button>
+          <button type="button" style="background: #ffffff; color: #334155; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; cursor: pointer; transition: 0.2s;" onclick='printInvoice({{ $proj->id }}, @json($invoiceData))' onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'"><i class="fa fa-print"></i></button>
+          <button type="button" class="rv-x" onclick="closeModal({{ $proj->id }})" style="font-size: 1.5rem; color: #94a3b8; border: none; background: transparent; cursor: pointer; padding: 0 8px;">×</button>
+        </div>
+      </div>
+
+      <div style="padding: 24px; background: #ffffff;">
+        
+        {{-- Progress Bar --}}
+        <div style="background: #f1f5f9; border-radius: 99px; height: 6px; margin-bottom: 24px; overflow: hidden;">
+          <div style="height: 100%; background: {{ $isPaid ? '#10b981' : '#3b82f6' }}; width: {{ min($pct, 100) }}%; transition: 1s ease-in-out;"></div>
         </div>
 
+        {{-- Forms (Discount & Pay) --}}
+        <div class="rv-pay no-print" id="disc-panel-{{ $proj->id }}" style="display:none;margin-bottom:24px;border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px;">
+          <div class="hd" style="color:#0f172a; margin-bottom: 12px; font-weight: 800;">
+            <span><i class="fa fa-percent" style="color: #3b82f6;"></i> منح خصم للمشروع</span>
+            <button type="button" class="rv-x" style="color:var(--soft);font-size:1rem" onclick="hideDiscountPanel({{ $proj->id }})">×</button>
+          </div>
+          <form method="POST" action="{{ route('projects.discount', $proj) }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.8'; b.style.color='#fff'; b.style.backgroundColor='#0d6efd'; b.style.borderColor='#0d6efd'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+            @csrf
+            <div style="font-size: 13px; color: #475569; margin-bottom: 12px; font-weight: 700;">إجمالي الخصومات الحالية: <strong>{{ \App\Support\Money::format($proj->discounts->sum('amount')) }} ج</strong></div>
+            <div class="rv-row2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div>
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">مبلغ الخصم الإضافي (ج) *</label>
+                <input type="number" step="0.01" min="0.01" name="amount" placeholder="0.00" required style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; margin-top: 4px;">
+              </div>
+              <div>
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">تاريخ الخصم *</label>
+                <input type="date" name="date" value="{{ today()->format('Y-m-d') }}" required style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; margin-top: 4px;">
+              </div>
+            </div>
+            <div style="margin-top: 12px;">
+              <label style="font-size: 12px; font-weight: 700; color: #475569;">ملاحظات/سبب الخصم</label>
+              <input type="text" name="notes" placeholder="اختياري" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; margin-top: 4px;">
+            </div>
+            <button type="submit" style="background: #0f172a; color: #ffffff; padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 800; cursor: pointer; margin-top: 16px; width: 100%;">تحديث الخصم</button>
+          </form>
+        </div>
+
+        <div class="rv-pay no-print" id="pay-panel-{{ $proj->id }}" style="display:none;margin-bottom:24px;border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px;">
+          <div class="hd" style="margin-bottom: 12px; font-weight: 800; color: #0f172a;">
+            <span><i class="fa fa-cash-register" style="color: #10b981;"></i> تسجيل تحصيل من العميل</span>
+            <button type="button" class="rv-x" style="color:var(--soft);font-size:1rem" onclick="hidePayPanel({{ $proj->id }})">×</button>
+          </div>
+          @php $reopenHere = session('reopen_project') == $proj->id; @endphp
+          @if($reopenHere && $errors->any())
+            <div style="background: #fef2f2; color: #b91c1c; border: 1px solid #f87171; border-radius: 8px; padding: 10px; margin-bottom: 12px; font-size: 13px; font-weight: 700;">
+              @foreach($errors->all() as $err) <div>{{ $err }}</div> @endforeach
+            </div>
+          @endif
+          @if($payAmount > 0.009)
+          <form method="POST" action="{{ route('receivables.pay', $proj) }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.8'; b.style.color='#fff'; b.style.backgroundColor='#0d6efd'; b.style.borderColor='#0d6efd'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+            @csrf
+            <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+              <span style="background: #eff6ff; color: #2563eb; padding: 4px 12px; border-radius: 99px; font-size: 12px; font-weight: 800; cursor: pointer;" onclick="setAmt({{ $proj->id }}, {{ $payAmount }})">المتبقي: {{ \App\Support\Money::format($payAmount) }} ج</span>
+              <span style="background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 99px; font-size: 12px; font-weight: 800; cursor: pointer;" onclick="setAmt({{ $proj->id }}, {{ round($payAmount * 0.5, 2) }})">النصف: {{ \App\Support\Money::format($payAmount * 0.5) }} ج</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+              <div>
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">المبلغ (ج) *</label>
+                <input type="number" step="0.01" min="0.01" name="amount" id="recv_amt_{{ $proj->id }}" value="{{ $reopenHere ? old('amount') : '' }}" required style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; margin-top: 4px;">
+              </div>
+              <div>
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">التاريخ *</label>
+                <input type="date" name="date" value="{{ $reopenHere ? old('date', today()->format('Y-m-d')) : today()->format('Y-m-d') }}" required style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; margin-top: 4px;">
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+              <div>
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">الخصم (ج)</label>
+                <input type="number" step="0.01" min="0" name="discount" id="recv_disc_{{ $proj->id }}" placeholder="0.00" value="{{ $reopenHere ? old('discount') : '' }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; margin-top: 4px;">
+              </div>
+              <div>
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">ملاحظات</label>
+                <input type="text" name="notes" placeholder="اختياري" value="{{ $reopenHere ? old('notes') : '' }}" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; margin-top: 4px;">
+              </div>
+            </div>
+            <div style="margin-bottom: 12px;">
+              <label style="font-size: 12px; font-weight: 700; color: #475569;"><i class="fa fa-wallet"></i> المحفظة *</label>
+              <div style="margin-top: 4px;">
+                @include('partials._wallet-select', ['wallets' => $wallets, 'bare' => true, 'required' => true, 'selectStyle' => 'width:100%', 'selected' => $reopenHere ? old('account_id') : null])
+              </div>
+            </div>
+            @if($proj->bands->count())
+              @php $oldBandChoice = $reopenHere ? old('band_choice', 'general') : 'general'; @endphp
+              <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                <label style="font-size: 12px; font-weight: 800; color: #0f172a; margin-bottom: 8px; display: block;">ارتباط التحصيل ببند</label>
+                <div style="display: flex; gap: 16px; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px;">
+                  <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;"><input type="radio" name="band_choice" value="general" {{ $oldBandChoice === 'general' ? 'checked' : '' }} onchange="toggleRecvBand({{ $proj->id }}, this.value)"> دفعة عامة للمشروع</label>
+                  <label style="cursor: pointer; display: flex; align-items: center; gap: 4px;"><input type="radio" name="band_choice" value="band" {{ $oldBandChoice === 'band' ? 'checked' : '' }} onchange="toggleRecvBand({{ $proj->id }}, this.value)"> دفعة لبند معين</label>
+                </div>
+                <select name="band_id" id="recv-band-{{ $proj->id }}" {{ $oldBandChoice === 'band' ? '' : 'disabled' }} style="display:{{ $oldBandChoice === 'band' ? 'block' : 'none' }}; width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; outline: none; margin-top: 4px;">
+                  <option value="">— اختر البند —</option>
+                  @foreach($proj->bands as $band)
+                    <option value="{{ $band->id }}" {{ $reopenHere && (int) old('band_id') === $band->id ? 'selected' : '' }}>{{ $band->name }}</option>
+                  @endforeach
+                </select>
+              </div>
+            @endif
+            <button type="submit" style="background: #10b981; color: #ffffff; padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 800; cursor: pointer; margin-top: 20px; width: 100%;"><i class="fa fa-check"></i> تسجيل التحصيل</button>
+          </form>
+          @else
+            <div style="text-align: center; color: #10b981; font-weight: 800; padding: 12px; background: #ecfdf5; border-radius: 8px;">
+              <i class="fa fa-check-circle"></i> تم تحصيل كامل المستحق.
+            </div>
+          @endif
+        </div>
+
+        {{-- Contracts --}}
         @if($hasCont)
-          {{-- محوّل لعقد تقسيط — عقد التقسيط شغال لوحده، التحصيل عليه من صفحة الأقساط --}}
-          <div class="rv-contract">
-            <div class="h"><i class="fa fa-file-contract"></i> هذا المشروع (أو بند فيه) معموله عقد تقسيط — سداد العقد نفسه بيتم من صفحة الأقساط.</div>
-            <table>
+          <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+            <div style="font-size: 13px; font-weight: 800; color: #d97706; margin-bottom: 12px;"><i class="fa fa-file-contract"></i> نظام التقسيط مفعل للمشروع - يتم السداد من صفحة الأقساط.</div>
+            <table class="n-table" style="width: 100%; background: #ffffff;">
               <thead><tr><th style="text-align:right">المتعاقد عليه</th><th>النوع</th><th>الإجمالي</th><th>المحصّل</th><th>المتبقي</th></tr></thead>
               <tbody>
                 @foreach($proj->contracts as $c)
                   <tr>
-                    <td style="text-align:right">{{ $c->product_name }}</td>
-                    <td>{{ $c->band_id ? 'بند: ' . ($c->band?->name ?? '—') : 'المشروع كامل' }}</td>
-                    <td style="font-weight:700">{{ \App\Support\Money::format($c->total_after_interest) }}</td>
-                    <td style="color:var(--ok);font-weight:700">{{ \App\Support\Money::format($c->down_payment + $c->payments->sum('amount_paid')) }}</td>
-                    <td style="color:{{ $c->remaining_balance > 0 ? 'var(--bad)' : 'var(--ok)' }};font-weight:700">{{ \App\Support\Money::format($c->remaining_balance) }}</td>
+                    <td style="text-align:right; font-weight: 800;">{{ $c->product_name }}</td>
+                    <td style="font-weight: 700; color: #475569;">{{ $c->band_id ? 'بند: ' . ($c->band?->name ?? '—') : 'المشروع كامل' }}</td>
+                    <td style="font-weight: 700;">{{ \App\Support\Money::format($c->total_after_interest) }}</td>
+                    <td style="color: #10b981; font-weight: 800;">{{ \App\Support\Money::format($c->down_payment + $c->payments->sum('amount_paid')) }}</td>
+                    <td style="color: {{ $c->remaining_balance > 0 ? '#ef4444' : '#10b981' }}; font-weight: 800;">{{ \App\Support\Money::format($c->remaining_balance) }}</td>
                   </tr>
                 @endforeach
               </tbody>
@@ -628,201 +884,95 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
           </div>
         @endif
 
-        @if(!$hasCont || $hasExcess || $proj->clientPayments->count())
-          @if($hasCont)
-            {{-- فاصل يوضّح إن اللي جاي بعد كده مستحق منفصل تمامًا عن العقد --}}
-            <div style="display:flex;align-items:center;gap:8px;margin:12px 0 4px">
-              <span style="flex:1;height:1px;background:var(--ln)"></span>
-              <span style="font-size:.7rem;color:var(--mut);font-weight:700">مستحق إضافي خارج نطاق العقد (فوترة بعد التعاقد)</span>
-              <span style="flex:1;height:1px;background:var(--ln)"></span>
+        {{-- Chic Filters for History --}}
+        <div class="m-filter-bar no-print" id="mf-{{ $proj->id }}" style="display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          
+          <div style="display: flex; align-items: center;">
+            <div style="display: flex; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
+              <button type="button" class="m-per-btn active" onclick="applyModalFilter('{{ $proj->id }}', 'period', 'all', this)" style="background: #475569; color: #ffffff; border: none; border-left: 1px solid #cbd5e1; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;">الكل</button>
+              <button type="button" class="m-per-btn" onclick="applyModalFilter('{{ $proj->id }}', 'period', 'month', this)" style="background: #ffffff; color: #475569; border: none; border-left: 1px solid #cbd5e1; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;">شهر</button>
+              <button type="button" class="m-per-btn" onclick="applyModalFilter('{{ $proj->id }}', 'period', 'week', this)" style="background: #ffffff; color: #475569; border: none; border-left: 1px solid #cbd5e1; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;">أسبوع</button>
+              <button type="button" class="m-per-btn" onclick="applyModalFilter('{{ $proj->id }}', 'period', 'yesterday', this)" style="background: #ffffff; color: #475569; border: none; border-left: 1px solid #cbd5e1; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;">أمس</button>
+              <button type="button" class="m-per-btn" onclick="applyModalFilter('{{ $proj->id }}', 'period', 'today', this)" style="background: #ffffff; color: #475569; border: none; padding: 4px 10px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;">اليوم</button>
             </div>
-          @endif
-
-          {{-- فورم منح الخصم --}}
-          <div class="rv-pay no-print" id="disc-panel-{{ $proj->id }}" style="display:none;margin-bottom:12px;border-color:var(--ink)">
-            <div class="hd" style="color:var(--ink)">
-              <span><i class="fa fa-percent"></i> منح خصم للمشروع</span>
-              <button type="button" class="rv-x" style="color:var(--soft);font-size:1rem" onclick="hideDiscountPanel({{ $proj->id }})">×</button>
-            </div>
-            <form method="POST" action="{{ route('projects.discount', $proj) }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.8'; b.style.color='#fff'; b.style.backgroundColor='#0d6efd'; b.style.borderColor='#0d6efd'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
-              @csrf
-              <div style="font-size:.75rem;color:var(--mut);margin-bottom:10px">
-                إجمالي الخصومات الحالية: <strong>{{ \App\Support\Money::format($proj->discounts->sum('amount')) }} ج.م</strong>
-              </div>
-              <div class="rv-row2">
-                <div>
-                  <label>مبلغ الخصم الإضافي (ج.م) *</label>
-                  <input type="number" step="0.01" min="0.01" name="amount" placeholder="0.00" required>
-                </div>
-                <div>
-                  <label>تاريخ الخصم *</label>
-                  <input type="date" name="date" value="{{ today()->format('Y-m-d') }}" required>
-                </div>
-              </div>
-              <div style="margin-top:8px">
-                <label>ملاحظات/سبب الخصم</label>
-                <input type="text" name="notes" placeholder="اختياري" style="width:100%;padding:8px 10px;border:1px solid var(--ln);border-radius:8px;font-size:.84rem;">
-              </div>
-              <button type="submit" class="rv-submit" style="background:var(--ink)">تحديث الخصم</button>
-            </form>
           </div>
 
-          {{-- فورم التحصيل --}}
-          <div class="rv-pay no-print" id="pay-panel-{{ $proj->id }}" style="display:none">
-            <div class="hd">
-              <span><i class="fa fa-cash-register"></i> تسجيل تحصيل من العميل</span>
-              <button type="button" class="rv-x" style="color:var(--soft);font-size:1rem" onclick="hidePayPanel({{ $proj->id }})">×</button>
-            </div>
-            @php $reopenHere = session('reopen_project') == $proj->id; @endphp
-            @if($reopenHere && $errors->any())
-              <div class="rv-form-errors" style="background:var(--neg-soft,#fbecea);color:var(--neg,#c0392b);border:1px solid var(--neg,#c0392b);border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:.8rem;font-weight:600;line-height:1.6">
-                @foreach($errors->all() as $err)
-                  <div>{{ $err }}</div>
-                @endforeach
-              </div>
-            @endif
-            @if($payAmount > 0.009)
-            <form method="POST" action="{{ route('receivables.pay', $proj) }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.8'; b.style.color='#fff'; b.style.backgroundColor='#0d6efd'; b.style.borderColor='#0d6efd'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
-              @csrf
-              <div class="rv-presets">
-                <span class="rv-preset hot" onclick="setAmt({{ $proj->id }}, {{ $payAmount }})">تحصيل كامل — {{ \App\Support\Money::format($payAmount) }} ج</span>
-                <span class="rv-preset" onclick="setAmt({{ $proj->id }}, {{ round($payAmount * 0.5, 2) }})">النصف — {{ \App\Support\Money::format($payAmount * 0.5) }} ج</span>
-                <span class="rv-preset" onclick="setAmt({{ $proj->id }}, {{ round($payAmount * 0.25, 2) }})">الربع — {{ \App\Support\Money::format($payAmount * 0.25) }} ج</span>
-              </div>
-              <div class="rv-row2">
-                <div>
-                  <label>المبلغ (ج.م) *</label>
-                  <input type="number" step="0.01" min="0.01" name="amount" id="recv_amt_{{ $proj->id }}" placeholder="0.00" value="{{ $reopenHere ? old('amount') : '' }}" required>
-                </div>
-                <div>
-                  <label>التاريخ *</label>
-                  <input type="date" name="date" value="{{ $reopenHere ? old('date', today()->format('Y-m-d')) : today()->format('Y-m-d') }}" required>
-                </div>
-              </div>
-              <div class="rv-row2">
-                <div>
-                  <label>الخصم (ج.م)</label>
-                  <input type="number" step="0.01" min="0" name="discount" id="recv_disc_{{ $proj->id }}" placeholder="0.00" value="{{ $reopenHere ? old('discount') : '' }}">
-                </div>
-                <div>
-                  <label>ملاحظات</label>
-                  <input type="text" name="notes" placeholder="اختياري" value="{{ $reopenHere ? old('notes') : '' }}">
-                </div>
-              </div>
-              <label><i class="fa fa-wallet"></i> المحفظة (التحصيل فيها) *</label>
-              @include('partials._wallet-select', ['wallets' => $wallets, 'bare' => true, 'required' => true, 'selectStyle' => 'width:100%', 'selected' => $reopenHere ? old('account_id') : null])
-
-              @if($proj->bands->count())
-                @php $oldBandChoice = $reopenHere ? old('band_choice', 'general') : 'general'; @endphp
-                <label>الدفعة دي تتسجّل على إيه؟</label>
-                <div class="rv-radio">
-                  <label><input type="radio" name="band_choice" value="general" {{ $oldBandChoice === 'general' ? 'checked' : '' }} onchange="toggleRecvBand({{ $proj->id }}, this.value)"> دفعة عامة للمشروع</label>
-                  <label><input type="radio" name="band_choice" value="band" {{ $oldBandChoice === 'band' ? 'checked' : '' }} onchange="toggleRecvBand({{ $proj->id }}, this.value)"> تحت بند محدد</label>
-                </div>
-                <select name="band_id" id="recv-band-{{ $proj->id }}" {{ $oldBandChoice === 'band' ? '' : 'disabled' }} style="display:{{ $oldBandChoice === 'band' ? 'block' : 'none' }};margin-top:7px">
-                  <option value="">— اختر البند —</option>
-                  @foreach($proj->bands as $band)
-                    <option value="{{ $band->id }}" {{ $reopenHere && (int) old('band_id') === $band->id ? 'selected' : '' }}>{{ $band->name }}</option>
-                  @endforeach
-                </select>
-              @endif
-
-              <button type="submit" class="rv-submit"><i class="fa fa-check"></i> تسجيل التحصيل</button>
-            </form>
-            @else
-              <div style="text-align:center;color:var(--ok);font-weight:600;font-size:.83rem;padding:6px">
-                <i class="fa fa-check-circle"></i> {{ $hasCont ? 'تم تحصيل كامل المستحق الإضافي' : 'تم تحصيل كامل المستحق من هذا العميل' }}
-              </div>
-            @endif
+          <div style="display: flex; gap: 8px; align-items: center; font-size: 12px; font-weight: 700; color: #475569;">
+            من: <input type="date" id="dfrom-{{ $proj->id }}" onchange="applyModalFilter('{{ $proj->id }}', 'custom')" style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; outline: none; font-family: inherit;">
+            إلى: <input type="date" id="dto-{{ $proj->id }}" onchange="applyModalFilter('{{ $proj->id }}', 'custom')" style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; outline: none; font-family: inherit;">
           </div>
-
-          {{-- السجل --}}
-          <div class="rv-hist-h">
-            <h6>سجل التحصيلات{{ $hasCont ? ' (المستحق الإضافي)' : '' }}</h6>
-            @if($payAmount > 0.009)<span class="rem">المتبقي: {{ \App\Support\Money::format($payAmount) }} ج</span>@endif
+          
+          <div style="flex-grow: 1; max-width: 300px; position: relative;">
+            <input type="text" id="search-{{ $proj->id }}" oninput="applyModalFilter('{{ $proj->id }}', 'search', this.value)" placeholder="ابحث في التحصيلات..." style="width: 100%; padding: 8px 16px 8px 36px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; color: #334155; outline: none; font-family: inherit; transition: 0.2s;" onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)'" onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none'">
+            <i class="fa fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
           </div>
+        </div>
 
-          <div class="rv-hf no-print" id="hist-filters-{{ $proj->id }}">
-            <button class="f active" onclick="filterHist({{ $proj->id }},'all',this)">الكل</button>
-            <button class="f" onclick="filterHist({{ $proj->id }},'today',this)">اليوم</button>
-            <button class="f" onclick="filterHist({{ $proj->id }},'week',this)">أسبوع</button>
-            <button class="f" onclick="filterHist({{ $proj->id }},'month',this)">شهر</button>
-            <button class="f" onclick="filterHist({{ $proj->id }},'custom',this)">مخصص</button>
-            <input type="text" placeholder="بحث..." oninput="searchHist({{ $proj->id }}, this.value)">
-          </div>
-          <div id="custom-range-{{ $proj->id }}" class="no-print" style="display:none;gap:6px;align-items:center;margin-bottom:8px">
-            <input type="date" id="dfrom-{{ $proj->id }}" style="padding:4px 7px;border:1px solid var(--ln);border-radius:6px;font-size:.73rem" oninput="applyCustomRange({{ $proj->id }})">
-            <span style="font-size:.72rem;color:var(--mut)">إلى</span>
-            <input type="date" id="dto-{{ $proj->id }}" style="padding:4px 7px;border:1px solid var(--ln);border-radius:6px;font-size:.73rem" oninput="applyCustomRange({{ $proj->id }})">
-          </div>
-
-          @if($proj->clientPayments->count())
-          <table class="rv-hist" id="hist-tbl-{{ $proj->id }}">
-            <thead>
-              <tr><th>التاريخ</th><th style="text-align:right">البيان</th><th>المبلغ</th></tr>
+        {{-- History Table --}}
+        <div style="border-radius: 12px; overflow: hidden; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 24px;">
+          <table class="n-table" id="ptbl-{{ $proj->id }}" style="width: 100%; margin: 0;">
+            <thead style="background: #f8fafc;">
+              <tr>
+                <th style="text-align: right; padding: 12px 24px; color: #475569;">التاريخ</th>
+                <th style="text-align: right; color: #475569;">البيان</th>
+                <th style="color: #475569;">المبلغ</th>
+              </tr>
             </thead>
             <tbody>
-              @foreach($proj->clientPayments as $pay)
-                <tr data-date="{{ \Carbon\Carbon::parse($pay->date)->format('Y-m-d') }}"
-                    data-desc="{{ mb_strtolower($pay->description ?? '') }}"
-                    style="cursor:pointer"
-                    onclick="showPayDetail(this)"
-                    data-full-date="{{ \Carbon\Carbon::parse($pay->date)->format('d/m/Y') }}"
-                    data-amount="{{ number_format($pay->amount, 2) }}"
-                    data-discount="{{ \App\Support\Money::format($pay->discount, 2) }}"
-                    data-description="{{ $pay->description ?: 'تحصيل مباشر' }}"
-                    data-band="{{ $pay->band->name ?? '' }}">
-                  <td style="color:var(--mut)">{{ \Carbon\Carbon::parse($pay->date)->format('d/m/Y') }}</td>
-                  <td class="desc" title="{{ $pay->description }}">{{ $pay->description ?: 'تحصيل مباشر' }}</td>
-                  <td style="color:var(--ok);font-weight:700">
+              @forelse($proj->clientPayments as $pay)
+                <tr data-date="{{ \Carbon\Carbon::parse($pay->date)->format('Y-m-d') }}" data-search="{{ mb_strtolower($pay->description ?: 'تحصيل مباشر') }} {{ $pay->amount }}" style="cursor: pointer;" onclick="showPayDetail(this)" data-full-date="{{ \Carbon\Carbon::parse($pay->date)->format('d/m/Y') }}" data-amount="{{ number_format($pay->amount, 2) }}" data-discount="{{ \App\Support\Money::format($pay->discount, 2) }}" data-description="{{ $pay->description ?: 'تحصيل مباشر' }}" data-band="{{ $pay->band->name ?? '' }}">
+                  <td style="text-align: right; padding: 16px 24px; font-weight: 700; color: #334155;">{{ \Carbon\Carbon::parse($pay->date)->format('Y-m-d') }}</td>
+                  <td style="text-align: right;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span style="width: 8px; height: 8px; border-radius: 50%; background: #3b82f6;"></span>
+                      <span style="font-weight: 800; color: #0f172a; font-size: 13px;">{{ $pay->description ?: 'تحصيل مباشر' }}</span>
+                    </div>
+                  </td>
+                  <td style="font-weight: 800; color: #10b981; font-size: 13px;">
                     {{ \App\Support\Money::format($pay->amount) }} ج
                     @if((float) $pay->discount > 0)
-                      <span style="color:var(--mut);font-size:10.5px">(خصم {{ \App\Support\Money::format($pay->discount) }})</span>
+                      <span style="color: #94a3b8; font-size: 11px; margin-right: 4px;">(خصم: {{ \App\Support\Money::format($pay->discount) }})</span>
                     @endif
                   </td>
                 </tr>
-              @endforeach
+              @empty
+                <tr>
+                  <td colspan="3" style="text-align: center; padding: 24px; color: #94a3b8; font-weight: 700;">لا توجد تحصيلات مسجلة بعد</td>
+                </tr>
+              @endforelse
             </tbody>
-            <tfoot>
-              <tr>
-                <td colspan="2" style="text-align:right;font-size:.72rem;color:var(--mut)">إجمالي التحصيلات</td>
-                <td style="color:var(--ok)">{{ \App\Support\Money::format($proj->clientPayments->sum(fn($p) => (float) $p->amount + (float) $p->discount)) }} ج</td>
-              </tr>
-            </tfoot>
           </table>
-          @else
-            <div class="rv-empty">
-              لا توجد تحصيلات مسجلة بعد
-              @if($payAmount > 0.009)<div style="margin-top:4px;font-size:.73rem">استخدم <strong>تحصيل كلي</strong> أو <strong>تحصيل جزئي</strong> أعلاه</div>@endif
-            </div>
-          @endif
-        @endif
+        </div>
 
-        {{-- البنود --}}
+        {{-- Bands --}}
         @if($proj->bands->count())
           <div class="no-print">
-            <div class="rv-bands-t" onclick="toggleBands({{ $proj->id }})">
-              <span><i class="fa fa-list-ul"></i> البنود المتعاقد عليها ({{ $proj->bands->count() }})</span>
-              <i class="fa fa-chevron-down" id="bands-icon-{{ $proj->id }}" style="font-size:.7rem;color:var(--soft);transition:.2s"></i>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer;" onclick="toggleBands({{ $proj->id }})">
+              <span style="font-weight: 800; color: #334155;"><i class="fa fa-list-ul" style="margin-left: 6px;"></i> البنود المتعاقد عليها ({{ $proj->bands->count() }})</span>
+              <i class="fa fa-chevron-down" id="bands-icon-{{ $proj->id }}" style="font-size: 12px; color: #94a3b8; transition: 0.2s;"></i>
             </div>
-            <div class="rv-bands-b" id="bands-body-{{ $proj->id }}">
-              <table>
-                @foreach($proj->bands as $band)
-                  @php $st = $band->status ?? 'pending'; @endphp
-                  <tr>
-                    <td style="font-weight:600">{{ $band->name }}</td>
-                    <td style="text-align:center;font-weight:700">{{ \App\Support\Money::format($band->client_price ?? 0) }} ج</td>
-                    <td style="text-align:center;font-size:.72rem;color:var(--mut)">
-                      {{ $st === 'completed' ? 'مكتمل' : ($st === 'in_progress' || $st === 'active' ? 'جاري' : 'معلق') }}
-                    </td>
-                  </tr>
-                @endforeach
+            <div id="bands-body-{{ $proj->id }}" style="display: none; padding-top: 8px;">
+              <table class="n-table" style="width: 100%;">
+                <tbody>
+                  @foreach($proj->bands as $band)
+                    @php $st = $band->status ?? 'pending'; @endphp
+                    <tr>
+                      <td style="font-weight: 800; color: #0f172a; text-align: right; padding: 12px 16px;">{{ $band->name }}</td>
+                      <td style="font-weight: 700; color: #475569; text-align: center;">{{ \App\Support\Money::format($band->client_price ?? 0) }} ج</td>
+                      <td style="text-align: left; padding: 12px 16px;">
+                        <span style="background: {{ $st === 'completed' ? '#ecfdf5' : ($st === 'in_progress' || $st === 'active' ? '#eff6ff' : '#f1f5f9') }}; color: {{ $st === 'completed' ? '#10b981' : ($st === 'in_progress' || $st === 'active' ? '#3b82f6' : '#64748b') }}; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800;">
+                          {{ $st === 'completed' ? 'مكتمل' : ($st === 'in_progress' || $st === 'active' ? 'جاري' : 'معلق') }}
+                        </span>
+                      </td>
+                    </tr>
+                  @endforeach
+                </tbody>
               </table>
             </div>
           </div>
         @endif
 
-      </div>{{-- /rv-mbody --}}
+      </div>
     </div>
   </div>
   @if(session('reopen_project') == $proj->id)
@@ -1082,36 +1232,92 @@ function toggleRecvBand(id, val) {
 }
 
 /* ── فلاتر سجل التحصيلات ───────────────────── */
-function filterHist(id, period, btn) {
-  document.querySelectorAll('#hist-filters-' + id + ' .f').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  const cr = document.getElementById('custom-range-' + id);
-  if (cr) cr.style.display = (period === 'custom') ? 'flex' : 'none';
-  if (period === 'custom') return;
-  applyDateFilter(id, period, null, null);
-}
-function applyCustomRange(id) {
-  applyDateFilter(id, 'custom',
-    document.getElementById('dfrom-' + id)?.value,
-    document.getElementById('dto-' + id)?.value);
-}
-function applyDateFilter(id, period, customFrom, customTo) {
-  const today = new Date(), todayStr = today.toISOString().slice(0,10);
-  let from = null, to = null;
-  if (period === 'today') { from = to = todayStr; }
-  else if (period === 'week')  { const d = new Date(today); d.setDate(d.getDate()-7);  from = d.toISOString().slice(0,10); }
-  else if (period === 'month') { const d = new Date(today); d.setDate(d.getDate()-30); from = d.toISOString().slice(0,10); }
-  else if (period === 'custom') { from = customFrom || null; to = customTo || null; }
-  document.querySelectorAll('#hist-tbl-' + id + ' tbody tr[data-date]').forEach(row => {
-    if (!from) { row.style.display = ''; return; }
-    const d = row.dataset.date;
-    row.style.display = (d >= from && d <= (to || '9999-99-99')) ? '' : 'none';
-  });
-}
-function searchHist(id, q) {
-  q = q.toLowerCase().trim();
-  document.querySelectorAll('#hist-tbl-' + id + ' tbody tr[data-desc]').forEach(row => {
-    row.style.display = (!q || row.dataset.desc.includes(q) || row.cells[0].textContent.includes(q)) ? '' : 'none';
+function applyModalFilter(id, filterType, filterValue = null, btnEl = null) {
+  const tableId = id.toString().startsWith('mrecv-') ? 'mtbl-' + id : 'ptbl-' + id;
+  const table = document.getElementById(tableId);
+  if (!table) return;
+
+  const bar = document.getElementById('mf-' + id);
+  if (!bar) return;
+
+  if (!bar.dataset.status) bar.dataset.status = 'all';
+  if (!bar.dataset.period) bar.dataset.period = 'all';
+  if (!bar.dataset.search) bar.dataset.search = '';
+
+  if (filterType === 'status') {
+    bar.dataset.status = filterValue;
+    if (btnEl) {
+      bar.querySelectorAll('.m-stat-btn').forEach(b => { b.classList.remove('active'); b.style.background = '#ffffff'; b.style.color = '#64748b'; b.style.borderColor = '#cbd5e1'; });
+      btnEl.classList.add('active');
+      if(filterValue === 'pending') { btnEl.style.background = '#2563eb'; btnEl.style.color = '#ffffff'; btnEl.style.borderColor = '#2563eb'; }
+      else if(filterValue === 'paid') { btnEl.style.background = '#10b981'; btnEl.style.color = '#ffffff'; btnEl.style.borderColor = '#10b981'; }
+      else { btnEl.style.background = '#64748b'; btnEl.style.color = '#ffffff'; btnEl.style.borderColor = '#64748b'; }
+    }
+  } else if (filterType === 'period') {
+    bar.dataset.period = filterValue;
+    const dfrom = document.getElementById('dfrom-' + id);
+    const dto = document.getElementById('dto-' + id);
+    if(dfrom) dfrom.value = '';
+    if(dto) dto.value = '';
+    
+    if (btnEl) {
+      bar.querySelectorAll('.m-per-btn').forEach(b => { b.classList.remove('active'); b.style.background = '#ffffff'; b.style.color = '#475569'; });
+      btnEl.classList.add('active');
+      btnEl.style.background = '#475569'; btnEl.style.color = '#ffffff';
+    }
+  } else if (filterType === 'search') {
+    bar.dataset.search = (filterValue || '').toLowerCase().trim();
+  } else if (filterType === 'custom') {
+    bar.dataset.period = 'custom';
+    bar.querySelectorAll('.m-per-btn').forEach(b => { b.classList.remove('active'); b.style.background = '#ffffff'; b.style.color = '#475569'; });
+  }
+
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  let dStart = null, dEnd = null;
+
+  if (bar.dataset.period === 'today') { dStart = dEnd = todayStr; }
+  else if (bar.dataset.period === 'yesterday') { 
+    const y = new Date(today); y.setDate(y.getDate()-1); 
+    dStart = dEnd = y.toISOString().slice(0,10); 
+  }
+  else if (bar.dataset.period === 'week') {
+    const w = new Date(today); w.setDate(w.getDate()-7);
+    dStart = w.toISOString().slice(0,10);
+  }
+  else if (bar.dataset.period === 'month') {
+    const m = new Date(today); m.setDate(m.getDate()-30);
+    dStart = m.toISOString().slice(0,10);
+  }
+  else if (bar.dataset.period === 'custom') {
+    const dfrom = document.getElementById('dfrom-' + id);
+    const dto = document.getElementById('dto-' + id);
+    dStart = dfrom ? dfrom.value : null;
+    dEnd = dto ? dto.value : null;
+  }
+
+  const searchStr = bar.dataset.search;
+  const targetStatus = bar.dataset.status;
+
+  table.querySelectorAll('tbody tr[data-date]').forEach(row => {
+    const rowStatus = row.getAttribute('data-status') || 'all';
+    const rowDate = row.getAttribute('data-date') || '';
+    const rowSearch = row.getAttribute('data-search') || '';
+
+    let matchStatus = (targetStatus === 'all') || (rowStatus === targetStatus);
+    let matchSearch = (!searchStr || rowSearch.includes(searchStr));
+    let matchDate = true;
+    
+    if (dStart || dEnd) {
+      if (dStart && rowDate < dStart) matchDate = false;
+      if (dEnd && rowDate > dEnd) matchDate = false;
+    }
+
+    if (matchStatus && matchSearch && matchDate) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
   });
 }
 
@@ -1188,12 +1394,17 @@ function filterMain() {
   if (nr) nr.style.display = visible === 0 && document.querySelectorAll('#main-tbody tr:not([style*="display: none"])').length === 0 ? 'block' : 'none';
 }
 function filterStatus(status, btn) {
-  activeStatus = status;
-  document.querySelectorAll('.rv-pill').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  if (btn) btn.classList.add('active');
+  activeStatus = status === 'active' ? 'unpaid' : status; // handle old 'unpaid' vs new 'active'
+  document.querySelectorAll('.n-tab, .rv-pill').forEach(b => {
+      b.classList.remove('active', 'active-all', 'active-active', 'active-paid');
+  });
+  if (btn) btn.classList.add('active-' + status);
   filterMain();
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  filterMain(); // Run initial filter on load
+});
 
 /* ── الخصم ────────────────────────────────── */
 function openDiscountPanel(id) {
@@ -1295,10 +1506,8 @@ function switchTab(tabId) {
   document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
   
   // Remove active class from all tab buttons
-  document.querySelectorAll('.tab-btn').forEach(el => {
+  document.querySelectorAll('.n-main-tab').forEach(el => {
     el.classList.remove('active');
-    el.style.borderBottomColor = 'transparent';
-    el.style.color = 'var(--mut)';
   });
   
   // Show target tab
@@ -1309,20 +1518,22 @@ function switchTab(tabId) {
   }
   
   // Add active styling to clicked button
-  let btnId = 'tab-btn-paid';
-  if (tabId === 'project-tab') btnId = 'tab-btn-project';
-  else if (tabId === 'manual-recv-tab') btnId = 'tab-btn-manual-recv';
+  let btnId = 'tab-btn-project';
+  if (tabId === 'manual-recv-tab') btnId = 'tab-btn-manual-recv';
   
   const btn = document.getElementById(btnId);
   if (btn) {
       btn.classList.add('active');
-      btn.style.borderBottomColor = 'var(--brand)';
-      btn.style.color = 'var(--brand)';
   }
   
   // Reset any global JS filters
   if (tabId) {
-      filterStatus('unpaid', null);
+      filterStatus('active', null); // default to active debts
+      const defaultBtn = document.querySelector('.n-tab[onclick*="active"]');
+      if(defaultBtn) {
+          document.querySelectorAll('.n-tab').forEach(b => b.classList.remove('active-all', 'active-active', 'active-paid'));
+          defaultBtn.classList.add('active-active');
+      }
   }
 }
 

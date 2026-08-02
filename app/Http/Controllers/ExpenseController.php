@@ -27,6 +27,11 @@ class ExpenseController extends Controller
             if ($request->to) $query->whereDate('date', '<=', $request->to);
         }
 
+        $descriptionFilter = $request->get('description_filter');
+        if ($descriptionFilter) {
+            $query->where('description', $descriptionFilter);
+        }
+
         $query->orderByDesc('date')->orderByDesc('id');
 
         $expenses = $query->paginate(30);

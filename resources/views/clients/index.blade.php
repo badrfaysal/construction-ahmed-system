@@ -14,7 +14,8 @@
 </div>
 
 @if($clients->count())
-  <div style="margin-bottom:16px; display:flex; align-items:center; gap:12px;">
+  <div style="margin-bottom:16px; display:flex; align-items:center; gap:12px; flex-wrap: wrap;">
+    <input type="text" id="client-search" oninput="searchClientsTable(this.value)" placeholder="ابحث عن عميل..." style="flex:1; min-width: 200px; padding:8px 12px; border:1px solid var(--ln); border-radius:6px; background:var(--surface);">
     <label style="font-size:13px; font-weight:600; color:var(--ink-2); white-space:nowrap;">ترتيب حسب:</label>
     <div class="f-select-wrap" style="width: 220px; margin: 0;">
       <select id="client-sort" onchange="sortClientsTable(this.value)" class="f-select" style="background: var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
@@ -103,6 +104,21 @@ function sortClientsTable(mode) {
   });
   rows.forEach(r => tbody.appendChild(r));
 }
+
+function searchClientsTable(q) {
+  const tbody = document.querySelector('#clients-table tbody');
+  if (!tbody) return;
+  const term = q.toLowerCase();
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  rows.forEach(r => {
+    if (r.textContent.toLowerCase().includes(term)) {
+      r.style.display = '';
+    } else {
+      r.style.display = 'none';
+    }
+  });
+}
+
 // Default: newest first
 document.addEventListener('DOMContentLoaded', () => sortClientsTable('newest'));
 </script>

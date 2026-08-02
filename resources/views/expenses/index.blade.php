@@ -176,6 +176,16 @@ table.exp-tbl { width:100%; border-collapse:collapse; }
           </select>
         </div>
         
+        <div class="f-group" style="flex:2;">
+          <label>البند / البيان</label>
+          <select name="description_filter" onchange="this.form.submit();">
+            <option value="">جميع البنود</option>
+            @foreach($uniqueDescriptions as $desc)
+              <option value="{{ $desc }}" {{ request('description_filter') == $desc ? 'selected' : '' }}>{{ $desc }}</option>
+            @endforeach
+          </select>
+        </div>
+        
         <div id="customRange" style="display:{{ $range == 'custom' ? 'flex' : 'none' }}; gap:16px; flex:3;">
           <div class="f-group">
             <label>من</label>

@@ -29,6 +29,10 @@
 <form method="GET" class="filter-bar">
   <input type="hidden" name="status" value="{{ request('status', 'due') }}">
   <div class="f-field">
+    <label>بحث بالاسم</label>
+    <input type="text" oninput="searchCraftsmen(this.value)" placeholder="ابحث عن صنايعي..." style="width:100%; padding:8px 12px; border:1px solid var(--ln); border-radius:6px; background:var(--surface);">
+  </div>
+  <div class="f-field">
     <label>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-building"/></svg>
       الشقة / المشروع
@@ -433,5 +437,20 @@ function closeBulkPaymentModal() {
 .rv-modal { position:fixed; inset:0; z-index:1060; display:none; align-items:center; justify-content:center; background:rgba(15,23,42,.55); }
 .rv-modal.open { display:flex; }
 </style>
+@endpush
+@push('scripts')
+<script>
+function searchCraftsmen(q) {
+  const term = q.toLowerCase();
+  const rows = document.querySelectorAll('.craftsman-row');
+  rows.forEach(r => {
+    if (r.textContent.toLowerCase().includes(term)) {
+      r.style.display = '';
+    } else {
+      r.style.display = 'none';
+    }
+  });
+}
+</script>
 @endpush
 @endsection

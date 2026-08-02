@@ -68,9 +68,10 @@
 .vstat-blue { background-image: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); }
 .vstat-teal { background-image: linear-gradient(135deg, #047857 0%, #10b981 100%); }
 .vstat-green{ background-image: linear-gradient(135deg, #4338ca 0%, #8b5cf6 100%); }
-.vstat-red  { background-image: linear-gradient(135deg, #be123c 0%, #f43f5e 100%); }
+.vstat-red  { background-image: linear-gradient(135deg, #be123c 0%, #a64555 100%); }
 .vstat-amber{ background-image: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); }
 .vstat-gold { background-image: linear-gradient(135deg, #334155 0%, #64748b 100%); }
+.vstat-light-red { background-image: linear-gradient(135deg, #f10101 0%, #e51d1d 100%); }
 
 /* Account Cards */
 .acc-card {
@@ -148,7 +149,7 @@
 }
 
 /* دعم شبكة الكروت في الشاشات الكبيرة */
-.cols-top { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 20px; display: grid; }
+.cols-top { grid-template-columns: repeat(4, 1fr); gap: 20px; display: grid; }
 .cols-acc { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; display: grid; }
 
 .qlink:hover {
@@ -250,11 +251,33 @@
 </style>
 
 {{-- شريط الفلتر الزمني --}}
-<div class="filter-bar">
-    <h2>نظرة عامة {{ $isFiltered ? '- شهر ' . \Carbon\Carbon::parse($monthFilter)->translatedFormat('F Y') : '- كل الأوقات' }}</h2>
-    <form class="filter-form" method="GET" action="{{ route('dashboard') }}">
-        <input type="month" name="month" value="{{ $monthFilter === 'all' ? '' : $monthFilter }}" onchange="this.form.submit()">
-        <a href="{{ route('dashboard', ['month' => 'all']) }}" class="btn ghost sm {{ $monthFilter === 'all' ? 'active' : '' }}" style="margin: 0">الكل (بدون فلتر)</a>
+<div class="filter-bar" style="background: linear-gradient(to left, #ffffff, #f8fafc); border-right: 4px solid #3b82f6; border-radius: 16px; box-shadow: 0 4px 15px -3px rgba(0,0,0,0.05); padding: 20px 24px;">
+    <h2 style="display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 800; color: #0f172a; margin: 0;">
+        <div style="width: 40px; height: 40px; border-radius: 12px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.1);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+        </div>
+        نظرة عامة
+        @if($isFiltered)
+            <span class="tag blue" style="font-size: 14px; font-weight: 700; padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; margin-inline-start: 4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                شهر {{ \Carbon\Carbon::parse($monthFilter)->translatedFormat('F Y') }}
+            </span>
+        @else
+            <span class="tag gray" style="font-size: 14px; font-weight: 700; padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; margin-inline-start: 4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                كل الأوقات
+            </span>
+        @endif
+    </h2>
+    <form class="filter-form" method="GET" action="{{ route('dashboard') }}" style="background: #f8fafc; padding: 6px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px;">
+        <div style="position: relative; display: flex; align-items: center;">
+            <svg style="position: absolute; right: 12px; color: #64748b; pointer-events: none; width: 16px; height: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <input type="month" name="month" value="{{ $monthFilter === 'all' ? '' : $monthFilter }}" onchange="this.form.submit()" style="padding: 10px 16px 10px 36px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #1e293b; font-weight: 600; font-size: 14px; outline: none; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: border-color 0.2s; font-family: inherit;">
+        </div>
+        <a href="{{ route('dashboard', ['month' => 'all']) }}" class="btn {{ $monthFilter === 'all' ? 'primary' : 'ghost' }} sm" style="margin: 0; border-radius: 8px; padding: 10px 16px; font-weight: 700; display: flex; align-items: center; gap: 6px; {{ $monthFilter === 'all' ? 'background: #3b82f6; color: #fff; border:none;' : 'background: transparent; color: #475569;' }}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+            الكل
+        </a>
     </form>
 </div>
 
@@ -355,23 +378,24 @@
   </a>
 
   {{-- 8. المصروفات العامة --}}
-  <div class="vstat vstat-red" style="background:var(--surface); border:1px solid var(--line);">
+  <a class="vstat vstat-light-red" href="#">
     <div class="top">
-      <span class="label" style="color:var(--ink)">المصروفات العامة</span>
-      <span class="ic" style="color:var(--neg); background:rgba(239, 68, 68, 0.1)">
+      <span class="label">المصروفات العامة</span>
+      <span class="ic">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
       </span>
     </div>
-    <div class="val tnum" style="color:var(--neg)">{{ \App\Support\Money::format($totalGeneralExpenses ?? 0) }} <small>ج.م</small></div>
-    <div class="note" style="color:var(--ink-3)">إجمالي المصروفات الإدارية للمؤسسة</div>
-  </div>
+    <div class="val tnum">{{ \App\Support\Money::format($totalGeneralExpenses ?? 0) }} <small>ج.م</small></div>
+    <div class="note">إجمالي المصروفات الإدارية للمؤسسة</div>
+    <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
+  </a>
 
 </div>
 
         {{-- روابط سريعة (Full Width) --}}
-        <div class="card card-pad" style="display: flex; flex-direction: column; padding: 24px; margin-top: 40px;">
-          <div class="section-label" style="margin:0 0 16px; font-size: 15px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; color: #3b82f6;"><use href="#i-send"/></svg>
+        <div class="card" style="display: flex; flex-direction: column; padding: 24px; margin-top: 40px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd; border-radius: 16px; box-shadow: 0 4px 15px -3px rgba(0,0,0,0.05);">
+          <div class="section-label" style="margin:0 0 20px; font-size: 16px; font-weight: 800; color: #0369a1; display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><use href="#i-send"/></svg>
             إجراءات سريعة
           </div>
           <div class="qlinks" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;">
@@ -402,10 +426,10 @@
           </div>
         </div>
 
-<div style="display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; margin-top: 40px;">
+<div style="margin-top: 40px;">
 
     {{-- Main Area: Accounts --}}
-    <div>
+    <div style="margin-bottom: 40px;">
         <h3 style="margin-top:0; margin-bottom:15px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px;">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>
             السيولة النقدية والمحافظ البنكية
@@ -443,15 +467,34 @@
             </div>
             @endforeach
         </div>
+    </div>
 
-        <h3 style="margin-top:40px; margin-bottom:15px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg>
-            تفاصيل الأرباح
-        </h3>
+    {{-- Profit & Recent Transactions Grid --}}
+    <style>
+    .profit-tx-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 24px;
+        align-items: start;
+        margin-bottom: 40px;
+    }
+    @media (max-width: 1300px) {
+        .profit-tx-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    </style>
+    <div class="profit-tx-grid">
         
-        {{-- Profit Details Section --}}
-        <div class="profit-section">
-            {{-- الربح الدفتري (على الورق) - Right Card --}}
+        {{-- Profit Details --}}
+        <div style="display: flex; flex-direction: column;">
+            <h3 style="margin-top:0; margin-bottom:15px; font-weight:700; color:#1e293b; display:flex; align-items:center; gap:8px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg>
+                تفاصيل الأرباح
+            </h3>
+            
+            <div class="profit-section" style="flex: 1; margin-bottom: 0;">
+                {{-- الربح الدفتري (على الورق) - Right Card --}}
             <div class="profit-card profit-card-blue">
                 <div class="card-header">
                     <div class="card-title">
@@ -520,10 +563,88 @@
                 <svg style="position: absolute; left: -20px; bottom: -20px; width: 180px; height: 180px; color: rgba(255,255,255,0.06); transform: rotate(-15deg); pointer-events:none; z-index: 1;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-cash"/></svg>
             </div>
         </div>
+
+        {{-- آخر الحركات --}}
+        <div style="display: flex; flex-direction: column;">
+            <div class="card" style="height: 100%; min-height: 400px; max-height: 480px; overflow:hidden; display: flex; flex-direction: column; background: #ffffff; border-color: #e2e8f0; box-shadow: 0 4px 15px -3px rgba(0,0,0,0.05); border-radius: 16px; position: relative;">
+              <div class="table-top" style="padding: 20px; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; background: #f8fafc;">
+                <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
+                  <span style="background: #e0f2fe; color: #0284c7; padding: 6px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>
+                  </span>
+                  آخر الحركات المالية
+                </h4>
+                <a href="{{ route('transactions.index') }}" class="btn ghost sm" style="font-size: 13px; background: #e0f2fe; color: #0284c7; border: none; font-weight: 700; border-radius: 8px;">عرض الكل</a>
+              </div>
+              <style>
+                .tx-premium {
+                    position: relative;
+                    padding: 16px;
+                    margin: 12px 20px;
+                    border-radius: 14px;
+                    background: #ffffff;
+                    border: 1px solid #f1f5f9;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+                    transition: all 0.3s ease;
+                    overflow: hidden;
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                }
+                .tx-premium:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+                    border-color: #e2e8f0;
+                }
+                .tx-in .tx-ic-box { background: #ecfdf5; color: #10b981; }
+                .tx-out .tx-ic-box { background: #fef2f2; color: #ef4444; }
+                .tx-ic-box {
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+                .tx-bg-icon { display: none; }
+              </style>
+              @if($recentTransactions->count())
+                <div class="feed feed-compact" style="flex: 1; overflow-y: auto; padding-bottom: 20px; padding-top: 4px;">
+                  @foreach($recentTransactions as $tx)
+                    <div class="tx-premium tx-{{ $tx->direction }}">
+                      <div class="tx-ic-box">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <use href="{{ $tx->direction === 'in' ? '#i-down' : '#i-chart' }}"/>
+                        </svg>
+                      </div>
+                      <div class="tx-main-info" style="flex: 1;">
+                        <div class="t" style="font-size: 14px; font-weight: 800; color: #1e293b; margin-bottom: 6px;">{{ \Illuminate\Support\Str::limit($tx->party, 25) }}</div>
+                        <div class="s" style="font-size: 13px; color: #64748b; display: flex; gap: 10px; align-items: center;">
+                          <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 6px; font-weight: 600; color: #475569;">{{ $tx->type }}</span>
+                          <span style="font-weight: 500;">{{ $tx->date->format('d/m') }}</span>
+                        </div>
+                      </div>
+                      <div style="font-size: 17px; font-weight: 800; color: {{ $tx->direction === 'in' ? '#10b981' : '#ef4444' }}; direction: ltr;">
+                        {{ $tx->direction === 'in' ? '+' : '-' }}{{ \App\Support\Money::format($tx->amount) }}
+                      </div>
+                    </div>
+                  @endforeach
+                </div>
+              @else
+                <div class="empty-state" style="padding:40px 20px; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8;">
+                  <svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 16px; opacity: 0.4;"><use href="#i-activity"/></svg>
+                  <h4 style="font-size:15px; margin: 0; color: #64748b; font-weight: 700;">لا توجد حركات مالية بعد</h4>
+                </div>
+              @endif
+            </div>
         </div>
+
+    </div>
         
-        {{-- Discounts and Losses Section --}}
-        <div class="discounts-card" style="margin-top:30px; margin-bottom:30px; background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; border-right: 4px solid #ef4444; overflow: hidden; box-shadow: 0 4px 15px -3px rgba(0,0,0,0.05);">
+    {{-- Discounts and Losses Section --}}
+    <div class="card discounts-card" style="margin-bottom:30px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); border-right: 4px solid #ef4444; overflow: hidden; position: relative;">
+        <svg style="position: absolute; left: -20px; bottom: -20px; width: 150px; height: 150px; color: rgba(239, 68, 68, 0.05); transform: rotate(-15deg); pointer-events:none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-chart"/></svg>
             <div style="padding: 24px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                     <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #b91c1c;">تفاصيل الخصومات والخسائر</h3>
@@ -564,71 +685,43 @@
                         <div style="text-align: right; font-size: 18px; font-weight: 800; color: #1e293b;">إجمالي الخصومات</div>
                     </div>
 
-                </div>
-            </div>
-        </div>
-
     </div>
 
-    {{-- Sidebar: Quick Links & Recent Tx --}}
-    <div style="display: flex; flex-direction: column; gap: 24px;">
-
-
-        {{-- آخر الحركات --}}
-        <div class="card" style="overflow:hidden; display: flex; flex-direction: column;">
-          <div class="table-top" style="padding: 16px 20px; border-bottom: 1px solid rgba(0,0,0,0.05);">
-            <h4 style="margin: 0; font-size: 15px; font-weight: 700; color: #0f172a;">آخر الحركات المالية</h4>
-            <a href="{{ route('transactions.index') }}" class="btn ghost sm" style="font-size: 11px;">عرض الكل</a>
-          </div>
-          @if($recentTransactions->count())
-            <div class="feed feed-compact" style="flex: 1; overflow-y: auto;">
-              @foreach($recentTransactions as $tx)
-                <div class="tx {{ $tx->direction }}" style="padding: 12px 20px;">
-                  <div class="tx-ic">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <use href="{{ $tx->direction === 'in' ? '#i-down' : '#i-chart' }}"/>
-                    </svg>
-                  </div>
-                  <div class="tx-main">
-                    <div class="t" style="font-size: 13px;">{{ \Illuminate\Support\Str::limit($tx->party, 20) }}</div>
-                    <div class="s" style="font-size: 11px;">
-                      <span>{{ $tx->type }}</span>
-                      <span>{{ $tx->date->format('d/m') }}</span>
-                    </div>
-                  </div>
-                  <div class="tx-amt" style="font-weight: 700; font-size: 13px;">{{ $tx->direction === 'in' ? '+' : '−' }}{{ \App\Support\Money::format($tx->amount) }}</div>
-                </div>
-              @endforeach
-            </div>
-          @else
-            <div class="empty-state" style="padding:40px 20px; flex: 1; display: flex; flex-direction: column; justify-content: center;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>
-              <h4 style="font-size:13px; margin-top: 10px;">لا توجد حركات بعد</h4>
-            </div>
-          @endif
-        </div>
-
-    </div>
-
-</div>
+</div> <!-- closes padding 24px -->
+</div> <!-- closes discounts-card -->
+</div> <!-- closes margin-top 40px wrapper -->
 
 {{-- الرسم البياني لنمو رأس المال --}}
-<div class="card card-pad" style="margin-bottom: 30px; padding: 24px; position: relative;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3 style="margin: 0; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+<div class="card" style="margin-top: 40px; margin-bottom: 40px; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; position: relative;">
+    <div style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #fafafa;">
+        
+        {{-- Right Side: Title --}}
+        <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px;">
             نمو رأس المال (لقطات)
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
         </h3>
-        <span class="tag blue sm" style="font-weight: 600;">آخر 30 يوم (افتراضي)</span>
+        
+        {{-- Left Side: Badges --}}
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: #334155; display: flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                آخر 30 يوم (افتراضي)
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+            <div style="background: #1d4ed8; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; display: flex; align-items: center;">
+                {{ $capitalSnapshots->count() }} لقطة
+            </div>
+        </div>
     </div>
     
-    <div id="capital-chart" style="min-height: 300px;"></div>
+    <div style="padding: 16px 24px 24px 24px;">
+        <div id="capital-chart" style="min-height: 320px;"></div>
+    </div>
     
     @if($capitalSnapshots->isEmpty())
-        <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.8); z-index: 10;">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 12px;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 8 12 12 14 14"></polyline></svg>
-            <div style="color: #64748b; font-weight: 600;">لا توجد لقطات مسجلة حتى الآن</div>
-            <div style="color: #94a3b8; font-size: 12px; margin-top: 4px;">يقوم النظام بتسجيل لقطة يومياً بشكل تلقائي</div>
+        <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.7); z-index: 10; backdrop-filter: blur(8px);">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#4338ca" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 16px; opacity: 0.5;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 8 12 12 14 14"></polyline></svg>
+            <div style="color: #1e3a8a; font-weight: 800; font-size: 16px; margin-bottom: 8px;">لا توجد لقطات مسجلة حتى الآن</div>
+            <div style="color: #4f46e5; font-size: 14px; font-weight: 600;">يقوم النظام بتسجيل لقطة يومياً بشكل تلقائي</div>
         </div>
     @endif
 </div>
@@ -696,6 +789,15 @@ document.addEventListener('DOMContentLoaded', function() {
             stroke: {
                 curve: 'smooth',
                 width: 3
+            },
+            markers: {
+                size: 5,
+                colors: ['#ffffff'],
+                strokeColors: '#3b82f6',
+                strokeWidth: 2,
+                hover: {
+                    size: 7
+                }
             },
             xaxis: {
                 categories: dates,

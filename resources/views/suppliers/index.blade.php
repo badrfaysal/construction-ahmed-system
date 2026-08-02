@@ -19,13 +19,16 @@
 </div>
 
 <form method="GET" class="filter-bar">
-  @include('partials._sort-select', ['options' => [
-    'name'        => 'أبجديًا (أ-ي)',
-    'newest'      => 'الأحدث',
-    'oldest'      => 'الأقدم',
-    'spent_desc'  => 'الأعلى إنفاقًا',
-    'spent_asc'   => 'الأقل إنفاقًا',
-  ]])
+  <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+    <input type="text" id="supplier-search" oninput="searchSuppliers(this.value)" placeholder="ابحث عن مورد..." style="flex:1; min-width: 200px; padding:8px 12px; border:1px solid var(--ln); border-radius:6px; background:var(--surface);">
+    @include('partials._sort-select', ['options' => [
+      'name'        => 'أبجديًا (أ-ي)',
+      'newest'      => 'الأحدث',
+      'oldest'      => 'الأقدم',
+      'spent_desc'  => 'الأعلى إنفاقًا',
+      'spent_asc'   => 'الأقل إنفاقًا',
+    ]])
+  </div>
 </form>
 
 @if($suppliers->count())
@@ -68,5 +71,21 @@
     <p><a href="{{ route('suppliers.create') }}">أضف مورداً</a></p>
   </div>
 @endif
+
+@push('scripts')
+<script>
+function searchSuppliers(q) {
+  const term = q.toLowerCase();
+  const cards = document.querySelectorAll('.card.sup');
+  cards.forEach(c => {
+    if (c.textContent.toLowerCase().includes(term)) {
+      c.style.display = 'block';
+    } else {
+      c.style.display = 'none';
+    }
+  });
+}
+</script>
+@endpush
 
 @endsection

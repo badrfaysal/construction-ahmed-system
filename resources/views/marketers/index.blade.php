@@ -21,7 +21,8 @@
   </div>
 @endif
 
-<div style="margin-bottom:16px; display:flex; align-items:center; gap:12px;">
+<div style="margin-bottom:16px; display:flex; align-items:center; gap:12px; flex-wrap: wrap;">
+  <input type="text" id="marketer-search" oninput="searchMarketersTable(this.value)" placeholder="ابحث عن مسوق..." style="flex:1; min-width: 200px; padding:8px 12px; border:1px solid var(--ln); border-radius:6px; background:var(--surface);">
   <label style="font-size:13px; font-weight:600; color:var(--ink-2); white-space:nowrap;">ترتيب حسب:</label>
   <div class="f-select-wrap" style="width: 260px; margin: 0;">
     <select id="marketer-sort" onchange="sortMarketersTable(this.value)" class="f-select" style="background: var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
@@ -128,6 +129,21 @@ function sortMarketersTable(mode) {
   });
   rows.forEach(r => tbody.appendChild(r));
 }
+
+function searchMarketersTable(q) {
+  const tbody = document.querySelector('#marketers-table tbody');
+  if (!tbody) return;
+  const term = q.toLowerCase();
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  rows.forEach(r => {
+    if (r.textContent.toLowerCase().includes(term)) {
+      r.style.display = '';
+    } else {
+      r.style.display = 'none';
+    }
+  });
+}
+
 // Default: newest first
 document.addEventListener('DOMContentLoaded', () => sortMarketersTable('newest'));
 </script>
