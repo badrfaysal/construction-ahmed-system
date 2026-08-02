@@ -290,10 +290,18 @@ function openBulkPaymentModal(workerName, remaining, isPartial = false) {
   document.getElementById('bulkModalWorkerName').textContent = workerName;
   document.getElementById('bulkModalWorkerNameInput').value = workerName;
   document.getElementById('bulkModalRemaining').textContent = remaining + ' ج.م';
+  
+  const submitBtn = document.getElementById('bulkPaymentSubmitBtn');
+  const modalTitle = document.getElementById('bulkPaymentModalTitle');
+  
   if (isPartial) {
       document.getElementById('bulkModalAmount').value = '';
+      if (submitBtn) submitBtn.textContent = 'تأكيد السداد الجزئي';
+      if (modalTitle) modalTitle.textContent = 'تسجيل سداد جزئي للصنايعي';
   } else {
       document.getElementById('bulkModalAmount').value = remaining > 0 ? remaining : 0;
+      if (submitBtn) submitBtn.textContent = 'تأكيد السداد المجمع';
+      if (modalTitle) modalTitle.textContent = 'تسجيل سداد مجمع للصنايعي';
   }
   document.getElementById('bulkPaymentModal').classList.add('open');
 }
@@ -387,7 +395,7 @@ function closeBulkPaymentModal() {
 <div class="rv-modal" id="bulkPaymentModal" onclick="if(event.target===this) closeBulkPaymentModal()">
   <div class="rv-card" style="max-width:400px;margin:20px;background:#fff;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.1);padding:20px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:1px solid #eee;padding-bottom:12px">
-      <h3 style="margin:0;font-size:1.1rem">تسجيل سداد مجمع للصنايعي</h3>
+      <h3 id="bulkPaymentModalTitle" style="margin:0;font-size:1.1rem">تسجيل سداد مجمع للصنايعي</h3>
       <button type="button" class="btn ghost sm" onclick="closeBulkPaymentModal()" style="padding:4px 8px"><i class="fa fa-times"></i></button>
     </div>
     <form method="POST" action="{{ route('workers.pay_bulk') }}" id="bulkPaymentForm">
@@ -427,7 +435,7 @@ function closeBulkPaymentModal() {
       
       <div style="text-align:left">
         <button type="button" class="btn ghost" onclick="closeBulkPaymentModal()">إلغاء</button>
-        <button type="submit" class="btn" style="background:var(--pos,#10b981); border-color:var(--pos,#10b981); color:#fff; font-weight:bold">تأكيد السداد المجمع</button>
+        <button type="submit" id="bulkPaymentSubmitBtn" class="btn" style="background:var(--pos,#10b981); border-color:var(--pos,#10b981); color:#fff; font-weight:bold">تأكيد السداد المجمع</button>
       </div>
     </form>
   </div>
