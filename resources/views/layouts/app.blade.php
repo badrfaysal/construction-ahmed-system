@@ -339,12 +339,6 @@
 
     <div class="right" style="display:flex; align-items:center; gap:8px;">
       
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
-        <input type="color" id="system-theme-picker" style="opacity:0; position:absolute; width:0; height:0;" value="#1a2433">
-      </label>
-
-
-
       {{-- Logout button --}}
       <form method="POST" action="{{ route('logout') }}" style="margin:0">
         @csrf
