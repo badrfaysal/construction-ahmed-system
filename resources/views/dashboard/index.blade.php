@@ -354,6 +354,18 @@
     <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>
   </a>
 
+  {{-- 8. المصروفات العامة --}}
+  <div class="vstat vstat-red" style="background:var(--surface); border:1px solid var(--line);">
+    <div class="top">
+      <span class="label" style="color:var(--ink)">المصروفات العامة</span>
+      <span class="ic" style="color:var(--neg); background:rgba(239, 68, 68, 0.1)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
+      </span>
+    </div>
+    <div class="val tnum" style="color:var(--neg)">{{ \App\Support\Money::format($totalGeneralExpenses ?? 0) }} <small>ج.م</small></div>
+    <div class="note" style="color:var(--ink-3)">إجمالي المصروفات الإدارية للمؤسسة</div>
+  </div>
+
 </div>
 
         {{-- روابط سريعة (Full Width) --}}

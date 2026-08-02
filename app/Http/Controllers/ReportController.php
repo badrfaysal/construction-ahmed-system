@@ -125,7 +125,7 @@ class ReportController extends Controller
             $topDiscountProject = null;
         }
 
-        $generalExpensesQuery = Expense::whereNull('project_id');
+        $generalExpensesQuery = \App\Models\Expense::whereNull('project_id');
         if ($from) $generalExpensesQuery->where('date', '>=', $from);
         if ($to) $generalExpensesQuery->where('date', '<=', $to);
         

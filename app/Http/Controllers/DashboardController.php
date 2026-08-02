@@ -89,6 +89,12 @@ class DashboardController extends Controller
         $totalMarketerCommissions = (float) \App\Models\Transaction::where('ref_type', 'marketer_commission')->sum('amount');
         $totalReturnLosses = (float) \App\Models\MaterialReturn::with('material')->get()->sum(fn($r) => $r->loss());
         $totalDiscountsAndLosses = $totalDiscount + $totalMarketerCommissions + $totalReturnLosses;
+        
+        $totalGeneralExpensesQuery = \App\Models\Expense::whereNull('project_id');
+        if ($isFiltered) {
+            $totalGeneralExpensesQuery->whereBetween('date', [$startDate, $endDate]);
+        }
+        $totalGeneralExpenses = (float) $totalGeneralExpensesQuery->sum('amount');
 
         // Fetch snapshots for the last 30 days for the chart
         $capitalSnapshots = \App\Models\CapitalSnapshot::where('snapshot_date', '>=', now()->subDays(30))
@@ -101,7 +107,7 @@ class DashboardController extends Controller
             'monthFilter', 'isFiltered', 'accounts', 'recentTransactions',
             'bookProfit', 'realProfit', 'uncollectedProfit', 'totalDiscount',
             'totalInstallmentProfit', 'totalTradeProfit', 'totalPercentageProfit', 'totalRevenuesForView',
-            'totalMarketerCommissions', 'totalReturnLosses', 'totalDiscountsAndLosses', 'capitalSnapshots'
+            'totalMarketerCommissions', 'totalReturnLosses', 'totalDiscountsAndLosses', 'capitalSnapshots', 'totalGeneralExpenses'
         ));
     }
 }
