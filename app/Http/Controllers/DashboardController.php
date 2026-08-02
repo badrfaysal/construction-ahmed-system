@@ -99,7 +99,7 @@ class DashboardController extends Controller
         // Fetch snapshots for the last 30 days for the chart
         $capitalSnapshots = \App\Models\CapitalSnapshot::where('snapshot_date', '>=', now()->subDays(30))
             ->orderBy('snapshot_date', 'asc')
-            ->get(['snapshot_date', 'net_capital']);
+            ->get(['snapshot_date', 'net_capital', 'details']);
 
         return view('dashboard.index', compact(
             'activeProjects', 'installmentContractsDue',

@@ -82,10 +82,19 @@ class CapitalService
 
         $netCapital = $accountsBalance + $directReceivables + $installmentReceivables - $supplierDebtsRemaining - $unpaidLabor - $clientOverpayments;
 
+        $accountsBreakdown = Account::where('status', 'active')
+            ->get(['id', 'name', 'balance'])
+            ->map(fn($acc) => [
+                'id' => $acc->id,
+                'name' => $acc->name,
+                'balance' => (float) $acc->balance
+            ])->toArray();
+
         return [
             'net_capital' => $netCapital,
             'details' => [
                 'accountsBalance' => $accountsBalance,
+                'accounts_breakdown' => $accountsBreakdown,
                 'directReceivables' => $directReceivables,
                 'installmentReceivables' => $installmentReceivables,
                 'supplierDebtsRemaining' => $supplierDebtsRemaining,

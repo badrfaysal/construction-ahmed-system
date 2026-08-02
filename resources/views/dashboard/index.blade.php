@@ -744,7 +744,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             snapshots.unshift({
                 snapshot_date: prevDateStr,
-                net_capital: single.net_capital
+                net_capital: single.net_capital,
+                details: single.details
             });
         }
         
@@ -831,10 +832,25 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             tooltip: {
                 theme: 'light',
-                y: {
-                    formatter: function (val) {
-                        return new Intl.NumberFormat('ar-EG').format(val) + " ج.م";
+                custom: function({series, seriesIndex, dataPointIndex, w}) {
+                    var val = series[seriesIndex][dataPointIndex];
+                    var item = snapshots[dataPointIndex];
+                    
+                    var tooltipHtml = '<div style="padding: 12px; font-family: inherit; min-width: 220px; direction: rtl; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">';
+                    tooltipHtml += '<div style="font-weight: 700; margin-bottom: 8px; font-size: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; color: #1e293b;">رأس المال: ' + new Intl.NumberFormat('ar-EG').format(val) + ' ج.م</div>';
+                    
+                    if (item.details && item.details.accounts_breakdown) {
+                        tooltipHtml += '<div style="font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 6px;">تفاصيل الخزائن:</div>';
+                        item.details.accounts_breakdown.forEach(function(acc) {
+                            tooltipHtml += '<div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; align-items: center;">';
+                            tooltipHtml += '<span style="color: #475569;">' + acc.name + '</span>';
+                            tooltipHtml += '<span style="font-weight: 700; color: #0f172a;">' + new Intl.NumberFormat('ar-EG').format(acc.balance) + '</span>';
+                            tooltipHtml += '</div>';
+                        });
                     }
+                    
+                    tooltipHtml += '</div>';
+                    return tooltipHtml;
                 }
             },
             markers: {
