@@ -146,19 +146,6 @@
   </button>
 
   <nav class="nav">
-    <div style="display:flex; gap:8px; padding: 10px 0 16px 0; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 8px;">
-      <label style="flex:1; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1); padding:8px; border-radius:10px; color:var(--sidebar-text, #fff); opacity:0.9; font-size:11px; font-weight:bold; transition: 0.2s;" title="تغيير لون الخلفية" onmouseover="this.style.background='rgba(255,255,255,0.15)'; this.style.opacity='1'" onmouseout="this.style.background='rgba(255,255,255,0.08)'; this.style.opacity='0.9'">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
-        <span>الخلفية</span>
-        <input type="color" id="sidebar-color-picker" style="opacity:0; position:absolute; width:0; height:0;" value="#111827">
-      </label>
-      <label style="flex:1; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1); padding:8px; border-radius:10px; color:var(--sidebar-text, #fff); opacity:0.9; font-size:11px; font-weight:bold; transition: 0.2s;" title="تغيير لون الخط" onmouseover="this.style.background='rgba(255,255,255,0.15)'; this.style.opacity='1'" onmouseout="this.style.background='rgba(255,255,255,0.08)'; this.style.opacity='0.9'">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
-        <span>لون الخط</span>
-        <input type="color" id="sidebar-text-picker" style="opacity:0; position:absolute; width:0; height:0;" value="#f3f4f6">
-      </label>
-    </div>
-
     {{-- Each nav-item gets the "active" class when the current route matches --}}
     {{-- Order follows the real workflow: dashboard → add people (clients/suppliers/workers) → projects & quotes → money → reports/analytics → follow-up → system --}}
 
@@ -358,7 +345,15 @@
         <input type="color" id="system-theme-picker" style="opacity:0; position:absolute; width:0; height:0;" value="#1a2433">
       </label>
 
-
+      {{-- Background upload button --}}
+      <label style="cursor:pointer; margin:0; display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:10px; background:rgba(255,255,255,0.5); border:1px solid rgba(0,0,0,0.05); color:var(--ink); transition:0.2s;" title="تغيير خلفية النظام" onmouseover="this.style.background='rgba(255,255,255,0.9)'" onmouseout="this.style.background='rgba(255,255,255,0.5)'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <input type="file" id="system-bg-upload" accept="image/*" style="display:none;">
+      </label>
+      
+      <button type="button" id="system-bg-clear" style="display:none; cursor:pointer; margin:0; align-items:center; justify-content:center; width:36px; height:36px; border-radius:10px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); color:#ef4444; transition:0.2s;" title="حذف الخلفية" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
 
       {{-- Logout button --}}
       <form method="POST" action="{{ route('logout') }}" style="margin:0">
