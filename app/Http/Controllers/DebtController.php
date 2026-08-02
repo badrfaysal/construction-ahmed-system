@@ -283,7 +283,9 @@ class DebtController extends Controller
             }
 
             if (!empty($transactions)) {
-                Transaction::insert($transactions);
+                foreach ($transactions as $txData) {
+                    Transaction::create($txData);
+                }
             }
         });
 
