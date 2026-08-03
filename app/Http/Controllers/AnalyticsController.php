@@ -13,6 +13,8 @@ class AnalyticsController extends Controller
     // Charts and KPIs: monthly cash flow, top suppliers, project status mix
     public function index()
     {
+        abort_unless(auth()->user()->canSeeFinancials(), 403, 'غير مصرح لك بالوصول للتقارير المالية');
+
         // Cash in/out grouped by month, last 6 months
         $monthly = Transaction::select(
                 DB::raw("DATE_FORMAT(date, '%Y-%m') as month"),
@@ -52,6 +54,8 @@ class AnalyticsController extends Controller
     // Labor cost breakdown grouped by technician / team name across all projects
     public function technicians()
     {
+        abort_unless(auth()->user()->canSeeFinancials(), 403, 'غير مصرح لك بالوصول للتقارير المالية');
+
         $technicians = ProjectBand::select('team_name')
             ->selectRaw('COUNT(*) as bands_count')
             ->selectRaw('SUM(labor_amount) as total_labor')

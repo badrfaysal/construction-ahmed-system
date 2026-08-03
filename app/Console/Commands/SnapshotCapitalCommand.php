@@ -28,14 +28,15 @@ class SnapshotCapitalCommand extends Command
         $this->info('Calculating current capital...');
         $capitalData = \App\Services\CapitalService::calculateCurrentCapital();
 
+        $dateStr = now()->timezone('Africa/Cairo')->toDateString();
         \App\Models\CapitalSnapshot::updateOrCreate(
-            ['snapshot_date' => today()],
+            ['snapshot_date' => $dateStr],
             [
                 'net_capital' => $capitalData['net_capital'],
                 'details' => $capitalData['details'],
             ]
         );
 
-        $this->info('Capital snapshot saved successfully for ' . today()->toDateString());
+        $this->info('Capital snapshot saved successfully for ' . $dateStr);
     }
 }

@@ -13,12 +13,8 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    // Login and permissions are shared with the first (fuel/factory) system,
-    // which lives in the same unified database — so we authenticate against
-    // its unprefixed "users" table, NOT our old sy2_users. We only ever read
-    // this table for auth (plus Laravel's normal remember_token write); we
-    // never alter its schema or touch rows on behalf of the other system.
-    protected $table = 'users';
+    // This system now uses its own dedicated users table for authentication.
+    protected $table = 'sy2_system_users';
 
     /**
      * The attributes that are mass assignable.
@@ -27,7 +23,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'email',
+        'username',
         'password',
         'role',
         'hide_financials',

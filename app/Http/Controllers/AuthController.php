@@ -22,23 +22,24 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email'    => ['required', 'email'],
+            'username' => ['required', 'string'],
             'password' => ['required'],
         ]);
 
-        // Auth::attempt checks email+password against the shared users table.
-        // The extra is_active=1 condition blocks suspended accounts from the
-        // first system from logging in here too.
-        // The "remember" checkbox makes the session persist across browser restarts.
         if (Auth::attempt([...$credentials, 'is_active' => 1], $request->boolean('remember'))) {
             $request->session()->regenerate(); // prevents session fixation attacks
+
+            // Update last_login
+            $user = Auth::user();
+            $user->last_login = now();
+            $user->save();
 
             return redirect()->intended(route('dashboard'));
         }
 
         return back()->withErrors([
-            'email' => 'البريد الإلكتروني أو كلمة المرور غير صحيحة، أو الحساب موقوف.',
-        ])->onlyInput('email');
+            'username' => 'اسم المستخدم أو كلمة المرور غير صحيحة، أو الحساب موقوف.',
+        ])->onlyInput('username');
     }
 
     // Log the user out and clear their session

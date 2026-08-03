@@ -40,6 +40,40 @@
   }
   .page-wrap { background: rgba(255,255,255,0.4); }
   .topbar { background: rgba(255,255,255,0.4); border-bottom: 1px solid rgba(255,255,255,0.2); }
+  
+  .page-head {
+    background: linear-gradient(135deg, var(--accent-soft, #f8fafc), #fff);
+    border: 1px solid var(--accent-soft, #e2e8f0);
+    padding: 24px 30px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-head::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0; width: 6px;
+    background: var(--accent, #3b82f6);
+  }
+  .page-head h2, .page-head h3 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--accent-ink, #1e293b);
+  }
+  .page-head p {
+    margin: 6px 0 0;
+    color: #475569;
+    font-size: 1rem;
+    font-weight: 600;
+  }
 </style>
 </head>
 <body>
@@ -214,6 +248,7 @@
     </a>
 
     <div class="nav-label">التقارير والتحليلات</div>
+    @if(auth()->user()->canSeeFinancials())
     <a class="nav-item {{ request()->routeIs('reports.dashboard') ? 'active' : '' }}" href="{{ route('reports.dashboard') }}" style="--ic:#6366f1">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bar-chart"/></svg>
       <span>التقارير</span>
@@ -222,6 +257,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-percent"/></svg>
       <span>ربحية المشاريع</span>
     </a>
+    @endif
     <a class="nav-item {{ request()->routeIs('reports.statement*') ? 'active' : '' }}" href="{{ route('reports.statement.index') }}" style="--ic:#0284c7">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
       <span>كشف حساب العميل</span>

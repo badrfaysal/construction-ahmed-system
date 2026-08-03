@@ -32,6 +32,8 @@ class ReportController extends Controller
     // Profitability table — real sell prices vs cost, split into book profit and collected profit
     public function profitability()
     {
+        abort_unless(auth()->user()->canSeeFinancials(), 403, 'غير مصرح لك بالوصول للتقارير المالية');
+
         $projects = Project::with(['client'])
             ->where('status', 'active')
             ->orderByDesc('created_at')
@@ -97,6 +99,7 @@ class ReportController extends Controller
     // Chart.js charts in reports/dashboard.blade.php.
     public function dashboard(Request $request)
     {
+        abort_unless(auth()->user()->canSeeFinancials(), 403, 'غير مصرح لك بالوصول للتقارير المالية');
         $from = $request->filled('from') ? \Carbon\Carbon::parse($request->from)->startOfDay() : null;
         $to   = $request->filled('to') ? \Carbon\Carbon::parse($request->to)->endOfDay() : null;
         $projectId = $request->get('project_id');

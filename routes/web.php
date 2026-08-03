@@ -206,6 +206,11 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
         Route::post('/settings/export-db', [SettingsController::class, 'exportDatabase'])->name('settings.export_db');
         Route::post('/settings/reset-db', [SettingsController::class, 'resetDatabase'])->name('settings.reset_db');
 
+        // Users Management
+        Route::post('/settings/users', [SettingsController::class, 'storeUser'])->name('settings.users.store');
+        Route::put('/settings/users/{user}', [SettingsController::class, 'updateUser'])->name('settings.users.update');
+        Route::delete('/settings/users/{user}', [SettingsController::class, 'deleteUser'])->name('settings.users.delete');
+
         // محفظة المقاولات — balance + hand-entered money moves (capital in,
         // owner withdrawals, general overhead). Owner-level,        // Wallet (المحفظة)
         Route::get('/wallet', [WalletController::class, 'index'])->name('wallet.index');

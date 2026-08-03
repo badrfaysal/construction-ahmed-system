@@ -7,18 +7,30 @@
   <div><h3>الصنايعية ومستحقاتهم</h3><p>كل صنايعي مجمّع عبر كل المشاريع — المتعاقد عليه، المدفوع، والمتبقي المستحق دلوقتي</p></div>
 </div>
 
-<div class="grid cols-3" style="margin-bottom:20px">
-  <div class="card stat">
-    <div class="top"><span class="label">عدد الصنايعية</span><span class="ic ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg></span></div>
+<style>
+.stat { background: linear-gradient(135deg, #3b82f6, #1d4ed8); border: none !important; border-radius: 16px; padding: 24px; color: #fff; box-shadow: 0 6px 20px rgba(0,0,0,0.08); transition: all 0.3s ease; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 10px; }
+.stat:nth-child(2) { background: linear-gradient(135deg, #10b981, #047857); }
+.stat:nth-child(3) { background: linear-gradient(135deg, #f59e0b, #b45309); }
+.stat:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.15); }
+.stat .top { display: flex; justify-content: space-between; align-items: center; color: #fff; font-size: 1rem; font-weight: 700; }
+.stat .top .label { color: rgba(255,255,255,0.95); }
+.stat .val { color: #fff !important; font-size: 2.2rem; font-weight: 900; line-height: 1; margin-top: 8px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.stat .ic { background: rgba(255,255,255,0.2) !important; color: #fff !important; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; border-radius: 12px; }
+.stat .ic svg { width: 22px; height: 22px; }
+</style>
+
+<div class="grid cols-3" style="margin-bottom:24px; gap: 20px;">
+  <div class="stat">
+    <div class="top"><span class="label">عدد الصنايعية</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg></span></div>
     <div class="val tnum">{{ $craftsmen->count() }}</div>
   </div>
-  <div class="card stat">
-    <div class="top"><span class="label">إجمالي المدفوع</span><span class="ic ic-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span></div>
-    <div class="val tnum" style="color:var(--pos)">{{ \App\Support\Money::format($totalPaid) }} <small>ج.م</small></div>
+  <div class="stat">
+    <div class="top"><span class="label">إجمالي المدفوع</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-cash"/></svg></span></div>
+    <div class="val tnum">{{ \App\Support\Money::format($totalPaid) }} <small style="font-size: 1rem;">ج.م</small></div>
   </div>
-  <div class="card stat">
-    <div class="top"><span class="label">إجمالي المستحق للصنايعية</span><span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg></span></div>
-    <div class="val tnum" style="color:{{ $totalRemaining > 0 ? 'var(--neg)' : 'var(--pos)' }}">{{ \App\Support\Money::format($totalRemaining) }} <small>ج.م</small></div>
+  <div class="stat">
+    <div class="top"><span class="label">إجمالي المستحق للصنايعية</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-hardhat"/></svg></span></div>
+    <div class="val tnum">{{ \App\Support\Money::format($totalRemaining) }} <small style="font-size: 1rem;">ج.م</small></div>
   </div>
 </div>
 <div class="tabs" style="margin-bottom: 20px; display: flex; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 10px;">

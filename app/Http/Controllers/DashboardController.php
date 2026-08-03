@@ -96,8 +96,8 @@ class DashboardController extends Controller
         }
         $totalGeneralExpenses = (float) $totalGeneralExpensesQuery->sum('amount');
 
-        // Fetch snapshots for the last 30 days for the chart
-        $capitalSnapshots = \App\Models\CapitalSnapshot::where('snapshot_date', '>=', now()->subDays(30))
+        // Fetch snapshots for the last 90 days for the chart
+        $capitalSnapshots = \App\Models\CapitalSnapshot::where('snapshot_date', '>=', now()->subDays(90))
             ->orderBy('snapshot_date', 'asc')
             ->get(['snapshot_date', 'net_capital', 'details']);
 

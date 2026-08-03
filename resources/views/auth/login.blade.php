@@ -37,9 +37,9 @@
     <form method="POST" action="{{ route('login') }}">
       @csrf
       <div class="field">
-        <label for="email">البريد الإلكتروني</label>
-        <input type="email" id="email" name="email" value="{{ old('email') }}"
-               placeholder="ahmed@aldabaa.com" autocomplete="email" required>
+        <label for="username">اسم المستخدم</label>
+        <input type="text" id="username" name="username" value="{{ old('username') }}"
+               placeholder="admin" autocomplete="username" required>
       </div>
       <div class="field">
         <label for="password">كلمة المرور</label>

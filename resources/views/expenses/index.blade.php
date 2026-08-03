@@ -3,63 +3,77 @@
 @section('page-title', 'المصروفات العامة')
 
 @push('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 /* ═══ تصميم المصروفات ═══ */
 .exp * { box-sizing:border-box; }
 .exp { --ink:#1e293b; --mut:#64748b; --soft:#94a3b8; --ln:#e2e8f0; --bg2:#f8fafc;
-      --ok:#047857; --bad:#b91c1c; --brand:#3b82f6; --brand-light:#eff6ff; }
+      --ok:#059669; --bad:#dc2626; --brand:#4f46e5; --brand-light:#e0e7ff; }
 
-.exp-stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-bottom:24px; }
-.exp-stat { background:#fff; border:1px solid var(--ln); border-radius:12px; padding:20px; 
-  display:flex; flex-direction:column; gap:8px; position:relative; overflow:hidden; }
-.exp-stat::before { content:''; position:absolute; top:0; right:0; width:4px; height:100%; background:var(--c, var(--mut)); }
-.exp-stat.st-red { --c:var(--bad); }
-.exp-stat.st-blue { --c:var(--brand); }
-.exp-stat.st-green { --c:var(--ok); }
-.exp-stat .top { display:flex; justify-content:space-between; align-items:center; color:var(--mut); font-size:.85rem; font-weight:600; }
-.exp-stat .top svg { color:var(--soft); }
-.exp-stat .val { font-size:1.8rem; font-weight:800; color:var(--ink); line-height:1; }
-.exp-stat .sub { font-size:.85rem; color:var(--mut); }
+.exp-stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin-bottom:24px; }
+.exp-stat { background:linear-gradient(145deg, #ffffff, #f8fafc); border:1px solid var(--ln); border-radius:16px; padding:24px; 
+  display:flex; flex-direction:column; gap:10px; position:relative; overflow:hidden; transition: all 0.3s ease; box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+.exp-stat:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.12); }
+.exp-stat::before { display: none; }
+.exp-stat.st-red { background: linear-gradient(135deg, #ef4444, #b91c1c); border: none; color: #fff; }
+.exp-stat.st-blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); border: none; color: #fff; }
+.exp-stat.st-green { background: linear-gradient(135deg, #10b981, #047857); border: none; color: #fff; }
+.exp-stat .top { display:flex; justify-content:space-between; align-items:center; font-size:1rem; font-weight:700; color: #fff; }
+.exp-stat .top svg, .exp-stat .top i { background: rgba(255,255,255,0.2); color: #fff; padding: 8px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+.exp-stat .val { font-size:2.2rem; font-weight:900; color:#fff; line-height:1; margin-top: 8px; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.exp-stat .sub { font-size:1rem; color:rgba(255,255,255,0.9); font-weight: 600; }
 
-.exp-layout { display:grid; grid-template-columns:330px 1fr; gap:20px; align-items:start; }
+.exp-layout { display:grid; grid-template-columns:360px 1fr; gap:24px; align-items:start; }
 @media(max-width:900px) { .exp-layout { grid-template-columns:1fr; } }
 
-.exp-box { background:#fff; border:1px solid var(--ln); border-radius:12px; overflow:hidden; }
-.exp-bhead { background:var(--bg2); padding:16px 20px; border-bottom:1px solid var(--ln); display:flex; align-items:center; gap:8px; }
-.exp-bhead h3 { font-size:1.05rem; font-weight:700; color:var(--ink); margin:0; }
+.exp-box { background:#fff; border:1px solid var(--ln); border-radius:16px; overflow:hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.03); transition: all 0.3s ease; }
+.exp-box:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.05); }
+.exp-bhead { background:linear-gradient(to left, var(--brand-light), #fff); padding:18px 24px; border-bottom:1px solid var(--ln); display:flex; align-items:center; gap:12px; }
+.exp-bhead svg, .exp-bhead i { color: var(--brand); background: #fff; border-radius: 10px; padding: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+.exp-bhead h3 { font-size:1.15rem; font-weight:800; color:var(--brand); margin:0; }
 
-.exp-form { padding:20px; display:flex; flex-direction:column; gap:16px; }
-.exp-form label { display:block; font-size:.85rem; font-weight:700; color:var(--ink); margin-bottom:6px; }
+.exp-form { padding:24px; display:flex; flex-direction:column; gap:20px; background: #fafafa; }
+.exp-form label { display:flex; align-items: center; gap: 8px; font-size:.9rem; font-weight:700; color:var(--ink); margin-bottom:8px; }
+.exp-form label i { color: var(--brand); font-size: 1rem; }
 .exp-form .req { color:var(--bad); }
-.exp-form input, .exp-form select, .exp-form textarea { width:100%; padding:10px 14px; border:1px solid var(--ln); 
-  border-radius:8px; font-size:.95rem; background:#fff; transition:.2s; }
-.exp-form input:focus, .exp-form select:focus, .exp-form textarea:focus { border-color:var(--brand); outline:none; box-shadow:0 0 0 3px var(--brand-light); }
-.exp-form .hint { font-size:.75rem; color:var(--mut); margin-top:4px; }
-.exp-form .btn { width:100%; padding:12px; font-size:1rem; justify-content:center; }
+.exp-form input, .exp-form select, .exp-form textarea { width:100%; padding:12px 16px; border:1px solid #cbd5e1; 
+  border-radius:10px; font-size:.95rem; background:#fff; transition:all .3s ease; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+.exp-form input:focus, .exp-form select:focus, .exp-form textarea:focus { border-color:var(--brand); outline:none; box-shadow:0 0 0 4px rgba(79, 70, 229, 0.15), inset 0 2px 4px rgba(0,0,0,0.01); }
+.exp-form .hint { font-size:.8rem; color:var(--mut); margin-top:6px; display: flex; align-items: center; gap: 6px; }
+.exp-form .btn { width:100%; padding:14px; font-size:1.05rem; justify-content:center; border-radius: 10px; font-weight: 700; background: linear-gradient(145deg, var(--brand), #4338ca); color: #fff; border: none; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.exp-form .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(79, 70, 229, 0.4); background: linear-gradient(145deg, #4338ca, #3730a3); }
 
-.exp-filters { padding:14px 20px; background:var(--bg2); border-bottom:1px solid var(--ln); 
-  display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end; }
-.exp-filters .f-group { flex:1; min-width:180px; display:flex; flex-direction:column; gap:4px; }
-.exp-filters label { font-size:.8rem; font-weight:600; color:var(--mut); }
-.exp-filters select, .exp-filters input { padding:8px 12px; border:1px solid var(--ln); border-radius:6px; font-size:.9rem; }
+.exp-filters { padding:20px 24px; background:linear-gradient(to bottom, #fff, var(--bg2)); border-bottom:1px solid var(--ln); 
+  display:flex; flex-wrap:wrap; gap:16px; align-items:flex-end; }
+.exp-filters .f-group { flex:1; min-width:180px; display:flex; flex-direction:column; gap:8px; }
+.exp-filters label { font-size:.85rem; font-weight:700; color:var(--ink); display: flex; align-items: center; gap: 6px; }
+.exp-filters label i { color: var(--mut); }
+.exp-filters select, .exp-filters input { padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:.95rem; transition: all 0.2s; box-shadow: inset 0 1px 3px rgba(0,0,0,0.02); }
+.exp-filters select:focus, .exp-filters input:focus { border-color: var(--brand); outline: none; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+.exp-filters .btn.secondary { background: #fff; border: 1px solid #cbd5e1; color: var(--ink); padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.exp-filters .btn.secondary:hover { background: var(--bg2); border-color: var(--mut); }
 
-.exp-dist { padding:20px; display:flex; gap:24px; border-bottom:1px solid var(--ln); align-items:center; flex-wrap:wrap; }
-.exp-dist-item { display:flex; flex-direction:column; gap:6px; }
-.exp-dist-top { display:flex; justify-content:space-between; font-size:.9rem; }
+.exp-dist { padding:24px; display:flex; gap:30px; border-bottom:1px solid var(--ln); align-items:center; flex-wrap:wrap; }
+.exp-dist-item { display:flex; flex-direction:column; gap:8px; }
+.exp-dist-top { display:flex; justify-content:space-between; font-size:.95rem; }
 .exp-dist-top .name { font-weight:700; color:var(--ink); }
 .exp-dist-top .amt { color:var(--mut); font-weight:600; }
-.exp-dist-bar { height:6px; background:#eef2f7; border-radius:99px; overflow:hidden; }
-.exp-dist-fill { height:100%; background:var(--brand); border-radius:99px; }
+.exp-dist-bar { height:8px; background:#eef2f7; border-radius:99px; overflow:hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
+.exp-dist-fill { height:100%; background:var(--brand); border-radius:99px; position: relative; }
+.exp-dist-fill::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); animation: shimmer 2s infinite; }
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 
 table.exp-tbl { width:100%; border-collapse:collapse; }
-.exp-tbl th { padding:14px 16px; text-align:right; font-size:.8rem; font-weight:700; color:var(--mut); border-bottom:1px solid var(--ln); }
-.exp-tbl td { padding:16px; font-size:.9rem; border-bottom:1px solid var(--ln); color:var(--ink); vertical-align:middle; }
+.exp-tbl th { padding:16px 20px; text-align:right; font-size:.85rem; font-weight:700; color:var(--mut); border-bottom:1px solid var(--ln); background: var(--bg2); }
+.exp-tbl td { padding:18px 20px; font-size:.95rem; border-bottom:1px solid var(--ln); color:var(--ink); vertical-align:middle; transition: background 0.2s; }
 .exp-tbl tr:last-child td { border-bottom:none; }
-.exp-tbl tr:hover td { background:var(--bg2); }
-.exp-tbl .amt { font-weight:700; color:var(--bad); font-size:1rem; }
-.exp-tbl .desc { font-weight:700; font-size:.95rem; }
-.exp-tbl .date { color:var(--soft); font-size:.95rem; }
-.exp-tbl .act { text-align:left; width:60px; }
+.exp-tbl tr:hover td { background:var(--brand-light); }
+.exp-tbl .amt { font-weight:800; color:var(--bad); font-size:1.05rem; }
+.exp-tbl .desc { font-weight:700; font-size:.95rem; color: var(--brand); }
+.exp-tbl .date { color:var(--mut); font-size:.95rem; font-weight: 600; }
+.exp-tbl .act { text-align:left; width:70px; }
+.exp-tbl .btn.ghost { background: transparent; border: none; cursor: pointer; transition: all 0.2s; border-radius: 8px; }
+.exp-tbl .btn.ghost:hover { background: #fee2e2; transform: scale(1.05); }
 </style>
 @endpush
 
@@ -67,10 +81,10 @@ table.exp-tbl { width:100%; border-collapse:collapse; }
 <div class="exp">
   
   {{-- Header --}}
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+  <div class="page-head">
     <div>
-      <h2 style="margin:0; font-size:1.6rem; color:var(--ink);">سجل المصروفات العامة</h2>
-      <p style="margin:6px 0 0; color:var(--mut); font-size:1rem;">المصروفات النثرية والتشغيلية المنفصلة عن حسابات المشاريع</p>
+      <h2>سجل المصروفات العامة</h2>
+      <p>المصروفات النثرية والتشغيلية المنفصلة عن حسابات المشاريع</p>
     </div>
   </div>
 
@@ -114,23 +128,23 @@ table.exp-tbl { width:100%; border-collapse:collapse; }
       <form action="{{ route('general_expenses.store') }}" method="POST" class="exp-form">
         @csrf
         <div>
-          <label>المبلغ (ج.م) <span class="req">*</span></label>
-          <input type="number" name="amount" step="0.01" min="0.01" required style="font-weight:bold; color:var(--bad); font-size:1.3rem;">
+          <label><i class="fa-solid fa-money-bill-wave"></i> المبلغ (ج.م) <span class="req">*</span></label>
+          <input type="number" name="amount" step="0.01" min="0.01" required style="font-weight:900; color:var(--bad); font-size:1.4rem;">
         </div>
 
         <div>
-          <label>البيان / نوع المصروف <span class="req">*</span></label>
+          <label><i class="fa-solid fa-tags"></i> البيان / نوع المصروف <span class="req">*</span></label>
           <input type="text" name="description" required list="expense-descriptions" placeholder="مثال: إيجار، بوفيه، نقل...">
           <datalist id="expense-descriptions">
             @foreach($uniqueDescriptions as $desc)
               <option value="{{ $desc }}"></option>
             @endforeach
           </datalist>
-          <div class="hint">استخدم نفس المسميات دائماً لضمان دقة التوزيع والإحصائيات.</div>
+          <div class="hint"><i class="fa-solid fa-circle-info"></i> استخدم نفس المسميات دائماً لضمان دقة التوزيع والإحصائيات.</div>
         </div>
 
         <div>
-          <label>دفع من خزنة / محفظة <span class="req">*</span></label>
+          <label><i class="fa-solid fa-wallet"></i> دفع من خزنة / محفظة <span class="req">*</span></label>
           <select name="account_id" required style="direction: rtl; text-align: right;">
             @foreach($wallets as $i => $w)
               @php 
@@ -143,17 +157,17 @@ table.exp-tbl { width:100%; border-collapse:collapse; }
         </div>
 
         <div>
-          <label>التاريخ <span class="req">*</span></label>
+          <label><i class="fa-regular fa-calendar"></i> التاريخ <span class="req">*</span></label>
           <input type="date" name="date" required value="{{ date('Y-m-d') }}">
         </div>
 
         <div>
-          <label>ملاحظات إضافية</label>
+          <label><i class="fa-solid fa-note-sticky"></i> ملاحظات إضافية</label>
           <textarea name="notes" rows="2" placeholder="أي تفاصيل أخرى..."></textarea>
         </div>
 
         <button type="submit" class="btn primary">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-check"/></svg>
+          <i class="fa-solid fa-circle-check"></i>
           حفظ وتسجيل المصروف
         </button>
       </form>
@@ -165,7 +179,7 @@ table.exp-tbl { width:100%; border-collapse:collapse; }
       {{-- Filters --}}
       <form method="GET" action="{{ route('general_expenses.index') }}" class="exp-filters" id="filterForm">
         <div class="f-group" style="flex:2;">
-          <label>عرض حسب الفترة</label>
+          <label><i class="fa-regular fa-calendar-days"></i> عرض حسب الفترة</label>
           <select name="range" onchange="document.getElementById('customRange').style.display = this.value === 'custom' ? 'flex' : 'none'; if(this.value !== 'custom') this.form.submit();">
             <option value="all" {{ $range == 'all' ? 'selected' : '' }}>كل الفترات</option>
             <option value="today" {{ $range == 'today' ? 'selected' : '' }}>اليوم</option>
@@ -177,7 +191,7 @@ table.exp-tbl { width:100%; border-collapse:collapse; }
         </div>
         
         <div class="f-group" style="flex:2;">
-          <label>البند / البيان</label>
+          <label><i class="fa-solid fa-list"></i> البند / البيان</label>
           <select name="description_filter" onchange="this.form.submit();">
             <option value="">جميع البنود</option>
             @foreach($uniqueDescriptions as $desc)
@@ -188,14 +202,14 @@ table.exp-tbl { width:100%; border-collapse:collapse; }
         
         <div id="customRange" style="display:{{ $range == 'custom' ? 'flex' : 'none' }}; gap:16px; flex:3;">
           <div class="f-group">
-            <label>من</label>
+            <label><i class="fa-solid fa-hourglass-start"></i> من</label>
             <input type="date" name="from" value="{{ request('from') }}">
           </div>
           <div class="f-group">
-            <label>إلى</label>
+            <label><i class="fa-solid fa-hourglass-end"></i> إلى</label>
             <input type="date" name="to" value="{{ request('to') }}">
           </div>
-          <button type="submit" class="btn secondary" style="padding:10px 20px;">بحث</button>
+          <button type="submit" class="btn secondary" style="padding:10px 20px;"><i class="fa-solid fa-magnifying-glass"></i> بحث</button>
         </div>
       </form>
 

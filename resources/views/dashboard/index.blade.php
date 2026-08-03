@@ -704,7 +704,7 @@
         {{-- Left Side: Badges --}}
         <div style="display: flex; align-items: center; gap: 12px;">
             <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 600; color: #334155; display: flex; align-items: center; gap: 6px; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
-                آخر 30 يوم (افتراضي)
+                آخر 3 شهور (افتراضي)
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </div>
             <div style="background: #1d4ed8; color: #ffffff; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; display: flex; align-items: center;">
