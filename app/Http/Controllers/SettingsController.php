@@ -91,11 +91,16 @@ class SettingsController extends Controller
         $passArg = $dbPass ? "-p\"{$dbPass}\"" : "";
         $command = "{$mysqldumpPath} -h {$dbHost} -P {$dbPort} -u {$dbUser} {$passArg} {$dbName} > \"{$filePath}\" 2>&1";
 
-        exec($command, $output, $returnVar);
+        try {
+            $result = \Illuminate\Support\Facades\Process::run($command);
 
-        if ($returnVar !== 0) {
-            \Illuminate\Support\Facades\Log::error("Database backup failed", ['output' => $output]);
-            return back()->with('error', 'حدث خطأ أثناء تصدير قاعدة البيانات. يرجى التأكد من توفر أداة mysqldump.');
+            if ($result->failed()) {
+                \Illuminate\Support\Facades\Log::error("Database backup failed", ['output' => $result->errorOutput() ?: $result->output()]);
+                return back()->with('error', 'حدث خطأ أثناء تصدير قاعدة البيانات. يرجى التأكد من توفر أداة mysqldump.');
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Database backup exception", ['error' => $e->getMessage()]);
+            return back()->with('error', 'حدث خطأ أثناء تصدير قاعدة البيانات: الوظائف المطلوبة معطلة في إعدادات الخادم (exec/proc_open).');
         }
 
         return response()->download($filePath)->deleteFileAfterSend(true);
