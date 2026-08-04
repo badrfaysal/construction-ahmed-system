@@ -274,26 +274,40 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
     
     {{-- Right Column (Client List) -> Now first in HTML because 2.7fr is first --}}
     <div class="n-card" style="padding: 0; border-top: 4px solid #0f172a;">
-        <div style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #f8fafc; border-radius: 12px 12px 0 0;">
-            <div style="display: flex; gap: 10px;">
-                <button class="btn" style="background: #1e293b; color: white; border-radius: 8px; font-weight: 700; padding: 6px 14px; border: none; cursor: pointer; font-size: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" onclick="window.print()">
+        <div style="padding: 16px 20px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #f8fafc; border-radius: 12px 12px 0 0;">
+            <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; min-width: max-content;">
+                قائمة العملاء والمشاريع <i class="fa fa-users" style="color: #3b82f6;"></i>
+            </h3>
+            
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: flex-end; flex: 1;">
+                <button class="btn" style="background: #1e293b; color: white; border-radius: 8px; font-weight: 700; padding: 6px 14px; border: none; cursor: pointer; font-size: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); white-space: nowrap;" onclick="window.print()">
                     <i class="fa fa-print" style="margin-left: 4px;"></i> طباعة القائمة
                 </button>
+                
                 <form id="sort-form" method="GET" action="{{ route('receivables.index') }}">
-                    <select name="sort" onchange="document.getElementById('sort-form').submit()" style="padding: 6px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 600; color: #1e293b; background: #fff; cursor: pointer; font-size: 12px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
+                    <select name="sort" onchange="document.getElementById('sort-form').submit()" style="padding: 6px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 600; color: #1e293b; background: #fff; cursor: pointer; font-size: 12px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); outline: none;">
                         <option value="newest" {{ request('sort', 'newest') == 'newest' ? 'selected' : '' }}>الأحدث أولاً</option>
                         <option value="amount_desc" {{ request('sort') == 'amount_desc' ? 'selected' : '' }}>الأعلى متبقي</option>
                         <option value="amount_asc" {{ request('sort') == 'amount_asc' ? 'selected' : '' }}>الأقل متبقي</option>
                     </select>
                 </form>
-                <div style="position: relative; width: 240px;">
-                    <input type="text" id="main-search" oninput="filterMain()" placeholder="ابحث باسم العميل أو المشروع..." style="width: 100%; padding: 6px 12px 6px 32px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; text-align: right; background: #fff; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
+                
+                <form method="GET" action="{{ route('receivables.index') }}" class="no-print" style="display: flex; gap: 6px; align-items: center; background: #ffffff; padding: 4px 6px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
+                    <span style="font-size: 12px; color: #64748b; font-weight: 700; margin-right: 4px;">من</span>
+                    <input type="date" name="date_from" value="{{ request('date_from') }}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: #f8fafc; color: #334155;">
+                    <span style="font-size: 12px; color: #64748b; font-weight: 700;">إلى</span>
+                    <input type="date" name="date_to" value="{{ request('date_to') }}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: #f8fafc; color: #334155;">
+                    <button type="submit" style="background: #4f46e5; color: white; border: none; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'" title="بحث بالتاريخ"><i class="fa fa-filter"></i></button>
+                    @if(request('date_from') || request('date_to'))
+                        <a href="{{ route('receivables.index') }}" style="background: #f1f5f9; color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 12px; text-decoration: none; transition: 0.2s; border: 1px solid #fee2e2;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#f1f5f9'" title="إلغاء الفلتر"><i class="fa fa-times"></i></a>
+                    @endif
+                </form>
+
+                <div style="position: relative; flex: 1; min-width: 200px; max-width: 240px;">
+                    <input type="text" id="main-search" oninput="filterMain()" placeholder="ابحث باسم العميل أو المشروع..." style="width: 100%; padding: 6px 12px 6px 32px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 12px; text-align: right; background: #fff; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); outline: none;">
                     <i class="fa fa-search" style="position: absolute; left: 12px; top: 8px; color: #94a3b8;"></i>
                 </div>
             </div>
-            <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-                قائمة العملاء والمشاريع <i class="fa fa-users" style="color: #3b82f6;"></i>
-            </h3>
         </div>
 
         <div style="overflow-x: auto;">
@@ -447,13 +461,25 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
 @if(isset($manualReceivables) && $manualReceivables->count())
 @php $groupedRecv = $manualReceivables->groupBy('party'); @endphp
 <div class="n-card" style="padding: 0; border-top: 4px solid #8b5cf6;">
-  <div style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #f8fafc; border-radius: 12px 12px 0 0;">
-    <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+  <div class="no-print" style="padding: 16px 20px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #f8fafc; border-radius: 12px 12px 0 0;">
+    <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; min-width: max-content;">
         سلف ومستحقات أخرى (حركات يدوية) <i class="fa fa-hand-holding-dollar" style="color: #8b5cf6;"></i>
     </h3>
-    <span style="background: #fffbeb; color: #b45309; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 800; border: 1px solid #fde68a;">
-        إجمالي المتبقي: {{ \App\Support\Money::format($manualReceivables->sum(fn($r) => $r->remaining())) }} ج.م
-    </span>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: flex-end; flex: 1;">
+        <form method="GET" action="{{ route('receivables.index') }}" class="no-print" style="display: flex; gap: 6px; align-items: center; background: #ffffff; padding: 4px 6px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
+            <span style="font-size: 12px; color: #64748b; font-weight: 700; margin-right: 4px;">من</span>
+            <input type="date" name="date_from" value="{{ request('date_from') }}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: #f8fafc; color: #334155;">
+            <span style="font-size: 12px; color: #64748b; font-weight: 700;">إلى</span>
+            <input type="date" name="date_to" value="{{ request('date_to') }}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: #f8fafc; color: #334155;">
+            <button type="submit" style="background: #4f46e5; color: white; border: none; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'" title="بحث بالتاريخ"><i class="fa fa-filter"></i></button>
+            @if(request('date_from') || request('date_to'))
+                <a href="{{ route('receivables.index') }}" style="background: #f1f5f9; color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 12px; text-decoration: none; transition: 0.2s; border: 1px solid #fee2e2;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#f1f5f9'" title="إلغاء الفلتر"><i class="fa fa-times"></i></a>
+            @endif
+        </form>
+        <span style="background: #fffbeb; color: #b45309; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 800; border: 1px solid #fde68a; white-space: nowrap;">
+            إجمالي المتبقي: {{ \App\Support\Money::format($manualReceivables->sum(fn($r) => $r->remaining())) }} ج.م
+        </span>
+    </div>
   </div>
   <div style="overflow-x: auto;">
       <table class="n-table" id="manual-table">

@@ -164,8 +164,8 @@
     </div>
 
     {{-- Left side tabs and filters --}}
-    <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-        <div style="display: flex; gap: 8px; background: #e2e8f0; padding: 8px; border-radius: 12px;">
+    <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+        <div style="display: flex; gap: 8px; background: #e2e8f0; padding: 6px; border-radius: 12px;">
             <button id="tab-btn-supplier" onclick="switchTab('supplier-tab')" class="n-main-tab active"><i class="fa fa-boxes-stacked"></i> ديون الموردين</button>
             <button id="tab-btn-manual" onclick="switchTab('manual-tab')" class="n-main-tab"><i class="fa fa-hand-holding-dollar"></i> عهد وديون أخرى</button>
         </div>
@@ -177,6 +177,7 @@
         </div>
     </div>
 </div>
+
 
 {{-- 4 Stat Cards --}}
 <div class="stat-cards no-print" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 32px;">
@@ -271,26 +272,40 @@
 <div id="supplier-tab" class="tab-content" style="display:block;">
     {{-- Full Width Main Card for Tables --}}
     <div class="n-card" style="padding: 0; border-top: 5px solid #0f172a;">
-        <div class="no-print" style="padding: 20px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #f8fafc; border-radius: 12px 12px 0 0;">
-            <div style="display: flex; gap: 14px;">
-                <button class="btn" style="background: #1e293b; color: white; border-radius: 8px; font-weight: 700; padding: 8px 20px; border: none; cursor: pointer; font-size: 13px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" onclick="window.print()">
+        <div class="no-print" style="padding: 16px 24px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #f8fafc; border-radius: 12px 12px 0 0;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; min-width: max-content;">
+                جدول ديون الموردين التفصيلي <i class="fa fa-table-list" style="color: #4f46e5;"></i>
+            </h3>
+            
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: flex-end; flex: 1;">
+                <button class="btn" style="background: #1e293b; color: white; border-radius: 8px; font-weight: 700; padding: 8px 16px; border: none; cursor: pointer; font-size: 13px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); white-space: nowrap;" onclick="window.print()">
                     <i class="fa fa-print" style="margin-left: 6px;"></i> طباعة التقرير
                 </button>
+                
                 <form id="sort-form" method="GET" action="{{ route('debts.index') }}">
-                    <select name="sort" onchange="document.getElementById('sort-form').submit()" style="padding: 8px 18px; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 700; color: #1e293b; background: #fff; cursor: pointer; font-size: 13px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
+                    <select name="sort" onchange="document.getElementById('sort-form').submit()" style="padding: 8px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-weight: 700; color: #1e293b; background: #fff; cursor: pointer; font-size: 13px; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); outline: none;">
                         <option value="newest" {{ request('sort', 'newest') == 'newest' ? 'selected' : '' }}>الأحدث أولاً</option>
                         <option value="amount_desc" {{ request('sort') == 'amount_desc' ? 'selected' : '' }}>الأعلى ديناً</option>
                         <option value="amount_asc" {{ request('sort') == 'amount_asc' ? 'selected' : '' }}>الأقل ديناً</option>
                     </select>
                 </form>
-                <div style="position: relative; width: 280px;">
-                    <input type="text" id="main-search" oninput="filterMain()" placeholder="ابحث باسم المورد..." style="width: 100%; padding: 8px 14px 8px 36px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-weight: 600; text-align: right; background: #fff; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
-                    <i class="fa fa-search" style="position: absolute; left: 14px; top: 12px; color: #94a3b8;"></i>
+                
+                <form method="GET" action="{{ route('debts.index') }}" class="no-print" style="display: flex; gap: 6px; align-items: center; background: #ffffff; padding: 4px 6px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
+                    <span style="font-size: 12px; color: #64748b; font-weight: 700; margin-right: 4px;">من</span>
+                    <input type="date" name="date_from" value="{{ request('date_from') }}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: #f8fafc; color: #334155;">
+                    <span style="font-size: 12px; color: #64748b; font-weight: 700;">إلى</span>
+                    <input type="date" name="date_to" value="{{ request('date_to') }}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: #f8fafc; color: #334155;">
+                    <button type="submit" style="background: #4f46e5; color: white; border: none; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'" title="بحث بالتاريخ"><i class="fa fa-filter"></i></button>
+                    @if(request('date_from') || request('date_to'))
+                        <a href="{{ route('debts.index') }}" style="background: #f1f5f9; color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 12px; text-decoration: none; transition: 0.2s; border: 1px solid #fee2e2;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#f1f5f9'" title="إلغاء الفلتر"><i class="fa fa-times"></i></a>
+                    @endif
+                </form>
+
+                <div style="position: relative; flex: 1; min-width: 200px; max-width: 260px;">
+                    <input type="text" id="main-search" oninput="filterMain()" placeholder="ابحث باسم المورد..." style="width: 100%; padding: 8px 14px 8px 36px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-weight: 600; text-align: right; background: #fff; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); outline: none;">
+                    <i class="fa fa-search" style="position: absolute; left: 14px; top: 10px; color: #94a3b8;"></i>
                 </div>
             </div>
-            <h3 style="margin: 0; font-size: 19px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
-                جدول ديون الموردين التفصيلي <i class="fa fa-table-list" style="color: #4f46e5;"></i>
-            </h3>
         </div>
 
         <div style="overflow-x: auto;">
@@ -368,13 +383,25 @@
 {{-- سلف وديون أخرى (حركات يدوية) --}}
 @if(isset($manualDebts) && $manualDebts->count())
 <div class="n-card" style="padding: 0; border-top: 5px solid #8b5cf6;">
-  <div class="no-print" style="padding: 20px 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #f8fafc; border-radius: 12px 12px 0 0;">
-    <h3 style="margin: 0; font-size: 19px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
+  <div class="no-print" style="padding: 16px 24px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #f8fafc; border-radius: 12px 12px 0 0;">
+    <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; min-width: max-content;">
         جدول السلف والديون اليدوية التفصيلي <i class="fa fa-hand-holding-dollar" style="color: #8b5cf6;"></i>
     </h3>
-    <span style="background: #fff1f2; color: #be123c; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 800; border: 1px solid #fecdd3;">
-        إجمالي المتبقي: {{ \App\Support\Money::format($manualDebts->sum(fn($r) => $r->remaining())) }} ج.م
-    </span>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: flex-end; flex: 1;">
+        <form method="GET" action="{{ route('debts.index') }}" class="no-print" style="display: flex; gap: 6px; align-items: center; background: #ffffff; padding: 4px 6px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
+            <span style="font-size: 12px; color: #64748b; font-weight: 700; margin-right: 4px;">من</span>
+            <input type="date" name="date_from" value="{{ request('date_from') }}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: #f8fafc; color: #334155;">
+            <span style="font-size: 12px; color: #64748b; font-weight: 700;">إلى</span>
+            <input type="date" name="date_to" value="{{ request('date_to') }}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: #f8fafc; color: #334155;">
+            <button type="submit" style="background: #4f46e5; color: white; border: none; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'" title="بحث بالتاريخ"><i class="fa fa-filter"></i></button>
+            @if(request('date_from') || request('date_to'))
+                <a href="{{ route('debts.index') }}" style="background: #f1f5f9; color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 12px; text-decoration: none; transition: 0.2s; border: 1px solid #fee2e2;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#f1f5f9'" title="إلغاء الفلتر"><i class="fa fa-times"></i></a>
+            @endif
+        </form>
+        <span style="background: #fff1f2; color: #be123c; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 800; border: 1px solid #fecdd3; white-space: nowrap;">
+            إجمالي المتبقي: {{ \App\Support\Money::format($manualDebts->sum(fn($r) => $r->remaining())) }} ج.م
+        </span>
+    </div>
   </div>
   <div style="overflow-x: auto;">
       <table class="n-table" id="manual-table">
