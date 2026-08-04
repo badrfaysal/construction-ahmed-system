@@ -34,11 +34,9 @@ class DebtController extends Controller
             $query->where('supplier_id', $sid);
         }
 
+        // Remove backend status filter to allow frontend JS tabs to work
         if ($status = $request->get('status')) {
             $query->where('status', $status);
-        } else {
-            // Default: hide fully-paid debts
-            $query->where('status', '!=', 'paid');
         }
 
         if ($dateFrom = $request->get('date_from')) {
@@ -76,8 +74,6 @@ class DebtController extends Controller
 
         if ($status = $request->get('status')) {
             $manualQuery->where('status', $status);
-        } else {
-            $manualQuery->where('status', '!=', 'paid');
         }
 
         if ($dateFrom = $request->get('date_from')) {

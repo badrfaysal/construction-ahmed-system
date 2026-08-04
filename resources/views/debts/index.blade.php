@@ -624,7 +624,7 @@
         <small style="color: #94a3b8; font-size: 12px; margin-top: 6px; display: block;" id="pay-max-note"></small>
       </div>
       <div style="margin-bottom: 20px;">
-        @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true])
+        @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true, 'name' => 'account_id'])
       </div>
       <div style="margin-bottom: 30px;">
         <label style="display:block; font-size: 14px; font-weight: 800; color: #475569; margin-bottom: 10px;">تاريخ الدفع *</label>
@@ -651,7 +651,7 @@
         <small style="color: #94a3b8; font-size: 12px; margin-top: 6px; display: block;" id="supplier-pay-note"></small>
       </div>
       <div style="margin-bottom: 20px;">
-        @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true, 'fieldName' => 'account_id'])
+        @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true, 'name' => 'account_id'])
       </div>
       <div style="margin-bottom: 30px;">
         <label style="display:block; font-size: 14px; font-weight: 800; color: #475569; margin-bottom: 10px;">تاريخ الدفع *</label>
@@ -698,7 +698,7 @@
         <small style="color: #94a3b8; font-size: 12px; margin-top: 6px; display: block;" id="manual-pay-max-note"></small>
       </div>
       <div style="margin-bottom: 20px;">
-        @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true])
+        @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true, 'name' => 'account_id'])
       </div>
       <div style="margin-bottom: 30px;">
         <label style="display:block; font-size: 14px; font-weight: 800; color: #475569; margin-bottom: 10px;">تاريخ السداد *</label>
@@ -725,7 +725,7 @@
         <small style="color: #94a3b8; font-size: 12px; margin-top: 6px; display: block;" id="manual-party-pay-max-note"></small>
       </div>
       <div style="margin-bottom: 20px;">
-        @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true, 'fieldName' => 'account_id'])
+        @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true, 'name' => 'account_id'])
       </div>
       <div style="margin-bottom: 30px;">
         <label style="display:block; font-size: 14px; font-weight: 800; color: #475569; margin-bottom: 10px;">تاريخ السداد *</label>
@@ -781,10 +781,13 @@ function filterStatus(status, btn) {
     document.querySelectorAll('.n-tab').forEach(b => {
         b.className = 'n-tab';
     });
-    btn.className = 'n-tab active-' + status;
+    if (btn) {
+        btn.className = 'n-tab active-' + status;
+    }
 
-    let rows = document.querySelectorAll('#main-tbody .rv-row-item');
-    rows.forEach(row => {
+    // Filter main supplier debts table
+    let mainRows = document.querySelectorAll('#main-tbody .rv-row-item');
+    mainRows.forEach(row => {
         let rStatus = row.getAttribute('data-status');
         if(status === 'all' || rStatus === status) {
             row.style.display = '';
@@ -792,7 +795,28 @@ function filterStatus(status, btn) {
             row.style.display = 'none';
         }
     });
+
+    // Filter manual debts table
+    let manualRows = document.querySelectorAll('#manual-tbody tr');
+    manualRows.forEach(row => {
+        let rStatus = row.getAttribute('data-status');
+        // Map 'pending' from manual table to 'active' filter
+        if (rStatus === 'pending') rStatus = 'active';
+
+        if(status === 'all' || rStatus === status) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    let activeBtn = document.querySelector('.n-tab.active-active');
+    if (activeBtn) {
+        filterStatus('active', activeBtn);
+    }
+});
 
 function openPartyModal(key) {
   const modal = document.getElementById('modal-' + key);
