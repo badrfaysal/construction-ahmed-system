@@ -92,7 +92,10 @@ class SettingsController extends Controller
         $command = "{$mysqldumpPath} -h {$dbHost} -P {$dbPort} -u {$dbUser} {$passArg} {$dbName} > \"{$filePath}\" 2>&1";
 
         try {
-            $result = \Illuminate\Support\Facades\Process::run($command);
+            // Provide SystemRoot explicitly to avoid Winsock initialization errors (10106) under Apache/XAMPP
+            $result = \Illuminate\Support\Facades\Process::env([
+                'SystemRoot' => getenv('SystemRoot') ?: 'C:\\Windows',
+            ])->run($command);
 
             if ($result->failed()) {
                 \Illuminate\Support\Facades\Log::error("Database backup failed", ['output' => $result->errorOutput() ?: $result->output()]);
