@@ -4,8 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\LogsActivity;
+
 class ManualDebt extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_manual_debts';
 
     protected $fillable = [

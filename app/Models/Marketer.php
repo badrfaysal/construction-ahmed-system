@@ -5,8 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use App\Traits\LogsActivity;
+
 class Marketer extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_marketers';
 
     protected $fillable = ['name', 'phone'];

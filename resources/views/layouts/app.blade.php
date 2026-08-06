@@ -313,6 +313,11 @@
     @if(auth()->user()->isAdmin())
       <div class="nav-label">النظام</div>
    
+      {{-- <a class="nav-item {{ request()->routeIs('activity-logs.index') ? 'active' : '' }}" href="{{ route('activity-logs.index') }}" style="--ic:#0ea5e9">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-activity"/></svg>
+        <span>سجل النظام الشامل</span>
+      </a> --}}
+
       <a class="nav-item {{ request()->routeIs('settings.edit') ? 'active' : '' }}" href="{{ route('settings.edit') }}" style="--ic:#94a3b8">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-settings"/></svg>
         <span>الإعدادات</span>

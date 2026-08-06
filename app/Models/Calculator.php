@@ -5,8 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\LogsActivity;
+
 class Calculator extends Model
 {
+    use LogsActivity;
+
     use HasFactory;
 
     protected $table = 'sy2_calculators';

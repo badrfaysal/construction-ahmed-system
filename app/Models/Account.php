@@ -6,8 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 // This model points to the construction-specific table "sy2_accounts".
+use App\Traits\LogsActivity;
+
 class Account extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_accounts';
 
     protected $fillable = ['name', 'category', 'initial_balance', 'balance', 'status'];

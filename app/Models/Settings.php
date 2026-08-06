@@ -5,8 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 // Single-row settings table — always use current() to get/create that one row.
+use App\Traits\LogsActivity;
+
 class Settings extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_settings';
 
     protected $fillable = [

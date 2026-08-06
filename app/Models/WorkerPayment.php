@@ -8,8 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 // One installment (دفعة) paid to a craftsman while the work is in progress.
 // Only what's actually been paid hits the wallet — the rest stays a
 // commitment, never a debit. See sy2_worker_payments migration.
+use App\Traits\LogsActivity;
+
 class WorkerPayment extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_worker_payments';
 
     protected $fillable = [

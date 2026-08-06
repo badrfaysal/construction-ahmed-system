@@ -26,6 +26,7 @@ use App\Http\Controllers\MarketerController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WarrantyController;
+use App\Http\Controllers\SystemActivityLogController;
 use App\Http\Controllers\WorkerPaymentController;
 use Illuminate\Support\Facades\Route;
 
@@ -197,6 +198,9 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     // sy2_materials, no manual entry. "index" before the {itemName} show route.
     Route::get('/price-history', [PriceHistoryController::class, 'index'])->name('price-history.index');
     Route::get('/price-history/{itemName}', [PriceHistoryController::class, 'show'])->name('price-history.show');
+    
+    // System Activity Logs
+    Route::get('/activity-logs', [SystemActivityLogController::class, 'index'])->name('activity-logs.index');
 
     // Admin-only area — settings + financial cost statements (real cost, profit)
     Route::middleware('role:admin')->group(function () {

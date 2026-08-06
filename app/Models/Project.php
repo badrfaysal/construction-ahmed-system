@@ -8,8 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\SupplierDebt;
 
+use App\Traits\LogsActivity;
+
 class Project extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_projects';
 
     protected $fillable = [

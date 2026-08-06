@@ -7,8 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 // One return against a specific material purchase — a purchase can have
 // several of these added over time, instead of a single fixed returned_qty
+use App\Traits\LogsActivity;
+
 class MaterialReturn extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_material_returns';
 
     protected $fillable = ['material_id', 'qty', 'return_price', 'date', 'notes'];

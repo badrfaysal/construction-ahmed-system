@@ -8,8 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 // عقد تقسيط واحد مربوط بمشروع — يحمل خطة السداد (إجمالي/مقدم/شهور/قسط) والمتبقي.
 // الدفعات الفعلية بتتسجّل في sy2_installment_payments وبتخصم من remaining_balance.
+use App\Traits\LogsActivity;
+
 class InstallmentContract extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_installment_contracts';
 
     protected $fillable = [

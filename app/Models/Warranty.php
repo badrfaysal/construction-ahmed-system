@@ -6,8 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use App\Traits\LogsActivity;
+
 class Warranty extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_warranties';
 
     protected $fillable = ['project_id', 'start_date', 'months'];

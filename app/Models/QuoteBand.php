@@ -6,8 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use App\Traits\LogsActivity;
+
 class QuoteBand extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_quote_bands';
 
     protected $fillable = ['quote_id', 'name', 'price', 'sort_order'];

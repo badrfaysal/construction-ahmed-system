@@ -5,8 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+use App\Traits\LogsActivity;
+
 class Installment extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_installments';
 
     protected $fillable = [

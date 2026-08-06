@@ -7,8 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 // One expected line item inside a quote band (e.g. "أسمنت" within "تشطيب") —
 // a rough estimate at quoting time, not a real purchase record
+use App\Traits\LogsActivity;
+
 class QuoteBandItem extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_quote_band_items';
 
     protected $fillable = ['quote_band_id', 'name', 'qty', 'unit_price', 'supervision_pct', 'sort_order'];

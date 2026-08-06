@@ -8,8 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 // One technician working a band, with their own specialty, wage and client
 // billing — every band's labor is a list of these, one row per technician
+use App\Traits\LogsActivity;
+
 class BandWorker extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_band_workers';
 
     protected $fillable = [

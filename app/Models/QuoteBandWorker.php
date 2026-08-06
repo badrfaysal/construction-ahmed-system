@@ -8,8 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 // One estimated technician inside a quote band — mirrors BandWorker, but this
 // is just a plan at quoting time, not a real hire. Copied into a real
 // BandWorker row when the quote is converted into a project.
+use App\Traits\LogsActivity;
+
 class QuoteBandWorker extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_quote_band_workers';
 
     protected $fillable = [

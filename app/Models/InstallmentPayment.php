@@ -7,8 +7,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 // دفعة تحصيل واحدة على عقد تقسيط — بتخصم من متبقّي العقد وتغذّي المحفظة
 // عبر InstallmentPaymentObserver (حركة "in" في sy2_transactions).
+use App\Traits\LogsActivity;
+
 class InstallmentPayment extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_installment_payments';
 
     protected $fillable = [

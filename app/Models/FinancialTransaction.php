@@ -12,8 +12,12 @@ use Illuminate\Support\Facades\DB;
 // with a distinctive marker. We never touch the first system's own rows, and we
 // never derive balances from this table (accounts.balance is the shared truth,
 // mutated directly — verified 2026-07-06 that the first system does the same).
+use App\Traits\LogsActivity;
+
 class FinancialTransaction extends Model
 {
+    use LogsActivity;
+
     protected $table = 'financial_transactions';
 
     // The first system doesn't use Eloquent timestamps (updated_at is left null),

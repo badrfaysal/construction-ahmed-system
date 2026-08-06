@@ -9,8 +9,12 @@ use Illuminate\Validation\ValidationException;
 
 // A "band" (بند) is one phase of construction work within a project
 // e.g. "محارة", "سيراميك وأرضيات", "دهانات"
+use App\Traits\LogsActivity;
+
 class ProjectBand extends Model
 {
+    use LogsActivity;
+
     protected $table = 'sy2_project_bands';
 
     protected $fillable = [
