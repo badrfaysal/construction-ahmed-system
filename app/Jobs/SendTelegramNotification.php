@@ -26,13 +26,17 @@ class SendTelegramNotification implements ShouldQueue
         $token = '8838781113:AAFzKHPB_jU3L8dzeJ8rgclW4MdmDmogMOE';
 
         try {
-            Http::timeout(5)->post("https://api.telegram.org/bot{$token}/sendMessage", [
+            $response = Http::timeout(5)->post("https://api.telegram.org/bot{$token}/sendMessage", [
                 'chat_id' => $chatId,
                 'text' => $this->message,
                 'parse_mode' => 'HTML',
             ]);
+            
+            if (!$response->successful()) {
+                \Log::error("Telegram error: " . $response->body());
+            }
         } catch (\Exception $e) {
-            // Silently fail if telegram is down
+            \Log::error("Telegram Exception: " . $e->getMessage());
         }
     }
 }

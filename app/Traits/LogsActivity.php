@@ -12,39 +12,48 @@ trait LogsActivity
     public static function getBatchId()
     {
         if (self::$batchId === null) {
-            self::$batchId = (string) \Illuminate\Support\Str::uuid();
+            $batchId = (string) \Illuminate\Support\Str::uuid();
+            self::$batchId = $batchId;
             
-            app()->terminating(function () {
-                $batchId = self::$batchId;
-                if (!$batchId) return;
-                
-                $logs = SystemActivityLog::where('batch_id', $batchId)->orderBy('id')->get();
-                if ($logs->isEmpty()) return;
+            register_shutdown_function(function () use ($batchId) {
+                try {
+                    $logs = SystemActivityLog::where('batch_id', $batchId)->orderBy('id')->get();
+                    
+                    if ($logs->isEmpty()) return;
 
-                $mainLog = $logs->first();
-                $subLogs = $logs->slice(1);
+                    $mainLog = $logs->first();
+                    $subLogs = $logs->slice(1);
 
-                $text = "<b>⚙️ سجل العمليات - تحديث جديد ⚙️</b>\n\n";
-                $text .= "<b>الحركة الرئيسية:</b> " . $mainLog->actionAr() . " (" . $mainLog->modelTypeAr() . ")\n";
-                
-                // Attempt to get name if the model has one
-                $model = $mainLog->subject;
-                if ($model && !empty($model->name)) {
-                    $text .= "<b>الاسم:</b> " . $model->name . "\n";
-                } elseif ($model && !empty($model->title)) {
-                    $text .= "<b>الاسم:</b> " . $model->title . "\n";
-                }
+                    $actionEmoji = match($mainLog->action) {
+                        'created' => '✨ إضافة جديدة',
+                        'updated' => '📝 تعديل',
+                        'deleted' => '❌ حذف',
+                        default => $mainLog->actionAr()
+                    };
 
-                $text .= "<b>بواسطة:</b> " . ($mainLog->user->name ?? 'النظام') . "\n";
-
-                if ($subLogs->count() > 0) {
-                    $text .= "\n<b>📋 تأثيرات إضافية تم تنفيذها:</b>\n";
-                    foreach ($subLogs as $sub) {
-                        $text .= "▪️ " . $sub->actionAr() . " (" . $sub->modelTypeAr() . ")\n";
+                    $text = "<b>🏢 مـقـاولات 🏢</b>\n\n";
+                    $text .= "<b>العملية:</b> {$actionEmoji} ({$mainLog->modelTypeAr()})\n";
+                    
+                    $fields = $mainLog->getTelegramFields();
+                    foreach ($fields as $key => $value) {
+                        if (!empty($value)) {
+                            $text .= "<b>{$key}:</b> {$value}\n";
+                        }
                     }
-                }
 
-                \App\Jobs\SendTelegramNotification::dispatchSync($text);
+                    $text .= "<b>بواسطة:</b> " . ($mainLog->user->name ?? 'النظام') . "\n";
+
+                    if ($subLogs->count() > 0) {
+                        $text .= "\n<b>حركات مرتبطة بالبند:</b>\n";
+                        foreach ($subLogs as $sub) {
+                            $text .= "▪️ " . $sub->getTelegramDescription() . "\n";
+                        }
+                    }
+
+                    \App\Jobs\SendTelegramNotification::dispatchSync($text);
+                } catch (\Throwable $e) {
+                    \Log::error("Telegram Batch Error: " . $e->getMessage());
+                }
             });
         }
         return self::$batchId;
