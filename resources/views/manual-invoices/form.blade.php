@@ -24,6 +24,7 @@
     font-size: 15px;
     color: var(--ink);
     gap: 8px;
+    flex-wrap: wrap;
     position: relative;
     overflow: hidden;
   }
@@ -280,7 +281,7 @@
     </h3>
     <p>{{ ($invoice && !($isDuplicate ?? false)) ? 'تعديل بيانات وأصناف الفاتورة' : 'أدخل بيانات العميل والأصناف لإنشاء فاتورة' }}</p>
   </div>
-  <div class="btn-row" style="display:flex;gap:12px;align-items:center;">
+  <div class="btn-row" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
     @if(!$invoice && !($isDuplicate ?? false))
     <div style="position:relative;">
       <select class="inp" style="background:#fff;border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding-inline-end:30px;min-width:220px;" onchange="if(this.value) window.location.href='/manual-invoices/create?'+this.value">

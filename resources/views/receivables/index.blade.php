@@ -223,12 +223,12 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
 {{-- Header --}}
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
     <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-        <div style="display: flex; gap: 8px; background: #e2e8f0; padding: 6px; border-radius: 12px;">
+        <div style="display: flex; gap: 8px; background: #e2e8f0; padding: 6px; border-radius: 12px; flex-wrap: wrap;">
             <button id="tab-btn-project" onclick="switchTab('project-tab')" class="n-main-tab active"><i class="fa fa-building"></i> مستحقات المشاريع</button>
             <button id="tab-btn-manual-recv" onclick="switchTab('manual-recv-tab')" class="n-main-tab"><i class="fa fa-hand-holding-dollar"></i> سلف وديون حرة</button>
         </div>
 
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px; display: flex; gap: 4px;">
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px; display: flex; gap: 4px; flex-wrap: wrap;">
             <button class="n-tab" onclick="filterStatus('all', this)"><i class="fa fa-list"></i> الكل</button>
             <button class="n-tab active-active" onclick="filterStatus('active', this)"><i class="fa fa-fire"></i> الديون النشطة</button>
             <button class="n-tab" onclick="filterStatus('paid', this)"><i class="fa fa-check-circle"></i> المسدد</button>
