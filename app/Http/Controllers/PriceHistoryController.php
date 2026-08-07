@@ -27,7 +27,7 @@ class PriceHistoryController extends Controller
                 'unit'           => $latest->unit,
                 'latest_price'   => (float) $latest->unit_price,
                 'latest_date'    => $latest->date,
-                'change_pct'     => $previous ? round((($latest->unit_price - $previous->unit_price) / $previous->unit_price) * 100, 1) : null,
+                'change_pct'     => ($previous && $previous->unit_price > 0) ? round((($latest->unit_price - $previous->unit_price) / $previous->unit_price) * 100, 1) : null,
                 'purchase_count' => $purchases->count(),
                 'min_price'      => (float) $purchases->min('unit_price'),
                 'max_price'      => (float) $purchases->max('unit_price'),
