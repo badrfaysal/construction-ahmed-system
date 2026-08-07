@@ -32,12 +32,33 @@ trait LogsActivity
                     };
 
                     $text = "<b>🏢 مـقـاولات 🏢</b>\n\n";
-                    $text .= "<b>العملية:</b> {$actionEmoji} ({$mainLog->modelTypeAr()})\n";
-                    
-                    $fields = $mainLog->getTelegramFields();
-                    foreach ($fields as $key => $value) {
-                        if (!empty($value)) {
-                            $text .= "<b>{$key}:</b> {$value}\n";
+
+                    // Custom override for Manual Invoices
+                    if ($mainLog->model_type === 'App\Models\ManualInvoice') {
+                        if ($mainLog->action === 'created') {
+                            $clientName = $mainLog->new_values['client_name'] ?? 'بدون اسم';
+                            $text .= "<b>العملية:</b> ✨ إنشاء فاتورة يدوية جديدة للعميل ({$clientName})\n";
+                        } else {
+                            $text .= "<b>العملية:</b> {$actionEmoji} فاتورة يدوية للعميل (" . ($mainLog->new_values['client_name'] ?? $mainLog->old_values['client_name'] ?? 'بدون اسم') . ")\n";
+                        }
+                        
+                        $fields = $mainLog->getTelegramFields();
+                        foreach ($fields as $key => $value) {
+                            if (!empty($value)) {
+                                $text .= "<b>{$key}:</b> {$value}\n";
+                            }
+                        }
+                        
+                        // Clear sub-logs for manual invoices to avoid cluttering with items (delete/create)
+                        $subLogs = collect();
+                    } else {
+                        $text .= "<b>العملية:</b> {$actionEmoji} ({$mainLog->modelTypeAr()})\n";
+                        
+                        $fields = $mainLog->getTelegramFields();
+                        foreach ($fields as $key => $value) {
+                            if (!empty($value)) {
+                                $text .= "<b>{$key}:</b> {$value}\n";
+                            }
                         }
                     }
 

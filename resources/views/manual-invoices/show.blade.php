@@ -14,6 +14,7 @@
       فاتورة ضريبية
     </label>
     
+    @if($invoice->status !== 'draft')
     @php
       $waText = urlencode("فاتورة رقم: {$invoice->invoice_number}\nالإجمالي: " . \App\Support\Money::format($invoice->total) . " ج.م");
       if ($invoice->client_phone) {
@@ -28,6 +29,7 @@
       <i class="fab fa-whatsapp" style="font-size:16px;"></i>
       إرسال واتساب (صورة)
     </button>
+    @endif
 
     <a href="{{ route('manual_invoices.create', ['copy_from_manual' => $invoice->id]) }}" class="btn ghost">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><use href="#i-clipboard"/></svg>

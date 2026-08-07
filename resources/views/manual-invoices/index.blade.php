@@ -119,8 +119,8 @@
   }
 </style>
 
-<div class="mi-layout">
-  <div class="mi-main">
+<div class="mi-layout" style="min-width: 0;">
+  <div class="mi-main" style="min-width: 0;">
 
 
 {{-- Filters --}}
