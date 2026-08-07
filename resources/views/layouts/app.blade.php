@@ -238,6 +238,14 @@
     </a>
     @endif 
     
+    <a class="nav-item {{ request()->routeIs('manual_invoices.*') ? 'active' : '' }}" href="{{ route('manual_invoices.index') }}" style="--ic:#8b5cf6">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <path d="M14 2v6h6"></path>
+        <path d="M10.5 17.5L16 12l-1.5-1.5L9 16v1.5h1.5z"></path>
+      </svg>
+      <span>الفواتير اليدوية</span>
+    </a>
     <a class="nav-item {{ request()->routeIs('material_invoices.*') ? 'active' : '' }}" href="{{ route('material_invoices.index') }}" style="--ic:#f59e0b">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
       <span>فواتير الشراء</span>
@@ -351,6 +359,8 @@
     'receivables'   => ['#12936a','#22b583','#e3f6ee','#0b6b49','i-coins'],
     'debts'         => ['#d63b2c','#ef5a4a','#fdeae7','#b02419','i-credit-card'],
     'materials'     => ['#ea580c','#f97316','#ffedd5','#c2410c','i-box'],
+    'manual-invoices' => ['#0891b2','#06b6d4','#e0f7fa','#0e7490','i-receipt'],
+    'manual_invoices' => ['#0891b2','#06b6d4','#e0f7fa','#0e7490','i-receipt'],
     'expenses'      => ['#ea580c','#f97316','#ffedd5','#c2410c','i-box'],
     'returns'       => ['#ea580c','#f97316','#ffedd5','#c2410c','i-box'],
     'reports'       => ['#7c3aed','#8b5cf6','#f2ecfe','#5b21b6','i-bar-chart'],

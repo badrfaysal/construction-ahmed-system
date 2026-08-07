@@ -49,7 +49,9 @@ class ExpenseController extends Controller
         $leastSpentCat = $distribution->keys()->last();
         $leastSpentAmount = $distribution->last() ?? 0;
 
-        $uniqueDescriptions = Expense::whereNull('project_id')->select('description')->distinct()->pluck('description');
+        $historical = Expense::whereNull('project_id')->select('description')->distinct()->pluck('description')->toArray();
+        $settingsCats = \App\Models\ExpenseCategory::pluck('name')->toArray();
+        $uniqueDescriptions = collect(array_merge($historical, $settingsCats))->filter()->unique()->sort()->values();
         $wallets = Account::selectable();
 
         return view('expenses.index', compact(

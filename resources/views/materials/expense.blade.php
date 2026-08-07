@@ -25,7 +25,12 @@
       </div>
       <div class="field">
         <label>اسم البند الفرعي *</label>
-        <input type="text" name="item" value="{{ old('item') }}" placeholder="مثال: تنظيف، شد شبك، دهانات..." required>
+        <input type="text" name="item" value="{{ old('item') }}" placeholder="مثال: تنظيف، شد شبك، دهانات..." list="expense-items-list" required>
+        <datalist id="expense-items-list">
+          @foreach($itemNames as $iName)
+            <option value="{{ $iName }}"></option>
+          @endforeach
+        </datalist>
       </div>
     </div>
 

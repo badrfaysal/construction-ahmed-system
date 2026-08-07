@@ -9,6 +9,10 @@ class ExpenseObserver
 {
     public function created(Expense $expense): void
     {
+        if (is_null($expense->project_id) && !empty($expense->description)) {
+            \App\Models\ExpenseCategory::firstOrCreate(['name' => trim($expense->description)]);
+        }
+
         Transaction::create([
             'project_id'  => $expense->project_id,
             'account_id'  => $expense->account_id,

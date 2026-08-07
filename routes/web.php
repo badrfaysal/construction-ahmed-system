@@ -24,6 +24,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\MarketerController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\ManualInvoiceController;
 use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\SystemActivityLogController;
@@ -84,6 +85,10 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::put('/materials/{material}', [MaterialController::class, 'update'])->name('materials.update');
     Route::delete('/materials/{material}', [MaterialController::class, 'destroy'])->name('materials.destroy');
     
+    // Manual Invoices (الفواتير اليدوية) — autocomplete must be before resource
+    Route::get('/manual-invoices/autocomplete', [ManualInvoiceController::class, 'autocomplete'])->name('manual_invoices.autocomplete');
+    Route::resource('manual-invoices', ManualInvoiceController::class)->names('manual_invoices')->parameters(['manual-invoices' => 'invoice']);
+
     // Material Invoices
     Route::get('/material-invoices', [\App\Http\Controllers\MaterialInvoiceController::class, 'index'])->name('material_invoices.index');
     Route::get('/material-invoices/{invoice}', [\App\Http\Controllers\MaterialInvoiceController::class, 'show'])->name('material_invoices.show');
@@ -209,6 +214,11 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
         Route::post('/settings/accounts', [SettingsController::class, 'storeAccount'])->name('settings.store_account');
         Route::post('/settings/export-db', [SettingsController::class, 'exportDatabase'])->name('settings.export_db');
         Route::post('/settings/reset-db', [SettingsController::class, 'resetDatabase'])->name('settings.reset_db');
+
+        // Expense Categories
+        Route::post('/settings/expense-categories', [SettingsController::class, 'storeExpenseCategory'])->name('settings.expense_categories.store');
+        Route::put('/settings/expense-categories/{expenseCategory}', [SettingsController::class, 'updateExpenseCategory'])->name('settings.expense_categories.update');
+        Route::delete('/settings/expense-categories/{expenseCategory}', [SettingsController::class, 'destroyExpenseCategory'])->name('settings.expense_categories.destroy');
 
         // Users Management
         Route::post('/settings/users', [SettingsController::class, 'storeUser'])->name('settings.users.store');

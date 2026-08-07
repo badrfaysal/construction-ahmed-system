@@ -16,9 +16,23 @@ class SettingsController extends Controller
     public function edit()
     {
         $settings = Settings::current();
+        
+        // Auto-migrate the array categories to the new DB table if it's empty
+        if (\App\Models\ExpenseCategory::count() === 0) {
+            $historical = \App\Models\Expense::whereNull('project_id')->select('description')->distinct()->pluck('description')->toArray();
+            $defaultCats = ['إيجار', 'كهرباء ومياه', 'بوفيه', 'نقل ومواصلات', 'صيانة', 'أدوات مكتبية', 'مرتبات', 'إكراميات'];
+            $allCats = array_values(array_unique(array_merge($defaultCats, $historical)));
+            foreach ($allCats as $cat) {
+                if (!empty(trim($cat))) {
+                    \App\Models\ExpenseCategory::create(['name' => trim($cat)]);
+                }
+            }
+        }
+
+        $expenseCategories = \App\Models\ExpenseCategory::orderBy('id', 'desc')->get();
         $accounts = Account::orderBy('id')->get();
         $users = User::orderBy('id')->get();
-        return view('settings.edit', compact('settings', 'accounts', 'users'));
+        return view('settings.edit', compact('settings', 'accounts', 'users', 'expenseCategories'));
     }
 
     public function storeAccount(Request $request)
@@ -207,5 +221,45 @@ class SettingsController extends Controller
         $user->delete();
 
         return back()->with('success', 'تم حذف المستخدم بنجاح.');
+    }
+
+    // --- Expense Categories Management ---
+    
+    public function storeExpenseCategory(Request $request)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255', 'unique:sy2_expense_categories,name'],
+            'description' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        \App\Models\ExpenseCategory::create($data);
+
+        return back()->with('success', 'تم إضافة بند المصروف بنجاح.');
+    }
+
+    public function updateExpenseCategory(Request $request, \App\Models\ExpenseCategory $expenseCategory)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255', 'unique:sy2_expense_categories,name,' . $expenseCategory->id],
+            'description' => ['nullable', 'string', 'max:500'],
+        ]);
+        
+        $oldName = $expenseCategory->name;
+        $newName = trim($data['name']);
+
+        $expenseCategory->update($data);
+
+        if ($oldName !== $newName) {
+            \App\Models\Expense::whereNull('project_id')->where('description', $oldName)->update(['description' => $newName]);
+            \App\Models\Transaction::where('ref_type', 'expense')->where('description', $oldName)->update(['description' => $newName]);
+        }
+
+        return back()->with('success', 'تم تعديل البند وتحديث المصروفات المرتبطة بنجاح.');
+    }
+
+    public function destroyExpenseCategory(\App\Models\ExpenseCategory $expenseCategory)
+    {
+        $expenseCategory->delete();
+        return back()->with('success', 'تم حذف البند بنجاح.');
     }
 }
