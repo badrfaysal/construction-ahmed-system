@@ -14,6 +14,7 @@ class ManualInvoice extends Model
     protected $fillable = [
         'invoice_number', 'client_name', 'client_phone', 'client_address',
         'date', 'subtotal', 'discount', 'tax_pct', 'tax_amount',
+        'tax_number', 'commercial_register',
         'total', 'paid_amount', 'notes', 'status',
     ];
 

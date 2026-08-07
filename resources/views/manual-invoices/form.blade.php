@@ -457,6 +457,24 @@
           <b id="summaryTax" style="font-size:15px;color:var(--pos);">0.00 ج.م</b>
         </div>
 
+        {{-- Tax Registration Fields - appear when tax > 0 --}}
+        <div id="taxRegistrationFields" style="display:none; border:1px solid #a5f3fc; background:linear-gradient(135deg,#ecfeff,#f0fdfa); border-radius:10px; padding:14px 16px; margin:8px 0; transition:all 0.3s ease;">
+          <div style="font-size:12px; font-weight:800; color:#0e7490; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><use href="#i-doc"/></svg>
+            بيانات الفاتورة الضريبية
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div>
+              <label style="font-size:11.5px; font-weight:700; color:#0e7490; margin-bottom:4px; display:block;">الرقم الضريبي</label>
+              <input type="text" name="tax_number" id="taxNumberInput" class="inp" value="{{ old('tax_number', $invoice?->tax_number) }}" placeholder="أدخل الرقم الضريبي..." style="font-size:13px;">
+            </div>
+            <div>
+              <label style="font-size:11.5px; font-weight:700; color:#0e7490; margin-bottom:4px; display:block;">السجل التجاري</label>
+              <input type="text" name="commercial_register" id="commercialRegisterInput" class="inp" value="{{ old('commercial_register', $invoice?->commercial_register) }}" placeholder="أدخل رقم السجل التجاري..." style="font-size:13px;">
+            </div>
+          </div>
+        </div>
+
         <div class="mi-highlight" style="background:var(--accent-soft);">
           <span style="font-weight:800;font-size:15px;color:var(--accent-ink);">الإجمالي النهائي</span>
           <b id="summaryGrandTotal" style="font-size:18px;color:var(--accent-ink);">0.00 ج.م</b>
@@ -699,6 +717,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('summaryRemaining').textContent = formatMoney(remaining) + ' ج.م';
 
     document.getElementById('taxRow').style.display = taxPct > 0 ? 'flex' : 'none';
+
+    // Show/hide tax registration fields
+    var taxRegFields = document.getElementById('taxRegistrationFields');
+    if (taxRegFields) {
+      taxRegFields.style.display = taxPct > 0 ? 'block' : 'none';
+    }
   };
 
   function renumberRows() {

@@ -72,6 +72,12 @@
       </b><br>
       رقم: {{ $invoice->invoice_number }}<br>
       التاريخ: {{ $invoice->date->format('d/m/Y') }}
+      @if($invoice->tax_number)
+        <span class="tax-invoice-label"><br>الرقم الضريبي: {{ $invoice->tax_number }}</span>
+      @endif
+      @if($invoice->commercial_register)
+        <span class="tax-invoice-label"><br>السجل التجاري: {{ $invoice->commercial_register }}</span>
+      @endif
     </div>
   </div>
 
@@ -235,90 +241,94 @@
 </div>
 @endif
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 async function shareInvoiceImage(waLink) {
-  const btn = document.getElementById('waBtn');
-  const originalText = btn.innerHTML;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:16px;"></i> جاري تجهيز الصورة...';
+  var btn = document.getElementById('waBtn');
+  var originalText = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:16px;"></i> جاري التجهيز...';
   btn.disabled = true;
 
   try {
-    const el = document.querySelector('.statement');
-    
-    // Fix for dom-to-image cropping in RTL + margin: auto layouts
-    const originalMargin = el.style.margin;
-    const originalMaxWidth = el.style.maxWidth;
+    var el = document.querySelector('.statement');
+    var originalMargin = el.style.margin;
+    var originalMaxWidth = el.style.maxWidth;
     el.style.margin = '0';
     el.style.maxWidth = '1000px';
-    
-    // Wait a brief moment for the browser to recalculate layout
-    await new Promise(r => setTimeout(r, 50));
 
-    domtoimage.toBlob(el, { 
-        bgcolor: '#ffffff', 
-        quality: 0.95,
-        width: el.offsetWidth,
-        height: el.offsetHeight
-      })
-      .then(async function (blob) {
-        // Restore styles immediately
-        el.style.margin = originalMargin;
-        el.style.maxWidth = originalMaxWidth;
-        
-        // 1. Try Native Web Share (Mobile)
-        const file = new File([blob], 'invoice.png', { type: 'image/png' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-                await navigator.share({
-                    files: [file],
-                    title: 'فاتورة',
-                    text: 'مرفق صورة الفاتورة'
-                });
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                return;
-            } catch (err) {
-                console.log('Native share failed or cancelled', err);
-            }
-        }
+    await new Promise(function(r) { setTimeout(r, 100); });
 
-        // 2. Fallback to Clipboard (Desktop)
-        try {
-          const item = new ClipboardItem({ 'image/png': blob });
-          await navigator.clipboard.write([item]);
-          alert('✅ تم حل مشكلة اللغة العربية ونسخ الصورة بنجاح!\n\nتوضيح هام: واتساب على الكمبيوتر يمنع المواقع من إرفاق الصور تلقائياً كنوع من الحماية، لذلك مستحيل إرسالها مباشرة بدون تدخل منك.\n\nالحل الأسهل هو الضغط على (Ctrl+V) أو (لصق) داخل الشات لإرسالها.');
-          window.open(waLink, '_blank');
-        } catch (err) {
-          console.error('Clipboard copy failed:', err);
-          // 3. Fallback: Download
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `فاتورة_${'{{ $invoice->invoice_number }}'}.png`;
-          a.click();
-          URL.revokeObjectURL(url);
-          alert('تم تحميل صورة الفاتورة على جهازك، يمكنك الآن فتح الواتساب وإرسالها من الملفات المحملة.');
-          window.open(waLink, '_blank');
-        }
-        
+    var canvas = await html2canvas(el, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff',
+      logging: false
+    });
+
+    el.style.margin = originalMargin;
+    el.style.maxWidth = originalMaxWidth;
+
+    var blob = await new Promise(function(resolve) {
+      canvas.toBlob(function(b) { resolve(b); }, 'image/png');
+    });
+
+    if (!blob) {
+      alert('فشل إنشاء الصورة.');
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+      return;
+    }
+
+    var file = new File([blob], 'invoice.png', { type: 'image/png' });
+
+    // 1) Mobile: Native Web Share
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: 'فاتورة', text: 'مرفق صورة الفاتورة' });
         btn.innerHTML = originalText;
         btn.disabled = false;
-      })
-      .catch(function (error) {
-        el.style.margin = originalMargin;
-        el.style.maxWidth = originalMaxWidth;
-        console.error('Screenshot failed:', error);
-        alert('حدث خطأ أثناء تجهيز الصورة.');
+        return;
+      } catch (shareErr) {
+        console.log('Native share cancelled or failed', shareErr);
+      }
+    }
+
+    // 2) Desktop HTTPS: Clipboard
+    if (typeof window.ClipboardItem !== 'undefined') {
+      try {
+        var item = new ClipboardItem({ 'image/png': blob });
+        await navigator.clipboard.write([item]);
+        alert('✅ تم نسخ الصورة!\n\nاضغط Ctrl+V (لصق) داخل محادثة الواتساب لإرسالها.');
+        window.open(waLink, '_blank');
         btn.innerHTML = originalText;
         btn.disabled = false;
-      });
-      
+        return;
+      } catch (clipErr) {
+        console.log('Clipboard failed', clipErr);
+      }
+    }
+
+    // 3) Fallback: Download file
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'فاتورة_{{ $invoice->invoice_number }}.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    alert('تم تحميل صورة الفاتورة. يمكنك إرسالها من الملفات المحملة.');
+    window.open(waLink, '_blank');
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+
   } catch (error) {
-    console.error('Error:', error);
+    console.error('shareInvoiceImage error:', error);
+    alert('حدث خطأ أثناء تجهيز الصورة: ' + error.message);
     btn.innerHTML = originalText;
     btn.disabled = false;
   }
+}
 </script>
 <script>
   // Auto-enable tax invoice mode if there is tax applied
