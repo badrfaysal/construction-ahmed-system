@@ -221,7 +221,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
 <div class="rv" style="background-color: #f3f6f9; min-height: 100vh; padding-bottom: 40px; font-family: 'Cairo', sans-serif;">
 
 {{-- Header --}}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
     <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
         <div style="display: flex; gap: 8px; background: #e2e8f0; padding: 6px; border-radius: 12px;">
             <button id="tab-btn-project" onclick="switchTab('project-tab')" class="n-main-tab active"><i class="fa fa-building"></i> مستحقات المشاريع</button>
