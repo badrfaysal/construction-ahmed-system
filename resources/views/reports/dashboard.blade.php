@@ -19,6 +19,12 @@
 .vstat:hover .vstat-bg { transform: scale(1.2) rotate(5deg); color: rgba(255, 255, 255, 0.25); }
 .vstat .val { font-size: 1.5rem; }
 .vstat .note { font-size: 0.75rem; }
+
+.charts-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.charts-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+@media(max-width: 1024px) { .charts-grid-4 { grid-template-columns: repeat(2, 1fr); } }
+@media(max-width: 768px) { .charts-grid-4 { grid-template-columns: 1fr; } .charts-grid-2 { grid-template-columns: 1fr; } }
+@media(max-width: 768px) { .cols-4 { grid-template-columns: 1fr !important; } }
 </style>
 @endpush
 
@@ -150,7 +156,7 @@
 </div>
 
 {{-- ═══ Charts Grid: 4 compact cards ═══ --}}
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px">
+<div class="charts-grid-4">
 
   {{-- 1. Area line: cash flow --}}
   <div class="card card-pad" style="padding:14px 16px">
@@ -186,7 +192,7 @@
 </div>
 
 {{-- ═══ Materials Charts: purchased + returned ═══ --}}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+<div class="charts-grid-2">
 
   <div class="card card-pad" style="padding:14px 16px">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">

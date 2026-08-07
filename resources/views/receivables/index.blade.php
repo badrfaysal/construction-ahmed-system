@@ -201,7 +201,12 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
 /* حماية السايدبار (الصفحة دي من غير Bootstrap أصلاً، بس احتياط) */
 .sidebar .nav { display:block !important; }
 
+@media (max-width:900px) {
+  .rv-stats-grid { grid-template-columns: 1fr 1fr !important; }
+  .rv-main-grid { grid-template-columns: 1fr !important; }
+}
 @media (max-width:640px) {
+  .rv-stats-grid { grid-template-columns: 1fr !important; }
   .rv-tot { min-width:45%; border-top:1px solid var(--ln); }
   .rv-acts { grid-template-columns:1fr 1fr; }
   .rv-row2 { grid-template-columns:1fr; }
@@ -241,7 +246,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
 </div>
 
 {{-- 4 Stat Cards --}}
-<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+<div class="rv-stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
     {{-- Card 1: Total Remaining --}}
     <div class="n-card" style="border-right: 4px solid #3b82f6;">
         <div style="font-size: 14px; font-weight: 700; color: #64748b; margin-bottom: 8px; text-align: right;">إجمالي المستحقات (المتبقي لنا)</div>
@@ -270,7 +275,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
 
 <div id="project-tab" class="tab-content" style="display:block;">
 {{-- Main Grid --}}
-<div style="display: grid; grid-template-columns: 2.7fr 1fr; gap: 20px;">
+<div class="rv-main-grid" style="display: grid; grid-template-columns: 2.7fr 1fr; gap: 20px;">
     
     {{-- Right Column (Client List) -> Now first in HTML because 2.7fr is first --}}
     <div class="n-card" style="padding: 0; border-top: 4px solid #0f172a;">

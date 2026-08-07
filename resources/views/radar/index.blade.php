@@ -14,9 +14,18 @@
   </button>
 </div>
 
+<style>
+  .radar-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  @media(max-width: 1024px) { .radar-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media(max-width: 640px) { .radar-stats-grid { grid-template-columns: 1fr; } }
+  
+  .radar-header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+  @media(max-width: 640px) { .radar-header-actions { flex-direction: column; align-items: stretch; text-align: center; } .radar-header-actions > div { text-align: center !important; } .radar-header-actions .btn { width: 100%; justify-content: center; } }
+</style>
+
 {{-- Top Action Bar & Stats --}}
 <div class="no-print" style="margin-bottom:20px;">
-  <div style="background: #fff; border-radius: 16px; padding: 24px 28px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
+  <div class="radar-header-actions" style="background: #fff; border-radius: 16px; padding: 24px 28px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;">
     <div style="text-align:right;">
       <h3 style="margin:0; font-size:20px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:12px;">
         <div style="background: #eff6ff; color: #3b82f6; padding: 10px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
@@ -37,7 +46,7 @@
     </button>
   </div>
 
-  <div class="grid radar-stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+  <div class="grid radar-stats-grid">
     {{-- Incoming --}}
     <div class="vstat radar-stat-green">
       <div class="top"><span class="label">التدفقات الداخلة</span>
@@ -136,7 +145,7 @@
         </label>
       </div>
       
-      <div id="custom-dates" style="display: {{ $period === 'custom' ? 'flex' : 'none' }}; gap: 10px; flex: 1.5; min-width: 300px;">
+      <div id="custom-dates" style="display: {{ $period === 'custom' ? 'flex' : 'none' }}; gap: 10px; flex: 1.5; min-width: 300px; flex-wrap: wrap;">
         <input type="date" name="date_to" value="{{ request('date_to') }}" style="flex:1; height:44px; padding:0 12px; font-size:13.5px; border-radius:10px; border:1px solid #cbd5e1; background:#f8fafc; color:#0f172a;" placeholder="إلى تاريخ">
         <input type="date" name="date_from" value="{{ request('date_from') }}" style="flex:1; height:44px; padding:0 12px; font-size:13.5px; border-radius:10px; border:1px solid #cbd5e1; background:#f8fafc; color:#0f172a;" placeholder="من تاريخ">
         <button type="submit" class="btn primary" style="height:44px; padding:0 24px; border-radius:10px; font-weight:bold; background:#3b82f6; border-color:#3b82f6; color:#fff; font-size:14px; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);">تطبيق</button>
@@ -145,7 +154,7 @@
   </form>
 </div>
 
-<div class="table-wrap" style="box-shadow:none; border:none;">
+<div class="table-wrap" style="box-shadow:none; border:none; overflow-x:auto;">
   <table class="table" style="min-width:1000px">
     <thead>
       <tr>
