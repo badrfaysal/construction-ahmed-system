@@ -26,7 +26,7 @@ class ManualInvoiceController extends Controller
             $query->whereDate('date', '<=', $request->to);
         }
 
-        $invoices = $query->paginate(25)->withQueryString();
+        $invoices = $query->paginate(10)->withQueryString();
 
         // Summary totals
         $totals = [

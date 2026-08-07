@@ -11,6 +11,8 @@
     border-radius: 16px;
     box-shadow: 0 2px 8px rgba(0,0,0,.04);
     margin-bottom: 24px;
+    position: relative;
+    z-index: 2;
   }
   .mi-card-head {
     display: flex;
@@ -22,8 +24,28 @@
     font-size: 15px;
     color: var(--ink);
     gap: 8px;
+    position: relative;
+    overflow: hidden;
   }
-  .mi-card-head svg { width: 20px; height: 20px; flex-shrink: 0; }
+  .mi-card-head > span, .mi-card-head > button { position: relative; z-index: 2; }
+  .mi-card-head svg:not(.decor-icon) { width: 20px; height: 20px; flex-shrink: 0; }
+  
+  @keyframes float1 {
+    0% { transform: translateY(0) rotate(-15deg); }
+    50% { transform: translateY(-15px) rotate(-5deg); }
+    100% { transform: translateY(0) rotate(-15deg); }
+  }
+  @keyframes float2 {
+    0% { transform: translateY(0) rotate(20deg); }
+    50% { transform: translateY(-10px) rotate(30deg); }
+    100% { transform: translateY(0) rotate(20deg); }
+  }
+  .decor-icon {
+    position: absolute;
+    opacity: 0.05;
+    z-index: 1;
+    pointer-events: none;
+  }
   .mi-card-body { padding: 24px; }
 
   /* ─── Form fields ───────────────────────────────────────────────── */
@@ -127,12 +149,20 @@
   }
   .mi-items-table thead th {
     padding: 12px 10px;
-    font-size: 12.5px;
+    font-size: 13px;
     font-weight: 800;
-    color: var(--ink-3);
+    color: #1e40af;
     text-align: right;
-    border-bottom: 2px solid var(--line);
+    border-bottom: 2px solid #bfdbfe;
     white-space: nowrap;
+    background: linear-gradient(90deg, #f8fafc, #eff6ff);
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .row-anim {
+    animation: slideIn 0.3s ease-out forwards;
   }
   .mi-items-table tbody td {
     padding: 8px 8px;
@@ -294,9 +324,10 @@
 
   {{-- Client Information --}}
   <div class="mi-card">
-    <div class="mi-card-head">
-      <span style="display:flex;align-items:center;gap:8px;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-users"/></svg>
+    <div class="mi-card-head" style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border-bottom: 1px solid #bae6fd;">
+      <svg class="decor-icon" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 60px; height: 60px; left: 20px; top: -10px; animation: float2 9s ease-in-out infinite;"><use href="#i-users"/></svg>
+      <span style="display:flex;align-items:center;gap:8px; color: #0369a1;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-credit-card"/></svg>
         بيانات العميل والفاتورة
       </span>
     </div>
@@ -334,12 +365,13 @@
 
   {{-- Items Table --}}
   <div class="mi-card">
-    <div class="mi-card-head">
-      <span style="display:flex;align-items:center;gap:8px;">
+    <div class="mi-card-head" style="background: linear-gradient(135deg, #ecfeff, #cffafe); border-bottom: 1px solid #a5f3fc;">
+      <svg class="decor-icon" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 60px; height: 60px; left: 200px; top: -15px; animation: float1 7s ease-in-out infinite;"><use href="#i-box"/></svg>
+      <span style="display:flex;align-items:center;gap:8px; color: #0e7490;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-box"/></svg>
         الأصناف والبنود
       </span>
-      <button type="button" class="btn sm" onclick="addRow()">
+      <button type="button" class="btn sm" onclick="addRow()" style="background: linear-gradient(45deg, #0e7490, #0891b2); color: #fff; border: none; font-weight: 700; box-shadow: 0 2px 6px rgba(8,145,178,0.3);">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><use href="#i-plus-circle"/></svg>
         إضافة صنف
       </button>
@@ -373,8 +405,9 @@
   {{-- Totals & Notes --}}
   <div class="mi-bottom-grid">
     <div class="mi-card">
-      <div class="mi-card-head">
-        <span style="display:flex;align-items:center;gap:8px;">
+      <div class="mi-card-head" style="background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-bottom: 1px solid #e2e8f0;">
+        <svg class="decor-icon" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 50px; height: 50px; left: 10px; top: -5px; animation: float2 8s ease-in-out infinite;"><use href="#i-doc"/></svg>
+        <span style="display:flex;align-items:center;gap:8px; color: #475569;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-doc"/></svg>
           ملاحظات / الشروط والأحكام
         </span>
@@ -389,11 +422,12 @@
       </div>
     </div>
 
-    <div class="mi-card">
-      <div class="mi-card-head">
-        <span style="display:flex;align-items:center;gap:8px;">
+    <div class="mi-card" style="box-shadow: 0 4px 16px rgba(0,0,0,0.06); border: 1px solid #cbd5e1;">
+      <div class="mi-card-head" style="background: linear-gradient(135deg, #eef2ff, #e0e7ff); border-bottom: 1px solid #c7d2fe;">
+        <svg class="decor-icon" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 70px; height: 70px; left: 15px; top: -10px; animation: float1 9s ease-in-out infinite alternate;"><use href="#i-coins"/></svg>
+        <span style="display:flex;align-items:center;gap:8px; color: #4338ca;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-coins"/></svg>
-          الحساب
+          الحساب الإجمالي
         </span>
       </div>
       <div class="mi-card-body" style="display:flex;flex-direction:column;gap:4px;">
@@ -539,12 +573,20 @@ document.addEventListener('DOMContentLoaded', function() {
   window.addRow = function(data) {
     const tbody = document.getElementById('itemsBody');
     const idx = window.rowIndex++;
+    
+    // Defaults: Today's date and "وحدة" for the unit
+    const today = new Date();
+    const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    const rowDate = (data && data.date) ? data.date : todayStr;
+    const rowUnit = (data && data.unit) ? data.unit : 'وحدة';
+
     const tr = document.createElement('tr');
     tr.id = `row-${idx}`;
+    tr.className = 'row-anim';
     tr.innerHTML = `
-      <td class="row-num">${idx + 1}</td>
+      <td class="row-num" style="color:#64748b; font-weight:800;">${idx + 1}</td>
       <td>
-        <input type="text" name="items[${idx}][date]" class="inp flatpickr-date row-date" value="${data?.date || ''}" placeholder="اختياري">
+        <input type="text" name="items[${idx}][date]" class="inp flatpickr-date row-date" value="${rowDate}" placeholder="اختياري">
       </td>
       <td>
         <div class="ac-wrap">
@@ -557,17 +599,17 @@ document.addEventListener('DOMContentLoaded', function() {
       </td>
       <td>
         <div class="ac-wrap">
-          <input type="text" name="items[${idx}][unit]" class="inp" data-ac-type="unit" data-ac-idx="${idx}" value="${data?.unit || ''}" autocomplete="off" placeholder="الوحدة">
+          <input type="text" name="items[${idx}][unit]" class="inp" data-ac-type="unit" data-ac-idx="${idx}" value="${rowUnit}" autocomplete="off" placeholder="الوحدة">
           <div class="ac-list" id="ac-unit-${idx}"></div>
         </div>
       </td>
       <td>
         <input type="number" name="items[${idx}][unit_price]" class="inp row-price" value="${data?.unit_price || 0}" min="0" step="0.01" required oninput="calcRowTotal(${idx})">
       </td>
-      <td class="row-total">${formatMoney((data?.qty || 1) * (data?.unit_price || 0))}</td>
+      <td class="row-total" style="font-weight:800; color:#334155; background:#f8fafc; border-radius:6px; padding-inline:12px; border: 1px solid #e2e8f0;">${formatMoney((data?.qty || 1) * (data?.unit_price || 0))}</td>
       <td>
-        <button type="button" class="del-row-btn" onclick="removeRow(${idx})" title="حذف">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
+        <button type="button" class="del-row-btn" onclick="removeRow(${idx})" title="حذف" style="color:#64748b; background:#f1f5f9; border:none; padding:6px; border-radius:6px; cursor:pointer; transition: 0.2s;" onmouseover="this.style.color='#ef4444';this.style.background='#fef2f2';" onmouseout="this.style.color='#64748b';this.style.background='#f1f5f9';">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><use href="#i-trash"/></svg>
         </button>
       </td>
     `;
