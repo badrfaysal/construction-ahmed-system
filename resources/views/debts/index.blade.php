@@ -168,9 +168,8 @@
 
     {{-- Left side tabs and filters --}}
     <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
-        <div style="display: flex; gap: 8px; background: #e2e8f0; padding: 6px; border-radius: 12px;">
-            <button id="tab-btn-supplier" onclick="switchTab('supplier-tab')" class="n-main-tab active"><i class="fa fa-boxes-stacked"></i> ديون الموردين</button>
-            <button id="tab-btn-manual" onclick="switchTab('manual-tab')" class="n-main-tab"><i class="fa fa-hand-holding-dollar"></i> عهد وديون أخرى</button>
+        <div style="display: flex; gap: 8px; background: #e2e8f0; padding: 6px; border-radius: 12px; flex-wrap: wrap;">
+            <button id="tab-btn-main" onclick="switchTab('main-debts-tab')" class="n-main-tab active"><i class="fa fa-boxes-stacked"></i> ديون الموردين وعهد وديون أخرى</button>
             <button id="tab-btn-discount" onclick="switchTab('discount-tab')" class="n-main-tab"><i class="fa fa-tags"></i> الخصومات المكتسبة</button>
         </div>
 
@@ -276,7 +275,8 @@
 </div>
 
 
-<div id="supplier-tab" class="tab-content" style="display:block;">
+<div id="main-debts-tab" class="tab-content" style="display:block;">
+<div id="supplier-tab">
     {{-- Full Width Main Card for Tables --}}
     <div class="n-card" style="padding: 0; border-top: 5px solid #0f172a;">
         <div class="no-print" style="padding: 16px 24px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #f8fafc; border-radius: 12px 12px 0 0;">
@@ -374,6 +374,54 @@
                             </td>
                         </tr>
                     @endforeach
+
+                    @if(isset($manualDebts) && $manualDebts->count())
+                        @foreach($manualGrouped as $partyName => $partyItems)
+                            @php
+                                $partyTotal     = $partyItems->sum('total_amount');
+                                $partyPaid      = $partyItems->sum('paid_amount');
+                                $partyRemaining = $partyItems->sum(fn($r) => $r->remaining());
+                                $partyCount     = $partyItems->count();
+                                $allPaid        = $partyItems->every(fn($r) => $r->status === 'paid');
+                                $partyKey       = 'mdebt-' . md5($partyName);
+                                $firstLetter    = mb_substr($partyName, 0, 1);
+                            @endphp
+                            <tr class="rv-row-item" onclick="openPartyModal('{{ $partyKey }}')"
+                                data-name="{{ mb_strtolower($partyName) }}"
+                                data-status="{{ $allPaid ? 'paid' : 'active' }}"
+                                data-billed="{{ $partyTotal }}"
+                                data-collected="{{ $partyPaid }}"
+                                data-remaining="{{ $partyRemaining }}">
+                                <td style="text-align: right; padding-right: 30px;">
+                                    <div style="display: flex; align-items: center; justify-content: flex-start; gap: 16px;">
+                                        <div class="avatar-print" style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6 0%, #0f172a 150%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                                            {{ $firstLetter }}
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 800; color: #0f172a; font-size: 15px; margin-bottom: 4px;">{{ $partyName }}</div>
+                                            <div style="color: #64748b; font-size: 12px; font-weight: 700;"><i class="fa fa-hand-holding-dollar" style="color: #cbd5e1; margin-left: 4px;"></i> عهدة / سلفة ({{ $partyCount }})</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="no-print" style="font-size: 13px; font-weight: 800; color: #64748b; background: #f1f5f9; padding: 4px 10px; border-radius: 6px;">--</span>
+                                    <span class="print-only" style="display:none;">--</span>
+                                </td>
+                                <td style="color: #475569; font-weight: 800; font-size: 15px;">{{ \App\Support\Money::format($partyTotal) }} ج</td>
+                                <td style="color: #10b981; font-weight: 800; font-size: 15px;">{{ \App\Support\Money::format($partyPaid) }} ج</td>
+                                <td style="color: #e11d48; font-weight: 800; font-size: 16px;">{{ \App\Support\Money::format($partyRemaining) }} ج</td>
+                                <td>
+                                    @if($allPaid)
+                                        <span class="no-print" style="background: #ecfdf5; color: #047857; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; border: 1px solid #a7f3d0;"><i class="fa fa-check"></i> مسدد</span>
+                                        <span class="print-only" style="display:none;">مسدد</span>
+                                    @else
+                                        <span class="no-print" style="background: #fff1f2; color: #be123c; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; border: 1px solid #fecdd3;"><i class="fa fa-clock"></i> دين نشط</span>
+                                        <span class="print-only" style="display:none;">نشط</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    @endif
                 </tbody>
             </table>
         </div>
@@ -386,86 +434,8 @@
 </div>
 
 
-<div id="manual-tab" class="tab-content" style="display:none;">
-{{-- سلف وديون أخرى (حركات يدوية) --}}
-@if(isset($manualDebts) && $manualDebts->count())
-<div class="n-card" style="padding: 0; border-top: 5px solid #8b5cf6;">
-  <div class="no-print" style="padding: 16px 24px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #f8fafc; border-radius: 12px 12px 0 0;">
-    <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; min-width: max-content;">
-        جدول السلف والديون اليدوية التفصيلي <i class="fa fa-hand-holding-dollar" style="color: #8b5cf6;"></i>
-    </h3>
-    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: flex-end; flex: 1;">
-        <form method="GET" action="{{ route('debts.index') }}" class="no-print" style="display: flex; gap: 6px; align-items: center; background: #ffffff; padding: 4px 6px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
-            <span style="font-size: 12px; color: #64748b; font-weight: 700; margin-right: 4px;">من</span>
-            <input type="date" name="date_from" value="{{ request('date_from') }}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: #f8fafc; color: #334155;">
-            <span style="font-size: 12px; color: #64748b; font-weight: 700;">إلى</span>
-            <input type="date" name="date_to" value="{{ request('date_to') }}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: #f8fafc; color: #334155;">
-            <button type="submit" style="background: #4f46e5; color: white; border: none; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'" title="بحث بالتاريخ"><i class="fa fa-filter"></i></button>
-            @if(request('date_from') || request('date_to'))
-                <a href="{{ route('debts.index') }}" style="background: #f1f5f9; color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 12px; text-decoration: none; transition: 0.2s; border: 1px solid #fee2e2;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#f1f5f9'" title="إلغاء الفلتر"><i class="fa fa-times"></i></a>
-            @endif
-        </form>
-        <span style="background: #fff1f2; color: #be123c; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 800; border: 1px solid #fecdd3; white-space: nowrap;">
-            إجمالي المتبقي: {{ \App\Support\Money::format($manualDebts->sum(fn($r) => $r->remaining())) }} ج.م
-        </span>
-    </div>
-  </div>
-  <div style="overflow-x: auto;">
-      <table class="n-table" id="manual-table">
-        <thead>
-          <tr>
-            <th style="text-align: right; padding-right: 30px;"><i class="fa fa-user"></i> الجهة / الشخص</th>
-            <th><i class="fa fa-hashtag"></i> التعاملات</th>
-            <th><i class="fa fa-file-invoice"></i> إجمالي المبلغ</th>
-            <th style="color: #10b981;"><i class="fa fa-check-double"></i> المسدد</th>
-            <th style="color: #e11d48;"><i class="fa fa-triangle-exclamation"></i> المتبقي</th>
-            <th><i class="fa fa-circle-info"></i> الحالة</th>
-          </tr>
-        </thead>
-        <tbody id="manual-tbody">
-          @foreach($manualGrouped as $partyName => $partyItems)
-            @php
-              $partyTotal     = $partyItems->sum('total_amount');
-              $partyPaid      = $partyItems->sum('paid_amount');
-              $partyRemaining = $partyItems->sum(fn($r) => $r->remaining());
-              $partyCount     = $partyItems->count();
-              $allPaid        = $partyItems->every(fn($r) => $r->status === 'paid');
-              $partyKey       = 'mdebt-' . md5($partyName);
-              $firstLetter    = mb_substr($partyName, 0, 1);
-            @endphp
-            <tr data-status="{{ $allPaid ? 'paid' : 'pending' }}" style="cursor:pointer" onclick="openPartyModal('{{ $partyKey }}')">
-              <td style="text-align: right; padding-right: 30px;">
-                  <div style="display: flex; align-items: center; justify-content: flex-start; gap: 16px;">
-                      <div class="avatar-print" style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6 0%, #0f172a 150%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-                          {{ $firstLetter }}
-                      </div>
-                      <div style="font-weight: 800; color: #0f172a; font-size: 15px;">{{ $partyName }}</div>
-                  </div>
-              </td>
-              <td>
-                  <span class="no-print" style="background: #f1f5f9; color: #475569; padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 800;">{{ $partyCount }}</span>
-                  <span class="print-only" style="display:none;">{{ $partyCount }}</span>
-              </td>
-              <td style="color: #475569; font-weight: 800; font-size: 15px;">{{ \App\Support\Money::format($partyTotal) }} ج</td>
-              <td style="color: #10b981; font-weight: 800; font-size: 15px;">{{ \App\Support\Money::format($partyPaid) }} ج</td>
-              <td style="color: #e11d48; font-weight: 800; font-size: 16px;">{{ \App\Support\Money::format($partyRemaining) }} ج</td>
-              <td>
-                @if($allPaid)
-                  <span class="no-print" style="background: #ecfdf5; color: #047857; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; border: 1px solid #a7f3d0;"><i class="fa fa-check"></i> مسدد</span>
-                  <span class="print-only" style="display:none;">مسدد</span>
-                @else
-                  <span class="no-print" style="background: #fff1f2; color: #be123c; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; border: 1px solid #fecdd3;"><i class="fa fa-clock"></i> معلق</span>
-                  <span class="print-only" style="display:none;">نشط</span>
-                @endif
-              </td>
-            </tr>
-          @endforeach
-        </tbody>
-      </table>
-  </div>
-</div>
-@endif
-</div> <!-- end manual-tab -->
+
+</div> <!-- end main-debts-tab -->
 
 <div id="discount-tab" class="tab-content" style="display:none;">
 {{-- الخصومات المكتسبة --}}
@@ -884,10 +854,9 @@ function switchTab(tabId) {
   
   document.getElementById(tabId).style.display = 'block';
   
-  const btnId = tabId === 'supplier-tab' ? 'tab-btn-supplier' 
-              : tabId === 'manual-tab' ? 'tab-btn-manual' 
-              : 'tab-btn-discount';
-  document.getElementById(btnId).classList.add('active');
+  const btnId = tabId === 'main-debts-tab' ? 'tab-btn-main' : 'tab-btn-discount';
+  let btn = document.getElementById(btnId);
+  if (btn) btn.classList.add('active');
 }
 
 function filterMain() {
@@ -921,28 +890,27 @@ function filterStatus(status, btn) {
 
     // Filter main supplier debts table
     let mainRows = document.querySelectorAll('#main-tbody .rv-row-item');
+    let mainVisible = 0;
     mainRows.forEach(row => {
         let rStatus = row.getAttribute('data-status');
-        if(status === 'all' || rStatus === status) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-
-    // Filter manual debts table
-    let manualRows = document.querySelectorAll('#manual-tbody tr');
-    manualRows.forEach(row => {
-        let rStatus = row.getAttribute('data-status');
-        // Map 'pending' from manual table to 'active' filter
+        // Map 'pending' from old manual logic to 'active' filter if present
         if (rStatus === 'pending') rStatus = 'active';
 
         if(status === 'all' || rStatus === status) {
             row.style.display = '';
+            mainVisible++;
         } else {
             row.style.display = 'none';
         }
     });
+
+    let suppTab = document.getElementById('supplier-tab');
+    if (suppTab) suppTab.style.display = mainVisible > 0 ? 'block' : 'none';
+
+    let noRes = document.getElementById('no-results');
+    if (noRes) {
+        noRes.style.display = (mainVisible === 0) ? 'block' : 'none';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {

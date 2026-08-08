@@ -224,8 +224,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
     <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
         <div style="display: flex; gap: 8px; background: #e2e8f0; padding: 6px; border-radius: 12px; flex-wrap: wrap;">
-            <button id="tab-btn-project" onclick="switchTab('project-tab')" class="n-main-tab active"><i class="fa fa-building"></i> مستحقات المشاريع</button>
-            <button id="tab-btn-manual-recv" onclick="switchTab('manual-recv-tab')" class="n-main-tab"><i class="fa fa-hand-holding-dollar"></i> سلف وديون حرة</button>
+            <button class="n-main-tab active" style="cursor: default;"><i class="fa fa-building"></i> مستحقات نشطة وديون نشطة</button>
         </div>
 
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px; display: flex; gap: 4px; flex-wrap: wrap;">
@@ -273,7 +272,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
     </div>
 </div>
 
-<div id="project-tab" class="tab-content" style="display:block;">
+<div id="project-tab">
 {{-- Main Grid --}}
 <div class="rv-main-grid" style="display: grid; grid-template-columns: 2.7fr 1fr; gap: 20px;">
     
@@ -365,6 +364,54 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
                             </td>
                         </tr>
                     @endforeach
+
+                    @if(isset($manualReceivables) && $manualReceivables->count())
+                        @php $groupedRecv = $manualReceivables->groupBy('party'); @endphp
+                        @foreach($groupedRecv as $partyName => $partyItems)
+                            @php
+                                $partyTotal     = $partyItems->sum('total_amount');
+                                $partyPaid      = $partyItems->sum('paid_amount');
+                                $partyRemaining = $partyItems->sum(fn($r) => $r->remaining());
+                                $partyCount     = $partyItems->count();
+                                $allPaid        = $partyItems->every(fn($r) => $r->status === 'paid');
+                                $partyKey       = 'mrecv-' . md5($partyName);
+                                $firstLetter    = mb_substr($partyName, 0, 1);
+                            @endphp
+                            <tr class="rv-row-item" onclick="openPartyModal('{{ $partyKey }}')"
+                                data-name="{{ mb_strtolower($partyName) }}"
+                                data-status="{{ $allPaid ? 'paid' : 'active' }}"
+                                data-billed="{{ $partyTotal }}"
+                                data-collected="{{ $partyPaid }}"
+                                data-remaining="{{ $partyRemaining }}"
+                                data-discount="0"
+                                data-profit="0">
+                                <td style="text-align: right; padding-right: 24px;">
+                                    <div style="display: flex; align-items: center; justify-content: flex-start; gap: 12px;">
+                                        <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6 0%, #0f172a 150%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                            {{ $firstLetter }}
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: 800; color: #0f172a; font-size: 13px;">{{ $partyName }}</div>
+                                            <div style="color: #64748b; font-size: 11px; margin-top: 3px; font-weight: 600;"><i class="fa fa-hand-holding-dollar" style="color: #cbd5e1; margin-left: 2px;"></i> عهدة / سلفة ({{ $partyCount }})</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span style="font-size: 12px; font-weight: 800; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">--</span>
+                                </td>
+                                <td style="color: #475569; font-weight: 700; font-size: 14px;">{{ \App\Support\Money::format($partyTotal) }} ج</td>
+                                <td style="color: #10b981; font-weight: 800; font-size: 14px;">{{ \App\Support\Money::format($partyPaid) }} ج</td>
+                                <td style="color: #ef4444; font-weight: 800; font-size: 15px;">{{ \App\Support\Money::format($partyRemaining) }} ج</td>
+                                <td>
+                                    @if($allPaid)
+                                        <span style="background: #ecfdf5; color: #047857; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; border: 1px solid #a7f3d0;"><i class="fa fa-check"></i> مسدد</span>
+                                    @else
+                                        <span style="background: #fffbeb; color: #b45309; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; border: 1px solid #fde68a;"><i class="fa fa-clock"></i> قيد الانتظار</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    @endif
                 </tbody>
             </table>
         </div>
@@ -461,82 +508,10 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
 </div> <!-- end project-tab -->
 
 
-<div id="manual-recv-tab" class="tab-content" style="display:none;">
-{{-- سلف ومستحقات أخرى (حركات يدوية) --}}
-@if(isset($manualReceivables) && $manualReceivables->count())
-@php $groupedRecv = $manualReceivables->groupBy('party'); @endphp
-<div class="n-card" style="padding: 0; border-top: 4px solid #8b5cf6;">
-  <div class="no-print" style="padding: 16px 20px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #f8fafc; border-radius: 12px 12px 0 0;">
-    <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; min-width: max-content;">
-        سلف ومستحقات أخرى (حركات يدوية) <i class="fa fa-hand-holding-dollar" style="color: #8b5cf6;"></i>
-    </h3>
-    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: flex-end; flex: 1;">
-        <form method="GET" action="{{ route('receivables.index') }}" class="no-print" style="display: flex; gap: 6px; align-items: center; background: #ffffff; padding: 4px 6px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);">
-            <span style="font-size: 12px; color: #64748b; font-weight: 700; margin-right: 4px;">من</span>
-            <input type="date" name="date_from" value="{{ request('date_from') }}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: #f8fafc; color: #334155;">
-            <span style="font-size: 12px; color: #64748b; font-weight: 700;">إلى</span>
-            <input type="date" name="date_to" value="{{ request('date_to') }}" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; outline: none; background: #f8fafc; color: #334155;">
-            <button type="submit" style="background: #4f46e5; color: white; border: none; border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'" title="بحث بالتاريخ"><i class="fa fa-filter"></i></button>
-            @if(request('date_from') || request('date_to'))
-                <a href="{{ route('receivables.index') }}" style="background: #f1f5f9; color: #ef4444; padding: 4px 10px; border-radius: 6px; font-size: 12px; text-decoration: none; transition: 0.2s; border: 1px solid #fee2e2;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#f1f5f9'" title="إلغاء الفلتر"><i class="fa fa-times"></i></a>
-            @endif
-        </form>
-        <span style="background: #fffbeb; color: #b45309; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 800; border: 1px solid #fde68a; white-space: nowrap;">
-            إجمالي المتبقي: {{ \App\Support\Money::format($manualReceivables->sum(fn($r) => $r->remaining())) }} ج.م
-        </span>
-    </div>
-  </div>
-  <div style="overflow-x: auto;">
-      <table class="n-table" id="manual-table">
-        <thead>
-          <tr>
-            <th style="text-align: right; padding-right: 24px;"><i class="fa fa-user"></i> الجهة / الشخص</th>
-            <th><i class="fa fa-hashtag"></i> التعاملات</th>
-            <th><i class="fa fa-file-invoice"></i> إجمالي المبلغ</th>
-            <th style="color: #10b981;"><i class="fa fa-check-double"></i> المسدد</th>
-            <th style="color: #ef4444;"><i class="fa fa-triangle-exclamation"></i> المتبقي</th>
-            <th><i class="fa fa-circle-info"></i> الحالة</th>
-          </tr>
-        </thead>
-        <tbody id="manual-tbody">
-          @foreach($groupedRecv as $partyName => $partyItems)
-            @php
-              $partyTotal     = $partyItems->sum('total_amount');
-              $partyPaid      = $partyItems->sum('paid_amount');
-              $partyRemaining = $partyItems->sum(fn($r) => $r->remaining());
-              $partyCount     = $partyItems->count();
-              $allPaid        = $partyItems->every(fn($r) => $r->status === 'paid');
-              $partyKey       = 'mrecv-' . md5($partyName);
-              $firstLetter    = mb_substr($partyName, 0, 1);
-            @endphp
-            <tr data-status="{{ $allPaid ? 'paid' : 'pending' }}" style="cursor:pointer" onclick="openPartyModal('{{ $partyKey }}')">
-              <td style="text-align: right; padding-right: 24px;">
-                  <div style="display: flex; align-items: center; justify-content: flex-start; gap: 12px;">
-                      <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6 0%, #0f172a 150%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                          {{ $firstLetter }}
-                      </div>
-                      <div style="font-weight: 800; color: #0f172a; font-size: 14px;">{{ $partyName }}</div>
-                  </div>
-              </td>
-              <td><span style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 800;">{{ $partyCount }}</span></td>
-              <td style="color: #475569; font-weight: 800; font-size: 14px;">{{ \App\Support\Money::format($partyTotal) }} ج</td>
-              <td style="color: #10b981; font-weight: 800; font-size: 14px;">{{ \App\Support\Money::format($partyPaid) }} ج</td>
-              <td style="color: #ef4444; font-weight: 800; font-size: 15px;">{{ \App\Support\Money::format($partyRemaining) }} ج</td>
-              <td>
-                @if($allPaid)
-                  <span style="background: #ecfdf5; color: #047857; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; border: 1px solid #a7f3d0;"><i class="fa fa-check"></i> مسدد</span>
-                @else
-                  <span style="background: #fffbeb; color: #b45309; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; border: 1px solid #fde68a;"><i class="fa fa-clock"></i> معلق</span>
-                @endif
-              </td>
-            </tr>
-          @endforeach
-        </tbody>
-      </table>
-  </div>
-</div>
 
 {{-- توليد المودلز الخاصة بتفاصيل كل جهة/شخص --}}
+@if(isset($manualReceivables) && $manualReceivables->count())
+@php $groupedRecv = $manualReceivables->groupBy('party'); @endphp
 @foreach($groupedRecv as $partyName => $partyItems)
   @php
     $partyTotal     = $partyItems->sum('total_amount');
@@ -676,7 +651,6 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
   </div>
 @endforeach
 @endif
-</div> <!-- end manual-recv-tab -->
 
 {{-- أقساط متأخرة --}}
 @if($overdueInstallments->count())
@@ -1369,7 +1343,7 @@ function filterMain() {
   
   let sumBilled = 0, sumDiscount = 0, sumCollected = 0, sumRemaining = 0, sumProfit = 0;
   
-  document.querySelectorAll('#main-tbody tr').forEach(row => {
+  document.querySelectorAll('#main-tbody tr.rv-row-item').forEach(row => {
     const st = row.dataset.status;
     const matchStatus = (activeStatus === 'all') 
                      || (activeStatus === 'unpaid' && st !== 'paid') 
@@ -1388,7 +1362,7 @@ function filterMain() {
   
   const fmt = n => Number(n).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
   const ftTitle = document.getElementById('ft-title');
-  if (ftTitle) ftTitle.innerText = `الإجمالي (${visible} مشروع)`;
+  if (ftTitle) ftTitle.innerText = `الإجمالي (${visible} حساب)`;
   
   const ftBilled = document.getElementById('ft-billed');
   if (ftBilled) ftBilled.innerText = fmt(sumBilled);
@@ -1411,18 +1385,13 @@ function filterMain() {
   const ftProfit = document.getElementById('ft-profit');
   if (ftProfit) ftProfit.innerText = fmt(sumProfit);
   
-  document.querySelectorAll('#manual-tbody tr').forEach(row => {
-    const partyCell = row.cells[1] ? row.cells[1].textContent.toLowerCase() : '';
-    const st = row.dataset.status;
-    const matchStatus = (activeStatus === 'all') 
-                     || (activeStatus === 'unpaid' && st !== 'paid') 
-                     || (st === activeStatus);
-    const show = (!q || partyCell.includes(q)) && matchStatus;
-    row.style.display = show ? '' : 'none';
-  });
+  const projTab = document.getElementById('project-tab');
+  if(projTab) {
+      projTab.style.display = visible > 0 ? 'block' : 'none';
+  }
   
   const nr = document.getElementById('no-results');
-  if (nr) nr.style.display = visible === 0 && document.querySelectorAll('#main-tbody tr:not([style*="display: none"])').length === 0 ? 'block' : 'none';
+  if (nr) nr.style.display = (visible === 0) ? 'block' : 'none';
 }
 function filterStatus(status, btn) {
   activeStatus = status === 'active' ? 'unpaid' : status; // handle old 'unpaid' vs new 'active'
