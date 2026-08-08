@@ -184,8 +184,15 @@
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
               <div class="tx-amt" style="{{ $log->action === 'deleted' ? 'text-decoration:line-through' : '' }};color:{{ $meta['color'] }}">
-                @if($log->amount > 0)
+                @if($log->amount > 0 && $log->discount > 0)
                   {{ $log->direction === 'in' ? '+ ' : '− ' }}{{ \App\Support\Money::format($log->amount) }} ج.م
+                  <div class="muted" style="font-size:11px; color:#10b981; margin-top:2px; font-weight:bold;">
+                     + تسوية: {{ \App\Support\Money::format($log->discount) }}
+                  </div>
+                @elseif($log->amount > 0)
+                  {{ $log->direction === 'in' ? '+ ' : '− ' }}{{ \App\Support\Money::format($log->amount) }} ج.م
+                @elseif($log->amount == 0 && $log->discount > 0)
+                  <span style="color:#10b981;">{{ \App\Support\Money::format($log->discount) }} ج.م (تسوية فقط)</span>
                 @elseif($log->amount == 0 && $log->ref_type === 'material' && $log->ref_id && $log->action !== 'deleted')
                   @php $txDeferredMat = \App\Models\Material::find($log->ref_id); @endphp
                   @if($txDeferredMat && $txDeferredMat->grossCost() > 0)

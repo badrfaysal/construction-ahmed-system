@@ -147,12 +147,25 @@ class TransactionController extends Controller
                 case 'debt':
                     $debt = SupplierDebt::find($transaction->ref_id);
                     if ($debt) {
-                        $newPaid = max(0, (float) $debt->paid_amount - (float) $transaction->amount);
+                        $newPaid = max(0, (float) $debt->paid_amount - ((float) $transaction->amount + (float) $transaction->discount));
                         $debt->update([
                             'paid_amount' => $newPaid,
                             'status'      => $newPaid <= 0.009
                                 ? 'pending'
                                 : ($newPaid >= (float) $debt->total_amount - 0.009 ? 'paid' : 'partial'),
+                        ]);
+                    }
+                    $transaction->delete();
+                    break;
+                case 'manual_debt':
+                    $manualDebt = \App\Models\ManualDebt::find($transaction->ref_id);
+                    if ($manualDebt) {
+                        $newPaid = max(0, (float) $manualDebt->paid_amount - ((float) $transaction->amount + (float) $transaction->discount));
+                        $manualDebt->update([
+                            'paid_amount' => $newPaid,
+                            'status'      => $newPaid <= 0.009
+                                ? 'pending'
+                                : ($newPaid >= (float) $manualDebt->total_amount - 0.009 ? 'paid' : 'partial'),
                         ]);
                     }
                     $transaction->delete();

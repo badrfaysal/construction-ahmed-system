@@ -207,9 +207,20 @@
           </td>
 
           <td class="num">
-            @if($log->amount > 0)
+            @if($log->amount > 0 && $log->discount > 0)
               <b style="color:{{ $isTransfer ? '#3b82f6' : ($log->direction === 'in' ? '#10b981' : ($log->direction === 'out' ? '#ef4444' : 'inherit')) }}; {{ $log->action === 'deleted' ? 'text-decoration:line-through' : '' }}">
                 EGP {{ \App\Support\Money::format($log->amount) }} {{ $log->direction === 'in' ? '+' : ($log->direction === 'out' ? '-' : '') }}
+              </b>
+              <div class="muted" style="font-size:11px; color:#10b981; margin-top:2px; font-weight:bold;">
+                 + تسوية: {{ \App\Support\Money::format($log->discount) }}
+              </div>
+            @elseif($log->amount > 0)
+              <b style="color:{{ $isTransfer ? '#3b82f6' : ($log->direction === 'in' ? '#10b981' : ($log->direction === 'out' ? '#ef4444' : 'inherit')) }}; {{ $log->action === 'deleted' ? 'text-decoration:line-through' : '' }}">
+                EGP {{ \App\Support\Money::format($log->amount) }} {{ $log->direction === 'in' ? '+' : ($log->direction === 'out' ? '-' : '') }}
+              </b>
+            @elseif($log->amount == 0 && $log->discount > 0)
+              <b style="color:#10b981; {{ $log->action === 'deleted' ? 'text-decoration:line-through' : '' }}">
+                EGP {{ \App\Support\Money::format($log->discount) }} (تسوية فقط)
               </b>
             @elseif($log->amount == 0 && $log->ref_type === 'material' && $log->ref_id && $log->action !== 'deleted')
               @php $deferredMat = \App\Models\Material::find($log->ref_id); @endphp

@@ -85,20 +85,41 @@ class DebtController extends Controller
 
         $manualDebts = $manualQuery->get();
 
-        return view('debts.index', compact('debts', 'projects', 'suppliers', 'wallets', 'totals', 'manualDebts', 'manualTotals'));
+        // Earned discounts summary
+        $earnedDiscounts = Transaction::whereIn('ref_type', ['debt', 'manual_debt'])
+            ->where('discount', '>', 0)
+            ->selectRaw('party, SUM(discount) as total_discount')
+            ->groupBy('party')
+            ->orderByDesc('total_discount')
+            ->get();
+
+        return view('debts.index', compact('debts', 'projects', 'suppliers', 'wallets', 'totals', 'manualDebts', 'manualTotals', 'earnedDiscounts'));
     }
 
     public function payManual(Request $request, \App\Models\ManualDebt $debt)
     {
         $data = $request->validate([
-            'amount'     => ['required', 'numeric', 'min:0.01', 'max:' . $debt->remaining()],
+            'amount'     => ['required', 'numeric', 'min:0'],
+            'discount'   => ['nullable', 'numeric', 'min:0'],
             'account_id' => ['required', 'integer', 'exists:sy2_accounts,id'],
             'pay_date'   => ['required', 'date'],
         ]);
 
-        DB::transaction(function () use ($debt, $data) {
-            $newPaid = (float) $debt->paid_amount + (float) $data['amount'];
-            $newStatus = $newPaid >= (float) $debt->total_amount ? 'paid' : 'partial';
+        $cash = (float) $data['amount'];
+        $discount = (float) ($data['discount'] ?? 0);
+        $totalPay = $cash + $discount;
+
+        if ($totalPay <= 0) {
+            return back()->with('error', 'يجب إدخال مبلغ سداد أو تسوية.');
+        }
+
+        if (round($totalPay, 2) > round($debt->remaining(), 2)) {
+            return back()->with('error', 'إجمالي السداد والتسوية أكبر من المتبقي من الدين.');
+        }
+
+        DB::transaction(function () use ($debt, $data, $cash, $discount, $totalPay) {
+            $newPaid = (float) $debt->paid_amount + $totalPay;
+            $newStatus = $newPaid >= (float) $debt->total_amount - 0.009 ? 'paid' : 'partial';
 
             $debt->update([
                 'paid_amount' => $newPaid,
@@ -112,7 +133,8 @@ class DebtController extends Controller
                 'direction'   => 'out',
                 'type'        => 'سداد دين يدوي',
                 'party'       => $debt->party,
-                'amount'      => (float) $data['amount'],
+                'amount'      => $cash,
+                'discount'    => $discount,
                 'date'        => $data['pay_date'],
                 'description' => 'سداد عهدة/دين لـ: ' . $debt->party,
                 'ref_type'    => 'manual_debt',
@@ -127,14 +149,27 @@ class DebtController extends Controller
     public function pay(Request $request, SupplierDebt $debt)
     {
         $data = $request->validate([
-            'amount'     => ['required', 'numeric', 'min:0.01', 'max:' . $debt->remaining()],
+            'amount'     => ['required', 'numeric', 'min:0'],
+            'discount'   => ['nullable', 'numeric', 'min:0'],
             'account_id' => ['required', 'integer', 'exists:sy2_accounts,id'],
             'pay_date'   => ['required', 'date'],
         ]);
 
-        DB::transaction(function () use ($debt, $data) {
-            $newPaid = (float) $debt->paid_amount + (float) $data['amount'];
-            $newStatus = $newPaid >= (float) $debt->total_amount ? 'paid' : 'partial';
+        $cash = (float) $data['amount'];
+        $discount = (float) ($data['discount'] ?? 0);
+        $totalPay = $cash + $discount;
+
+        if ($totalPay <= 0) {
+            return back()->with('error', 'يجب إدخال مبلغ سداد أو تسوية.');
+        }
+
+        if (round($totalPay, 2) > round($debt->remaining(), 2)) {
+            return back()->with('error', 'إجمالي السداد والتسوية أكبر من المتبقي من الدين.');
+        }
+
+        DB::transaction(function () use ($debt, $data, $cash, $discount, $totalPay) {
+            $newPaid = (float) $debt->paid_amount + $totalPay;
+            $newStatus = $newPaid >= (float) $debt->total_amount - 0.009 ? 'paid' : 'partial';
 
             $debt->update([
                 'paid_amount' => $newPaid,
@@ -149,7 +184,8 @@ class DebtController extends Controller
                 'direction'   => 'out',
                 'type'        => 'سداد دين مورد',
                 'party'       => $debt->supplier?->name ?? $debt->description,
-                'amount'      => (float) $data['amount'],
+                'amount'      => $cash,
+                'discount'    => $discount,
                 'date'        => $data['pay_date'],
                 'description' => 'سداد: ' . $debt->description,
                 'ref_type'    => 'debt',
@@ -174,20 +210,39 @@ class DebtController extends Controller
         $totalRemaining = $debts->sum(fn($d) => $d->remaining());
 
         $data = $request->validate([
-            'amount'     => ['required', 'numeric', 'min:0.01', 'max:' . $totalRemaining],
+            'amount'     => ['required', 'numeric', 'min:0'],
+            'discount'   => ['nullable', 'numeric', 'min:0'],
             'account_id' => ['required', 'integer', 'exists:sy2_accounts,id'],
             'pay_date'   => ['required', 'date'],
         ]);
 
-        DB::transaction(function () use ($debts, $data, $supplier) {
-            $remaining = (float) $data['amount'];
-            foreach ($debts as $debt) {
-                if ($remaining <= 0) break;
-                $debtRemaining = $debt->remaining();
-                $pay = min($remaining, $debtRemaining);
+        $cash = (float) $data['amount'];
+        $discount = (float) ($data['discount'] ?? 0);
+        $totalPay = $cash + $discount;
 
-                $newPaid = (float) $debt->paid_amount + $pay;
-                $newStatus = $newPaid >= (float) $debt->total_amount ? 'paid' : 'partial';
+        if ($totalPay <= 0) {
+            return back()->with('error', 'يجب إدخال مبلغ سداد أو تسوية.');
+        }
+
+        if (round($totalPay, 2) > round($totalRemaining, 2)) {
+            return back()->with('error', 'إجمالي السداد والتسوية أكبر من المتبقي من الديون.');
+        }
+
+        DB::transaction(function () use ($debts, $data, $supplier, $cash, $discount) {
+            $remainingCash = $cash;
+            $remainingDiscount = $discount;
+
+            foreach ($debts as $debt) {
+                if ($remainingCash <= 0 && $remainingDiscount <= 0) break;
+                
+                $debtRemaining = $debt->remaining();
+                $payTotal = min($remainingCash + $remainingDiscount, $debtRemaining);
+
+                $payCash = min($remainingCash, $payTotal);
+                $payDiscount = $payTotal - $payCash;
+
+                $newPaid = (float) $debt->paid_amount + $payTotal;
+                $newStatus = $newPaid >= (float) $debt->total_amount - 0.009 ? 'paid' : 'partial';
                 $debt->update(['paid_amount' => $newPaid, 'status' => $newStatus]);
 
                 Transaction::create([
@@ -197,14 +252,16 @@ class DebtController extends Controller
                     'direction'   => 'out',
                     'type'        => 'سداد دين مورد',
                     'party'       => $supplier ? $supplier->name : 'بدون مورد',
-                    'amount'      => $pay,
+                    'amount'      => $payCash,
+                    'discount'    => $payDiscount,
                     'date'        => $data['pay_date'],
                     'description' => 'سداد: ' . $debt->description,
                     'ref_type'    => 'debt',
                     'ref_id'      => $debt->id,
                 ]);
 
-                $remaining -= $pay;
+                $remainingCash -= $payCash;
+                $remainingDiscount -= $payDiscount;
             }
         });
         $supplierName = $supplier ? $supplier->name : 'بدون مورد';
@@ -236,23 +293,40 @@ class DebtController extends Controller
         }
 
         $data = $request->validate([
-            'amount'     => ['required', 'numeric', 'min:0.01', 'max:' . $totalRemaining],
+            'amount'     => ['required', 'numeric', 'min:0'],
+            'discount'   => ['nullable', 'numeric', 'min:0'],
             'account_id' => ['required', 'integer', 'exists:sy2_accounts,id'],
             'pay_date'   => ['required', 'date'],
         ]);
 
-        DB::transaction(function () use ($debts, $data, $partyName) {
-            $remainingPay = (float) $data['amount'];
+        $cash = (float) $data['amount'];
+        $discount = (float) ($data['discount'] ?? 0);
+        $totalPay = $cash + $discount;
+
+        if ($totalPay <= 0) {
+            return back()->with('error', 'يجب إدخال مبلغ سداد أو تسوية.');
+        }
+
+        if (round($totalPay, 2) > round($totalRemaining, 2)) {
+            return back()->with('error', 'إجمالي السداد والتسوية أكبر من المتبقي من الديون.');
+        }
+
+        DB::transaction(function () use ($debts, $data, $partyName, $cash, $discount) {
+            $remainingCash = $cash;
+            $remainingDiscount = $discount;
             $transactions = [];
             
             foreach ($debts as $debt) {
-                if ($remainingPay <= 0) break;
+                if ($remainingCash <= 0 && $remainingDiscount <= 0) break;
                 
                 $debtRemaining = $debt->remaining();
-                $pay = min($remainingPay, $debtRemaining);
+                $payTotal = min($remainingCash + $remainingDiscount, $debtRemaining);
+                
+                $payCash = min($remainingCash, $payTotal);
+                $payDiscount = $payTotal - $payCash;
 
-                $newPaid = (float) $debt->paid_amount + $pay;
-                $newStatus = $newPaid >= (float) $debt->total_amount ? 'paid' : 'partial';
+                $newPaid = (float) $debt->paid_amount + $payTotal;
+                $newStatus = $newPaid >= (float) $debt->total_amount - 0.009 ? 'paid' : 'partial';
                 
                 $debt->update([
                     'paid_amount' => $newPaid,
@@ -266,7 +340,8 @@ class DebtController extends Controller
                     'direction'   => 'out',
                     'type'        => 'سداد عهدة/دين يدوي',
                     'party'       => $partyName,
-                    'amount'      => $pay,
+                    'amount'      => $payCash,
+                    'discount'    => $payDiscount,
                     'date'        => $data['pay_date'],
                     'description' => 'سداد: ' . $debt->description,
                     'ref_type'    => 'manual_debt',
@@ -275,7 +350,8 @@ class DebtController extends Controller
                     'updated_at'  => now(),
                 ];
 
-                $remainingPay -= $pay;
+                $remainingCash -= $payCash;
+                $remainingDiscount -= $payDiscount;
             }
 
             if (!empty($transactions)) {

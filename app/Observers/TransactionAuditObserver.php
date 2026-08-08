@@ -47,6 +47,7 @@ class TransactionAuditObserver
             'type'           => $transaction->type,
             'party'          => $transaction->party,
             'amount'         => $transaction->amount,
+            'discount'       => $transaction->discount ?? 0.00,
             'project_id'     => $transaction->project_id,
             'band_id'        => $transaction->band_id,
             'account_id'     => $transaction->account_id,

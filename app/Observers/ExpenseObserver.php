@@ -25,10 +25,13 @@ class ExpenseObserver
             'ref_type'    => $expense->project_id ? 'project_expense' : 'expense',
             'ref_id'      => $expense->id,
         ]);
+
+        $expense->project?->recalculateCachedTotals();
     }
 
     public function deleted(Expense $expense): void
     {
         Transaction::whereIn('ref_type', ['expense', 'project_expense'])->where('ref_id', $expense->id)->first()?->delete();
+        $expense->project?->recalculateCachedTotals();
     }
 }

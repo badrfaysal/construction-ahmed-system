@@ -141,7 +141,10 @@
   // Get Recent Transactions (Debts out)
   $recentActivities = \App\Models\Transaction::where('direction', 'out')
       ->whereIn('ref_type', ['debt', 'manual_debt'])
+      ->selectRaw('party, date, SUM(amount) as amount, SUM(discount) as discount')
+      ->groupBy('party', 'date')
       ->orderByDesc('date')
+      ->orderByDesc(\DB::raw('MAX(id)'))
       ->take(3)
       ->get();
 @endphp
@@ -168,6 +171,7 @@
         <div style="display: flex; gap: 8px; background: #e2e8f0; padding: 6px; border-radius: 12px;">
             <button id="tab-btn-supplier" onclick="switchTab('supplier-tab')" class="n-main-tab active"><i class="fa fa-boxes-stacked"></i> ديون الموردين</button>
             <button id="tab-btn-manual" onclick="switchTab('manual-tab')" class="n-main-tab"><i class="fa fa-hand-holding-dollar"></i> عهد وديون أخرى</button>
+            <button id="tab-btn-discount" onclick="switchTab('discount-tab')" class="n-main-tab"><i class="fa fa-tags"></i> الخصومات المكتسبة</button>
         </div>
 
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 6px; display: flex; gap: 6px;">
@@ -256,6 +260,9 @@
                 </div>
                 <div style="text-align: left;">
                     <div style="font-size: 16px; font-weight: 800; color: #10b981;">{{ \App\Support\Money::format($act->amount) }} ج.م</div>
+                    @if($act->discount > 0)
+                        <div style="font-size: 11px; font-weight: 700; color: #10b981; margin-top: 4px;">+ تسوية: {{ \App\Support\Money::format($act->discount) }} ج.م</div>
+                    @endif
                 </div>
             </div>
             @empty
@@ -460,6 +467,57 @@
 @endif
 </div> <!-- end manual-tab -->
 
+<div id="discount-tab" class="tab-content" style="display:none;">
+{{-- الخصومات المكتسبة --}}
+@if(isset($earnedDiscounts) && $earnedDiscounts->count())
+<div class="n-card" style="padding: 0; border-top: 5px solid #10b981;">
+  <div class="no-print" style="padding: 16px 24px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; background: #f8fafc; border-radius: 12px 12px 0 0;">
+    <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; min-width: max-content;">
+        جدول الخصومات المكتسبة والتسويات <i class="fa fa-tags" style="color: #10b981;"></i>
+    </h3>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; justify-content: flex-end; flex: 1;">
+        <span style="background: #ecfdf5; color: #047857; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 800; border: 1px solid #a7f3d0; white-space: nowrap;">
+            إجمالي الخصومات: {{ \App\Support\Money::format($earnedDiscounts->sum('total_discount')) }} ج.م
+        </span>
+    </div>
+  </div>
+  <div style="overflow-x: auto;">
+      <table class="n-table" id="discount-table">
+        <thead>
+          <tr>
+            <th style="text-align: right; padding-right: 30px;"><i class="fa fa-user"></i> الجهة المانحة للخصم (المورد / شخص)</th>
+            <th style="color: #10b981;"><i class="fa fa-hand-holding-dollar"></i> إجمالي مبلغ الخصم المكتسب (التسويات)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach($earnedDiscounts as $ed)
+            @php
+              $firstLetter = mb_substr($ed->party, 0, 1);
+            @endphp
+            <tr>
+              <td style="text-align: right; padding-right: 30px;">
+                  <div style="display: flex; align-items: center; justify-content: flex-start; gap: 16px;">
+                      <div class="avatar-print" style="width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #0f172a 150%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+                          {{ $firstLetter }}
+                      </div>
+                      <div style="font-weight: 800; color: #0f172a; font-size: 15px;">{{ $ed->party }}</div>
+                  </div>
+              </td>
+              <td style="color: #10b981; font-weight: 800; font-size: 18px;">{{ \App\Support\Money::format($ed->total_discount) }} ج.م</td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+  </div>
+</div>
+@else
+<div class="n-card" style="text-align: center; padding: 50px; color: #94a3b8;">
+    <i class="fa fa-tags" style="font-size: 40px; margin-bottom: 16px; display: block; color: #cbd5e1;"></i>
+    <strong style="display: block; font-size: 16px; color: #64748b;">لا يوجد خصومات مكتسبة مسجلة حتى الآن</strong>
+</div>
+@endif
+</div> <!-- end discount-tab -->
+
 
 {{-- ── توليد المودلز الخاصة بتفاصيل الموردين ── --}}
 @foreach($bySupplier as $supplierId => $supplierDebts)
@@ -645,11 +703,18 @@
     <p id="pay-desc" style="margin:0 0 24px; font-size:14px; color: #64748b; font-weight: 600; line-height: 1.5;"></p>
     <form id="pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.8'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
       @csrf
-      <div style="margin-bottom: 20px;">
-        <label style="display:block; font-size: 14px; font-weight: 800; color: #475569; margin-bottom: 10px;">المبلغ المسدد (ج.م) *</label>
-        <input type="number" name="amount" id="pay-amount" min="0.01" step="0.01" required style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; font-weight: 700; outline: none;" onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#cbd5e1'">
-        <small style="color: #94a3b8; font-size: 12px; margin-top: 6px; display: block;" id="pay-max-note"></small>
+      <div style="margin-bottom: 20px; display: flex; gap: 14px;">
+        <div style="flex: 1;">
+            <label style="display:block; font-size: 14px; font-weight: 800; color: #475569; margin-bottom: 10px;">المبلغ المسدد نقداً (ج.م) *</label>
+            <input type="number" name="amount" id="pay-amount" min="0" step="0.01" required style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; font-weight: 700; outline: none;" onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#cbd5e1'" oninput="updateLiveRemaining('pay')">
+            <small style="color: #94a3b8; font-size: 12px; margin-top: 6px; display: block;" id="pay-max-note"></small>
+        </div>
+        <div style="flex: 1;">
+            <label style="display:block; font-size: 14px; font-weight: 800; color: #10b981; margin-bottom: 10px;">تسوية / خصم مكتسب (ج.م)</label>
+            <input type="number" name="discount" id="pay-discount" min="0" step="0.01" style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; font-weight: 700; outline: none; background: #ecfdf5; color: #047857;" onfocus="this.style.borderColor='#10b981'" onblur="this.style.borderColor='#cbd5e1'" placeholder="0.00" oninput="updateLiveRemaining('pay')">
+        </div>
       </div>
+      <div id="pay-live-remaining" style="margin-bottom: 20px; font-size: 14px; font-weight: 800; color: #475569; background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px dashed #cbd5e1; display: none;">المتبقي بعد السداد: <span style="color: #e11d48;">0.00 ج.م</span></div>
       <div style="margin-bottom: 20px;">
         @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true, 'name' => 'account_id'])
       </div>
@@ -672,11 +737,18 @@
     <p id="supplier-pay-name" style="margin:0 0 24px; font-size:14px; color: #64748b; font-weight: 600; line-height: 1.5;"></p>
     <form id="supplier-pay-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.8'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
       @csrf
-      <div style="margin-bottom: 20px;">
-        <label style="display:block; font-size: 14px; font-weight: 800; color: #475569; margin-bottom: 10px;">المبلغ المسدد (ج.م) *</label>
-        <input type="number" name="amount" id="supplier-pay-amount" min="0.01" step="0.01" required style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; font-weight: 700; outline: none;" onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#cbd5e1'">
-        <small style="color: #94a3b8; font-size: 12px; margin-top: 6px; display: block;" id="supplier-pay-note"></small>
+      <div style="margin-bottom: 20px; display: flex; gap: 14px;">
+        <div style="flex: 1;">
+            <label style="display:block; font-size: 14px; font-weight: 800; color: #475569; margin-bottom: 10px;">المبلغ المسدد نقداً (ج.م) *</label>
+            <input type="number" name="amount" id="supplier-pay-amount" min="0" step="0.01" required style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; font-weight: 700; outline: none;" onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#cbd5e1'" oninput="updateLiveRemaining('supplier-pay')">
+            <small style="color: #94a3b8; font-size: 12px; margin-top: 6px; display: block;" id="supplier-pay-note"></small>
+        </div>
+        <div style="flex: 1;">
+            <label style="display:block; font-size: 14px; font-weight: 800; color: #10b981; margin-bottom: 10px;">تسوية / خصم مكتسب (ج.م)</label>
+            <input type="number" name="discount" id="supplier-pay-discount" min="0" step="0.01" style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; font-weight: 700; outline: none; background: #ecfdf5; color: #047857;" onfocus="this.style.borderColor='#10b981'" onblur="this.style.borderColor='#cbd5e1'" placeholder="0.00" oninput="updateLiveRemaining('supplier-pay')">
+        </div>
       </div>
+      <div id="supplier-pay-live-remaining" style="margin-bottom: 20px; font-size: 14px; font-weight: 800; color: #475569; background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px dashed #cbd5e1; display: none;">المتبقي بعد السداد: <span style="color: #e11d48;">0.00 ج.م</span></div>
       <div style="margin-bottom: 20px;">
         @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true, 'name' => 'account_id'])
       </div>
@@ -721,9 +793,17 @@
           ">سداد جزئي</button>
         </div>
 
-        <input type="number" name="amount" id="manual-pay-amount" min="0.01" step="0.01" required readonly style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; font-weight: 700; outline: none; background: #f8fafc;" onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#cbd5e1'">
-        <small style="color: #94a3b8; font-size: 12px; margin-top: 6px; display: block;" id="manual-pay-max-note"></small>
+        <div style="display: flex; gap: 14px;">
+          <div style="flex: 1;">
+              <input type="number" name="amount" id="manual-pay-amount" min="0" step="0.01" required readonly style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; font-weight: 700; outline: none; background: #f8fafc;" onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#cbd5e1'" oninput="updateLiveRemaining('manual-pay')">
+              <small style="color: #94a3b8; font-size: 12px; margin-top: 6px; display: block;" id="manual-pay-max-note"></small>
+          </div>
+          <div style="flex: 1;">
+              <input type="number" name="discount" id="manual-pay-discount" min="0" step="0.01" placeholder="تسوية/خصم" readonly style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; font-weight: 700; outline: none; background: #ecfdf5; color: #047857;" onfocus="this.style.borderColor='#10b981'" onblur="this.style.borderColor='#cbd5e1'" oninput="updateLiveRemaining('manual-pay')">
+          </div>
+        </div>
       </div>
+      <div id="manual-pay-live-remaining" style="margin-bottom: 20px; font-size: 14px; font-weight: 800; color: #475569; background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px dashed #cbd5e1; display: none;">المتبقي بعد السداد: <span style="color: #e11d48;">0.00 ج.م</span></div>
       <div style="margin-bottom: 20px;">
         @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true, 'name' => 'account_id'])
       </div>
@@ -746,11 +826,18 @@
     <form id="manual-party-pay-form" method="POST" action="{{ route('debts.manual.party.pay') }}" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.8'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
       @csrf
       <input type="hidden" name="party_name" id="manual-party-pay-party">
-      <div style="margin-bottom: 20px; margin-top: 24px;">
-        <label style="display:block; font-size: 14px; font-weight: 800; color: #475569; margin-bottom: 10px;">المبلغ المسدد (ج.م) *</label>
-        <input type="number" name="amount" id="manual-party-pay-amount" min="0.01" step="0.01" required style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; font-weight: 700; outline: none;" onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#cbd5e1'">
-        <small style="color: #94a3b8; font-size: 12px; margin-top: 6px; display: block;" id="manual-party-pay-max-note"></small>
+      <div style="margin-bottom: 20px; margin-top: 24px; display: flex; gap: 14px;">
+        <div style="flex: 1;">
+            <label style="display:block; font-size: 14px; font-weight: 800; color: #475569; margin-bottom: 10px;">المبلغ المسدد نقداً (ج.م) *</label>
+            <input type="number" name="amount" id="manual-party-pay-amount" min="0" step="0.01" required style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; font-weight: 700; outline: none;" onfocus="this.style.borderColor='#4f46e5'" onblur="this.style.borderColor='#cbd5e1'" oninput="updateLiveRemaining('manual-party-pay')">
+            <small style="color: #94a3b8; font-size: 12px; margin-top: 6px; display: block;" id="manual-party-pay-max-note"></small>
+        </div>
+        <div style="flex: 1;">
+            <label style="display:block; font-size: 14px; font-weight: 800; color: #10b981; margin-bottom: 10px;">تسوية / خصم مكتسب (ج.م)</label>
+            <input type="number" name="discount" id="manual-party-pay-discount" min="0" step="0.01" style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 16px; font-weight: 700; outline: none; background: #ecfdf5; color: #047857;" onfocus="this.style.borderColor='#10b981'" onblur="this.style.borderColor='#cbd5e1'" placeholder="0.00" oninput="updateLiveRemaining('manual-party-pay')">
+        </div>
       </div>
+      <div id="manual-party-pay-live-remaining" style="margin-bottom: 20px; font-size: 14px; font-weight: 800; color: #475569; background: #f8fafc; padding: 12px; border-radius: 10px; border: 1px dashed #cbd5e1; display: none;">المتبقي بعد السداد: <span style="color: #e11d48;">0.00 ج.م</span></div>
       <div style="margin-bottom: 20px;">
         @include('partials._wallet-select', ['wallets' => $wallets, 'required' => true, 'name' => 'account_id'])
       </div>
@@ -770,6 +857,24 @@
 
 @push('scripts')
 <script>
+function updateLiveRemaining(prefix) {
+  const amountEl = document.getElementById(prefix + '-amount');
+  const discountEl = document.getElementById(prefix + '-discount');
+  const remainingEl = document.getElementById(prefix + '-live-remaining');
+  
+  if (!amountEl || !remainingEl) return;
+  
+  const max = parseFloat(amountEl.max) || 0;
+  const amount = parseFloat(amountEl.value) || 0;
+  const discount = discountEl ? parseFloat(discountEl.value) || 0 : 0;
+  
+  let remaining = max - (amount + discount);
+  if (remaining < 0) remaining = 0;
+  
+  remainingEl.innerHTML = 'المتبقي بعد السداد: <span style="color:' + (remaining === 0 ? '#10b981' : '#e11d48') + '">' + remaining.toLocaleString('ar-EG', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ج.م</span>';
+  remainingEl.style.display = 'block';
+}
+
 function switchTab(tabId) {
   document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
   
@@ -779,7 +884,9 @@ function switchTab(tabId) {
   
   document.getElementById(tabId).style.display = 'block';
   
-  const btnId = tabId === 'supplier-tab' ? 'tab-btn-supplier' : 'tab-btn-manual';
+  const btnId = tabId === 'supplier-tab' ? 'tab-btn-supplier' 
+              : tabId === 'manual-tab' ? 'tab-btn-manual' 
+              : 'tab-btn-discount';
   document.getElementById(btnId).classList.add('active');
 }
 
@@ -857,26 +964,32 @@ function openSupplierPayModal(supplierId, remaining, name, mode) {
     (mode === 'full' ? 'سداد كامل ديون المورد: ' : 'سداد جزئي لديون المورد: ') + name;
   document.getElementById('supplier-pay-amount').max = remaining;
   document.getElementById('supplier-pay-amount').value = mode === 'full' ? remaining : '';
+  document.getElementById('supplier-pay-discount').value = '';
   document.getElementById('supplier-pay-note').textContent = 'الحد الأقصى: ' + remaining.toLocaleString('ar-EG') + ' ج.م';
   document.getElementById('supplier-pay-form').action = '/debts/supplier/' + supplierId + '/pay';
   
   const submitBtn = document.querySelector('#supplier-pay-form button[type=submit]');
   if(submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'تسجيل الدفع'; }
 
+  document.getElementById('supplier-pay-live-remaining').style.display = 'none';
   document.getElementById('supplier-pay-modal').style.display = 'flex';
+  updateLiveRemaining('supplier-pay');
 }
 
 function openPayModal(id, remaining, desc) {
   document.getElementById('pay-desc').textContent = desc;
   document.getElementById('pay-amount').max = remaining;
   document.getElementById('pay-amount').value = remaining;
+  document.getElementById('pay-discount').value = '';
   document.getElementById('pay-max-note').textContent = 'الحد الأقصى: ' + remaining.toLocaleString('ar-EG') + ' ج.م';
   document.getElementById('pay-form').action = '/debts/' + id + '/pay';
   
   const submitBtn = document.querySelector('#pay-form button[type=submit]');
   if(submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'تسجيل الدفع'; }
 
+  document.getElementById('pay-live-remaining').style.display = 'none';
   document.getElementById('pay-modal').style.display = 'flex';
+  updateLiveRemaining('pay');
 }
 
 function openManualPayModal(id, remaining, desc) {
@@ -885,6 +998,7 @@ function openManualPayModal(id, remaining, desc) {
   
   // Default to full payment style
   document.getElementById('manual-pay-amount').value = remaining;
+  document.getElementById('manual-pay-discount').value = '';
   document.getElementById('manual-pay-amount').readOnly = true;
   document.getElementById('manual-pay-full-btn').style.background = '#10b981';
   document.getElementById('manual-pay-full-btn').style.color = '#fff';
@@ -897,7 +1011,9 @@ function openManualPayModal(id, remaining, desc) {
   const submitBtn = document.querySelector('#manual-pay-form button[type=submit]');
   if(submitBtn) { submitBtn.disabled = false; submitBtn.innerText = 'تسجيل السداد'; }
 
+  document.getElementById('manual-pay-live-remaining').style.display = 'none';
   document.getElementById('manual-pay-modal').style.display = 'flex';
+  updateLiveRemaining('manual-pay');
 }
 
 function openPartyBulkPay(partyName, remaining, mode, partyKey) {
@@ -905,12 +1021,15 @@ function openPartyBulkPay(partyName, remaining, mode, partyKey) {
   document.getElementById('manual-party-pay-party').value = partyName;
   document.getElementById('manual-party-pay-amount').max = remaining;
   document.getElementById('manual-party-pay-amount').value = mode === 'full' ? remaining : '';
+  document.getElementById('manual-party-pay-discount').value = '';
   document.getElementById('manual-party-pay-max-note').textContent = 'الحد الأقصى: ' + remaining.toLocaleString('ar-EG') + ' ج.م';
   
   const submitBtn = document.querySelector('#manual-party-pay-form button[type=submit]');
   if(submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = 'تسجيل السداد للجهة'; }
 
+  document.getElementById('manual-party-pay-live-remaining').style.display = 'none';
   document.getElementById('manual-party-pay-modal').style.display = 'flex';
+  updateLiveRemaining('manual-party-pay');
 }
 </script>
 @endpush

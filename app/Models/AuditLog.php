@@ -16,7 +16,7 @@ class AuditLog extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'action', 'transaction_id', 'direction', 'type', 'party', 'amount',
+        'action', 'transaction_id', 'direction', 'type', 'party', 'amount', 'discount',
         'project_id', 'band_id', 'account_id', 'ref_type', 'ref_id',
         'description', 'date', 'old_values', 'performed_by', 'happened_at',
     ];
