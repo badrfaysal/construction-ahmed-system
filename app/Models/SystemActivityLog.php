@@ -127,6 +127,28 @@ class SystemActivityLog extends Model
             if ($name) $fields['الاسم'] = $name;
         }
 
+        // Generic fallback to ensure name exists if possible
+        if (!isset($fields['الاسم']) && !isset($fields['البند']) && !isset($fields['المشروع']) && !isset($fields['الخامة'])) {
+            $name = $model?->name ?? $model?->title ?? $this->new_values['name'] ?? $this->new_values['title'] ?? $this->old_values['name'] ?? $this->old_values['title'] ?? null;
+            if ($name) $fields['الاسم'] = $name;
+        }
+
+        // Generic extraction for amount / price / total
+        if (!isset($fields['المبلغ']) && !isset($fields['الإجمالي'])) {
+            $amountVal = $model?->amount ?? $this->new_values['amount'] ?? $model?->total ?? $this->new_values['total'] ?? $model?->price ?? $this->new_values['price'] ?? null;
+            if ($amountVal !== null) {
+                $fields['المبلغ/القيمة'] = number_format((float)$amountVal, 2) . " ج.م";
+            }
+        }
+
+        // Generic extraction for balance
+        if (!isset($fields['الرصيد'])) {
+            $balanceVal = $model?->balance ?? $this->new_values['balance'] ?? null;
+            if ($balanceVal !== null) {
+                $fields['الرصيد'] = number_format((float)$balanceVal, 2) . " ج.م";
+            }
+        }
+
         return $fields;
     }
 

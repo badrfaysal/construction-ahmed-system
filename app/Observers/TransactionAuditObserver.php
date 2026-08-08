@@ -108,6 +108,50 @@ class TransactionAuditObserver
             $text .= "<b>الوصف:</b> {$log->description}\n";
         }
         $text .= "<b>بواسطة:</b> {$user}\n";
+        $text .= "<b>الوقت:</b> " . \Carbon\Carbon::parse($log->happened_at ?? now())->format('Y-m-d h:i A') . "\n";
+
+        if ($log->action === 'updated' && !empty($log->old_values)) {
+            $text .= "\n<b>تفاصيل التعديل:</b>\n";
+            $fieldNamesAr = [
+                'direction' => 'الاتجاه',
+                'type' => 'النوع',
+                'party' => 'الطرف',
+                'amount' => 'المبلغ',
+                'project_id' => 'المشروع',
+                'band_id' => 'البند',
+                'account_id' => 'الحساب',
+                'description' => 'الوصف',
+                'date' => 'التاريخ',
+                'discount' => 'الخصم',
+            ];
+            foreach ($log->old_values as $key => $oldValue) {
+                $newValue = $log->$key;
+                if ($oldValue == $newValue) continue;
+                
+                $keyAr = $fieldNamesAr[$key] ?? $key;
+                
+                if (in_array($key, ['amount', 'discount'])) {
+                    $oldValue = is_numeric($oldValue) ? number_format((float)$oldValue, 2) . ' ج.م' : $oldValue;
+                    $newValue = is_numeric($newValue) ? number_format((float)$newValue, 2) . ' ج.م' : $newValue;
+                }
+                
+                if ($key === 'project_id') {
+                    $oldValue = \App\Models\Project::find($oldValue)?->name ?? 'عام / غير محدد';
+                    $newValue = \App\Models\Project::find($newValue)?->name ?? 'عام / غير محدد';
+                } elseif ($key === 'account_id') {
+                    $oldValue = \App\Models\Account::find($oldValue)?->name ?? 'غير محدد';
+                    $newValue = \App\Models\Account::find($newValue)?->name ?? 'غير محدد';
+                } elseif ($key === 'band_id') {
+                    $oldValue = \App\Models\ProjectBand::find($oldValue)?->name ?? 'غير محدد';
+                    $newValue = \App\Models\ProjectBand::find($newValue)?->name ?? 'غير محدد';
+                }
+                
+                $oldValue = $oldValue === null || $oldValue === '' ? 'فارغ' : $oldValue;
+                $newValue = $newValue === null || $newValue === '' ? 'فارغ' : $newValue;
+                
+                $text .= "🔸 <b>{$keyAr}:</b> من ( {$oldValue} ) ⬅️ إلى ( {$newValue} )\n";
+            }
+        }
 
         SendTelegramNotification::dispatchSync($text);
     }

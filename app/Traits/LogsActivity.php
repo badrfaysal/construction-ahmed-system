@@ -63,6 +63,36 @@ trait LogsActivity
                     }
 
                     $text .= "<b>بواسطة:</b> " . ($mainLog->user->name ?? 'النظام') . "\n";
+                    $text .= "<b>الوقت:</b> " . \Carbon\Carbon::parse($mainLog->created_at ?? now())->format('Y-m-d h:i A') . "\n";
+
+                    if ($mainLog->action === 'updated' && !empty($mainLog->new_values) && !empty($mainLog->old_values)) {
+                        $text .= "\n<b>تفاصيل التعديل:</b>\n";
+                        $fieldNamesAr = [
+                            'name' => 'الاسم', 'title' => 'العنوان', 'amount' => 'المبلغ',
+                            'total' => 'الإجمالي', 'price' => 'السعر', 'balance' => 'الرصيد',
+                            'status' => 'الحالة', 'description' => 'الوصف', 'date' => 'التاريخ',
+                            'qty' => 'الكمية', 'quantity' => 'الكمية', 'category' => 'التصنيف',
+                            'type' => 'النوع', 'initial_balance' => 'الرصيد الافتتاحي',
+                            'project_id' => 'المشروع', 'client_id' => 'العميل',
+                        ];
+                        foreach ($mainLog->new_values as $key => $newValue) {
+                            if (!array_key_exists($key, $mainLog->old_values)) continue;
+                            $oldValue = $mainLog->old_values[$key];
+                            if ($oldValue == $newValue) continue;
+                            
+                            $keyAr = $fieldNamesAr[$key] ?? $key;
+                            
+                            if (in_array($key, ['amount', 'total', 'price', 'balance', 'initial_balance'])) {
+                                $oldValue = is_numeric($oldValue) ? number_format((float)$oldValue, 2) . ' ج.م' : $oldValue;
+                                $newValue = is_numeric($newValue) ? number_format((float)$newValue, 2) . ' ج.م' : $newValue;
+                            }
+                            
+                            $oldValue = $oldValue === null || $oldValue === '' ? 'فارغ' : $oldValue;
+                            $newValue = $newValue === null || $newValue === '' ? 'فارغ' : $newValue;
+                            
+                            $text .= "🔸 <b>{$keyAr}:</b> من ( {$oldValue} ) ⬅️ إلى ( {$newValue} )\n";
+                        }
+                    }
 
                     if ($subLogs->count() > 0) {
                         $text .= "\n<b>حركات مرتبطة بالبند:</b>\n";
