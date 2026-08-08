@@ -135,7 +135,7 @@
     <div class="val tnum price-sell">{{ \App\Support\Money::format($displayValue) }} <small>ج.م</small></div>
     <div class="note" style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
       <span>سعر الشراء (تكلفة)</span>
-      <strong class="price-cost">{{ \App\Support\Money::format($project->totalSpent()) }} ج.م</strong>
+      <strong class="price-cost">{{ \App\Support\Money::format($project->computeTotalCost()) }} ج.م</strong>
     </div>
   </div>
   <div class="card stat" style="background: #fffbeb; border-color: #fde68a;">
@@ -154,8 +154,8 @@
     <div class="note">الباقي عليه: {{ \App\Support\Money::format(max($project->amountDue(), 0)) }} ج.م</div>
   </div>
   <div class="card stat" style="background: #fff7ed; border-color: #fed7aa;">
-    <div class="top"><span class="label">إجمالي المصروف</span><span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></span></div>
-    <div class="val tnum">{{ \App\Support\Money::format($project->totalSpent()) }} <small>ج.م</small></div>
+    <div class="top"><span class="label">إجمالي التكلفة والمصروف</span><span class="ic ic-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chart"/></svg></span></div>
+    <div class="val tnum">{{ \App\Support\Money::format($project->computeTotalCost()) }} <small>ج.م</small></div>
   </div>
   @if($isOwner)
     @php
@@ -860,7 +860,6 @@
             <th>الخزنة</th>
             <th class="num">المبلغ</th>
             <th>ملاحظات</th>
-            <th class="num"></th>
           </tr>
         </thead>
         <tbody>
@@ -871,15 +870,6 @@
               <td>{{ $exp->account->name }}</td>
               <td class="num" style="color:var(--neg); font-weight:700;">{{ \App\Support\Money::format($exp->amount) }}</td>
               <td style="color:var(--mut); font-size:13px">{{ $exp->notes ?: '—' }}</td>
-              <td class="num" style="width:60px">
-                <form method="POST" action="{{ route('general_expenses.destroy', $exp->id) }}" onsubmit="return confirm('تأكيد حذف المصروف؟ سيتم إرجاع المبلغ للخزنة.')">
-                  @csrf
-                  @method('DELETE')
-                  <button type="submit" class="btn ghost sm" style="color:#ef4444; padding:6px">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-                  </button>
-                </form>
-              </td>
             </tr>
           @endforeach
         </tbody>
@@ -1666,7 +1656,18 @@
                 </tr>
               @endif
 
-              @php $marketersCommission = (float) $project->transactions()->where('ref_type', 'marketer_commission')->sum('amount'); @endphp
+              @php 
+                $marketersCommission = (float) $project->transactions()->where('ref_type', 'marketer_commission')->sum('amount'); 
+                $projectExpensesCost = (float) $project->transactions()->where('ref_type', 'project_expense')->sum('amount');
+              @endphp
+              @if($projectExpensesCost > 0)
+              <tr>
+                <td>المصروفات العامة للمشروع</td>
+                <td class="num">0.00</td>
+                <td class="num">{{ \App\Support\Money::format($projectExpensesCost) }}</td>
+                <td class="num" style="color: var(--neg)">-{{ \App\Support\Money::format($projectExpensesCost) }}</td>
+              </tr>
+              @endif
               <tr>
                 <td>عمولة المسوقين</td>
                 <td class="num">0.00</td>
@@ -1682,7 +1683,7 @@
               <tr style="border-top: 2px solid #ddd;">
                 <td><strong>الصافي الكلي للمشروع</strong></td>
                 <td class="num"><strong>{{ \App\Support\Money::format($project->actualClientTotal()) }}</strong></td>
-                <td class="num"><strong>{{ \App\Support\Money::format($project->totalSpent()) }}</strong></td>
+                <td class="num"><strong>{{ \App\Support\Money::format($project->computeTotalCost()) }}</strong></td>
                 <td class="num" style="color:{{ $totalProfit >= 0 ? 'var(--pos)' : 'var(--neg)' }}"><strong>{{ \App\Support\Money::format($totalProfit) }}</strong></td>
               </tr>
             </tfoot>
