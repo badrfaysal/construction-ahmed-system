@@ -18,10 +18,18 @@ class MaterialInvoiceObserver
         $this->syncFinancials($invoice);
     }
 
-    public function deleted(MaterialInvoice $invoice): void
+    public function deleting(MaterialInvoice $invoice): void
     {
-        // Debt will be cascading deleted or manually deleted
-        SupplierDebt::where('invoice_id', $invoice->id)->delete();
+        // Reverse any manual payments made on this invoice's debts before deleting the debts
+        $debts = SupplierDebt::where('invoice_id', $invoice->id)->get();
+        foreach ($debts as $debt) {
+            $txs = Transaction::where('ref_type', 'debt')->where('ref_id', $debt->id)->get();
+            foreach ($txs as $tx) {
+                $tx->delete(); // Refunds the wallet
+            }
+            $debt->delete();
+        }
+        
         Transaction::where('ref_type', 'material_invoice')->where('ref_id', $invoice->id)->delete();
     }
 
@@ -87,6 +95,11 @@ class MaterialInvoiceObserver
         } else {
             // No debt remaining for this invoice
             if ($debt) {
+                // Reverse any manual payments made on this debt before deleting it
+                $txs = Transaction::where('ref_type', 'debt')->where('ref_id', $debt->id)->get();
+                foreach ($txs as $tx) {
+                    $tx->delete(); // Refunds the wallet
+                }
                 $debt->delete();
             }
         }

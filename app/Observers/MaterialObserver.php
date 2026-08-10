@@ -140,8 +140,16 @@ class MaterialObserver
 
     public function deleting(Material $material): void
     {
-        // Remove any outstanding debt linked to this purchase before DB sets material_id to null
-        SupplierDebt::where('material_id', $material->id)->where('paid_amount', 0)->delete();
+        // Remove any outstanding debt linked to this purchase before DB sets material_id to null.
+        // If there are manual payments against this debt, reverse them first to refund the wallet.
+        $debts = SupplierDebt::where('material_id', $material->id)->get();
+        foreach ($debts as $debt) {
+            $txs = Transaction::where('ref_type', 'debt')->where('ref_id', $debt->id)->get();
+            foreach ($txs as $tx) {
+                $tx->delete();
+            }
+            $debt->delete();
+        }
     }
 
     public function deleted(Material $material): void

@@ -269,12 +269,37 @@ class ProjectBandController extends Controller
 
         // Deleting a band DB-cascades its workers AND their recorded دفعات —
         // real paid cash would vanish from the books while its wallet debits
-        // stay behind. Block until those payments are removed explicitly.
-        if ($band->workers()->whereHas('payments')->exists()) {
-            return back()->with('error', 'البند فيه صنايعية ليهم دفعات مسجلة — احذف دفعاتهم الأول (من صفحة دفعات كل صنايعي) قبل حذف البند.');
-        }
+        // stay behind. So we must explicitly delete payments and materials
+        // first to trigger their observers which reverse the transactions.
+        DB::transaction(function () use ($band) {
+            foreach ($band->workers as $worker) {
+                foreach ($worker->payments as $payment) {
+                    $payment->delete();
+                }
+            }
+            
+            $invoices = collect();
+            foreach ($band->materials as $material) {
+                if ($material->invoice_id) {
+                    $invoices->push($material->invoice);
+                }
+                $material->delete();
+            }
 
-        DB::transaction(fn () => $band->delete());
+            foreach ($invoices->unique('id') as $invoice) {
+                if ($invoice->materials()->count() === 0) {
+                    $invoice->delete();
+                } else {
+                    $invoice->total_amount = $invoice->materials()->get()->sum(fn($m) => $m->qty * $m->unit_price);
+                    if ($invoice->paid_amount > $invoice->total_amount) {
+                        $invoice->paid_amount = $invoice->total_amount;
+                    }
+                    $invoice->save();
+                }
+            }
+
+            $band->delete();
+        });
 
         return redirect()->route('projects.show', $project)
             ->with('success', 'تم حذف البند.');

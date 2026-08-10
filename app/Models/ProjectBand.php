@@ -128,15 +128,15 @@ class ProjectBand extends Model
             }
         }
 
-        // Workers dropped from the form. A craftsman with recorded دفعات can't
-        // be silently removed — his payment history (and the wallet debits
-        // behind it) must stay traceable. The user flow for "صنايعي مشي" is to
-        // keep him with his actual executed qty and add a new worker instead.
+        // Workers dropped from the form.
+        // We explicitly delete their payments and any materials (expenses) linked to them
+        // to ensure all financial records and dues are reversed properly.
         foreach ($this->workers()->whereNotIn('id', $keptIds)->get() as $removed) {
-            if ($removed->payments()->exists()) {
-                throw ValidationException::withMessages([
-                    'workers' => 'الصنايعي "' . $removed->name . '" له دفعات مسجلة فلا يمكن حذفه من البند — لو مشي بدري، قلّل كميته/أجره وسيبه في القائمة وضيف صنايعي جديد يكمّل. (أو احذف دفعاته الأول من صفحة الدفعات.)',
-                ]);
+            foreach ($removed->payments as $payment) {
+                $payment->delete();
+            }
+            foreach (\App\Models\Material::where('band_worker_id', $removed->id)->get() as $material) {
+                $material->delete();
             }
             $removed->delete();
         }
@@ -163,6 +163,8 @@ class ProjectBand extends Model
             'labor_sell_price'      => $laborSellPrice,
             'labor_supervision_pct' => $laborSupervisionPct,
         ]);
+
+        $this->recalculateCachedTotals();
     }
 
     // Recomputes the band's labor totals straight from its current workers —

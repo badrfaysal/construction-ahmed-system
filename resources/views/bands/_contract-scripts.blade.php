@@ -250,7 +250,7 @@ function workerRowHtml(g) {
         </div>
       </div>
       <div class="btn-row worker-del-row" style="margin-top:8px">
-        <button type="button" class="btn ghost sm danger worker-del-btn" onclick="this.closest('.worker-row').remove(); updateClientPrice(); if(typeof updateBandTabCounts==='function') updateBandTabCounts();">حذف الفني</button>
+        <button type="button" class="btn ghost sm danger worker-del-btn" onclick="if(confirm('هل أنت متأكد من حذف الفني؟\\n\\nتنبيه: لو تم حذف الفني، هيتم حذفه من البند، ولو في فلوس اتدفعت له (دفعات) هترجع لمحفظتك وتتعكس حركتها وتتسجل في الرادار كـ ملغاة.')) { this.closest('.worker-row').remove(); updateClientPrice(); if(typeof updateBandTabCounts==='function') updateBandTabCounts(); }">حذف الفني</button>
       </div>
     </div>`;
 }

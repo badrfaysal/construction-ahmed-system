@@ -53,7 +53,7 @@
 </form>
 
 <div class="btn-row" style="margin-top:16px">
-  <form method="POST" action="{{ route('bands.destroy', $band) }}" onsubmit="return confirm('حذف هذا البند؟')">
+  <form method="POST" action="{{ route('bands.destroy', $band) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذا البند؟\n\nتنبيه: لو تم حذف البند، كل الخامات وكل الصنايعية هيتم عكس حركتهم وحذفهم، وكل فلوس اتدفعت في البند ده (خامات أو صنايعية) هترجع لمحفظتك وتتعكس حركتها وتتسجل في الرادار كـ ملغاة.')">
     @csrf @method('DELETE')
     <button class="btn danger">حذف البند</button>
   </form>
