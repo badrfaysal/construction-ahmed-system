@@ -29,6 +29,7 @@ use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\SystemActivityLogController;
 use App\Http\Controllers\WorkerPaymentController;
+use App\Http\Controllers\AssetController;
 use Illuminate\Support\Facades\Route;
 
 // ---- Auth routes (no login required) ----
@@ -204,6 +205,15 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::get('/price-history', [PriceHistoryController::class, 'index'])->name('price-history.index');
     Route::get('/price-history/{itemName}', [PriceHistoryController::class, 'show'])->name('price-history.show');
     
+    // Assets (الأصول)
+    Route::get('/assets', [AssetController::class, 'index'])->name('assets.index');
+    Route::post('/assets', [AssetController::class, 'store'])->name('assets.store');
+    Route::put('/assets/{asset}', [AssetController::class, 'update'])->name('assets.update');
+    Route::delete('/assets/{asset}', [AssetController::class, 'destroy'])->name('assets.destroy');
+    Route::post('/assets/{asset}/depreciate', [AssetController::class, 'depreciate'])->name('assets.depreciate');
+    Route::post('/assets/{asset}/sell', [AssetController::class, 'sell'])->name('assets.sell');
+
+    
     // System Activity Logs
     Route::get('/activity-logs', [SystemActivityLogController::class, 'index'])->name('activity-logs.index');
 
@@ -247,14 +257,12 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
         Route::put('/transactions/{transaction}', [TransactionController::class, 'update'])->name('transactions.update');
         Route::delete('/transactions/{transaction}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
         
-        // الرادار - سجل الحركات الشامل
+        // الرادار
         Route::get('/radar', [RadarController::class, 'index'])->name('radar.index');
+        Route::delete('/radar/{log}/revert', [RadarController::class, 'revert'])->name('radar.revert');
     });
 
     // Global search (بحث) — available from the topbar on every screen
     Route::get('/search', [SearchController::class, 'index'])->name('search.index');
+
 });
-
-
-
-        

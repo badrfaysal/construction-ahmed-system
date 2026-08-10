@@ -524,6 +524,10 @@
                         <span class="lbl">أرباح منظومة التقسيط (الفوائد)</span>
                         <span class="val">{{ \App\Support\Money::format($totalInstallmentProfit) }} ج</span>
                     </li>
+                    <li>
+                        <span class="lbl">أرباح بيع الأصول الثابتة</span>
+                        <span class="val">{{ \App\Support\Money::format($totalAssetSaleProfit) }} ج</span>
+                    </li>
                     <li class="total-row">
                         <span class="lbl">إجمالي الإيرادات</span>
                         <span class="val">{{ \App\Support\Money::format($totalRevenuesForView) }} ج</span>

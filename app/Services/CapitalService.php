@@ -80,7 +80,9 @@ class CapitalService
         $directReceivables += $manualReceivables;
         $supplierDebtsRemaining += $manualDebtsDue;
 
-        $netCapital = $accountsBalance + $directReceivables + $installmentReceivables - $supplierDebtsRemaining - $unpaidLabor - $clientOverpayments;
+        $activeAssetsValue = (float) \App\Models\Asset::active()->sum('current_value');
+
+        $netCapital = $accountsBalance + $directReceivables + $installmentReceivables + $activeAssetsValue - $supplierDebtsRemaining - $unpaidLabor - $clientOverpayments;
 
         $accountsBreakdown = Account::where('status', 'active')
             ->get(['id', 'name', 'balance'])
@@ -102,6 +104,7 @@ class CapitalService
                 'clientOverpayments' => $clientOverpayments,
                 'manualDebtsDue' => $manualDebtsDue,
                 'manualReceivables' => $manualReceivables,
+                'activeAssetsValue' => $activeAssetsValue,
             ]
         ];
     }

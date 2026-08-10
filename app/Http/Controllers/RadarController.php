@@ -16,7 +16,19 @@ class RadarController extends Controller
             abort(403, 'غير مصرح لك بالدخول لهذه الصفحة');
         }
 
-        $query = AuditLog::with(['performedBy', 'project', 'band'])->orderByDesc('happened_at');
+        $query = AuditLog::with(['performedBy', 'project', 'band']);
+
+        // Sorting
+        $sort = $request->get('sort', 'newest');
+        if ($sort === 'oldest') {
+            $query->orderBy('happened_at')->orderBy('id');
+        } elseif ($sort === 'amount_desc') {
+            $query->orderByDesc('amount');
+        } elseif ($sort === 'amount_asc') {
+            $query->orderBy('amount');
+        } else {
+            $query->orderByDesc('happened_at')->orderByDesc('id');
+        }
 
         // Action filter
         if ($request->filled('action')) {
@@ -84,5 +96,55 @@ class RadarController extends Controller
         $canceledCount = $canceledQuery->whereIn('ref_type', ['manual', 'client_payment', 'transfer'])->count(); // mostly manual actions
 
         return view('radar.index', compact('logs', 'users', 'period', 'liveIds', 'wallets', 'totalIn', 'totalOut', 'totalTransfers', 'canceledCount'));
+    }
+
+    public function revert(Request $request, AuditLog $log)
+    {
+        $request->validate(['current_password' => ['required', 'string']]);
+        if (!\Illuminate\Support\Facades\Hash::check($request->current_password, auth()->user()->password)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'current_password' => 'كلمة مرور الأدمن غير صحيحة.',
+            ]);
+        }
+
+        if ($log->action === 'deleted') {
+            return back()->with('error', 'هذه الحركة محذوفة بالفعل.');
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($log) {
+            if ($log->ref_type === 'asset') {
+                $asset = \App\Models\Asset::find($log->ref_id);
+                if ($asset) {
+                    if ($log->type === 'إهلاك أصل') {
+                        $asset->current_value += $log->amount;
+                        $asset->status = 'active';
+                        $asset->save();
+                    } elseif ($log->type === 'شراء أصل (دفتري)') {
+                        $asset->delete();
+                    }
+                }
+            }
+
+            // Mark log as deleted
+            AuditLog::create([
+                'action'       => 'deleted',
+                'direction'    => $log->direction,
+                'type'         => 'عكس ' . $log->type,
+                'party'        => $log->party,
+                'amount'       => $log->amount,
+                'ref_type'     => $log->ref_type,
+                'ref_id'       => $log->ref_id,
+                'description'  => "تم عكس الحركة من الرادار: " . $log->description,
+                'date'         => now()->toDateString(),
+                'performed_by' => auth()->id(),
+                'happened_at'  => now(),
+            ]);
+
+            // We can also mark the original log as deleted by updating it, but AuditLog is append-only.
+            // Actually it's better to just update the action to 'deleted' to hide the delete button.
+            $log->update(['action' => 'deleted']);
+        });
+
+        return back()->with('success', 'تم عكس الحركة بنجاح.');
     }
 }

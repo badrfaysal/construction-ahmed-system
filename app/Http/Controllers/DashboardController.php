@@ -78,7 +78,37 @@ class DashboardController extends Controller
         $totalPercentageProfit  = $projects->sum(fn ($p) => $p->percentageProfit());
         $totalInstallmentProfit = $projects->sum(fn ($p) => $p->totalInstallmentInterest());
 
-        $totalRevenuesForView = $totalTradeProfit + $totalPercentageProfit + $totalInstallmentProfit;
+        // أرباح بيع الأصول
+        // يتم حسابها من الأصول المباعة = مبلغ البيع (من الحركة المالية) - القيمة الدفترية للأصل (وقت البيع)
+        // وبما أن القيمة الحالية للأصل تظل محفوظة في Asset، والحركة مسجلة في Transaction:
+        $totalAssetSaleProfit = 0;
+        $soldAssetsQuery = \App\Models\Asset::where('status', 'sold');
+        if ($isFiltered) {
+            // we should ideally filter by sale date, which is recorded in the transaction
+            // but for simplicity, we can fetch all and check transaction date
+            $soldAssets = $soldAssetsQuery->get();
+            foreach ($soldAssets as $asset) {
+                $saleTx = \App\Models\Transaction::where('ref_type', 'asset')
+                    ->where('ref_id', $asset->id)
+                    ->where('direction', 'in')
+                    ->whereBetween('date', [$startDate, $endDate])
+                    ->first();
+                if ($saleTx) {
+                    $totalAssetSaleProfit += ($saleTx->amount - $asset->current_value);
+                }
+            }
+        } else {
+            $soldAssets = $soldAssetsQuery->get();
+            foreach ($soldAssets as $asset) {
+                $saleAmount = \App\Models\Transaction::where('ref_type', 'asset')
+                    ->where('ref_id', $asset->id)
+                    ->where('direction', 'in')
+                    ->sum('amount');
+                $totalAssetSaleProfit += ($saleAmount - $asset->current_value);
+            }
+        }
+
+        $totalRevenuesForView = $totalTradeProfit + $totalPercentageProfit + $totalInstallmentProfit + $totalAssetSaleProfit;
         
         // الربح الدفتري = إجمالي الأرباح (الإيرادات) - الخصومات
         $bookProfit = $totalRevenuesForView - $totalDiscount;
@@ -106,7 +136,7 @@ class DashboardController extends Controller
             'accountsBalance', 'directReceivables', 'installmentReceivables', 'supplierDebtsRemaining', 'unpaidLabor', 'clientOverpayments', 'netCapital',
             'monthFilter', 'isFiltered', 'accounts', 'recentTransactions',
             'bookProfit', 'realProfit', 'uncollectedProfit', 'totalDiscount',
-            'totalInstallmentProfit', 'totalTradeProfit', 'totalPercentageProfit', 'totalRevenuesForView',
+            'totalInstallmentProfit', 'totalTradeProfit', 'totalPercentageProfit', 'totalAssetSaleProfit', 'totalRevenuesForView',
             'totalMarketerCommissions', 'totalReturnLosses', 'totalDiscountsAndLosses', 'capitalSnapshots', 'totalGeneralExpenses'
         ));
     }

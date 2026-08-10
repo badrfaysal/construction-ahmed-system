@@ -60,8 +60,6 @@ class AuditLog extends Model
         return $this->direction === 'in' ? 'وارد' : ($this->direction === 'out' ? 'صادر' : '—');
     }
 
-    // لون وأيقونة ثابتين لكل نوع حركة (حسب ref_type) — عشان العين تفرّق فورًا
-    // بين نوع وتاني في سجل الحركات من غير ما تقرا النص
     public function refMeta(): array
     {
         return match ($this->ref_type) {
@@ -76,6 +74,7 @@ class AuditLog extends Model
             'discount'       => ['label' => 'منح خصم للعميل',    'color' => '#f43f5e', 'icon' => 'i-percent'],
             'manual'         => ['label' => 'حركة محفظة يدوية',  'color' => '#c9821a', 'icon' => 'i-wallet'],
             'band'           => ['label' => 'أجور فنيين (قديم)', 'color' => '#8b5cf6', 'icon' => 'i-hardhat'],
+            'asset'          => ['label' => 'الأصول الثابتة',    'color' => '#059669', 'icon' => 'i-building'],
             default          => ['label' => 'حركة عامة',         'color' => '#64748b', 'icon' => 'i-activity'],
         };
     }

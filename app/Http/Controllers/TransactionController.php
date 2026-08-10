@@ -179,6 +179,20 @@ class TransactionController extends Controller
                         $transaction->delete();
                     }
                     break;
+                case 'asset':
+                    $asset = \App\Models\Asset::find($transaction->ref_id);
+                    if ($asset) {
+                        if ($transaction->direction === 'out') {
+                            // تم عكس حركة شراء -> نحذف الأصل
+                            $asset->delete();
+                        } elseif ($transaction->direction === 'in') {
+                            // تم عكس حركة بيع -> نرجع الأصل لحالة نشط ونمسح لوج البيع
+                            $asset->update(['status' => 'active']);
+                            $asset->logs()->where('action', 'sale')->latest()->first()?->delete();
+                        }
+                    }
+                    $transaction->delete();
+                    break;
                 default: // manual, client_payment, null, band (legacy)
                     $transaction->delete();
             }

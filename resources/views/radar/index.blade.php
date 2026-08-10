@@ -127,6 +127,15 @@
         </select>
       </div>
 
+      <div class="field" style="margin: 0; flex: 1; min-width: 180px;">
+        <select name="sort" onchange="this.form.submit()" style="width:100%; height:44px; padding-top:0; padding-bottom:0; background-color:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; color:#0f172a; font-weight:600; font-size:13.5px;">
+          <option value="newest" {{ request('sort') === 'newest' ? 'selected' : '' }}>الأحدث أولاً (الافتراضي)</option>
+          <option value="oldest" {{ request('sort') === 'oldest' ? 'selected' : '' }}>الأقدم أولاً</option>
+          <option value="amount_desc" {{ request('sort') === 'amount_desc' ? 'selected' : '' }}>المبلغ (الأعلى للأقل)</option>
+          <option value="amount_asc" {{ request('sort') === 'amount_asc' ? 'selected' : '' }}>المبلغ (الأقل للأعلى)</option>
+        </select>
+      </div>
+
       <div class="radar-ranges" style="display:flex; gap:6px; align-items:center; background:#f1f5f9; padding:6px; border-radius:12px; border: 1px solid #e2e8f0; flex: 2; min-width: 100%; flex-wrap: wrap;">
         @php $ranges = ['all' => 'الكل', 'today' => 'اليوم', 'yesterday' => 'أمس', 'month' => 'الشهر ده']; @endphp
         @foreach($ranges as $val => $label)
@@ -183,7 +192,28 @@
             $meta['label'] = $isTransferOut ? 'تحويل صادر' : 'تحويل وارد';
           }
         @endphp
-        <tr style="{{ $log->action === 'deleted' ? 'background:repeating-linear-gradient(45deg, #fffafa, #fffafa 10px, #fff5f5 10px, #fff5f5 20px); opacity: 0.8;' : '' }}">
+        @php
+          $logData = [
+             'id' => $log->transaction_id ?? $log->id,
+             'action' => $meta['label'],
+             'type' => $isTransfer ? 'تحويل' : ($log->direction === 'in' ? 'تدفق داخل' : ($log->direction === 'out' ? 'تدفق خارج' : '—')),
+             'amount' => \App\Support\Money::format($log->amount),
+             'discount' => $log->discount > 0 ? \App\Support\Money::format($log->discount) : 0,
+             'direction' => $log->direction,
+             'party' => $isTransfer ? 'تحويل' : $partyName,
+             'project' => $log->project ? $log->project->name : 'عام / غير محدد',
+             'band' => $log->band ? $log->band->name : '',
+             'description' => $log->description ?: '—',
+             'date' => $log->happened_at->format('Y-m-d H:i A'),
+             'user' => $log->performedBy ? $log->performedBy->name : 'النظام',
+             'account' => $accountName,
+             'color' => $isTransfer ? '#3b82f6' : ($log->direction === 'in' ? '#10b981' : ($log->direction === 'out' ? '#ef4444' : '#64748b'))
+          ];
+        @endphp
+        <tr style="cursor: pointer; {{ $log->action === 'deleted' ? 'background:repeating-linear-gradient(45deg, #fffafa, #fffafa 10px, #fff5f5 10px, #fff5f5 20px); opacity: 0.8;' : 'transition: background 0.2s;' }}" 
+            onmouseover="this.style.background='#f8fafc'" 
+            onmouseout="this.style.background='{{ $log->action === 'deleted' ? 'repeating-linear-gradient(45deg, #fffafa, #fffafa 10px, #fff5f5 10px, #fff5f5 20px)' : 'transparent' }}'"
+            onclick="if(!event.target.closest('button') && !event.target.closest('a')) openLogDetails(this)" data-log="{{ htmlspecialchars(json_encode($logData)) }}">
           <td class="muted" style="padding-right:20px;">{{ $log->transaction_id ?? $log->id }}</td>
           
           <td>
@@ -342,7 +372,14 @@
                   </button>
                 @endif
                 <button type="button" class="btn ghost sm danger" title="حذف وعكس الحركة"
-                  onclick="openDeleteModal({{ $log->transaction_id }}, '{{ addslashes($meta['label']) }}', '{{ \App\Support\Money::format($log->amount) }}', {{ $isSafe ? 'false' : 'true' }})">
+                  onclick="openDeleteModal('/transactions/{{ $log->transaction_id }}', '{{ addslashes($meta['label']) }}', '{{ \App\Support\Money::format($log->amount) }}', {{ $isSafe ? 'false' : 'true' }})">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
+                </button>
+              </div>
+            @elseif($log->transaction_id === null && $log->ref_type === 'asset' && $log->action !== 'deleted' && in_array($log->type, ['إهلاك أصل', 'شراء أصل (دفتري)']))
+              <div style="display:flex;gap:4px">
+                <button type="button" class="btn ghost sm danger" title="عكس إجراء الأصل"
+                  onclick="openDeleteModal('/radar/{{ $log->id }}/revert', '{{ addslashes($meta['label'] . ' - ' . $log->type) }}', '{{ \App\Support\Money::format($log->amount) }}', true)">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
                 </button>
               </div>
@@ -558,6 +595,58 @@
   </div>
 </div>
 
+{{-- Log Details Modal --}}
+<div class="modal-overlay" id="log-details-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-box" style="max-width:500px; padding: 0; overflow: hidden; border-radius: 16px;">
+    <div class="modal-head" id="log-details-head" style="padding: 20px; border-bottom: 1px solid rgba(0,0,0,0.05); color: white;">
+      <h4 style="margin:0; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="22" height="22"><use href="#i-doc"/></svg>
+        <span id="log-details-title">تفاصيل الحركة</span>
+      </h4>
+      <button class="btn ghost sm" onclick="document.getElementById('log-details-modal').classList.remove('open')" style="color: inherit; opacity: 0.8; background: rgba(255,255,255,0.2);">✕</button>
+    </div>
+    <div class="modal-body" style="padding: 20px; background: #f8fafc;">
+      
+      <div style="background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); text-align: center;">
+        <div style="font-size: 13px; color: #64748b; margin-bottom: 4px;">المبلغ</div>
+        <div id="log-details-amount" style="font-size: 28px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;"></div>
+        <div id="log-details-discount" style="font-size: 12px; color: #10b981; font-weight: bold; margin-top: 4px; display: none;"></div>
+      </div>
+
+      <div style="background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden;">
+        <div style="display: flex; border-bottom: 1px solid #f1f5f9; padding: 12px 16px;">
+          <div style="width: 120px; font-weight: 600; color: #64748b; font-size: 13px;">النوع:</div>
+          <div id="log-details-type" style="font-weight: 700; color: #0f172a; font-size: 14px;"></div>
+        </div>
+        <div style="display: flex; border-bottom: 1px solid #f1f5f9; padding: 12px 16px;">
+          <div style="width: 120px; font-weight: 600; color: #64748b; font-size: 13px;">التاريخ:</div>
+          <div id="log-details-date" style="font-weight: 700; color: #0f172a; font-size: 14px; direction: ltr; text-align: right;"></div>
+        </div>
+        <div style="display: flex; border-bottom: 1px solid #f1f5f9; padding: 12px 16px;">
+          <div style="width: 120px; font-weight: 600; color: #64748b; font-size: 13px;">المشروع / البند:</div>
+          <div id="log-details-project" style="font-weight: 700; color: #0f172a; font-size: 14px;"></div>
+        </div>
+        <div style="display: flex; border-bottom: 1px solid #f1f5f9; padding: 12px 16px;">
+          <div style="width: 120px; font-weight: 600; color: #64748b; font-size: 13px;">الطرف:</div>
+          <div id="log-details-party" style="font-weight: 700; color: #0f172a; font-size: 14px;"></div>
+        </div>
+        <div style="display: flex; border-bottom: 1px solid #f1f5f9; padding: 12px 16px;">
+          <div style="width: 120px; font-weight: 600; color: #64748b; font-size: 13px;">الخزنة / الحساب:</div>
+          <div id="log-details-account" style="font-weight: 700; color: #0f172a; font-size: 14px;"></div>
+        </div>
+        <div style="display: flex; border-bottom: 1px solid #f1f5f9; padding: 12px 16px;">
+          <div style="width: 120px; font-weight: 600; color: #64748b; font-size: 13px;">بواسطة:</div>
+          <div id="log-details-user" style="font-weight: 700; color: #0f172a; font-size: 14px;"></div>
+        </div>
+        <div style="display: flex; padding: 12px 16px; flex-direction: column;">
+          <div style="font-weight: 600; color: #64748b; font-size: 13px; margin-bottom: 6px;">البيان والملاحظات:</div>
+          <div id="log-details-description" style="font-weight: 600; color: #334155; font-size: 14px; line-height: 1.6; background: #f8fafc; padding: 10px; border-radius: 8px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 @push('scripts')
 <script>
 function openOperationModal() {
@@ -681,13 +770,41 @@ function openEditModal(txId, amount, accountId, date, description) {
   document.getElementById('edit-tx-modal').classList.add('open');
 }
 
-function openDeleteModal(txId, label, amount, isOwned) {
-  document.getElementById('delete-tx-form').action = '/transactions/' + txId;
+function openDeleteModal(actionUrl, label, amount, isOwned) {
+  document.getElementById('delete-tx-form').action = actionUrl;
   document.getElementById('delete-summary').innerHTML = 'هيتم التراجع وعكس: <strong>' + label + '</strong> — <strong>' + amount + ' ج.م</strong> وهيرجع أثرها بالكامل.';
   document.getElementById('delete-owned-note').style.display = isOwned ? 'block' : 'none';
   document.getElementById('delete-password').value = '';
   document.getElementById('delete-tx-error').style.display = 'none';
   document.getElementById('delete-tx-modal').classList.add('open');
+}
+
+function openLogDetails(rowEl) {
+  const data = JSON.parse(rowEl.getAttribute('data-log'));
+  
+  document.getElementById('log-details-head').style.background = data.color;
+  document.getElementById('log-details-title').textContent = data.action;
+  
+  const sign = data.direction === 'in' ? '+' : (data.direction === 'out' ? '-' : '');
+  document.getElementById('log-details-amount').textContent = sign + data.amount + ' ج.م';
+  document.getElementById('log-details-amount').style.color = data.color;
+  
+  if (data.discount !== 0) {
+    document.getElementById('log-details-discount').textContent = '+ تسوية: ' + data.discount + ' ج.م';
+    document.getElementById('log-details-discount').style.display = 'block';
+  } else {
+    document.getElementById('log-details-discount').style.display = 'none';
+  }
+
+  document.getElementById('log-details-type').textContent = data.type;
+  document.getElementById('log-details-date').textContent = data.date;
+  document.getElementById('log-details-project').textContent = data.project + (data.band ? ' (بند: ' + data.band + ')' : '');
+  document.getElementById('log-details-party').textContent = data.party;
+  document.getElementById('log-details-account').textContent = data.account || '—';
+  document.getElementById('log-details-user').textContent = data.user;
+  document.getElementById('log-details-description').textContent = data.description;
+  
+  document.getElementById('log-details-modal').classList.add('open');
 }
 
 function playAlarmSound() {

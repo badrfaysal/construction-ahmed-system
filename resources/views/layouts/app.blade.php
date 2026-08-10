@@ -236,6 +236,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-wallet"/></svg>
       <span>المحفظة</span>
     </a>
+    <a class="nav-item {{ request()->routeIs('assets.*') ? 'active' : '' }}" href="{{ route('assets.index') }}" style="--ic:#059669">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-truck"/></svg>
+      <span>الأصول الثابتة</span>
+    </a>
     @endif 
     
     <a class="nav-item {{ request()->routeIs('manual_invoices.*') ? 'active' : '' }}" href="{{ route('manual_invoices.index') }}" style="--ic:#8b5cf6">
