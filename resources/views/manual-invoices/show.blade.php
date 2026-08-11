@@ -241,7 +241,7 @@
 </div>
 @endif
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
 <script>
 async function shareInvoiceImage(waLink) {
   var btn = document.getElementById('waBtn');
@@ -258,15 +258,9 @@ async function shareInvoiceImage(waLink) {
 
     await new Promise(function(r) { setTimeout(r, 100); });
 
-    var scale = 2;
-    var blob = await domtoimage.toBlob(el, {
-      bgcolor: '#ffffff',
-      width: el.clientWidth * scale,
-      height: el.clientHeight * scale,
-      style: {
-        transform: 'scale(' + scale + ')',
-        transformOrigin: 'top right'
-      }
+    var blob = await htmlToImage.toBlob(el, {
+      pixelRatio: 2,
+      backgroundColor: '#ffffff'
     });
 
     el.style.margin = originalMargin;
