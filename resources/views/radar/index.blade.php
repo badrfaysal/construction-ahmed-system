@@ -170,16 +170,17 @@
         @endforeach
         <label style="margin:0; cursor:pointer; flex:1;">
           <input type="radio" name="period" value="custom" style="display:none;" onchange="document.getElementById('filter-form').submit()" {{ $period === 'custom' ? 'checked' : '' }}>
-          <div style="text-align:center; padding:8px 0; border-radius:8px; font-size:13px; font-weight:bold; transition:all 0.2s; {{ $period === 'custom' ? 'background:#3b82f6; color:#fff; box-shadow:0 2px 8px rgba(59,130,246,0.35);' : 'color:#475569;' }}">
-            تصفية <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12" style="margin-right:2px; vertical-align:middle;"><use href="#i-filter"/></svg>
+          <div style="display:flex; align-items:center; justify-content:center; gap:4px; padding:8px 0; border-radius:8px; font-size:13px; font-weight:bold; transition:all 0.2s; {{ $period === 'custom' ? 'background:#3b82f6; color:#fff; box-shadow:0 2px 8px rgba(59,130,246,0.35);' : 'color:#475569;' }}">
+            تصفية
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><use href="#i-filter"/></svg>
           </div>
         </label>
       </div>
       
-      <div id="custom-dates" style="display: {{ $period === 'custom' ? 'flex' : 'none' }}; gap: 10px; flex: 1.5; min-width: 100%; flex-wrap: wrap;">
-        <input type="date" name="date_to" value="{{ request('date_to') }}" style="flex:1; min-width:130px; height:44px; padding:0 12px; font-size:13.5px; border-radius:10px; border:1px solid #cbd5e1; background:#f8fafc; color:#0f172a;" placeholder="إلى تاريخ">
-        <input type="date" name="date_from" value="{{ request('date_from') }}" style="flex:1; min-width:130px; height:44px; padding:0 12px; font-size:13.5px; border-radius:10px; border:1px solid #cbd5e1; background:#f8fafc; color:#0f172a;" placeholder="من تاريخ">
-        <button type="submit" class="btn primary" style="height:44px; padding:0 24px; border-radius:10px; font-weight:bold; background:#3b82f6; border-color:#3b82f6; color:#fff; font-size:14px; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);">تطبيق</button>
+      <div id="custom-dates" style="display: {{ $period === 'custom' ? 'flex' : 'none' }}; gap: 12px; margin-top: 10px; flex: 1.5; min-width: 100%; flex-wrap: wrap;">
+        <input type="date" name="date_from" value="{{ request('date_from') }}" class="radar-filter-input" style="flex:1; min-width:130px; margin:0;" placeholder="من تاريخ">
+        <input type="date" name="date_to" value="{{ request('date_to') }}" class="radar-filter-input" style="flex:1; min-width:130px; margin:0;" placeholder="إلى تاريخ">
+        <button type="submit" class="btn primary" style="height:46px; padding:0 32px; border-radius:12px; font-weight:bold; background:#3b82f6; border-color:#3b82f6; color:#fff; font-size:14px; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);">تطبيق</button>
       </div>
     </div>
   </form>
