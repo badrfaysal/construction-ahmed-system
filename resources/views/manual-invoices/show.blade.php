@@ -265,7 +265,7 @@ async function shareInvoiceImage(waLink) {
       height: el.clientHeight * scale,
       style: {
         transform: 'scale(' + scale + ')',
-        transformOrigin: 'top left'
+        transformOrigin: 'top right'
       }
     });
 
