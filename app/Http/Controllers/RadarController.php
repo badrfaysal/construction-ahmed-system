@@ -68,6 +68,25 @@ class RadarController extends Controller
             $query->where('project_id', $request->project_id);
         }
 
+        // Text Search
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->where(function($b) use ($q) {
+                $b->where('description', 'like', "%{$q}%")
+                  ->orWhere('party', 'like', "%{$q}%")
+                  ->orWhere('type', 'like', "%{$q}%")
+                  ->orWhereHas('project', function($pq) use ($q) {
+                      $pq->where('name', 'like', "%{$q}%");
+                  })
+                  ->orWhereHas('band', function($bq) use ($q) {
+                      $bq->where('name', 'like', "%{$q}%");
+                  })
+                  ->orWhereHas('performedBy', function($uq) use ($q) {
+                      $uq->where('name', 'like', "%{$q}%");
+                  });
+            });
+        }
+
         // Flow type filter
         if ($request->filled('flow_type')) {
             $flow = $request->flow_type;

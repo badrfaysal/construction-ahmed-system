@@ -97,7 +97,7 @@
   </div>
 </div>
 
-<div class="form-card no-print" style="margin-bottom: 24px; padding: 20px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 2px 10px rgba(0,0,0,0.02); background:#fff;">
+<div class="form-card no-print" style="max-width: 100%; margin-bottom: 24px; padding: 20px; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 2px 10px rgba(0,0,0,0.02); background:#fff;">
   <form method="GET" action="{{ route('radar.index') }}" id="filter-form">
     
     <div style="border-bottom:1px solid #e2e8f0; padding-bottom:16px; margin-bottom:20px;">
@@ -109,8 +109,12 @@
     
     <div style="display:flex; gap:16px; align-items:center; width:100%; flex-wrap:wrap;">
       
+      <div class="field" style="margin: 0; flex: 1; min-width: 250px;">
+        <input type="text" name="q" value="{{ request('q') }}" class="radar-filter-input" placeholder="بحث عام (بالاسم، البيان، الخ)..." oninput="clearTimeout(window.searchTimeout); window.searchTimeout = setTimeout(() => this.form.submit(), 600)">
+      </div>
+
       <div class="field" style="margin: 0; flex: 1; min-width: 180px;">
-        <select name="action" onchange="this.form.submit()" style="width:100%; height:44px; padding-top:0; padding-bottom:0; background-color:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; color:#0f172a; font-weight:600; font-size:13.5px;">
+        <select name="action" class="radar-filter-input" onchange="this.form.submit()">
           <option value="">كل الإجراءات</option>
           <option value="created" {{ request('action') === 'created' ? 'selected' : '' }}>إنشاء (Created)</option>
           <option value="updated" {{ request('action') === 'updated' ? 'selected' : '' }}>تعديل (Updated)</option>
@@ -146,7 +150,7 @@
       </div>
 
       <div class="field" style="margin: 0; flex: 1; min-width: 180px;">
-        <select name="sort" onchange="this.form.submit()" style="width:100%; height:44px; padding-top:0; padding-bottom:0; background-color:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; color:#0f172a; font-weight:600; font-size:13.5px;">
+        <select name="sort" class="radar-filter-input" onchange="this.form.submit()">
           <option value="newest" {{ request('sort') === 'newest' ? 'selected' : '' }}>الأحدث أولاً (الافتراضي)</option>
           <option value="oldest" {{ request('sort') === 'oldest' ? 'selected' : '' }}>الأقدم أولاً</option>
           <option value="amount_desc" {{ request('sort') === 'amount_desc' ? 'selected' : '' }}>المبلغ (الأعلى للأقل)</option>
@@ -291,9 +295,11 @@
             @endif
           </td>
 
-          <td style="text-align:center;font-weight:600;font-size:13px;color:#475569">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="vertical-align:middle; margin-left:4px;"><use href="#i-users"/></svg>
-            {{ $isTransfer ? 'تحويل' : $partyName }}
+          <td>
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;font-weight:600;font-size:13px;color:#475569;white-space:nowrap;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><use href="#i-users"/></svg>
+              <span>{{ $isTransfer ? 'تحويل' : $partyName }}</span>
+            </div>
           </td>
 
           <td>
@@ -668,31 +674,73 @@
 @push('styles')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <style>
+  .radar-filter-input,
   .select2-container .select2-selection--single {
-    height: 44px;
-    border-radius: 10px;
-    border: 1px solid #cbd5e1;
-    background-color: #f8fafc;
-    padding-top: 6px;
-    font-size: 13.5px;
-    font-weight: 600;
-    color: #0f172a;
+    width: 100% !important;
+    height: 46px !important;
+    padding: 0 16px !important;
+    border-radius: 12px !important;
+    border: 1px solid #cbd5e1 !important;
+    background: linear-gradient(145deg, #f8fafc, #f1f5f9) !important;
+    color: #0f172a !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
+    transition: all 0.3s ease !important;
+    display: flex;
+    align-items: center;
+  }
+  .radar-filter-input:focus,
+  .radar-filter-input:hover,
+  .select2-container--open .select2-selection--single,
+  .select2-container .select2-selection--single:hover {
+    border-color: #3b82f6 !important;
+    background: #eff6ff !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), inset 0 2px 4px rgba(0,0,0,0.01) !important;
+    outline: none !important;
+    color: #1d4ed8 !important;
+  }
+  
+  /* Fix Select2 text alignment and arrow */
+  .select2-container .select2-selection--single .select2-selection__rendered {
+    padding-right: 0 !important;
+    padding-left: 20px !important;
+    line-height: 44px !important;
+    color: inherit !important;
   }
   .select2-container--default .select2-selection--single .select2-selection__arrow {
-    top: 8px;
-    right: auto;
-    left: 8px;
-  }
-  .select2-container[dir="rtl"] .select2-selection--single .select2-selection__rendered {
-    padding-right: 12px;
+    top: 10px !important;
+    right: auto !important;
+    left: 12px !important;
   }
   .select2-dropdown {
-    border-radius: 10px;
-    border: 1px solid #cbd5e1;
+    border-radius: 12px !important;
+    border: 1px solid #bfdbfe !important;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1) !important;
     overflow: hidden;
+    padding: 4px;
+  }
+  .select2-results__option {
+    border-radius: 8px;
+    margin-bottom: 2px;
+    font-weight: 600;
+    font-size: 13.5px;
+    color: #334155;
+    padding: 8px 12px;
+  }
+  .select2-results__option--highlighted[aria-selected] {
+    background-color: #eff6ff !important;
+    color: #2563eb !important;
   }
   .select2-search__field {
-    border-radius: 6px !important;
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 8px 12px !important;
+  }
+  .select2-search__field:focus {
+    border-color: #3b82f6 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
   }
 </style>
 @endpush
