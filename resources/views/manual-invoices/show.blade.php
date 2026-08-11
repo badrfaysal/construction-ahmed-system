@@ -241,7 +241,7 @@
 </div>
 @endif
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
 <script>
 async function shareInvoiceImage(waLink) {
   var btn = document.getElementById('waBtn');
@@ -258,19 +258,19 @@ async function shareInvoiceImage(waLink) {
 
     await new Promise(function(r) { setTimeout(r, 100); });
 
-    var canvas = await html2canvas(el, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      logging: false
+    var scale = 2;
+    var blob = await domtoimage.toBlob(el, {
+      bgcolor: '#ffffff',
+      width: el.clientWidth * scale,
+      height: el.clientHeight * scale,
+      style: {
+        transform: 'scale(' + scale + ')',
+        transformOrigin: 'top left'
+      }
     });
 
     el.style.margin = originalMargin;
     el.style.maxWidth = originalMaxWidth;
-
-    var blob = await new Promise(function(resolve) {
-      canvas.toBlob(function(b) { resolve(b); }, 'image/png');
-    });
 
     if (!blob) {
       alert('فشل إنشاء الصورة.');
