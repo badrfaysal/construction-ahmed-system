@@ -119,7 +119,25 @@
       </div>
 
       <div class="field" style="margin: 0; flex: 1; min-width: 180px;">
-        <select name="user_id" onchange="this.form.submit()" style="width:100%; height:44px; padding-top:0; padding-bottom:0; background-color:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; color:#0f172a; font-weight:600; font-size:13.5px;">
+        <select name="flow_type" class="select2-filter" onchange="this.form.submit()">
+          <option value="">كل التدفقات</option>
+          <option value="in" {{ request('flow_type') === 'in' ? 'selected' : '' }}>وارد</option>
+          <option value="out" {{ request('flow_type') === 'out' ? 'selected' : '' }}>صادر</option>
+          <option value="transfer" {{ request('flow_type') === 'transfer' ? 'selected' : '' }}>تحويل</option>
+        </select>
+      </div>
+
+      <div class="field" style="margin: 0; flex: 1; min-width: 180px;">
+        <select name="project_id" class="select2-filter" onchange="this.form.submit()">
+          <option value="">كل المشاريع</option>
+          @foreach($projects as $project)
+            <option value="{{ $project->id }}" {{ request('project_id') == $project->id ? 'selected' : '' }}>{{ $project->name }}</option>
+          @endforeach
+        </select>
+      </div>
+
+      <div class="field" style="margin: 0; flex: 1; min-width: 180px;">
+        <select name="user_id" class="select2-filter" onchange="this.form.submit()">
           <option value="">كل المستخدمين</option>
           @foreach($users as $user)
             <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
@@ -647,7 +665,54 @@
   </div>
 </div>
 
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<style>
+  .select2-container .select2-selection--single {
+    height: 44px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    background-color: #f8fafc;
+    padding-top: 6px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #0f172a;
+  }
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    top: 8px;
+    right: auto;
+    left: 8px;
+  }
+  .select2-container[dir="rtl"] .select2-selection--single .select2-selection__rendered {
+    padding-right: 12px;
+  }
+  .select2-dropdown {
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    overflow: hidden;
+  }
+  .select2-search__field {
+    border-radius: 6px !important;
+  }
+</style>
+@endpush
+
 @push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+  $(document).ready(function() {
+    $('.select2-filter').select2({
+      dir: "rtl",
+      width: '100%',
+      language: {
+        noResults: function () {
+          return "لا توجد نتائج";
+        }
+      }
+    });
+  });
+</script>
 <script>
 function openOperationModal() {
   document.getElementById('operation-modal').classList.add('open');

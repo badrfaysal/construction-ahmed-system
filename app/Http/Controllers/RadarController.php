@@ -51,6 +51,8 @@ class RadarController extends Controller
                 $query->whereBetween('happened_at', [Carbon::today()->startOfDay(), Carbon::today()->endOfDay()]);
             } elseif ($period === 'yesterday') {
                 $query->whereBetween('happened_at', [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()]);
+            } elseif ($period === 'month') {
+                $query->whereBetween('happened_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()]);
             } elseif ($period === 'custom') {
                 if ($request->filled('date_from')) {
                     $query->where('happened_at', '>=', Carbon::parse($request->date_from)->startOfDay());
@@ -61,8 +63,26 @@ class RadarController extends Controller
             }
         }
 
+        // Project filter
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
+        }
+
+        // Flow type filter
+        if ($request->filled('flow_type')) {
+            $flow = $request->flow_type;
+            if ($flow === 'in') {
+                $query->where('direction', 'in')->where('ref_type', '!=', 'transfer');
+            } elseif ($flow === 'out') {
+                $query->where('direction', 'out')->where('ref_type', '!=', 'transfer');
+            } elseif ($flow === 'transfer') {
+                $query->where('ref_type', 'transfer');
+            }
+        }
+
         $logs = $query->paginate(30)->withQueryString();
         $users = User::all();
+        $projects = \App\Models\Project::all();
         $wallets = \App\Models\Account::selectable();
         
         $transactionIds = $logs->pluck('transaction_id')->filter()->unique();
@@ -79,6 +99,9 @@ class RadarController extends Controller
         } elseif ($period === 'yesterday') {
             $txQuery->whereBetween('created_at', [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()]);
             $canceledQuery->whereBetween('happened_at', [Carbon::yesterday()->startOfDay(), Carbon::yesterday()->endOfDay()]);
+        } elseif ($period === 'month') {
+            $txQuery->whereBetween('created_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()]);
+            $canceledQuery->whereBetween('happened_at', [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()]);
         } elseif ($period === 'custom') {
             if ($request->filled('date_from')) {
                 $txQuery->where('created_at', '>=', Carbon::parse($request->date_from)->startOfDay());
@@ -95,7 +118,7 @@ class RadarController extends Controller
         $totalTransfers = (clone $txQuery)->where('ref_type', 'transfer')->where('direction', 'out')->sum('amount'); // Count one side only
         $canceledCount = $canceledQuery->whereIn('ref_type', ['manual', 'client_payment', 'transfer'])->count(); // mostly manual actions
 
-        return view('radar.index', compact('logs', 'users', 'period', 'liveIds', 'wallets', 'totalIn', 'totalOut', 'totalTransfers', 'canceledCount'));
+        return view('radar.index', compact('logs', 'users', 'projects', 'period', 'liveIds', 'wallets', 'totalIn', 'totalOut', 'totalTransfers', 'canceledCount'));
     }
 
     public function revert(Request $request, AuditLog $log)
