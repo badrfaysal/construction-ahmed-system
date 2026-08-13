@@ -133,13 +133,13 @@
                   <tr style="background-color: var(--bg-hover);">
                     <td>{{ $m->date->format('Y-m-d') }}</td>
                     <td colspan="6" style="font-weight:bold; color:var(--accent);">
+                      بند فرعي: {{ explode(' — ', str_replace('بند فرعي: ', '', $m->invoice->name))[0] }}
                       @if($m->band_worker_id)
-                        مصنعية وتنفيذ: {{ explode(' — ', str_replace('بند فرعي: ', '', $m->invoice->name))[0] }}
+                        <small class="muted" style="margin-right:10px; font-weight:normal;">(مصنعية وتنفيذ)</small>
+                      @elseif($m->supplier_name)
+                        <small class="muted" style="margin-right:10px; font-weight:normal;">(خامة)</small>
                       @else
-                        بند فرعي: {{ explode(' — ', str_replace('بند فرعي: ', '', $m->invoice->name))[0] }}
-                        @if($m->supplier_name)
-                          <small class="muted" style="margin-right:10px; font-weight:normal;">(مورد: {{ $m->supplier_name }})</small>
-                        @endif
+                        <small class="muted" style="margin-right:10px; font-weight:normal;">(مصروف عام)</small>
                       @endif
                     </td>
                   </tr>
@@ -168,13 +168,13 @@
                 <tr>
                   <td>{{ $m->date->format('Y-m-d') }}</td>
                   <td>
+                    {{ $m->item }}
                     @if($m->band_worker_id)
-                      مصنعية وتنفيذ
+                      <br><small class="muted">مصنعية وتنفيذ</small>
+                    @elseif($m->supplier_name)
+                      <br><small class="muted">خامة</small>
                     @else
-                      {{ $m->item }}
-                      @if($m->supplier_name)
-                        <br><small class="muted">مورد: {{ $m->supplier_name }}</small>
-                      @endif
+                      <br><small class="muted">مصروف عام</small>
                     @endif
                     @if($m->notes)<br><small class="muted" style="font-size:12.5px;font-weight:500;">{{ $m->notes }}</small>@endif
                     @if($m->contract_type && $m->contract_type !== 'lump_sum') <small class="muted">({{ $m->contractTypeAr() }})</small> @endif
