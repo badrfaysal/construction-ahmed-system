@@ -205,10 +205,10 @@ class ReportController extends Controller
         // matching here, to avoid accidentally merging two different people) ----
         $people = collect();
         foreach ($allBands as $b) {
-            if ($b->workers->isEmpty() && $b->team_name) {
+            if ($b->real_workers->isEmpty() && $b->team_name) {
                 $people->push((object) ['name' => $b->team_name, 'amount' => (float) $b->labor_amount]);
             }
-            foreach ($b->workers as $w) {
+            foreach ($b->real_workers as $w) {
                 $people->push((object) ['name' => $w->name, 'amount' => (float) $w->amount]);
             }
         }
@@ -471,7 +471,7 @@ class ReportController extends Controller
                 'cost' => $m->netCost(),
             ])->sortByDesc('cost')->values();
 
-            $workers = $band->workers->map(fn ($w) => (object) [
+            $workers = $band->real_workers->map(fn ($w) => (object) [
                 'name'          => $w->name,
                 'contract_type' => $w->contractTypeAr(),
                 'qty'           => in_array($w->contract_type, ['per_meter','per_piece','daily']) ? $w->contract_qty : null,
@@ -492,7 +492,7 @@ class ReportController extends Controller
             // وحدة البند. منها نطلع:
             //   • متوسط تكلفة الوحدة  = التكلفة الكلية للبند ÷ عدد الوحدات
             //   • الكثافة لكل 100م²   = عدد الوحدات ÷ مساحة الشقة × 100
-            $qtyWorkers = $band->workers->filter(fn ($w) =>
+            $qtyWorkers = $band->real_workers->filter(fn ($w) =>
                 in_array($w->contract_type, ['per_meter', 'per_piece', 'daily'], true)
                 && (float) $w->contract_qty > 0
             );

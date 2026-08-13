@@ -45,6 +45,11 @@ class ProjectBand extends Model
         return $this->hasMany(BandWorker::class, 'project_band_id')->orderBy('sort_order');
     }
 
+    public function getRealWorkersAttribute()
+    {
+        return $this->workers->reject(fn($w) => $w->specialty === 'صنايعي بند فرعي');
+    }
+
     public function clientPayments(): HasMany
     {
         return $this->hasMany(Transaction::class, 'band_id')

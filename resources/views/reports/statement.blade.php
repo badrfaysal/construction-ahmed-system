@@ -133,8 +133,14 @@
                   <tr style="background-color: var(--bg-hover);">
                     <td>{{ $m->date->format('Y-m-d') }}</td>
                     <td colspan="6" style="font-weight:bold; color:var(--accent);">
-                      بند فرعي: {{ explode(' — ', str_replace('بند فرعي: ', '', $m->invoice->name))[0] }}
-                      @if($m->supplier_name) <small class="muted" style="margin-right:10px; font-weight:normal;">(مورد: {{ $m->supplier_name }})</small> @endif
+                      @if($m->band_worker_id)
+                        مصنعية وتنفيذ: {{ explode(' — ', str_replace('بند فرعي: ', '', $m->invoice->name))[0] }}
+                      @else
+                        بند فرعي: {{ explode(' — ', str_replace('بند فرعي: ', '', $m->invoice->name))[0] }}
+                        @if($m->supplier_name)
+                          <small class="muted" style="margin-right:10px; font-weight:normal;">(مورد: {{ $m->supplier_name }})</small>
+                        @endif
+                      @endif
                     </td>
                   </tr>
                   @php $lastInvoiceId = $m->invoice_id; @endphp
@@ -162,8 +168,14 @@
                 <tr>
                   <td>{{ $m->date->format('Y-m-d') }}</td>
                   <td>
-                    {{ $m->item }}
-                    @if($m->supplier_name && !$m->band_worker_id)<br><small class="muted">{{ $m->supplier_name }}</small>@endif
+                    @if($m->band_worker_id)
+                      مصنعية وتنفيذ
+                    @else
+                      {{ $m->item }}
+                      @if($m->supplier_name)
+                        <br><small class="muted">مورد: {{ $m->supplier_name }}</small>
+                      @endif
+                    @endif
                     @if($m->notes)<br><small class="muted" style="font-size:12.5px;font-weight:500;">{{ $m->notes }}</small>@endif
                     @if($m->contract_type && $m->contract_type !== 'lump_sum') <small class="muted">({{ $m->contractTypeAr() }})</small> @endif
                   </td>
@@ -183,9 +195,9 @@
           @endif
 
           {{-- Labor --}}
-          @if($band->workers->isNotEmpty())
+          @if($band->real_workers->isNotEmpty())
             <tr><td colspan="7" style="background:var(--bg);font-weight:600;font-size:0.85em;color:var(--text-muted);padding-right:20px;">المصنعيات</td></tr>
-            @foreach($band->workers as $w)
+            @foreach($band->real_workers as $w)
               <tr>
                 <td>{{ $w->start_date?->format('Y-m-d') ?? $band->labor_date?->format('Y-m-d') ?? '—' }}</td>
                 <td>مصنعية وتنفيذ ({{ $w->contractTypeAr() }})</td>
@@ -203,7 +215,7 @@
               </tr>
             @endforeach
           @endif
-          @if($band->labor_amount > 0 && $band->workers->isEmpty())
+          @if($band->labor_amount > 0 && $band->real_workers->isEmpty())
             <tr>
               <td>{{ $band->labor_date?->format('Y-m-d') ?? '—' }}</td>
               <td>مصنعية وتنفيذ ({{ $band->contract_type ?: '—' }})</td>

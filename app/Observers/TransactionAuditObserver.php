@@ -15,7 +15,12 @@ class TransactionAuditObserver
 {
     public function created(Transaction $transaction): void
     {
-        $log = AuditLog::create($this->snapshot($transaction, 'created'));
+        $extra = [];
+        if ($transaction->ref_type === 'material' && $transaction->amount == 0) {
+            $mat = \App\Models\Material::find($transaction->ref_id);
+            if ($mat) $extra['old_values'] = ['gross_amount' => $mat->grossCost()];
+        }
+        $log = AuditLog::create($this->snapshot($transaction, 'created') + $extra);
         $this->dispatchTelegram($log);
     }
 
@@ -34,7 +39,19 @@ class TransactionAuditObserver
 
     public function deleted(Transaction $transaction): void
     {
-        $log = AuditLog::create($this->snapshot($transaction, 'deleted'));
+        $extra = [];
+        if ($transaction->ref_type === 'material' && $transaction->amount == 0) {
+            $mat = \App\Models\Material::find($transaction->ref_id);
+            if ($mat) $extra['old_values'] = ['gross_amount' => $mat->grossCost()];
+            else {
+                // Try to find it from the created log
+                $createdLog = AuditLog::where('transaction_id', $transaction->id)->where('action', 'created')->first();
+                if ($createdLog && isset($createdLog->old_values['gross_amount'])) {
+                    $extra['old_values'] = ['gross_amount' => $createdLog->old_values['gross_amount']];
+                }
+            }
+        }
+        $log = AuditLog::create($this->snapshot($transaction, 'deleted') + $extra);
         $this->dispatchTelegram($log);
     }
 

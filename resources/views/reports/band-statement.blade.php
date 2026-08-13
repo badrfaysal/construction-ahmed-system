@@ -102,6 +102,11 @@
                 <td>{{ $m->date->format('Y-m-d') }}</td>
                 <td colspan="6" style="font-weight:bold; color:var(--accent);">
                   بند فرعي: {{ explode(' — ', str_replace('بند فرعي: ', '', $m->invoice->name))[0] }}
+                  @if($m->band_worker_id && $m->supplier_name)
+                    <small class="muted" style="margin-right:10px; font-weight:normal; color:var(--warn) !important">(مصنعية: {{ $m->supplier_name }})</small>
+                  @elseif($m->supplier_name)
+                    <small class="muted" style="margin-right:10px; font-weight:normal;">(مورد: {{ $m->supplier_name }})</small>
+                  @endif
                 </td>
               </tr>
               @php $lastInvoiceId = $m->invoice_id; @endphp
@@ -145,11 +150,11 @@
     @endif
 
     {{-- Labor --}}
-    <div class="st-sec">المصنعية ({{ $band->workers->count() ?: ($band->labor_amount > 0 ? 1 : 0) }})</div>
+    <div class="st-sec">المصنعية ({{ $band->real_workers->count() ?: ($band->labor_amount > 0 ? 1 : 0) }})</div>
     <table class="st-table">
       <thead><tr><th>الاسم</th><th>التخصص</th><th>نوع التعاقد</th><th class="num">التكلفة</th><th class="num">سعر العميل</th></tr></thead>
       <tbody>
-        @forelse($band->workers as $w)
+        @forelse($band->real_workers as $w)
           <tr>
             <td>{{ $w->name }}</td>
             <td class="muted">{{ $w->specialty ?: '—' }}</td>

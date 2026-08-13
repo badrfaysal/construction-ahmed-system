@@ -24,6 +24,11 @@ class MaterialObserver
 
         $walletAmount = $this->walletAmount($material);
 
+        $type = 'شراء مواد';
+        if ($material->category === 'misc') {
+            $type = $material->band_worker_id ? 'دفعة صنايعي' : 'بند فرعي';
+        }
+
         // Create a transaction so it always appears in the Radar/Audit Log.
         // If deferred, amount is 0, which correctly doesn't affect the wallet.
         Transaction::create([
@@ -31,7 +36,7 @@ class MaterialObserver
             'band_id'     => $material->band_id,
             'account_id'  => $material->account_id,
             'direction'   => 'out',
-            'type'        => 'شراء مواد',
+            'type'        => $type,
             'party'       => $material->supplier?->name ?? $material->item,
             'amount'      => $walletAmount,
             'date'        => $material->date,
@@ -75,6 +80,11 @@ class MaterialObserver
 
         $walletAmount = $this->walletAmount($material);
 
+        $type = 'شراء مواد';
+        if ($material->category === 'misc') {
+            $type = $material->band_worker_id ? 'دفعة صنايعي' : 'بند فرعي';
+        }
+
         $tx = Transaction::where('ref_type', 'material')->where('ref_id', $material->id)->first();
 
         if ($tx) {
@@ -82,6 +92,7 @@ class MaterialObserver
                 'project_id'  => $material->project_id,
                 'band_id'     => $material->band_id,
                 'account_id'  => $material->account_id,
+                'type'        => $type,
                 'party'       => $material->supplier?->name ?? $material->item,
                 'amount'      => $walletAmount,
                 'date'        => $material->date,
@@ -93,7 +104,7 @@ class MaterialObserver
                 'band_id'     => $material->band_id,
                 'account_id'  => $material->account_id,
                 'direction'   => 'out',
-                'type'        => 'شراء مواد',
+                'type'        => $type,
                 'party'       => $material->supplier?->name ?? $material->item,
                 'amount'      => $walletAmount,
                 'date'        => $material->date,

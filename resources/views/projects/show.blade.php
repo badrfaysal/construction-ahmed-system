@@ -22,7 +22,7 @@
   // لو خامات جديدة اتسجلت على البند بعد كده — عشان كده بيختلفوا مع الوقت.
   $bandsAgreedTotal = $project->bands->sum('client_price');
   $valueGap = $actualValue - $bandsAgreedTotal;
-  $owedWorkers  = $project->bands->flatMap(fn ($b) => $b->workers->map(fn ($w) => (object)[
+  $owedWorkers  = $project->bands->flatMap(fn ($b) => $b->real_workers->map(fn ($w) => (object)[
     'name'      => $w->name,
     'band'      => $b->name,
     'remaining' => $w->remaining(),
@@ -193,7 +193,7 @@
     المرتجعات <span class="cnt">{{ $project->materials->sum(fn($m) => $m->returns->count()) }}</span>
   </button>
   <button type="button" class="tab" data-tab="workers" onclick="switchProjectTab('workers')">
-    الفنيين <span class="cnt">{{ $project->bands->sum(fn($b) => $b->workers->count()) }}</span>
+    الفنيين <span class="cnt">{{ $project->bands->sum(fn($b) => $b->real_workers->count()) }}</span>
   </button>
   @if($isOwner)
     <button type="button" class="tab" data-tab="reports" onclick="switchProjectTab('reports')">
@@ -257,8 +257,8 @@
                 @endif
               </td>
               <td class="muted">
-                @if($band->workers->count())
-                  {{ $band->workers->pluck('name')->join('، ') }}
+                @if($band->real_workers->count())
+                  {{ $band->real_workers->pluck('name')->join('، ') }}
                 @elseif($band->team_name)
                   {{ $band->team_name }}
                 @else
@@ -1172,7 +1172,7 @@
   الصنايعي بياخد فلوسه على دفعات لغاية ما الشغل يخلص — كل دفعة بتتخصم من المحفظة وقتها بس، والباقي يفضل مستحق (مش دين علينا).
   لو صنايعي عمل جزء من الشغل ومشي، سيبه بأمتاره اللي اتعملت وضيف صنايعي تاني في نفس البند يكمّل الباقي (من تعديل البند).
 </p>
-@php $allWorkers = $project->bands->flatMap(fn($b) => $b->workers->map(fn($w) => (object) ['worker' => $w, 'band' => $b])); @endphp
+@php $allWorkers = $project->bands->flatMap(fn($b) => $b->real_workers->map(fn($w) => (object) ['worker' => $w, 'band' => $b])); @endphp
 <div class="table-card" style="margin-bottom:24px">
   @if($allWorkers->count())
     <div class="table-scroll">
@@ -1304,7 +1304,7 @@
   $maxBandClient = $rptBandRows->max('client') ?: 1;
 
   // الصنايعية: كل فني ونسبة تحصيله، الأعلى تعاقدًا أولًا
-  $rptWorkers = $project->bands->flatMap(fn ($b) => $b->workers)->sortByDesc('amount')->values();
+  $rptWorkers = $project->bands->flatMap(fn ($b) => $b->real_workers)->sortByDesc('amount')->values();
 
   // ── تحليل الخامات: أعلى الأصناف بالتكلفة (خامات حقيقية فقط، بدون بنود فرعية) ──
   $realMaterials = $project->materials->where('category', '!=', 'misc');

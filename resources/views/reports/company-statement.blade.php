@@ -159,7 +159,7 @@
       <table class="st-table" style="margin-top:8px">
         <thead><tr><th>الفني</th><th>التخصص</th><th>نوع التعاقد</th><th>بداية العمل</th><th class="num">الأجر (التكلفة)</th><th class="num">سعر البيع</th><th class="num">إشراف %</th><th class="num">إشراف (ج.م)</th></tr></thead>
         <tbody>
-          @forelse($band->workers as $w)
+          @forelse($band->real_workers as $w)
             <tr>
               <td>{{ $w->name }}</td>
               <td class="muted">{{ $w->specialty ?: '—' }}</td>

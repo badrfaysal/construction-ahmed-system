@@ -119,7 +119,7 @@
           @if($laborClientTotal > 0)
             @php
               $laborProfit = $band->laborPercentageProfit();
-              $laborPct = $band->workers->count() > 0 ? $band->workers->avg('supervision_pct') : (float) $band->labor_supervision_pct;
+              $laborPct = $band->real_workers->count() > 0 ? $band->real_workers->avg('supervision_pct') : (float) $band->labor_supervision_pct;
             @endphp
             <tr>
               <td style="padding-inline-start: 25px;"><span style="color:var(--text-muted);">-</span> <strong>مصنعية</strong></td>

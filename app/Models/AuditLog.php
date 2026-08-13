@@ -62,8 +62,17 @@ class AuditLog extends Model
 
     public function refMeta(): array
     {
+        if ($this->ref_type === 'material') {
+            if ($this->type === 'دفعة صنايعي') {
+                return ['label' => 'دفعة صنايعي', 'color' => '#8b5cf6', 'icon' => 'i-hardhat'];
+            }
+            if ($this->type === 'بند فرعي') {
+                return ['label' => 'بند فرعي', 'color' => '#f59e0b', 'icon' => 'i-receipt'];
+            }
+            return ['label' => 'شراء خامة', 'color' => '#f59e0b', 'icon' => 'i-box'];
+        }
+
         return match ($this->ref_type) {
-            'material'         => ['label' => 'شراء خامة',       'color' => '#f59e0b', 'icon' => 'i-box'],
             'material_invoice' => ['label' => 'فاتورة خامات',    'color' => '#f59e0b', 'icon' => 'i-box'],
             'return'           => ['label' => 'مرتجع خامة',       'color' => '#0d9488', 'icon' => 'i-box'],
             'debt'           => ['label' => 'سداد دين مورد',    'color' => '#dc2626', 'icon' => 'i-credit-card'],
