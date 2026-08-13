@@ -222,7 +222,7 @@ class AssetController extends Controller
         }
 
         // حذف الحركات المرتبطة بالأصل من Transaction (إذا كان تم شراؤه أو بيعه بحساب)
-        Transaction::where('ref_type', 'asset')->where('ref_id', $asset->id)->delete();
+        Transaction::where('ref_type', 'asset')->where('ref_id', $asset->id)->get()->each->delete();
         
         // تسجيل الإلغاء في الرادار
         AuditLog::create([

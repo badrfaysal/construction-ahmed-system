@@ -16,9 +16,14 @@ class TransactionAuditObserver
     public function created(Transaction $transaction): void
     {
         $extra = [];
-        if ($transaction->ref_type === 'material' && $transaction->amount == 0) {
-            $mat = \App\Models\Material::find($transaction->ref_id);
-            if ($mat) $extra['old_values'] = ['gross_amount' => $mat->grossCost()];
+        if (in_array($transaction->ref_type, ['material', 'material_invoice'])) {
+            if ($transaction->ref_type === 'material') {
+                $mat = \App\Models\Material::find($transaction->ref_id);
+                if ($mat) $extra['old_values'] = ['gross_amount' => $mat->grossCost()];
+            } else {
+                $inv = \App\Models\MaterialInvoice::find($transaction->ref_id);
+                if ($inv) $extra['old_values'] = ['gross_amount' => (float) $inv->total_amount];
+            }
         }
         $log = AuditLog::create($this->snapshot($transaction, 'created') + $extra);
         $this->dispatchTelegram($log);
@@ -40,13 +45,19 @@ class TransactionAuditObserver
     public function deleted(Transaction $transaction): void
     {
         $extra = [];
-        if ($transaction->ref_type === 'material' && $transaction->amount == 0) {
-            $mat = \App\Models\Material::find($transaction->ref_id);
-            if ($mat) $extra['old_values'] = ['gross_amount' => $mat->grossCost()];
-            else {
+        if (in_array($transaction->ref_type, ['material', 'material_invoice'])) {
+            if ($transaction->ref_type === 'material') {
+                $mat = \App\Models\Material::find($transaction->ref_id);
+                if ($mat) $extra['old_values'] = ['gross_amount' => $mat->grossCost()];
+            } else {
+                $inv = \App\Models\MaterialInvoice::find($transaction->ref_id);
+                if ($inv) $extra['old_values'] = ['gross_amount' => (float) $inv->total_amount];
+            }
+            
+            if (empty($extra)) {
                 // Try to find it from the created log
                 $createdLog = AuditLog::where('transaction_id', $transaction->id)->where('action', 'created')->first();
-                if ($createdLog && isset($createdLog->old_values['gross_amount'])) {
+                if ($createdLog && is_array($createdLog->old_values) && isset($createdLog->old_values['gross_amount'])) {
                     $extra['old_values'] = ['gross_amount' => $createdLog->old_values['gross_amount']];
                 }
             }

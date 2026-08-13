@@ -183,13 +183,16 @@
               @endif
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-              <div class="tx-amt" style="{{ $log->action === 'deleted' ? 'text-decoration:line-through' : '' }};color:{{ $meta['color'] }}">
+              <div class="tx-amt" style="{{ $log->action === 'deleted' ? 'text-decoration:line-through; color:red !important;' : 'color:' . $meta['color'] }}">
                 @php
                   // Extract gross cost for materials/invoices if it differs from the wallet amount
                   $matGrossCost = null;
                   if (in_array($log->ref_type, ['material', 'material_invoice'])) {
-                    if (isset($log->old_values['gross_amount'])) {
-                      $matGrossCost = (float) $log->old_values['gross_amount'];
+                    $ov = $log->old_values;
+                    if (is_string($ov)) $ov = json_decode($ov, true);
+                    
+                    if (is_array($ov) && isset($ov['gross_amount'])) {
+                      $matGrossCost = (float) $ov['gross_amount'];
                     } elseif ($log->ref_id && $log->action !== 'deleted') {
                       if ($log->ref_type === 'material') {
                         $txMat = \App\Models\Material::find($log->ref_id);

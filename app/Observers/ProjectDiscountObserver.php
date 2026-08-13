@@ -48,7 +48,7 @@ class ProjectDiscountObserver
      */
     public function deleting(ProjectDiscount $projectDiscount): void
     {
-        Transaction::where('ref_type', 'discount')->where('ref_id', $projectDiscount->id)->delete();
+        Transaction::where('ref_type', 'discount')->where('ref_id', $projectDiscount->id)->first()?->delete();
     }
 
     /**

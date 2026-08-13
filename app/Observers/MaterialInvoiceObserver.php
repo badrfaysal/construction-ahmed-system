@@ -30,7 +30,7 @@ class MaterialInvoiceObserver
             $debt->delete();
         }
         
-        Transaction::where('ref_type', 'material_invoice')->where('ref_id', $invoice->id)->delete();
+        Transaction::where('ref_type', 'material_invoice')->where('ref_id', $invoice->id)->first()?->delete();
     }
 
     private function syncFinancials(MaterialInvoice $invoice): void

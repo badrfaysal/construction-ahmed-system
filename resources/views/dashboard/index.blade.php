@@ -749,7 +749,8 @@ document.addEventListener('DOMContentLoaded', function() {
             snapshots.unshift({
                 snapshot_date: prevDateStr,
                 net_capital: single.net_capital,
-                details: single.details
+                details: single.details,
+                formatted_time: prevDateStr
             });
         }
         
@@ -841,7 +842,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     var item = snapshots[dataPointIndex];
                     
                     var tooltipHtml = '<div style="padding: 12px; font-family: inherit; min-width: 220px; direction: rtl; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">';
-                    tooltipHtml += '<div style="font-weight: 700; margin-bottom: 8px; font-size: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; color: #1e293b;">رأس المال: ' + new Intl.NumberFormat('ar-EG').format(val) + ' ج.م</div>';
+                    tooltipHtml += '<div style="font-weight: 700; margin-bottom: 8px; font-size: 15px; color: #1e293b;">رأس المال: ' + new Intl.NumberFormat('ar-EG').format(val) + ' ج.م</div>';
+                    if (item.formatted_time) {
+                        tooltipHtml += '<div style="font-size: 13px; color: #64748b; margin-bottom: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">وقت اللقطة: ' + item.formatted_time + ' (توقيت القاهرة)</div>';
+                    } else {
+                        tooltipHtml += '<div style="border-bottom: 1px solid #e2e8f0; margin-bottom: 8px; padding-bottom: 8px;"></div>';
+                    }
                     
                     if (item.details && item.details.accounts_breakdown) {
                         tooltipHtml += '<div style="font-size: 12px; color: #64748b; font-weight: 600; margin-bottom: 6px;">تفاصيل الخزائن:</div>';
