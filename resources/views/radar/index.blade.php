@@ -229,7 +229,9 @@
              'date' => $log->happened_at->format('Y-m-d H:i A'),
              'user' => $log->performedBy ? $log->performedBy->name : 'النظام',
              'account' => $accountName,
-             'color' => $isTransfer ? '#3b82f6' : ($log->direction === 'in' ? '#10b981' : ($log->direction === 'out' ? '#ef4444' : '#64748b'))
+             'color' => $isTransfer ? '#3b82f6' : ($log->direction === 'in' ? '#10b981' : ($log->direction === 'out' ? '#ef4444' : '#64748b')),
+             'action_type' => $log->action,
+             'old_values' => is_string($log->old_values) ? json_decode($log->old_values, true) : $log->old_values
           ];
         @endphp
         <tr style="cursor: pointer; {{ $log->action === 'deleted' ? 'background:repeating-linear-gradient(45deg, #fffafa, #fffafa 10px, #fff5f5 10px, #fff5f5 20px); opacity: 0.8;' : 'transition: background 0.2s;' }}" 
@@ -253,43 +255,58 @@
               </div>
               <div>
                 <div style="font-weight:bold;font-size:13px">{{ $meta['label'] }}</div>
-                <div style="font-size:11px;color:#64748b">{{ $isTransfer ? 'تحويل' : ($log->direction === 'in' ? 'تدفق داخل' : ($log->direction === 'out' ? 'تدفق خارج' : '—')) }}</div>
+                <div style="font-size:11px;color:#64748b;margin-bottom:4px;">{{ $isTransfer ? 'تحويل' : ($log->direction === 'in' ? 'تدفق داخل' : ($log->direction === 'out' ? 'تدفق خارج' : '—')) }}</div>
+                <span class="tag {{ $log->action === 'created' ? 'green' : ($log->action === 'deleted' ? 'red' : 'amber') }} sm" style="font-size: 10px; padding: 2px 6px;">{{ $log->actionAr() }}</span>
               </div>
             </div>
           </td>
 
           <td class="num">
-            @if($log->amount > 0 && $log->discount > 0)
-              <b style="color:{{ $isTransfer ? '#3b82f6' : ($log->direction === 'in' ? '#10b981' : ($log->direction === 'out' ? '#ef4444' : 'inherit')) }}; {{ $log->action === 'deleted' ? 'text-decoration:line-through' : '' }}">
+            @php
+              // Extract gross cost for materials/invoices if it differs from the wallet amount
+              $matGrossCost = null;
+              if (in_array($log->ref_type, ['material', 'material_invoice'])) {
+                $ov = $log->old_values;
+                if (is_string($ov)) $ov = json_decode($ov, true);
+                
+                if (is_array($ov) && isset($ov['gross_amount'])) {
+                  $matGrossCost = (float) $ov['gross_amount'];
+                } elseif ($log->ref_id && $log->action !== 'deleted') {
+                  if ($log->ref_type === 'material') {
+                    $txMat = \App\Models\Material::find($log->ref_id);
+                    if ($txMat) $matGrossCost = $txMat->grossCost();
+                  } else {
+                    $txInv = \App\Models\MaterialInvoice::find($log->ref_id);
+                    if ($txInv) $matGrossCost = (float) $txInv->total_amount;
+                  }
+                }
+              }
+            @endphp
+
+            @if($matGrossCost !== null && round($matGrossCost, 2) > round($log->amount, 2))
+              <b style="color:var(--amber); {{ $log->action === 'deleted' ? 'text-decoration:line-through; color:red !important;' : '' }}">EGP {{ \App\Support\Money::format($matGrossCost) }}</b>
+              <div class="muted" style="font-size:10px; margin-top:2px; font-weight:bold;">
+                @if($log->amount == 0)
+                  (آجل بالكامل)
+                @else
+                  (آجل، تم دفع {{ \App\Support\Money::format($log->amount) }})
+                @endif
+              </div>
+            @elseif($log->amount > 0 && $log->discount > 0)
+              <b style="color:{{ $isTransfer ? '#3b82f6' : ($log->direction === 'in' ? '#10b981' : ($log->direction === 'out' ? '#ef4444' : 'inherit')) }}; {{ $log->action === 'deleted' ? 'text-decoration:line-through; color:red !important;' : '' }}">
                 EGP {{ \App\Support\Money::format($log->amount) }} {{ $log->direction === 'in' ? '+' : ($log->direction === 'out' ? '-' : '') }}
               </b>
               <div class="muted" style="font-size:11px; color:#10b981; margin-top:2px; font-weight:bold;">
                  + تسوية: {{ \App\Support\Money::format($log->discount) }}
               </div>
             @elseif($log->amount > 0)
-              <b style="color:{{ $isTransfer ? '#3b82f6' : ($log->direction === 'in' ? '#10b981' : ($log->direction === 'out' ? '#ef4444' : 'inherit')) }}; {{ $log->action === 'deleted' ? 'text-decoration:line-through' : '' }}">
+              <b style="color:{{ $isTransfer ? '#3b82f6' : ($log->direction === 'in' ? '#10b981' : ($log->direction === 'out' ? '#ef4444' : 'inherit')) }}; {{ $log->action === 'deleted' ? 'text-decoration:line-through; color:red !important;' : '' }}">
                 EGP {{ \App\Support\Money::format($log->amount) }} {{ $log->direction === 'in' ? '+' : ($log->direction === 'out' ? '-' : '') }}
               </b>
             @elseif($log->amount == 0 && $log->discount > 0)
-              <b style="color:#10b981; {{ $log->action === 'deleted' ? 'text-decoration:line-through' : '' }}">
+              <b style="color:#10b981; {{ $log->action === 'deleted' ? 'text-decoration:line-through; color:red !important;' : '' }}">
                 EGP {{ \App\Support\Money::format($log->discount) }} (تسوية فقط)
               </b>
-            @elseif($log->amount == 0 && $log->ref_type === 'material' && $log->ref_id && $log->action !== 'deleted')
-              @php $deferredMat = \App\Models\Material::find($log->ref_id); @endphp
-              @if($deferredMat && $deferredMat->grossCost() > 0)
-                <b style="color:var(--amber)">EGP {{ \App\Support\Money::format($deferredMat->grossCost()) }}</b>
-                <div class="muted" style="font-size:10px">آجل بالكامل</div>
-              @else
-                <span class="muted">—</span>
-              @endif
-            @elseif($log->amount == 0 && $log->ref_type === 'material_invoice' && $log->ref_id && $log->action !== 'deleted')
-              @php $deferredInv = \App\Models\MaterialInvoice::find($log->ref_id); @endphp
-              @if($deferredInv && $deferredInv->total_amount > 0)
-                <b style="color:var(--amber)">EGP {{ \App\Support\Money::format($deferredInv->total_amount) }}</b>
-                <div class="muted" style="font-size:10px">آجل بالكامل</div>
-              @else
-                <span class="muted">—</span>
-              @endif
             @else
               <span class="muted">—</span>
             @endif
@@ -666,6 +683,14 @@
           <div style="font-weight: 600; color: #64748b; font-size: 13px; margin-bottom: 6px;">البيان والملاحظات:</div>
           <div id="log-details-description" style="font-weight: 600; color: #334155; font-size: 14px; line-height: 1.6; background: #f8fafc; padding: 10px; border-radius: 8px;"></div>
         </div>
+
+        <div id="log-details-changes-container" style="display: none; padding: 12px 16px; flex-direction: column;">
+          <div style="font-weight: 600; color: #c2410c; font-size: 13px; margin-bottom: 6px; display:flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><use href="#i-tool"/></svg>
+            البيانات قبل التعديل:
+          </div>
+          <div id="log-details-changes" style="font-weight: 600; color: #78350f; font-size: 13.5px; line-height: 1.7; background: #fffbeb; border: 1px dashed #fde68a; padding: 12px; border-radius: 8px;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -916,6 +941,41 @@ function openLogDetails(rowEl) {
   document.getElementById('log-details-account').textContent = data.account || '—';
   document.getElementById('log-details-user').textContent = data.user;
   document.getElementById('log-details-description').textContent = data.description;
+  
+  const changesContainer = document.getElementById('log-details-changes-container');
+  if (data.action_type === 'updated' && data.old_values && Object.keys(data.old_values).length > 0) {
+    let html = '';
+    const labels = {
+      'amount': 'المبلغ',
+      'discount': 'التسوية',
+      'type': 'النوع',
+      'party': 'الطرف',
+      'description': 'البيان',
+      'date': 'التاريخ',
+      'project_id': 'المشروع',
+      'band_id': 'البند',
+      'account_id': 'الخزنة'
+    };
+    for (const [key, val] of Object.entries(data.old_values)) {
+      if(key === 'gross_amount') continue; // Not a real column change
+      const label = labels[key] || key;
+      html += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #fde68a; padding-bottom:6px; margin-bottom:6px;">
+                <span style="color:#b45309">${label}:</span>
+                <span style="font-weight:bold">${val !== null && val !== '' ? val : '—'}</span>
+               </div>`;
+    }
+    
+    if (html !== '') {
+      // Remove last border
+      html = html.replace(/border-bottom:1px solid #fde68a; padding-bottom:6px; margin-bottom:6px;"(?=[^>]*>([^<]*<[^>]*>)*$)/, 'padding-bottom:2px;"');
+      document.getElementById('log-details-changes').innerHTML = html;
+      changesContainer.style.display = 'flex';
+    } else {
+      changesContainer.style.display = 'none';
+    }
+  } else {
+    changesContainer.style.display = 'none';
+  }
   
   document.getElementById('log-details-modal').classList.add('open');
 }
