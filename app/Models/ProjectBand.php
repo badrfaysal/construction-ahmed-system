@@ -163,7 +163,7 @@ class ProjectBand extends Model
             $laborSupervisionPct = $this->labor_supervision_pct ?? 0;
         }
 
-        $this->update([
+        $this->updateQuietly([
             'labor_amount'          => $laborAmount,
             'labor_sell_price'      => $laborSellPrice,
             'labor_supervision_pct' => $laborSupervisionPct,
@@ -181,7 +181,7 @@ class ProjectBand extends Model
     {
         $this->load('workers');
 
-        $this->update([
+        $this->updateQuietly([
             'labor_amount'          => $this->workersTotal(),
             'labor_sell_price'      => $this->workers->sum(fn ($w) => $w->clientPrice()),
             'labor_supervision_pct' => 0,

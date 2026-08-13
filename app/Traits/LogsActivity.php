@@ -145,6 +145,7 @@ trait LogsActivity
             SystemActivityLog::create([
                 'batch_id'   => self::getBatchId(),
                 'user_id'    => Auth::id(),
+                'ip_address' => request()->ip(),
                 'action'     => $action,
                 'model_type' => get_class($model),
                 'model_id'   => $model->id ?? 0,

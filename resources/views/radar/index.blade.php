@@ -213,6 +213,89 @@
             $isTransferOut = $log->direction === 'out';
             $meta['label'] = $isTransferOut ? 'تحويل صادر' : 'تحويل وارد';
           }
+          
+          $matGrossCost = null;
+          if (in_array($log->ref_type, ['material', 'material_invoice', 'worker_payment'])) {
+            $ovGross = is_string($log->old_values) ? json_decode($log->old_values, true) : $log->old_values;
+            
+            if (is_array($ovGross) && isset($ovGross['gross_amount'])) {
+              $matGrossCost = (float) $ovGross['gross_amount'];
+            } elseif ($log->ref_id && $log->action !== 'deleted') {
+              if ($log->ref_type === 'material') {
+                $txMat = \App\Models\Material::find($log->ref_id);
+                if ($txMat) $matGrossCost = $txMat->grossCost();
+              } elseif ($log->ref_type === 'material_invoice') {
+                $txInv = \App\Models\MaterialInvoice::find($log->ref_id);
+                if ($txInv) $matGrossCost = (float) $txInv->total_amount;
+              } elseif ($log->ref_type === 'worker_payment') {
+                // For worker payment, the amount IS the cash paid.
+                // But wait, there is no total invoice for a worker payment!
+                // Maybe the user wants it to say (آجل) if amount is 0?
+                // For worker payment, we don't have a gross_cost, just the discount if any.
+                // If amount is 0, we can just say "آجل" without a gross cost, or we can use the discount as gross cost?
+              }
+            }
+            
+            if ($matGrossCost === null && $log->transaction_id) {
+                // Fallback: look for gross_amount in another log for the same transaction (e.g. if the model is deleted)
+                $relatedLog = \App\Models\AuditLog::where('transaction_id', $log->transaction_id)
+                    ->whereNotNull('old_values')
+                    ->where('old_values', 'like', '%"gross_amount"%')
+                    ->first();
+                if ($relatedLog) {
+                    $relatedOv = is_string($relatedLog->old_values) ? json_decode($relatedLog->old_values, true) : $relatedLog->old_values;
+                    if (is_array($relatedOv) && isset($relatedOv['gross_amount'])) {
+                        $matGrossCost = (float) $relatedOv['gross_amount'];
+                    }
+                }
+            }
+          }
+          
+          $deletionEffects = [];
+          if ($log->action === 'deleted') {
+              if ($log->amount > 0) {
+                  $formattedAmt = \App\Support\Money::format($log->amount);
+                  $acc = \App\Models\Account::nameOf($log->account_id);
+                  if ($log->direction === 'out') {
+                      $deletionEffects[] = "تم استرداد مبلغ {$formattedAmt} ج.م وإعادته إلى ({$acc}).";
+                  } elseif ($log->direction === 'in') {
+                      $deletionEffects[] = "تم سحب مبلغ {$formattedAmt} ج.م من ({$acc}) لعكس الحركة.";
+                  }
+              }
+              
+              if (in_array($log->ref_type, ['material', 'material_invoice'])) {
+                  $gross = $matGrossCost ?? 0;
+                  $formattedGross = \App\Support\Money::format($gross);
+                  $debtCancelled = $gross - $log->amount;
+                  
+                  if ($matGrossCost === null && $log->amount == 0) {
+                      $deletionEffects[] = "تم إلغاء فاتورة شراء آجلة بالكامل.";
+                  } elseif ($matGrossCost === null) {
+                      $deletionEffects[] = "تم إلغاء فاتورة الشراء بالكامل.";
+                  } elseif ($debtCancelled > 0.01 && $log->amount > 0) {
+                      $formattedDebt = \App\Support\Money::format($debtCancelled);
+                      $deletionEffects[] = "تم إلغاء الفاتورة (إجمالي {$formattedGross} ج.م)، وسقوط المديونية المتبقية بقيمة {$formattedDebt} ج.م.";
+                  } elseif ($debtCancelled > 0.01 && $log->amount == 0) {
+                      $deletionEffects[] = "تم إلغاء فاتورة آجلة بالكامل، وسقوط المديونية بقيمة {$formattedGross} ج.م.";
+                  } elseif ($gross > 0) {
+                      $deletionEffects[] = "تم إلغاء الفاتورة بالكامل (بقيمة {$formattedGross} ج.م).";
+                  }
+              } elseif ($log->ref_type === 'debt') {
+                  $debtReinstated = $log->amount + $log->discount;
+                  $formattedDebt = \App\Support\Money::format($debtReinstated);
+                  $deletionEffects[] = "تم التراجع عن سداد المديونية، وعودة دين بقيمة {$formattedDebt} ج.م على الشركة.";
+              } elseif ($log->ref_type === 'worker_payment') {
+                  if ($log->amount > 0) {
+                      $formattedAmt = \App\Support\Money::format($log->amount);
+                      $deletionEffects[] = "تم التراجع عن دفعة الصنايعي، وعودة مستحقاته بقيمة {$formattedAmt} ج.م.";
+                  }
+              }
+              
+              if ($log->discount > 0) {
+                  $formattedDisc = \App\Support\Money::format($log->discount);
+                  $deletionEffects[] = "تم إلغاء تسوية/خصم كان بقيمة {$formattedDisc} ج.م.";
+              }
+          }
         @endphp
         @php
           $logData = [
@@ -231,6 +314,8 @@
              'account' => $accountName,
              'color' => $isTransfer ? '#3b82f6' : ($log->direction === 'in' ? '#10b981' : ($log->direction === 'out' ? '#ef4444' : '#64748b')),
              'action_type' => $log->action,
+             'gross_amount' => $matGrossCost !== null && round($matGrossCost, 2) > round($log->amount, 2) ? \App\Support\Money::format($matGrossCost) : null,
+             'deletion_effects' => $deletionEffects,
           ];
           $ovRaw = is_string($log->old_values) ? json_decode($log->old_values, true) : $log->old_values;
           $ov = [];
@@ -310,26 +395,6 @@
           </td>
 
           <td class="num">
-            @php
-              // Extract gross cost for materials/invoices if it differs from the wallet amount
-              $matGrossCost = null;
-              if (in_array($log->ref_type, ['material', 'material_invoice'])) {
-                $ov = $log->old_values;
-                if (is_string($ov)) $ov = json_decode($ov, true);
-                
-                if (is_array($ov) && isset($ov['gross_amount'])) {
-                  $matGrossCost = (float) $ov['gross_amount'];
-                } elseif ($log->ref_id && $log->action !== 'deleted') {
-                  if ($log->ref_type === 'material') {
-                    $txMat = \App\Models\Material::find($log->ref_id);
-                    if ($txMat) $matGrossCost = $txMat->grossCost();
-                  } else {
-                    $txInv = \App\Models\MaterialInvoice::find($log->ref_id);
-                    if ($txInv) $matGrossCost = (float) $txInv->total_amount;
-                  }
-                }
-              }
-            @endphp
 
             @if($matGrossCost !== null && round($matGrossCost, 2) > round($log->amount, 2))
               <b style="color:var(--amber); {{ $log->action === 'deleted' ? 'text-decoration:line-through; color:red !important;' : '' }}">EGP {{ \App\Support\Money::format($matGrossCost) }}</b>
@@ -739,6 +804,14 @@
           </div>
           <div id="log-details-changes" style="font-weight: 600; color: #78350f; font-size: 13.5px; line-height: 1.7; background: #fffbeb; border: 1px dashed #fde68a; padding: 12px; border-radius: 8px;"></div>
         </div>
+
+        <div id="log-details-deletion-effects-container" style="display: none; padding: 12px 16px; flex-direction: column;">
+          <div style="font-weight: 600; color: #dc2626; font-size: 13px; margin-bottom: 6px; display:flex; align-items:center; gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><use href="#i-x"/></svg>
+            تأثيرات الحذف التي تمت:
+          </div>
+          <div id="log-details-deletion-effects" style="font-weight: 600; color: #991b1b; font-size: 13.5px; line-height: 1.7; background: #fef2f2; border: 1px dashed #fca5a5; padding: 12px; border-radius: 8px;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -968,12 +1041,30 @@ function openDeleteModal(actionUrl, label, amount, isOwned) {
 function openLogDetails(rowEl) {
   const data = JSON.parse(rowEl.getAttribute('data-log'));
   
-  document.getElementById('log-details-head').style.background = data.color;
+  let headerColor = data.color;
+  if (data.action_type === 'deleted') {
+      headerColor = '#475569'; // Slate 600
+  } else if (data.action_type === 'updated') {
+      headerColor = '#f59e0b'; // Amber 500
+  } else if (data.action_type === 'created') {
+      headerColor = '#10b981'; // Emerald 500
+  }
+  
+  document.getElementById('log-details-head').style.background = headerColor;
   document.getElementById('log-details-title').textContent = data.action;
   
   const sign = data.direction === 'in' ? '+' : (data.direction === 'out' ? '-' : '');
-  document.getElementById('log-details-amount').textContent = sign + data.amount + ' ج.م';
-  document.getElementById('log-details-amount').style.color = data.color;
+  if (data.gross_amount) {
+    if (data.amount === '0.00' || data.amount === '0') {
+      document.getElementById('log-details-amount').innerHTML = `<span style="text-decoration:line-through; opacity:0.6; font-size: 18px;">${sign}${data.amount} ج.م</span> <br> <span style="color:#f59e0b">${sign}${data.gross_amount} ج.م <small>(آجل بالكامل)</small></span>`;
+    } else {
+      document.getElementById('log-details-amount').innerHTML = `<span style="font-size: 18px;">${sign}${data.amount} ج.م (تم دفعه)</span> <br> <span style="color:#f59e0b">${sign}${data.gross_amount} ج.م <small>(آجل جزئياً)</small></span>`;
+    }
+    document.getElementById('log-details-amount').style.color = '#0f172a';
+  } else {
+    document.getElementById('log-details-amount').textContent = sign + data.amount + ' ج.م';
+    document.getElementById('log-details-amount').style.color = data.color;
+  }
   
   if (data.discount !== 0) {
     document.getElementById('log-details-discount').textContent = '+ تسوية: ' + data.discount + ' ج.م';
@@ -1009,8 +1100,24 @@ function openLogDetails(rowEl) {
     for (const [key, val] of Object.entries(data.old_values)) {
       if(key === 'gross_amount') continue;
       const label = labels[key] || key;
-      const oldVal = val !== null && val !== '' ? val : '—';
-      const newVal = data.new_values && data.new_values[key] !== undefined && data.new_values[key] !== null && data.new_values[key] !== '' ? data.new_values[key] : '—';
+      let oldVal = val !== null && val !== '' ? val : '—';
+      let newVal = data.new_values && data.new_values[key] !== undefined && data.new_values[key] !== null && data.new_values[key] !== '' ? data.new_values[key] : '—';
+      
+      if (key === 'amount' && data.gross_amount) {
+          const isOldZero = oldVal === '0' || oldVal === '0.00' || oldVal.includes('0.00');
+          if (isOldZero) {
+              oldVal = `${data.gross_amount} <span style="color:#d97706; font-size:11px;">(آجل بالكامل)</span>`;
+          } else if (oldVal !== '—') {
+              oldVal = `${oldVal} <span style="color:#d97706; font-size:11px;">(آجل، الإجمالي: ${data.gross_amount})</span>`;
+          }
+          
+          const isNewZero = newVal === '0' || newVal === '0.00' || newVal.includes('0.00');
+          if (isNewZero) {
+              newVal = `${data.gross_amount} <span style="color:#d97706; font-size:12px;">(آجل بالكامل)</span>`;
+          } else if (newVal !== '—') {
+              newVal = `${newVal} <span style="color:#d97706; font-size:12px;">(آجل، الإجمالي: ${data.gross_amount})</span>`;
+          }
+      }
       
       html += `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #fde68a; padding-bottom:8px; margin-bottom:8px;">
                  <span style="color:#b45309; width: 80px; flex-shrink: 0;">${label}:</span>
@@ -1031,6 +1138,19 @@ function openLogDetails(rowEl) {
     changesContainer.style.display = 'none';
   }
   
+  const deletionEffectsContainer = document.getElementById('log-details-deletion-effects-container');
+  if (data.action_type === 'deleted' && data.deletion_effects && data.deletion_effects.length > 0) {
+    let effectsHtml = '<ul style="margin:0; padding-right:18px;">';
+    data.deletion_effects.forEach(effect => {
+      effectsHtml += `<li style="margin-bottom:6px;">✅ ${effect}</li>`;
+    });
+    effectsHtml += '</ul>';
+    document.getElementById('log-details-deletion-effects').innerHTML = effectsHtml;
+    deletionEffectsContainer.style.display = 'flex';
+  } else {
+    deletionEffectsContainer.style.display = 'none';
+  }
+
   document.getElementById('log-details-modal').classList.add('open');
 }
 

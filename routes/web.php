@@ -29,6 +29,7 @@ use App\Http\Controllers\WalletController;
 use App\Http\Controllers\WarrantyController;
 use App\Http\Controllers\SystemActivityLogController;
 use App\Http\Controllers\WorkerPaymentController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AssetController;
 use Illuminate\Support\Facades\Route;
 
@@ -214,8 +215,9 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::post('/assets/{asset}/sell', [AssetController::class, 'sell'])->name('assets.sell');
 
     
-    // System Activity Logs
-    Route::get('/activity-logs', [SystemActivityLogController::class, 'index'])->name('activity-logs.index');
+    // System Activity Logs 
+    Route::get('/activity-logs', [SystemActivityLogController::class, 'index'])->name('activity-logs.index'); 
+    Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.index'); 
 
     // Admin-only area — settings + financial cost statements (real cost, profit)
     Route::middleware('role:admin')->group(function () {

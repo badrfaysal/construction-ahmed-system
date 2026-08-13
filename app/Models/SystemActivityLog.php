@@ -11,6 +11,7 @@ class SystemActivityLog extends Model
     protected $fillable = [
         'batch_id',
         'user_id',
+        'ip_address',
         'action',
         'model_type',
         'model_id',
@@ -91,59 +92,75 @@ class SystemActivityLog extends Model
         $model = $this->subject;
         $basename = class_basename($this->model_type);
         $fields = [];
+        
+        $source = $this->action === 'deleted' ? $this->old_values : $this->new_values;
+        if (!is_array($source)) $source = [];
+        if (!is_array($this->old_values)) $this->old_values = [];
+        if (!is_array($this->new_values)) $this->new_values = [];
 
-        if (!$model) {
+        if (!$model && $this->action !== 'deleted') {
             $name = $this->new_values['name'] ?? ($this->old_values['name'] ?? '');
             if ($name) $fields['الاسم'] = $name;
             return $fields;
         }
 
         if ($basename === 'ProjectBand') {
-            $fields['النوع'] = $model->parent_id ? 'بند فرعي' : 'بند رئيسي';
-            $fields['البند'] = $model->name;
+            $fields['النوع'] = ($model->parent_id ?? $source['parent_id'] ?? null) ? 'بند فرعي' : 'بند رئيسي';
+            $fields['البند'] = $model->name ?? $source['name'] ?? '';
             $fields['المشروع'] = $model->project->name ?? 'غير محدد';
         } elseif ($basename === 'ProjectBandWorker' || $basename === 'BandWorker') {
-            $fields['الفني'] = $model->name ?? 'غير محدد';
-            $fields['النظام'] = $model ? $model->contractTypeAr() : 'غير محدد';
-            $price = $model->amount ?? ($this->new_values['amount'] ?? 0);
-            $fields['الإجمالي'] = number_format((float)$price, 2) . " ج.م";
+            $fields['الفني'] = $model->name ?? $source['name'] ?? 'غير محدد';
+            $price = $model->amount ?? $source['amount'] ?? 0;
+            $fields['الإجمالي'] = $price > 0 ? number_format((float)$price, 2) . " ج.م" : "أجل";
         } elseif ($basename === 'ProjectBandMaterial') {
             $fields['الخامة'] = $model->material->name ?? 'غير محدد';
-            $fields['الكمية'] = $model->quantity ?? 0;
+            $fields['الكمية'] = $model->quantity ?? $source['quantity'] ?? 0;
         } elseif ($basename === 'WorkerPayment') {
             $fields['الفني'] = $model->worker->name ?? 'غير محدد';
-            $fields['المبلغ'] = number_format((float)($model->amount ?? 0), 2) . " ج.م";
+            $amount = $model->amount ?? $source['amount'] ?? 0;
+            $fields['المبلغ'] = $amount > 0 ? number_format((float)$amount, 2) . " ج.م" : "أجل";
         } elseif ($basename === 'Transaction' || $basename === 'FinancialTransaction') {
-            $amount = $model->amount ?? ($this->new_values['amount'] ?? 0);
-            $fields['المبلغ'] = number_format((float)$amount, 2) . " ج.م";
-            if ($model->type) $fields['النوع'] = $model->type;
-            if ($model->party) $fields['الطرف'] = $model->party;
-            if ($model->project) $fields['المشروع'] = $model->project->name;
+            $amount = $model->amount ?? $source['amount'] ?? 0;
+            $fields['المبلغ'] = $amount > 0 ? number_format((float)$amount, 2) . " ج.م" : "أجل";
+            if ($type = ($model->type ?? $source['type'] ?? null)) $fields['النوع'] = $type;
+            if ($party = ($model->party ?? $source['party'] ?? null)) $fields['الطرف'] = $party;
+            if ($model && $model->project) $fields['المشروع'] = $model->project->name;
         } elseif ($basename === 'Project') {
-            $fields['المشروع'] = $model->name;
-            if ($model->client_id && $model->client) $fields['العميل'] = $model->client->name;
+            $fields['المشروع'] = $model->name ?? $source['name'] ?? '';
+            if ($model && $model->client_id && $model->client) $fields['العميل'] = $model->client->name;
         } else {
-            $name = $model->name ?? $model->title ?? '';
+            $name = $model->name ?? $model->title ?? $source['name'] ?? $source['title'] ?? '';
             if ($name) $fields['الاسم'] = $name;
         }
 
         // Generic fallback to ensure name exists if possible
         if (!isset($fields['الاسم']) && !isset($fields['البند']) && !isset($fields['المشروع']) && !isset($fields['الخامة'])) {
-            $name = $model?->name ?? $model?->title ?? $this->new_values['name'] ?? $this->new_values['title'] ?? $this->old_values['name'] ?? $this->old_values['title'] ?? null;
+            $name = $model?->name ?? $model?->title ?? $source['name'] ?? $source['title'] ?? null;
             if ($name) $fields['الاسم'] = $name;
         }
 
-        // Generic extraction for amount / price / total
-        if (!isset($fields['المبلغ']) && !isset($fields['الإجمالي'])) {
-            $amountVal = $model?->amount ?? $this->new_values['amount'] ?? $model?->total ?? $this->new_values['total'] ?? $model?->price ?? $this->new_values['price'] ?? null;
+        // Generic extraction for amount / price / total (Always show if available)
+        if (!isset($fields['المبلغ']) && !isset($fields['الإجمالي']) && !isset($fields['المبلغ/القيمة'])) {
+            $amountVal = $model?->amount ?? $source['amount'] ?? $model?->total ?? $source['total'] ?? $model?->price ?? $source['price'] ?? null;
             if ($amountVal !== null) {
-                $fields['المبلغ/القيمة'] = number_format((float)$amountVal, 2) . " ج.م";
+                $fields['المبلغ'] = $amountVal > 0 ? number_format((float)$amountVal, 2) . " ج.م" : "أجل";
+            }
+        }
+
+        // Generic extraction for Project (Always show if available)
+        if (!isset($fields['المشروع'])) {
+            $projectId = $model?->project_id ?? $source['project_id'] ?? null;
+            if ($projectId) {
+                $project = \App\Models\Project::find($projectId);
+                if ($project) {
+                    $fields['المشروع'] = $project->name;
+                }
             }
         }
 
         // Generic extraction for balance
         if (!isset($fields['الرصيد'])) {
-            $balanceVal = $model?->balance ?? $this->new_values['balance'] ?? null;
+            $balanceVal = $model?->balance ?? $source['balance'] ?? null;
             if ($balanceVal !== null) {
                 $fields['الرصيد'] = number_format((float)$balanceVal, 2) . " ج.م";
             }
@@ -157,22 +174,38 @@ class SystemActivityLog extends Model
         $model = $this->subject;
         $actionName = $this->actionAr();
         $basename = class_basename($this->model_type);
+        
+        $source = $this->action === 'deleted' ? $this->old_values : $this->new_values;
+        if (!is_array($source)) $source = [];
 
-        if (!$model) {
+        if (!$model && $this->action !== 'deleted') {
             $name = $this->new_values['name'] ?? ($this->old_values['name'] ?? '');
             return "{$actionName}" . ($name ? " ({$name})" : "");
         }
 
         if ($basename === 'ProjectBandWorker' || $basename === 'BandWorker') {
-            $workerName = $model->name ?? 'فني';
+            $workerName = $model->name ?? $source['name'] ?? 'فني';
             $calcType = $model ? $model->contractTypeAr() : 'غير محدد';
-            $price = $model->amount ?? ($this->new_values['amount'] ?? 0);
-            return "تعاقد مع فني ({$workerName}) بنظام ({$calcType}) بقيمة " . number_format((float)$price, 2) . " ج.م";
+            $price = $model->amount ?? $source['amount'] ?? 0;
+            $priceStr = $price > 0 ? number_format((float)$price, 2) . " ج.م" : "أجل";
+            
+            $bandName = $model->band->name ?? null;
+            $projectName = $model->band->project->name ?? null;
+            
+            $details = "تعاقد مع فني ({$workerName}) بنظام ({$calcType}) بقيمة " . $priceStr;
+            if ($bandName) $details .= " - لبند ({$bandName})";
+            if ($projectName) $details .= " - مشروع ({$projectName})";
+            
+            return $details;
         }
 
         if ($basename === 'ProjectBandMaterial') {
             $materialName = $model->material->name ?? 'خامة';
-            return "إضافة خامة ({$materialName}) بكمية " . ($model->quantity ?? 0);
+            return "إضافة خامة ({$materialName}) بكمية " . ($model->quantity ?? $source['quantity'] ?? 0);
+        }
+        
+        if ($this->action === 'login') {
+            return "تسجيل الدخول إلى النظام";
         }
 
         // Fallback: join the fields
