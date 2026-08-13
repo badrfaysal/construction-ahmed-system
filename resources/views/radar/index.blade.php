@@ -231,13 +231,61 @@
              'account' => $accountName,
              'color' => $isTransfer ? '#3b82f6' : ($log->direction === 'in' ? '#10b981' : ($log->direction === 'out' ? '#ef4444' : '#64748b')),
              'action_type' => $log->action,
-             'old_values' => is_string($log->old_values) ? json_decode($log->old_values, true) : $log->old_values
           ];
+          $ovRaw = is_string($log->old_values) ? json_decode($log->old_values, true) : $log->old_values;
+          $ov = [];
+          $nv = [];
+          if (is_array($ovRaw)) {
+              foreach ($ovRaw as $k => $v) {
+                  if ($k === 'account_id') {
+                      $ov['account'] = \App\Models\Account::nameOf($v);
+                      $nv['account'] = \App\Models\Account::nameOf($log->account_id);
+                  }
+                  elseif ($k === 'project_id') {
+                      $ov['project'] = $v ? \App\Models\Project::find($v)?->name : 'عام / غير محدد';
+                      $nv['project'] = $log->project_id ? \App\Models\Project::find($log->project_id)?->name : 'عام / غير محدد';
+                  }
+                  elseif ($k === 'band_id') {
+                      $ov['band'] = $v ? \App\Models\Band::find($v)?->name : '—';
+                      $nv['band'] = $log->band_id ? \App\Models\Band::find($log->band_id)?->name : '—';
+                  }
+                  elseif ($k === 'amount') {
+                      $ov['amount'] = \App\Support\Money::format($v);
+                      $nv['amount'] = \App\Support\Money::format($log->amount);
+                  }
+                  elseif ($k === 'discount') {
+                      $ov['discount'] = \App\Support\Money::format($v);
+                      $nv['discount'] = \App\Support\Money::format($log->discount);
+                  }
+                  elseif ($k === 'happened_at' || $k === 'date') {
+                      $ov['date'] = \Carbon\Carbon::parse($v)->format('Y-m-d H:i A');
+                      $nv['date'] = \Carbon\Carbon::parse($log->happened_at)->format('Y-m-d H:i A');
+                  }
+                  elseif ($k === 'description') {
+                      $ov['description'] = $v;
+                      $nv['description'] = $log->description;
+                  }
+                  elseif ($k === 'party') {
+                      $ov['party'] = $v;
+                      $nv['party'] = $log->party;
+                  }
+                  elseif ($k === 'type') {
+                      $ov['type'] = $v;
+                      $nv['type'] = $log->type;
+                  }
+                  elseif ($k === 'direction') {
+                      $ov['direction'] = $v === 'in' ? 'تدفق داخل' : ($v === 'out' ? 'تدفق خارج' : $v);
+                      $nv['direction'] = $log->direction === 'in' ? 'تدفق داخل' : ($log->direction === 'out' ? 'تدفق خارج' : $log->direction);
+                  }
+              }
+          }
+          $logData['old_values'] = $ov;
+          $logData['new_values'] = $nv;
         @endphp
         <tr style="cursor: pointer; {{ $log->action === 'deleted' ? 'background:repeating-linear-gradient(45deg, #fffafa, #fffafa 10px, #fff5f5 10px, #fff5f5 20px); opacity: 0.8;' : 'transition: background 0.2s;' }}" 
             onmouseover="this.style.background='#f8fafc'" 
             onmouseout="this.style.background='{{ $log->action === 'deleted' ? 'repeating-linear-gradient(45deg, #fffafa, #fffafa 10px, #fff5f5 10px, #fff5f5 20px)' : 'transparent' }}'"
-            onclick="if(!event.target.closest('button') && !event.target.closest('a')) openLogDetails(this)" data-log="{{ htmlspecialchars(json_encode($logData)) }}">
+            onclick="if(!event.target.closest('button') && !event.target.closest('a')) openLogDetails(this)" data-log="{{ json_encode($logData) }}">
           <td class="muted" style="padding-right:20px;">{{ $log->transaction_id ?? $log->id }}</td>
           
           <td>
@@ -646,7 +694,7 @@
       </h4>
       <button class="btn ghost sm" onclick="document.getElementById('log-details-modal').classList.remove('open')" style="color: inherit; opacity: 0.8; background: rgba(255,255,255,0.2);">✕</button>
     </div>
-    <div class="modal-body" style="padding: 20px; background: #f8fafc;">
+    <div class="modal-body" style="padding: 20px; background: #f8fafc; max-height: 75vh; overflow-y: auto;">
       
       <div style="background: white; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); text-align: center;">
         <div style="font-size: 13px; color: #64748b; margin-bottom: 4px;">المبلغ</div>
@@ -687,7 +735,7 @@
         <div id="log-details-changes-container" style="display: none; padding: 12px 16px; flex-direction: column;">
           <div style="font-weight: 600; color: #c2410c; font-size: 13px; margin-bottom: 6px; display:flex; align-items:center; gap:6px;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><use href="#i-tool"/></svg>
-            البيانات قبل التعديل:
+            مقارنة التعديلات التي تمت:
           </div>
           <div id="log-details-changes" style="font-weight: 600; color: #78350f; font-size: 13.5px; line-height: 1.7; background: #fffbeb; border: 1px dashed #fde68a; padding: 12px; border-radius: 8px;"></div>
         </div>
@@ -952,22 +1000,28 @@ function openLogDetails(rowEl) {
       'party': 'الطرف',
       'description': 'البيان',
       'date': 'التاريخ',
-      'project_id': 'المشروع',
-      'band_id': 'البند',
-      'account_id': 'الخزنة'
+      'project': 'المشروع',
+      'band': 'البند',
+      'account': 'الخزنة',
+      'direction': 'اتجاه الحركة'
     };
+    
     for (const [key, val] of Object.entries(data.old_values)) {
-      if(key === 'gross_amount') continue; // Not a real column change
+      if(key === 'gross_amount') continue;
       const label = labels[key] || key;
-      html += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #fde68a; padding-bottom:6px; margin-bottom:6px;">
-                <span style="color:#b45309">${label}:</span>
-                <span style="font-weight:bold">${val !== null && val !== '' ? val : '—'}</span>
+      const oldVal = val !== null && val !== '' ? val : '—';
+      const newVal = data.new_values && data.new_values[key] !== undefined && data.new_values[key] !== null && data.new_values[key] !== '' ? data.new_values[key] : '—';
+      
+      html += `<div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #fde68a; padding-bottom:8px; margin-bottom:8px;">
+                 <span style="color:#b45309; width: 80px; flex-shrink: 0;">${label}:</span>
+                 <div style="flex:1; display:flex; flex-direction:column; gap:4px; text-align:left;">
+                   <div style="font-size:12px; color:#92400e; text-decoration:line-through; opacity: 0.8;">${oldVal}</div>
+                   <div style="font-size:13.5px; font-weight:bold; color:#166534;">${newVal}</div>
+                 </div>
                </div>`;
     }
     
     if (html !== '') {
-      // Remove last border
-      html = html.replace(/border-bottom:1px solid #fde68a; padding-bottom:6px; margin-bottom:6px;"(?=[^>]*>([^<]*<[^>]*>)*$)/, 'padding-bottom:2px;"');
       document.getElementById('log-details-changes').innerHTML = html;
       changesContainer.style.display = 'flex';
     } else {
