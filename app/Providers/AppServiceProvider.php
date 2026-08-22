@@ -42,6 +42,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Illuminate\Pagination\Paginator::defaultView('vendor.pagination.tailwind');
+
         Expense::observe(ExpenseObserver::class);
 
         // سجل الحركات (transactions) is never entered by hand — these observers

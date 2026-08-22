@@ -217,13 +217,12 @@
       </tbody>
     </table>
   </div>
+  @if($invoices->hasPages())
+    <div style="padding:14px 18px;border-top:1px solid #e2e8f0;background:#fafbfc;display:flex;justify-content:center;">
+      {{ $invoices->links() }}
+    </div>
+  @endif
 </div>
-
-@if($invoices->hasPages())
-  <div style="margin-top:20px;display:flex;justify-content:center;">
-    {{ $invoices->links() }}
-  </div>
-@endif
   </div>
 
   <div class="mi-sidebar">
