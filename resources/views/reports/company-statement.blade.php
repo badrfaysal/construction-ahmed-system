@@ -12,7 +12,55 @@
     </button>
     <a href="{{ route('projects.show', $project) }}" class="btn ghost">رجوع</a>
   </div>
-</div>
+<style>
+  /* تنسيق الإجماليات باللون الأسود الواضح في الطباعة والشاشة */
+  .st-box.tot {
+    border: 1.5px solid #000000 !important;
+    background: #f8fafc;
+  }
+  .st-box.tot .l {
+    color: #000000 !important;
+    font-weight: 700 !important;
+  }
+  .st-box.tot .v {
+    color: #000000 !important;
+    font-weight: 900 !important;
+  }
+
+  @media print {
+    .st-box.tot {
+      border: 1.5px solid #000000 !important;
+      background: #f8fafc !important;
+    }
+    .st-box.tot .l,
+    .st-box.tot .v,
+    .st-box.tot * {
+      color: #000000 !important;
+      font-weight: 900 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .st-table .sub td,
+    .st-table tr.sub td {
+      color: #000000 !important;
+      font-weight: 800 !important;
+      border-top: 1.5px solid #000000 !important;
+    }
+    .st-final table tr td {
+      color: #000000 !important;
+      font-weight: 800 !important;
+    }
+    .st-final tr.big td {
+      background: transparent !important;
+      color: #000000 !important;
+      border-top: 2px solid #000000 !important;
+      font-weight: 900 !important;
+    }
+    .st-final table {
+      border: 1.5px solid #000000 !important;
+    }
+  }
+</style>
 
 <div class="statement">
   <div class="st-head">
