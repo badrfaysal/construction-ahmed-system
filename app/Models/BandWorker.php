@@ -28,6 +28,11 @@ class BandWorker extends Model
         return ['start_date' => 'date'];
     }
 
+    public function setSupervisionPctAttribute($value): void
+    {
+        $this->attributes['supervision_pct'] = (float) ($value ?? 0);
+    }
+
     public function band(): BelongsTo
     {
         return $this->belongsTo(ProjectBand::class, 'project_band_id');

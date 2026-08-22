@@ -597,6 +597,7 @@ class MaterialController extends Controller
         }
 
         $data = $request->validate($rules);
+        $data['supervision_pct'] = (float) ($data['supervision_pct'] ?? 0);
 
         DB::transaction(function () use ($material, $data, $isMisc) {
             $oldCost = $material->qty * $material->unit_price;

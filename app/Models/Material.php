@@ -42,6 +42,11 @@ class Material extends Model
         return ['date' => 'date'];
     }
 
+    public function setSupervisionPctAttribute($value): void
+    {
+        $this->attributes['supervision_pct'] = (float) ($value ?? 0);
+    }
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id');
