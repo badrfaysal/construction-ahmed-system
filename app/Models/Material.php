@@ -99,6 +99,11 @@ class Material extends Model
         return (float) $this->qty * (float) $this->unit_price;
     }
 
+    public function recalculateCost(): float
+    {
+        return $this->grossCost();
+    }
+
     // Fraction of this purchase that was actually paid in cash at purchase
     // time (1 for a fully-paid buy, paid_amount/gross for partial, 0 for a
     // fully-deferred one) — used to work out how much of a return is a cash

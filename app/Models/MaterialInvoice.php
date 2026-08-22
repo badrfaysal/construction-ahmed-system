@@ -66,7 +66,7 @@ class MaterialInvoice extends Model
 
     public function syncTotalAmount(): void
     {
-        $this->total_amount = $this->materials->sum(fn ($m) => tap($m, fn() => $m->recalculateCost())->grossCost());
+        $this->total_amount = $this->materials()->get()->sum(fn ($m) => $m->grossCost());
         $this->save();
     }
 }
