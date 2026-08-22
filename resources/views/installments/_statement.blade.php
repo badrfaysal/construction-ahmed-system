@@ -193,7 +193,7 @@
                             <select name="account_id" id="pay_acc_{{ $c->id }}" class="form-select" required style="border-color:#3b82f6;color:#1d4ed8;font-weight:bold;">
                               <option value="" disabled {{ $c->account_id ? '' : 'selected' }}>— اختر الخزنة —</option>
                               @foreach(($wallets ?? collect()) as $w)
-                                <option value="{{ $w->id }}" @selected($c->account_id == $w->id)>{{ $w->account_name }} — {{ \App\Support\Money::format($w->balance) }} ج</option>
+                                <option value="{{ $w->id }}" @selected($c->account_id == $w->id)>{{ $w->name }} — {{ \App\Support\Money::format($w->balance) }} ج</option>
                               @endforeach
                             </select>
                          </div>
@@ -262,7 +262,7 @@
                             <select name="account_id" class="form-select form-select-lg" required style="border-color:#3b82f6;color:#1d4ed8;font-weight:bold;">
                                <option value="" disabled {{ $c->account_id ? '' : 'selected' }}>— اختر الخزنة —</option>
                                @foreach(($wallets ?? collect()) as $w)
-                                  <option value="{{ $w->id }}" @selected($c->account_id == $w->id)>{{ $w->account_name }} — {{ \App\Support\Money::format($w->balance) }} ج</option>
+                                  <option value="{{ $w->id }}" @selected($c->account_id == $w->id)>{{ $w->name }} — {{ \App\Support\Money::format($w->balance) }} ج</option>
                                @endforeach
                             </select>
                          </div>

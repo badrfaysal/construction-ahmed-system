@@ -104,7 +104,7 @@
               @foreach($wallets->groupBy(fn($w) => $w->categoryAr()) as $cat => $grp)
                 <optgroup label="{{ $cat }}">
                   @foreach($grp as $w)
-                    <option value="{{ $w->id }}">{{ $w->account_name }}@if($w->id == \App\Models\Account::WALLET_ID) ★@endif — {{ \App\Support\Money::format($w->balance) }} ج</option>
+                    <option value="{{ $w->id }}">{{ $w->name }}@if($w->id == \App\Models\Account::WALLET_ID) ★@endif — {{ \App\Support\Money::format($w->balance) }} ج</option>
                   @endforeach
                 </optgroup>
               @endforeach

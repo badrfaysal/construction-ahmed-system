@@ -55,6 +55,49 @@
   .tax-invoice-row { display: none; }
   body.tax-invoice-mode .tax-invoice-row { display: table-row; }
   body.tax-invoice-mode .standard-total-row { display: none; }
+
+  /* تنسيق الإجمالي باللون الأسود الصريح */
+  .st-box.tot {
+    border: 1.5px solid #000000 !important;
+    background: #f8fafc;
+  }
+  .st-box.tot .l {
+    color: #000000 !important;
+    font-weight: 700 !important;
+  }
+  .st-box.tot .v {
+    color: #000000 !important;
+    font-weight: 900 !important;
+  }
+
+  @media print {
+    .st-box.tot {
+      border: 1.5px solid #000000 !important;
+      background: #f8fafc !important;
+    }
+    .st-box.tot .l,
+    .st-box.tot .v,
+    .st-box.tot * {
+      color: #000000 !important;
+      font-weight: 900 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .standard-total-row.tot-row td {
+      color: #000000 !important;
+      font-weight: 900 !important;
+      border-top: 1.5px solid #000000 !important;
+    }
+    .st-final table {
+      border: 1px solid #000000 !important;
+    }
+    .st-final tr.big td {
+      background: transparent !important;
+      color: #000000 !important;
+      border-top: 2px solid #000000 !important;
+      font-weight: 900 !important;
+    }
+  }
 </style>
 
 <div class="statement">
@@ -99,9 +142,9 @@
       $remaining = $invoice->remaining();
     @endphp
     <div class="st-summary">
-      <div class="st-box tot">
-        <div class="l">إجمالي المستحق</div>
-        <div class="v">
+      <div class="st-box tot" style="border: 1.5px solid #000000;">
+        <div class="l" style="color:#000000;font-weight:700;">إجمالي المستحق</div>
+        <div class="v" style="color:#000000;font-weight:900;">
           <span class="standard-label">{{ \App\Support\Money::format($invoice->total) }} ج.م</span>
           <span class="tax-invoice-label">{{ \App\Support\Money::format($grandTotal) }} EGP</span>
         </div>
@@ -162,16 +205,11 @@
             <td class="muted" style="text-align:right">الخصم</td>
             <td style="text-align:left;font-weight:700;color:#b91c1c">-{{ \App\Support\Money::format($invoice->discount) }} ج.م</td>
           </tr>
-          <tr class="standard-total-row">
-            <td class="muted" style="text-align:right">إجمالي المستحق</td>
-            <td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($invoice->total) }} ج.م</td>
-          </tr>
-          @else
-          <tr class="standard-total-row">
-            <td class="muted" style="text-align:right">إجمالي المستحق</td>
-            <td style="text-align:left;font-weight:700">{{ \App\Support\Money::format($invoice->total) }} ج.م</td>
-          </tr>
           @endif
+          <tr class="standard-total-row tot-row" style="border-top:1.5px solid #000000;background:#f8fafc;">
+            <td style="text-align:right;font-weight:800;color:#000000;font-size:14.5px;">إجمالي المستحق</td>
+            <td style="text-align:left;font-weight:900;color:#000000;font-size:14.5px;">{{ \App\Support\Money::format($invoice->total) }} ج.م</td>
+          </tr>
 
           {{-- Tax invoice mode --}}
           <tr class="tax-invoice-row">
@@ -192,9 +230,9 @@
             <td class="muted" style="text-align:right">الضريبة ({{ (float) $invoice->tax_pct }}%)</td>
             <td style="text-align:left;font-weight:700;color:var(--pos)">+{{ \App\Support\Money::format($invoice->tax_amount) }} EGP</td>
           </tr>
-          <tr class="tax-invoice-row" style="background:#005c97;color:#fff">
-            <td style="font-weight:700;color:#fff;font-size:14.5px">الإجمالي النهائي</td>
-            <td style="text-align:left;font-weight:700;color:#fff;font-size:14.5px">{{ \App\Support\Money::format($grandTotal) }} EGP</td>
+          <tr class="tax-invoice-row" style="background:#0f172a;color:#fff;">
+            <td style="font-weight:800;color:#fff;font-size:14.5px;">الإجمالي النهائي</td>
+            <td style="text-align:left;font-weight:900;color:#fff;font-size:14.5px;">{{ \App\Support\Money::format($grandTotal) }} EGP</td>
           </tr>
         </table>
 
@@ -203,9 +241,9 @@
             <td class="muted" style="text-align:right">المدفوع</td>
             <td style="text-align:left;font-weight:700;color:var(--pos)">{{ \App\Support\Money::format($invoice->paid_amount) }} ج.م</td>
           </tr>
-          <tr class="big">
-            <td style="text-align:right;font-size:16px;font-weight:700">المتبقي المطلوب</td>
-            <td style="text-align:left;font-size:20px;font-weight:800">
+          <tr class="big" style="border-top:2px solid #000000;">
+            <td style="text-align:right;font-size:16px;font-weight:800;color:#000000;">المتبقي المطلوب</td>
+            <td style="text-align:left;font-size:20px;font-weight:900;color:#000000;">
               <span class="standard-label">{{ \App\Support\Money::format($remaining) }} ج.م</span>
               <span class="tax-invoice-label">{{ \App\Support\Money::format($remaining) }} EGP</span>
             </td>

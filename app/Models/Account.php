@@ -73,4 +73,10 @@ class Account extends Model
             default          => 'أخرى',
         };
     }
+
+    // Accessor for account_name fallback to ensure backward and view compatibility
+    public function getAccountNameAttribute(): string
+    {
+        return (string) ($this->attributes['name'] ?? $this->name ?? '');
+    }
 }
