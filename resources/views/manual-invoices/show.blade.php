@@ -241,9 +241,9 @@
             <td class="muted" style="text-align:right">المدفوع</td>
             <td style="text-align:left;font-weight:700;color:var(--pos)">{{ \App\Support\Money::format($invoice->paid_amount) }} ج.م</td>
           </tr>
-          <tr class="big" style="border-top:2px solid #000000;">
-            <td style="text-align:right;font-size:16px;font-weight:800;color:#000000;">المتبقي المطلوب</td>
-            <td style="text-align:left;font-size:20px;font-weight:900;color:#000000;">
+          <tr class="big">
+            <td style="text-align:right;font-size:16px;font-weight:800;">المتبقي المطلوب</td>
+            <td style="text-align:left;font-size:20px;font-weight:900;">
               <span class="standard-label">{{ \App\Support\Money::format($remaining) }} ج.م</span>
               <span class="tax-invoice-label">{{ \App\Support\Money::format($remaining) }} EGP</span>
             </td>
