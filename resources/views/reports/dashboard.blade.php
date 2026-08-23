@@ -146,11 +146,14 @@
 
   <div class="vstat vstat-red">
     <div class="top">
-      <span class="label">المصروفات العامة</span>
+      <span class="label">إجمالي المصروفات (عامة + مشاريع)</span>
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg></span>
     </div>
-    <div class="val tnum">{{ \App\Support\Money::format($totalGeneralExpenses ?? 0) }} <small>ج.م</small></div>
-    <div class="note" style="color:rgba(255,255,255,0.8); margin-top:8px;">إجمالي المصروفات خارج المشاريع</div>
+    <div class="val tnum">{{ \App\Support\Money::format($totalAllExpenses ?? 0) }} <small>ج.م</small></div>
+    <div class="note" style="color:rgba(255,255,255,0.9); margin-top:8px; font-size:11px; display:flex; justify-content:space-between;">
+      <span>عامة: {{ \App\Support\Money::format($totalCompanyExpenses ?? 0) }}</span>
+      <span>مشاريع: {{ \App\Support\Money::format($totalProjectExpenses ?? 0) }}</span>
+    </div>
     <svg class="vstat-bg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-receipt"/></svg>
   </div>
 </div>
@@ -309,46 +312,238 @@
   </div>
 </div>
 
-{{-- ═══ General Expenses Section ═══ --}}
-<div style="margin-bottom:24px;">
-  <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-    <div style="width:32px; height:32px; border-radius:8px; background:#fef2f2; display:grid; place-items:center;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><use href="#i-receipt"/></svg>
-    </div>
-    <h3 style="margin:0; font-size:1.15rem; color:var(--ink);">تفاصيل المصروفات العامة</h3>
-  </div>
-  
-  <div class="grid cols-2">
-    <div class="table-card">
-      <div class="table-top"><h4>توزيع المصروفات أعلى بنود المصروفات</h4></div>
-      <div class="table-scroll">
-        <table>
-          <thead><tr><th>#</th><th>البيان</th><th class="num">المبلغ</th></tr></thead>
-          <tbody>
-            @if(isset($generalExpensesDistribution) && $generalExpensesDistribution->count() > 0)
-              @foreach($generalExpensesDistribution as $cat => $amount)
-                <tr>
-                  <td><span style="width:22px;height:22px;border-radius:50%;background:{{ ['#ef4444','#f87171','#fca5a5','#fecaca','#fee2e2'][$loop->index % 5] }};color:{{ $loop->index < 3 ? '#fff' : '#b91c1c' }};display:grid;place-items:center;font-size:10px;font-weight:700">{{ $loop->index+1 }}</span></td>
-                  <td style="font-weight:600;">{{ $cat }}</td>
-                  <td class="num" style="font-weight:700;color:var(--bad)">{{ \App\Support\Money::format($amount) }}</td>
-                </tr>
-              @endforeach
-            @else
-              <tr><td colspan="3" class="muted" style="text-align:center;padding:16px">لا توجد بيانات للمصروفات في هذه الفترة</td></tr>
-            @endif
-          </tbody>
-        </table>
+{{-- ═══ تفاصيل وتحليل المصروفات (عامة + مشاريع + مجمّع) ═══ --}}
+<div style="margin-bottom:28px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div style="width:36px; height:36px; border-radius:10px; background:#fef2f2; display:grid; place-items:center;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><use href="#i-receipt"/></svg>
+      </div>
+      <div>
+        <h3 style="margin:0; font-size:1.2rem; color:var(--ink);">تفاصيل وتحليل المصروفات العامة (الشركة والمشاريع)</h3>
+        <p class="muted" style="margin:2px 0 0; font-size:12.5px;">توزيع ومقارنة المصروفات العامة للشركة والمصروفات المسجلة داخل المشاريع والإجمالي المجمع لكل بند</p>
       </div>
     </div>
-    
-    <div class="card card-pad" style="padding:14px 16px; display:flex; flex-direction:column; justify-content:center; align-items:center; background:linear-gradient(135deg, var(--bg2), #fff);">
-      <div style="font-size:12px; font-weight:700; color:var(--mut); margin-bottom:12px; text-transform:uppercase; letter-spacing:1px;">إجمالي المصروفات العامة لهذه الفترة</div>
-      <div class="tnum" style="font-size:2.8rem; font-weight:800; color:var(--bad); line-height:1;">{{ \App\Support\Money::format($totalGeneralExpenses ?? 0) }}</div>
-      <div style="font-size:13px; color:var(--mut); margin-top:8px;">جنيهاً مصرياً</div>
-      <a href="{{ route('general_expenses.index') }}" class="btn secondary" style="margin-top:24px;">عرض تفاصيل وسجل المصروفات</a>
+    <div style="display:flex; gap:8px;">
+      <a href="{{ route('general_expenses.index') }}" class="btn ghost sm" style="font-size:12px; padding:6px 12px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-clipboard"/></svg>
+        سجل المصروفات العامة
+      </a>
     </div>
   </div>
+
+  {{-- 3 KPI Cards --}}
+  <div class="grid cols-3" style="gap:16px; margin-bottom:20px;">
+    {{-- Card 1: Company General Expenses --}}
+    <div class="card stat" style="background:#eff6ff; border:1px solid #bfdbfe; padding:18px;">
+      <div class="top">
+        <span class="label" style="font-size:13px; font-weight:700; color:#1e40af;">مصروفات عامة للشركة (خارج المشاريع)</span>
+        <span class="ic" style="background:#dbeafe; color:#1d4ed8;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-building"/></svg></span>
+      </div>
+      <div class="val tnum" style="color:#1d4ed8; font-size:24px; margin-top:8px;">{{ \App\Support\Money::format($totalCompanyExpenses ?? 0) }} <small style="font-size:13px;">ج.م</small></div>
+      <div class="note" style="margin-top:6px; color:#3b82f6; font-weight:600;">عدد الحركات: {{ $countCompanyExpenses ?? 0 }} حركة</div>
+    </div>
+
+    {{-- Card 2: Project General Expenses --}}
+    <div class="card stat" style="background:#fffbeb; border:1px solid #fde68a; padding:18px;">
+      <div class="top">
+        <span class="label" style="font-size:13px; font-weight:700; color:#92400e;">مصروفات عامة داخل المشاريع</span>
+        <span class="ic" style="background:#fef3c7; color:#d97706;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-tool"/></svg></span>
+      </div>
+      <div class="val tnum" style="color:#b45309; font-size:24px; margin-top:8px;">{{ \App\Support\Money::format($totalProjectExpenses ?? 0) }} <small style="font-size:13px;">ج.م</small></div>
+      <div class="note" style="margin-top:6px; color:#d97706; font-weight:600;">عدد الحركات: {{ $countProjectExpenses ?? 0 }} حركة</div>
+    </div>
+
+    {{-- Card 3: Combined Total --}}
+    <div class="card stat" style="background:#fef2f2; border:1.5px solid #fca5a5; padding:18px;">
+      <div class="top">
+        <span class="label" style="font-size:13px; font-weight:800; color:#991b1b;">الإجمالي الكلي المجمّع (عامة + مشاريع)</span>
+        <span class="ic" style="background:#fee2e2; color:#dc2626;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-receipt"/></svg></span>
+      </div>
+      <div class="val tnum" style="color:#dc2626; font-size:24px; margin-top:8px;">{{ \App\Support\Money::format($totalAllExpenses ?? 0) }} <small style="font-size:13px;">ج.م</small></div>
+      <div class="note" style="margin-top:6px; color:#ef4444; font-weight:600;">إجمالي {{ $countAllExpenses ?? 0 }} حركة صرف في الفترة</div>
+    </div>
+  </div>
+
+  {{-- Comprehensive Comparison Table: Combined by Item --}}
+  <div class="table-card" style="padding:20px; margin-bottom:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+      <div>
+        <h4 style="margin:0; font-size:15px; font-weight:800;">جدول تفصيلي: إجمالي الصرف على كل بند (المشاريع + العامة)</h4>
+        <p class="muted" style="margin:2px 0 0; font-size:12px;">يوضح نصيب الشركة ونصيب المشاريع والإجمالي المجمع لكل نوع مصروف (فطار، إيجارات، انتقالات...)</p>
+      </div>
+      <div style="display:flex; gap:6px;" id="expViewBtns">
+        <button type="button" class="btn sm active" onclick="switchExpView('all', this)" id="btn-exp-all" style="font-size:12px; padding:4px 10px;">الكل (مجمّع)</button>
+        <button type="button" class="btn ghost sm" onclick="switchExpView('company', this)" id="btn-exp-company" style="font-size:12px; padding:4px 10px;">عامة للشركة فقط</button>
+        <button type="button" class="btn ghost sm" onclick="switchExpView('project', this)" id="btn-exp-project" style="font-size:12px; padding:4px 10px;">مشاريع فقط</button>
+      </div>
+    </div>
+
+    {{-- 1. Combined Table View --}}
+    <div id="view-exp-all" class="exp-view-panel table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px;">#</th>
+            <th>البيان / نوع المصروف</th>
+            <th class="num" style="color:#1d4ed8;">عامة للشركة</th>
+            <th class="num" style="color:#b45309;">داخل المشاريع</th>
+            <th class="num" style="color:#dc2626; font-size:14px;">الإجمالي الكلي (المجمّع)</th>
+            <th class="num">النسبة من الإجمالي</th>
+            <th style="min-width:140px;">نسبة (عامة / مشاريع)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($combinedExpensesDistribution as $idx => $row)
+            @php
+              $compPct = $row->total_amount > 0 ? round(($row->company_amount / $row->total_amount) * 100) : 0;
+              $projPct = $row->total_amount > 0 ? round(($row->project_amount / $row->total_amount) * 100) : 0;
+            @endphp
+            <tr>
+              <td>
+                <span style="width:22px;height:22px;border-radius:50%;background:#fee2e2;color:#dc2626;display:grid;place-items:center;font-size:10px;font-weight:700;">{{ $idx + 1 }}</span>
+              </td>
+              <td>
+                <strong style="font-size:14px; color:var(--ink);">{{ $row->description }}</strong>
+                <span class="muted" style="font-size:11px; margin-inline-start:4px;">({{ $row->count }} {{ $row->count === 1 ? 'حركة' : 'حركات' }})</span>
+              </td>
+              <td class="num" style="color:#1d4ed8; font-weight:600;">
+                {{ $row->company_amount > 0 ? \App\Support\Money::format($row->company_amount) : '—' }}
+              </td>
+              <td class="num" style="color:#b45309; font-weight:600;">
+                {{ $row->project_amount > 0 ? \App\Support\Money::format($row->project_amount) : '—' }}
+              </td>
+              <td class="num" style="color:#dc2626; font-weight:800; font-size:14px;">
+                {{ \App\Support\Money::format($row->total_amount) }} ج.م
+              </td>
+              <td class="num">
+                <span class="tag gray" style="font-weight:700;">{{ $row->pct }}%</span>
+              </td>
+              <td>
+                <div style="display:flex; height:8px; border-radius:4px; overflow:hidden; background:var(--line); margin-bottom:4px;">
+                  @if($compPct > 0)
+                    <div style="width:{{ $compPct }}%; background:#3b82f6;" title="عامة: {{ $compPct }}%"></div>
+                  @endif
+                  @if($projPct > 0)
+                    <div style="width:{{ $projPct }}%; background:#f59e0b;" title="مشاريع: {{ $projPct }}%"></div>
+                  @endif
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--ink-3);">
+                  <span style="color:#3b82f6;">عامة: {{ $compPct }}%</span>
+                  <span style="color:#f59e0b;">مشاريع: {{ $projPct }}%</span>
+                </div>
+              </td>
+            </tr>
+          @empty
+            <tr><td colspan="7" class="muted" style="text-align:center;padding:24px;">لا توجد مصروفات مسجلة في هذه الفترة</td></tr>
+          @endforelse
+        </tbody>
+        @if($combinedExpensesDistribution->count() > 0)
+          <tfoot>
+            <tr style="background:rgba(239,68,68,0.05); font-weight:bold;">
+              <td colspan="2" style="color:var(--neg);">الإجمالي الكلي لكافة المصروفات</td>
+              <td class="num" style="color:#1d4ed8;">{{ \App\Support\Money::format($totalCompanyExpenses ?? 0) }} ج.م</td>
+              <td class="num" style="color:#b45309;">{{ \App\Support\Money::format($totalProjectExpenses ?? 0) }} ج.م</td>
+              <td class="num" style="color:#dc2626; font-size:15px;">{{ \App\Support\Money::format($totalAllExpenses ?? 0) }} ج.م</td>
+              <td class="num" style="color:var(--neg);">100%</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        @endif
+      </table>
+    </div>
+
+    {{-- 2. Company Only View --}}
+    <div id="view-exp-company" class="exp-view-panel table-scroll" style="display:none;">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px;">#</th>
+            <th>البيان (مصروفات عامة للشركة)</th>
+            <th class="num">عدد الحركات</th>
+            <th class="num" style="color:#1d4ed8;">المبلغ</th>
+            <th class="num">النسبة من المصروفات العامة</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($topCompanyExpenses as $idx => $row)
+            <tr>
+              <td><span style="width:22px;height:22px;border-radius:50%;background:#dbeafe;color:#1d4ed8;display:grid;place-items:center;font-size:10px;font-weight:700;">{{ $idx + 1 }}</span></td>
+              <td><strong style="color:var(--ink);">{{ $row->description }}</strong></td>
+              <td class="num">{{ $row->count }}</td>
+              <td class="num" style="color:#1d4ed8; font-weight:700;">{{ \App\Support\Money::format($row->amount) }} ج.م</td>
+              <td class="num"><span class="tag gray">{{ $row->pct }}%</span></td>
+            </tr>
+          @empty
+            <tr><td colspan="5" class="muted" style="text-align:center;padding:20px;">لا توجد مصروفات عامة للشركة في هذه الفترة</td></tr>
+          @endforelse
+        </tbody>
+        @if($topCompanyExpenses->count() > 0)
+          <tfoot>
+            <tr style="background:rgba(59,130,246,0.05); font-weight:bold;">
+              <td colspan="3" style="color:#1d4ed8;">إجمالي المصروفات العامة للشركة</td>
+              <td class="num" style="color:#1d4ed8; font-size:15px;">{{ \App\Support\Money::format($totalCompanyExpenses ?? 0) }} ج.م</td>
+              <td class="num" style="color:#1d4ed8;">100%</td>
+            </tr>
+          </tfoot>
+        @endif
+      </table>
+    </div>
+
+    {{-- 3. Projects Only View --}}
+    <div id="view-exp-project" class="exp-view-panel table-scroll" style="display:none;">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px;">#</th>
+            <th>البيان (مصروفات داخل المشاريع)</th>
+            <th class="num">عدد الحركات</th>
+            <th class="num" style="color:#b45309;">المبلغ</th>
+            <th class="num">النسبة من مصروفات المشاريع</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($topProjectExpenses as $idx => $row)
+            <tr>
+              <td><span style="width:22px;height:22px;border-radius:50%;background:#fef3c7;color:#b45309;display:grid;place-items:center;font-size:10px;font-weight:700;">{{ $idx + 1 }}</span></td>
+              <td><strong style="color:var(--ink);">{{ $row->description }}</strong></td>
+              <td class="num">{{ $row->count }}</td>
+              <td class="num" style="color:#b45309; font-weight:700;">{{ \App\Support\Money::format($row->amount) }} ج.م</td>
+              <td class="num"><span class="tag gray">{{ $row->pct }}%</span></td>
+            </tr>
+          @empty
+            <tr><td colspan="5" class="muted" style="text-align:center;padding:20px;">لا توجد مصروفات مشاريع مسجلة في هذه الفترة</td></tr>
+          @endforelse
+        </tbody>
+        @if($topProjectExpenses->count() > 0)
+          <tfoot>
+            <tr style="background:rgba(245,158,11,0.05); font-weight:bold;">
+              <td colspan="3" style="color:#b45309;">إجمالي المصروفات العامة للمشاريع</td>
+              <td class="num" style="color:#b45309; font-size:15px;">{{ \App\Support\Money::format($totalProjectExpenses ?? 0) }} ج.م</td>
+              <td class="num" style="color:#b45309;">100%</td>
+            </tr>
+          </tfoot>
+        @endif
+      </table>
+    </div>
+
+  </div>
 </div>
+
+<script>
+function switchExpView(viewName, btn) {
+  document.querySelectorAll('.exp-view-panel').forEach(el => el.style.display = 'none');
+  const target = document.getElementById('view-exp-' + viewName);
+  if (target) target.style.display = '';
+  
+  document.querySelectorAll('#expViewBtns .btn').forEach(b => {
+    b.classList.remove('active');
+    b.classList.add('ghost');
+  });
+  btn.classList.add('active');
+  btn.classList.remove('ghost');
+}
+</script>
 
 {{-- Top bands --}}
 <div class="grid cols-2" style="margin-bottom:24px">

@@ -128,15 +128,76 @@ class ReportController extends Controller
             $topDiscountProject = null;
         }
 
-        $generalExpensesQuery = \App\Models\Expense::whereNull('project_id');
-        if ($from) $generalExpensesQuery->where('date', '>=', $from);
-        if ($to) $generalExpensesQuery->where('date', '<=', $to);
+        // ---- Expenses Analysis (General Company + Project Expenses + Combined) ----
+        $baseExpenseQuery = \App\Models\Expense::query();
+        if ($from) $baseExpenseQuery->where('date', '>=', $from);
+        if ($to) $baseExpenseQuery->where('date', '<=', $to);
+
+        // 1. General Company Expenses (خارج المشاريع)
+        $companyExpenses = (clone $baseExpenseQuery)->whereNull('project_id')->get();
+        $totalCompanyExpenses = (float) $companyExpenses->sum('amount');
+        $countCompanyExpenses = $companyExpenses->count();
+
+        // 2. Project General Expenses (داخل المشاريع)
+        $projectExpensesQuery = (clone $baseExpenseQuery)->whereNotNull('project_id');
+        if ($projectId) {
+            $projectExpensesQuery->where('project_id', $projectId);
+        }
+        $projectExpenses = $projectExpensesQuery->with('project')->get();
+        $totalProjectExpenses = (float) $projectExpenses->sum('amount');
+        $countProjectExpenses = $projectExpenses->count();
+
+        // 3. Combined Total (الإجمالي الكلي المجمّع)
+        $totalAllExpenses = $totalCompanyExpenses + $totalProjectExpenses;
+        $countAllExpenses = $countCompanyExpenses + $countProjectExpenses;
+        $totalGeneralExpenses = $totalCompanyExpenses; // Backward compatibility
+
+        // Grouping & Cross-Comparison by description/item:
+        $allExpenseRecords = $companyExpenses->concat($projectExpenses);
         
-        $totalGeneralExpenses = (float) $generalExpensesQuery->sum('amount');
-        $generalExpensesDistribution = $generalExpensesQuery->get()->groupBy('description')
-            ->map(fn($group) => $group->sum('amount'))
-            ->sortDesc()
-            ->take(5);
+        $combinedExpensesDistribution = $allExpenseRecords
+            ->groupBy(fn ($e) => trim($e->description))
+            ->map(function ($items, $desc) use ($totalAllExpenses) {
+                $compSum = $items->whereNull('project_id')->sum('amount');
+                $projSum = $items->whereNotNull('project_id')->sum('amount');
+                $totalSum = $compSum + $projSum;
+                $pct = $totalAllExpenses > 0 ? round(($totalSum / $totalAllExpenses) * 100, 1) : 0;
+                
+                return (object) [
+                    'description'    => $desc,
+                    'company_amount' => (float) $compSum,
+                    'project_amount' => (float) $projSum,
+                    'total_amount'   => (float) $totalSum,
+                    'count'          => $items->count(),
+                    'pct'            => $pct,
+                ];
+            })
+            ->sortByDesc('total_amount')
+            ->values();
+
+        $generalExpensesDistribution = $combinedExpensesDistribution->take(5); // Backward compatibility
+
+        $topCompanyExpenses = $companyExpenses
+            ->groupBy(fn ($e) => trim($e->description))
+            ->map(fn ($items, $desc) => (object) [
+                'description' => $desc,
+                'amount'      => (float) $items->sum('amount'),
+                'count'       => $items->count(),
+                'pct'         => $totalCompanyExpenses > 0 ? round(($items->sum('amount') / $totalCompanyExpenses) * 100, 1) : 0,
+            ])
+            ->sortByDesc('amount')
+            ->values();
+
+        $topProjectExpenses = $projectExpenses
+            ->groupBy(fn ($e) => trim($e->description))
+            ->map(fn ($items, $desc) => (object) [
+                'description' => $desc,
+                'amount'      => (float) $items->sum('amount'),
+                'count'       => $items->count(),
+                'pct'         => $totalProjectExpenses > 0 ? round(($items->sum('amount') / $totalProjectExpenses) * 100, 1) : 0,
+            ])
+            ->sortByDesc('amount')
+            ->values();
 
         // ---- Monthly cash flow chart (same grouping as AnalyticsController::index()) ----
         $txQuery = Transaction::select(
@@ -289,7 +350,11 @@ class ReportController extends Controller
             'topPurchasedMaterials', 'topReturnedMaterials',
             'lowestProjectsByDiscount',
             'totalMarketerCommissions', 'topMarketers', 'lowestMarketers',
-            'totalGeneralExpenses', 'generalExpensesDistribution'
+            'totalGeneralExpenses', 'generalExpensesDistribution',
+            'totalCompanyExpenses', 'countCompanyExpenses',
+            'totalProjectExpenses', 'countProjectExpenses',
+            'totalAllExpenses', 'countAllExpenses',
+            'combinedExpensesDistribution', 'topCompanyExpenses', 'topProjectExpenses'
         ));
     }
 

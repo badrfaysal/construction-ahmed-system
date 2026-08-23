@@ -847,8 +847,12 @@
 @endphp
 
 @if($project->projectExpenses->count())
-  <div class="section-label" style="margin-top:0;color:var(--ink)">
-    المصروفات العامة للمشروع (تخصم من الأرباح ولا يتحملها العميل)
+  <div class="section-label" style="margin-top:0;color:var(--ink);display:flex;justify-content:space-between;align-items:center;">
+    <span>المصروفات العامة للمشروع (تخصم من الأرباح ولا يتحملها العميل)</span>
+    <button type="button" class="btn ghost sm" onclick="switchProjectTab('reports')" style="font-size:12px;gap:4px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-pie-chart"/></svg>
+      عرض التحليل في التقارير
+    </button>
   </div>
   <div class="table-card" style="margin-bottom:24px">
     <div class="table-scroll">
@@ -860,19 +864,44 @@
             <th>الخزنة</th>
             <th class="num">المبلغ</th>
             <th>ملاحظات</th>
+            @if(auth()->user()->canManage())
+              <th style="text-align:center; width:60px;">حذف</th>
+            @endif
           </tr>
         </thead>
         <tbody>
           @foreach($project->projectExpenses as $exp)
             <tr>
-              <td><span class="tag gray">{{ $exp->date->format('Y-m-d') }}</span></td>
+              <td><span class="tag gray">{{ $exp->date ? $exp->date->format('Y-m-d') : '—' }}</span></td>
               <td style="font-weight:600; color:var(--ink)">{{ $exp->description }}</td>
-              <td>{{ $exp->account->name }}</td>
-              <td class="num" style="color:var(--neg); font-weight:700;">{{ \App\Support\Money::format($exp->amount) }}</td>
+              <td>
+                <span style="display:inline-flex;align-items:center;gap:4px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;color:var(--accent);"><use href="#i-wallet"/></svg>
+                  {{ $exp->account ? $exp->account->name : '—' }}
+                </span>
+              </td>
+              <td class="num" style="color:var(--neg); font-weight:700;">{{ \App\Support\Money::format($exp->amount) }} ج.م</td>
               <td style="color:var(--mut); font-size:13px">{{ $exp->notes ?: '—' }}</td>
+              @if(auth()->user()->canManage())
+                <td style="text-align:center;">
+                  <form action="{{ route('general_expenses.destroy', $exp) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا المصروف واسترجاع المبلغ للخزنة؟');">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="btn ghost sm" style="color:var(--bad); padding:4px 8px;" title="حذف واسترجاع القيمة">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-trash"/></svg>
+                    </button>
+                  </form>
+                </td>
+              @endif
             </tr>
           @endforeach
         </tbody>
+        <tfoot>
+          <tr style="background:rgba(239,68,68,0.05); font-weight:bold;">
+            <td colspan="3" style="color:var(--neg);">إجمالي المصروفات العامة</td>
+            <td class="num" style="color:var(--neg); font-size:15px;">{{ \App\Support\Money::format($project->projectExpenses->sum('amount')) }} ج.م</td>
+            <td colspan="{{ auth()->user()->canManage() ? 2 : 1 }}"></td>
+          </tr>
+        </tfoot>
       </table>
     </div>
   </div>
@@ -1253,11 +1282,67 @@
   $rptDue = $remaining; // From controller
   $rptCollectedPct = $netClientTotal > 0 ? min(100, round($rptCollected / $netClientTotal * 100)) : 0;
 
-  // دونات: توزيع خامات/مصنعية/عمولات/ربح كنسبة من المشروع
+  // ── تحليل المصروفات العامة للمشروع ──
+  $rptExpenses = $project->projectExpenses->sortByDesc('date')->values();
+  $rptExpensesTotal = (float) $rptExpenses->sum('amount');
+  $rptExpensesCount = $rptExpenses->count();
+
+  $rptExpensesByDesc = $rptExpenses
+    ->groupBy('description')
+    ->map(fn ($g, $desc) => (object) [
+      'desc'   => $desc,
+      'count'  => $g->count(),
+      'amount' => (float) $g->sum('amount'),
+      'pct'    => $rptExpensesTotal > 0 ? round(($g->sum('amount') / $rptExpensesTotal) * 100, 1) : 0,
+    ])
+    ->sortByDesc('amount')->values();
+  $rptMaxExpDesc = $rptExpensesByDesc->max('amount') ?: 1;
+
+  $expColors = ['#ef4444', '#f59e0b', '#10b981', '#6366f1', '#ec4899', '#06b6d4', '#8b5cf6', '#3b82f6', '#14b8a6', '#f97316'];
+  $expCircumference = 2 * M_PI * 40;
+  $expOffsetAcc = 0;
+  $expDonutSlices = $rptExpensesByDesc->map(function ($item, $idx) use ($rptExpensesTotal, $expCircumference, &$expOffsetAcc, $expColors) {
+    $color = $expColors[$idx % count($expColors)];
+    $frac = $rptExpensesTotal > 0 ? ($item->amount / $rptExpensesTotal) : 0;
+    $len  = $frac * $expCircumference;
+    $dash = round($len, 2) . ' ' . round($expCircumference - $len, 2);
+    $offset = round(-$expOffsetAcc, 2);
+    $expOffsetAcc += $len;
+    return (object) [
+      'desc'       => $item->desc,
+      'amount'     => $item->amount,
+      'count'      => $item->count,
+      'pct'        => $item->pct,
+      'color'      => $color,
+      'dash'       => $dash,
+      'dashoffset' => $offset,
+    ];
+  });
+
+  $rptExpensesByAccount = $rptExpenses
+    ->groupBy(fn ($e) => $e->account?->name ?? 'بدون خزنة')
+    ->map(fn ($g, $accName) => (object) [
+      'account' => $accName,
+      'count'   => $g->count(),
+      'amount'  => (float) $g->sum('amount'),
+      'pct'     => $rptExpensesTotal > 0 ? round(($g->sum('amount') / $rptExpensesTotal) * 100, 1) : 0,
+    ])
+    ->sortByDesc('amount')->values();
+  $rptMaxExpAccount = $rptExpensesByAccount->max('amount') ?: 1;
+
+  $highestExpense = $rptExpenses->sortByDesc('amount')->first();
+  $highestExpenseAmount = $highestExpense ? (float) $highestExpense->amount : 0;
+  $highestExpenseDesc = $highestExpense ? $highestExpense->description : 'لا يوجد';
+
+  $expToCostPct = $rptTotalCost > 0 ? round(($rptExpensesTotal / $rptTotalCost) * 100, 1) : 0;
+  $expToProfitPct = ($rptProfit + $rptExpensesTotal) > 0 ? round(($rptExpensesTotal / ($rptProfit + $rptExpensesTotal)) * 100, 1) : 0;
+
+  // دونات: توزيع خامات/مصنعية/عمولات/مصروفات عامة/ربح كنسبة من المشروع
   $donutSlices = collect([
     ['label' => 'خامات', 'value' => $rptMatCost, 'color' => '#f59e0b'],
     ['label' => 'مصنعية', 'value' => $rptLaborCost, 'color' => '#8b5cf6'],
     ['label' => 'عمولات', 'value' => $marketersCost, 'color' => '#ec4899'],
+    ['label' => 'مصروفات عامة', 'value' => $rptExpensesTotal, 'color' => '#ef4444'],
     ['label' => 'ربح', 'value' => max(0, $rptProfit), 'color' => '#16a34a'],
   ])->filter(fn ($s) => $s['value'] > 0);
   $donutTotal = $donutSlices->sum('value') ?: 1;
@@ -1540,6 +1625,200 @@
         <p class="muted">لا يوجد موردون مسجّلون</p>
       @endforelse
     </div>
+  </div>
+
+  {{-- ═══ تحليل المصروفات العامة للمشروع ═══ --}}
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div class="section-label" style="margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+          <span>تحليل المصروفات العامة للمشروع</span>
+          <span class="tag red" style="font-size: 11px; font-weight: normal; background: #fee2e2; color: #ef4444; border-radius: 4px; padding: 2px 8px;">تخصم من الأرباح</span>
+        </div>
+        <p class="muted" style="margin: 4px 0 0; font-size: 13px;">المصروفات النثرية والتشغيلية الخاصة بالمشروع ولا يتحملها العميل</p>
+      </div>
+      @if(auth()->user()->canManage())
+        <button type="button" class="btn sm" onclick="document.getElementById('project-expense-modal').classList.add('open')" style="background: #ef4444; border-color: #ef4444; color: #fff;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><use href="#i-plus"/></svg>
+          إضافة مصروف عام
+        </button>
+      @endif
+    </div>
+
+    @if($rptExpensesCount > 0)
+      {{-- KPI Cards --}}
+      <div class="grid cols-4" style="gap: 20px;">
+        <div class="vstat vstat-red" style="padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+          <div class="top"><span class="label">إجمالي المصروفات العامة</span></div>
+          <div class="val tnum" style="font-size: 22px; margin-top: 8px; color: var(--neg);">{{ \App\Support\Money::format($rptExpensesTotal) }} <small style="font-size: 13px;">ج.م</small></div>
+          <div class="note" style="font-size: 11px; margin-top: 4px; color: var(--ink-3);">مخصومة بالكامل من أرباح المشروع</div>
+        </div>
+        <div class="vstat vstat-blue" style="padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+          <div class="top"><span class="label">عدد حركات الصرف</span></div>
+          <div class="val tnum" style="font-size: 22px; margin-top: 8px;">{{ $rptExpensesCount }} <small style="font-size: 13px;">حركة</small></div>
+          <div class="note" style="font-size: 11px; margin-top: 4px; color: var(--ink-3);">موزعة على {{ $rptExpensesByDesc->count() }} بنود صرف</div>
+        </div>
+        <div class="vstat vstat-amber" style="padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+          <div class="top"><span class="label">أعلى بند صرف</span></div>
+          <div class="val" style="font-size: 18px; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $highestExpenseDesc }}">{{ $highestExpenseDesc }}</div>
+          <div class="note" style="font-size: 11px; margin-top: 4px; color: var(--warn); font-weight: 600;">{{ \App\Support\Money::format($highestExpenseAmount) }} ج.م</div>
+        </div>
+        <div class="vstat vstat-navy" style="padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+          <div class="top"><span class="label">النسبة من التكلفة</span></div>
+          <div class="val tnum" style="font-size: 22px; margin-top: 8px;">{{ $expToCostPct }}%</div>
+          <div class="note" style="font-size: 11px; margin-top: 4px; color: var(--ink-3);">تمثل {{ $expToProfitPct }}% من إجمالي الأرباح</div>
+        </div>
+      </div>
+
+      {{-- Visual Distribution Charts (2 Columns) --}}
+      <div class="grid cols-2" style="gap: 24px; align-items: stretch;">
+        
+        {{-- Donut Chart: By Description --}}
+        <div class="table-card" style="padding: 24px; display: flex; flex-direction: column;">
+          <div class="section-label" style="margin-top:0; margin-bottom: 20px; font-size: 15px;">توزيع المصروفات حسب البيان (الرسم البياني)</div>
+          
+          <div style="display:flex; flex-direction: column; align-items:center; gap:24px; flex: 1; justify-content: center;">
+            <div style="position: relative; width: 150px; height: 150px; display: flex; align-items: center; justify-content: center;">
+              <svg width="150" height="150" viewBox="0 0 100 100" style="transform:rotate(-90deg); filter: drop-shadow(0 4px 8px rgba(0,0,0,0.08));">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="var(--line)" stroke-width="16"/>
+                @foreach($expDonutSlices as $slice)
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="{{ $slice->color }}" stroke-width="16"
+                    stroke-dasharray="{{ $slice->dash }}" stroke-dashoffset="{{ $slice->dashoffset }}" stroke-linecap="butt"/>
+                @endforeach
+              </svg>
+              <div style="position: absolute; text-align: center; pointer-events: none;">
+                <div style="font-size: 11px; color: var(--ink-3); font-weight: 600;">الإجمالي</div>
+                <div class="tnum" style="font-size: 14px; font-weight: 800; color: var(--neg);">{{ \App\Support\Money::format($rptExpensesTotal) }}</div>
+              </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:10px; width: 100%;">
+              @foreach($expDonutSlices as $slice)
+                <div style="display:flex; align-items:center; gap:8px; font-size:13.5px; border-bottom: 1px dashed var(--border); padding-bottom: 8px;">
+                  <span style="width:10px; height:10px; border-radius:3px; background:{{ $slice->color }}; flex-shrink:0;"></span>
+                  <span style="font-weight: 600;">{{ $slice->desc }}</span>
+                  <span class="muted" style="font-size: 12px;">({{ $slice->count }} {{ $slice->count === 1 ? 'حركة' : 'حركات' }})</span>
+                  <span style="margin-inline-start:auto; display:flex; align-items:center; gap:8px;">
+                    <strong class="tnum" style="color: var(--neg);">{{ \App\Support\Money::format($slice->amount) }} ج.م</strong>
+                    <span class="tag gray" style="font-size: 11px; font-weight: 700;">{{ $slice->pct }}%</span>
+                  </span>
+                </div>
+              @endforeach
+            </div>
+          </div>
+        </div>
+
+        {{-- Horizontal Bars: By Account / Treasury --}}
+        <div class="table-card" style="padding: 24px; display: flex; flex-direction: column;">
+          <div class="section-label" style="margin-top:0; margin-bottom: 20px; font-size: 15px;">توزيع المصروفات حسب الخزنة / المحفظة</div>
+          
+          <div style="display: flex; flex-direction: column; gap: 16px; justify-content: center; flex: 1;">
+            @foreach($rptExpensesByAccount as $acc)
+              <div style="padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+                <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+                  <span style="display: flex; align-items: center; gap: 6px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--accent);"><use href="#i-wallet"/></svg>
+                    <strong>{{ $acc->account }}</strong>
+                    <span class="muted" style="font-size: 12px;">({{ $acc->count }} {{ $acc->count === 1 ? 'حركة' : 'حركات' }})</span>
+                  </span>
+                  <span class="muted" style="display: flex; align-items: center; gap: 8px;">
+                    <strong class="tnum" style="color:var(--neg);">{{ \App\Support\Money::format($acc->amount) }} ج.م</strong>
+                    <span class="tag gray" style="font-size: 11px; font-weight: 700;">{{ $acc->pct }}%</span>
+                  </span>
+                </div>
+                <div class="bar-track" style="height: 10px; border-radius: 5px; background: var(--line);">
+                  <div class="bar-fill" style="width:{{ $rptMaxExpAccount > 0 ? round($acc->amount / $rptMaxExpAccount * 100) : 0 }}%; background: #ef4444; border-radius: 5px;"></div>
+                </div>
+              </div>
+            @endforeach
+          </div>
+        </div>
+
+      </div>
+
+      {{-- Detailed Table Card --}}
+      <div class="table-card" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div class="section-label" style="margin: 0; font-size: 15px;">سجل تفاصيل المصروفات العامة للمشروع</div>
+          <span class="muted" style="font-size: 13px;">إجمالي {{ $rptExpensesCount }} مصروف</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>التاريخ</th>
+                <th>البيان / نوع المصروف</th>
+                <th>الخزنة المصروف منها</th>
+                <th class="num">المبلغ</th>
+                <th class="num">النسبة من الإجمالي</th>
+                <th>ملاحظات</th>
+                @if(auth()->user()->canManage())
+                  <th style="text-align:center; width:60px;">حذف</th>
+                @endif
+              </tr>
+            </thead>
+            <tbody>
+              @foreach($rptExpenses as $exp)
+                @php
+                  $expPct = $rptExpensesTotal > 0 ? round(($exp->amount / $rptExpensesTotal) * 100, 1) : 0;
+                @endphp
+                <tr>
+                  <td><span class="tag gray">{{ $exp->date ? $exp->date->format('Y-m-d') : '—' }}</span></td>
+                  <td>
+                    <strong style="color:var(--ink); font-size: 14px;">{{ $exp->description }}</strong>
+                  </td>
+                  <td>
+                    <span style="display: inline-flex; align-items: center; gap: 4px; color: var(--ink-2);">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;color:var(--accent);"><use href="#i-wallet"/></svg>
+                      {{ $exp->account ? $exp->account->name : '—' }}
+                    </span>
+                  </td>
+                  <td class="num" style="color:var(--neg); font-weight:700; font-size: 14.5px;">{{ \App\Support\Money::format($exp->amount) }} ج.م</td>
+                  <td class="num"><span class="tag gray" style="font-weight: 600;">{{ $expPct }}%</span></td>
+                  <td style="color:var(--mut); font-size:13px">{{ $exp->notes ?: '—' }}</td>
+                  @if(auth()->user()->canManage())
+                    <td style="text-align:center;">
+                      <form action="{{ route('general_expenses.destroy', $exp) }}" method="POST" onsubmit="return confirm('هل أنت متأكد من حذف هذا المصروف واسترجاع المبلغ للخزنة؟');">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="btn ghost sm" style="color:var(--bad); padding:4px 8px;" title="حذف المصروف واسترجاع المبلغ">
+                          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-trash"/></svg>
+                        </button>
+                      </form>
+                    </td>
+                  @endif
+                </tr>
+              @endforeach
+            </tbody>
+            <tfoot>
+              <tr style="background: rgba(239, 68, 68, 0.05); font-weight: bold;">
+                <td colspan="3" style="color: var(--neg);">إجمالي المصروفات العامة للمشروع</td>
+                <td class="num" style="color: var(--neg); font-size: 15px;">{{ \App\Support\Money::format($rptExpensesTotal) }} ج.م</td>
+                <td class="num" style="color: var(--neg);">100%</td>
+                <td colspan="{{ auth()->user()->canManage() ? 2 : 1 }}"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    @else
+      <div class="table-card" style="padding: 40px 20px; text-align: center;">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; color: #ef4444; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 28px; height: 28px;"><use href="#i-receipt"/></svg>
+        </div>
+        <h4 style="margin: 0 0 8px; font-size: 16px;">لا توجد مصروفات عامة مسجلة على هذا المشروع</h4>
+        <p class="muted" style="margin: 0 0 20px; font-size: 13px; max-width: 450px; margin-inline: auto;">
+          المصروفات العامة هي المصروفات النثرية أو التشغيلية التي تخصم مباشرة من أرباح المشروع ولا يتحملها العميل في الفاتورة.
+        </p>
+        @if(auth()->user()->canManage())
+          <button type="button" class="btn sm" onclick="document.getElementById('project-expense-modal').classList.add('open')" style="background: #ef4444; border-color: #ef4444; color: #fff;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><use href="#i-plus"/></svg>
+            تسجيل أول مصروف عام
+          </button>
+        @endif
+      </div>
+    @endif
+
   </div>
 
   {{-- ═══ تحليل المرتجعات ═══ --}}
@@ -2025,11 +2304,11 @@ function initFinancialCharts() {
     new Chart(costCtx, {
       type: 'bar',
       data: {
-        labels: ['خامات', 'مصنعيات', 'بنود فرعية', 'عمولات'],
+        labels: ['خامات', 'مصنعيات', 'بنود فرعية', 'عمولات', 'مصروفات عامة'],
         datasets: [{
           label: 'التكلفة',
-          data: [{{ $bandMaterialsCost ?: 0 }}, {{ $laborCost ?: 0 }}, {{ $generalMaterialsCost ?: 0 }}, {{ $marketersCost ?: 0 }}],
-          backgroundColor: ['#4f46e5', '#f59e0b', '#06b6d4', '#8b5cf6'],
+          data: [{{ $bandMaterialsCost ?: 0 }}, {{ $laborCost ?: 0 }}, {{ $generalMaterialsCost ?: 0 }}, {{ $marketersCost ?: 0 }}, {{ $projectExpensesCost ?: 0 }}],
+          backgroundColor: ['#4f46e5', '#f59e0b', '#06b6d4', '#8b5cf6', '#ef4444'],
           borderRadius: 4
         }]
       },

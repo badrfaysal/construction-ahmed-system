@@ -162,6 +162,7 @@ class ProjectController extends Controller
             'transactions',
             'contracts.payments',
             'warranty',
+            'projectExpenses.account',
         ]);
 
         $wallets = Account::selectable();
@@ -178,6 +179,7 @@ class ProjectController extends Controller
         $piecemealLaborCost = $project->materials->whereNotNull('band_worker_id')->sum(fn ($m) => $m->netCost());
         $laborCost = $project->bands->sum('labor_amount') + $piecemealLaborCost;
         $marketersCost = (float) $project->transactions()->where('ref_type', 'marketer_commission')->sum('amount');
+        $projectExpensesCost = (float) $project->transactions()->where('ref_type', 'project_expense')->sum('amount');
         
         $projectMarketers = $project->transactions()
             ->where('ref_type', 'marketer_commission')
@@ -196,7 +198,7 @@ class ProjectController extends Controller
 
         return view('projects.show', compact('project', 'wallets', 'marketers', 
             'collected', 'remaining', 'generalMaterialsCost', 'bandMaterialsCost', 
-            'laborCost', 'marketersCost', 'projectMarketers', 'totalCost'));
+            'laborCost', 'marketersCost', 'projectExpensesCost', 'projectMarketers', 'totalCost'));
     }
 
     // Show edit form
