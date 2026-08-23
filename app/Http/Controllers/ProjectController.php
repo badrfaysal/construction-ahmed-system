@@ -196,9 +196,18 @@ class ProjectController extends Controller
 
         $totalCost = $project->computeTotalCost();
 
+        $historicalExpenses = \App\Models\Expense::select('description')->distinct()->pluck('description')->toArray();
+        $settingsCats = \App\Models\ExpenseCategory::pluck('name')->toArray();
+        $uniqueExpenseDescriptions = collect(array_merge($historicalExpenses, $settingsCats))
+            ->map(fn ($d) => trim($d))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values();
+
         return view('projects.show', compact('project', 'wallets', 'marketers', 
             'collected', 'remaining', 'generalMaterialsCost', 'bandMaterialsCost', 
-            'laborCost', 'marketersCost', 'projectExpensesCost', 'projectMarketers', 'totalCost'));
+            'laborCost', 'marketersCost', 'projectExpensesCost', 'projectMarketers', 'totalCost', 'uniqueExpenseDescriptions'));
     }
 
     // Show edit form

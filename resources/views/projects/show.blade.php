@@ -759,7 +759,21 @@
       <div class="modal-body">
         <div class="field">
           <label>البيان / اسم المصروف <span class="req">*</span></label>
-          <input type="text" name="description" required placeholder="مثال: رسوم تراخيص، نقل عام للمشروع...">
+          <input type="text" name="description" required list="project-expense-descriptions" placeholder="اختر أو اكتب بيان المصروف (فطار، إيجار سيارة...)" autocomplete="off">
+          <datalist id="project-expense-descriptions">
+            @foreach($uniqueExpenseDescriptions ?? [] as $desc)
+              <option value="{{ $desc }}"></option>
+            @endforeach
+          </datalist>
+          @if(isset($uniqueExpenseDescriptions) && $uniqueExpenseDescriptions->isNotEmpty())
+            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
+              @foreach($uniqueExpenseDescriptions->take(6) as $qDesc)
+                <button type="button" class="tag gray" style="cursor:pointer; border:1px solid var(--border); background:var(--bg2); font-size:11.5px; padding:3px 8px; border-radius:4px;" onclick="document.querySelector('#project-expense-modal input[name=description]').value = '{{ $qDesc }}'">
+                  + {{ $qDesc }}
+                </button>
+              @endforeach
+            </div>
+          @endif
         </div>
         <div class="field">
           <label>المبلغ (ج.م) <span class="req">*</span></label>
