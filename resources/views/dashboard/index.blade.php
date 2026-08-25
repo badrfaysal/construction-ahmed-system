@@ -578,7 +578,6 @@
                   </span>
                   آخر الحركات المالية
                 </h4>
-                <a href="{{ route('transactions.index') }}" class="btn ghost sm" style="font-size: 13px; background: #e0f2fe; color: #0284c7; border: none; font-weight: 700; border-radius: 8px;">عرض الكل</a>
               </div>
               <style>
                 .tx-premium {

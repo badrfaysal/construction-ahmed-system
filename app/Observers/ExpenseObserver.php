@@ -7,6 +7,13 @@ use App\Models\Transaction;
 
 class ExpenseObserver
 {
+    public function saving(Expense $expense): void
+    {
+        if (!empty($expense->description)) {
+            $expense->description = \App\Support\ItemNameMatcher::normalizeLetters(trim($expense->description));
+        }
+    }
+
     public function created(Expense $expense): void
     {
         if (is_null($expense->project_id) && !empty($expense->description)) {
