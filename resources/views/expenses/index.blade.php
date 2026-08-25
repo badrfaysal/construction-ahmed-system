@@ -134,13 +134,13 @@ table.exp-tbl { width:100%; border-collapse:collapse; }
 
         <div>
           <label><i class="fa-solid fa-tags"></i> البيان / نوع المصروف <span class="req">*</span></label>
-          <input type="text" name="description" required list="expense-descriptions" placeholder="مثال: إيجار، بوفيه، نقل...">
-          <datalist id="expense-descriptions">
-            @foreach($uniqueDescriptions as $desc)
-              <option value="{{ $desc }}"></option>
+          <select name="description" required>
+            <option value="">— اختر البيان —</option>
+            @foreach($expenseCategories as $desc)
+              <option value="{{ $desc }}">{{ $desc }}</option>
             @endforeach
-          </datalist>
-          <div class="hint"><i class="fa-solid fa-circle-info"></i> استخدم نفس المسميات دائماً لضمان دقة التوزيع والإحصائيات.</div>
+          </select>
+          <div class="hint"><i class="fa-solid fa-circle-info"></i> يمكن إضافة بنود جديدة من صفحة الإعدادات.</div>
         </div>
 
         <div>

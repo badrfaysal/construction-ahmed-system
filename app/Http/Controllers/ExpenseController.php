@@ -50,8 +50,8 @@ class ExpenseController extends Controller
         $leastSpentAmount = $distribution->last() ?? 0;
 
         $historical = Expense::select('description')->distinct()->pluck('description')->toArray();
-        $settingsCats = \App\Models\ExpenseCategory::pluck('name')->toArray();
-        $uniqueDescriptions = collect(array_merge($historical, $settingsCats))
+        $expenseCategories = \App\Models\ExpenseCategory::pluck('name')->toArray();
+        $uniqueDescriptions = collect(array_merge($historical, $expenseCategories))
             ->map(fn($d) => trim($d))
             ->filter()
             ->unique()
@@ -61,7 +61,7 @@ class ExpenseController extends Controller
 
         return view('expenses.index', compact(
             'expenses', 'totalSpent', 'distribution', 'mostSpentCat', 'mostSpentAmount',
-            'leastSpentCat', 'leastSpentAmount', 'uniqueDescriptions', 'wallets', 'range'
+            'leastSpentCat', 'leastSpentAmount', 'uniqueDescriptions', 'expenseCategories', 'wallets', 'range'
         ));
     }
 

@@ -197,8 +197,8 @@ class ProjectController extends Controller
         $totalCost = $project->computeTotalCost();
 
         $historicalExpenses = \App\Models\Expense::select('description')->distinct()->pluck('description')->toArray();
-        $settingsCats = \App\Models\ExpenseCategory::pluck('name')->toArray();
-        $uniqueExpenseDescriptions = collect(array_merge($historicalExpenses, $settingsCats))
+        $expenseCategories = \App\Models\ExpenseCategory::pluck('name')->toArray();
+        $uniqueExpenseDescriptions = collect(array_merge($historicalExpenses, $expenseCategories))
             ->map(fn ($d) => trim($d))
             ->filter()
             ->unique()
@@ -207,7 +207,7 @@ class ProjectController extends Controller
 
         return view('projects.show', compact('project', 'wallets', 'marketers', 
             'collected', 'remaining', 'generalMaterialsCost', 'bandMaterialsCost', 
-            'laborCost', 'marketersCost', 'projectExpensesCost', 'projectMarketers', 'totalCost', 'uniqueExpenseDescriptions'));
+            'laborCost', 'marketersCost', 'projectExpensesCost', 'projectMarketers', 'totalCost', 'uniqueExpenseDescriptions', 'expenseCategories'));
     }
 
     // Show edit form
