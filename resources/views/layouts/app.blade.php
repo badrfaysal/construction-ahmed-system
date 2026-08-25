@@ -481,6 +481,12 @@
     if (!(form instanceof HTMLFormElement)) return;
     if (form.hasAttribute('data-no-loading')) return;
 
+    if (form.dataset.submitting) {
+      e.preventDefault();
+      return;
+    }
+    form.dataset.submitting = '1';
+
     if (e.submitter && e.submitter.name) {
       const hidden = document.createElement('input');
       hidden.type = 'hidden';
@@ -490,9 +496,11 @@
     }
 
     show();
-    form.querySelectorAll('button[type="submit"], button:not([type])').forEach(function (btn) {
-      if (!btn.disabled) btn.disabled = true;
-    });
+    setTimeout(function() {
+      form.querySelectorAll('button[type="submit"], button:not([type])').forEach(function (btn) {
+        if (!btn.disabled) btn.disabled = true;
+      });
+    }, 0);
   });
 
   document.addEventListener('click', function (e) {
@@ -508,7 +516,10 @@
 
   // رجوع/تقدّم من الكاش (bfcache) بيسيب الصفحة زي ما كانت وقت الخروج منها —
   // لازم نقفل الشاشة تاني وإلا هتفضل عالقة لو المستخدم رجع بزرار المتصفح
-  window.addEventListener('pageshow', function () { hide(); });
+  window.addEventListener('pageshow', function () { 
+    hide(); 
+    document.querySelectorAll('form').forEach(f => delete f.dataset.submitting);
+  });
 })();
 </script>
 
