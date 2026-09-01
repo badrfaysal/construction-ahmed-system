@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Material;
 use App\Models\Supplier;
-use App\Support\ItemNameMatcher;
 use Illuminate\Http\Request;
 
 class SupplierController extends Controller
@@ -78,19 +77,24 @@ class SupplierController extends Controller
             ->with('success', 'تم إضافة المورد.');
     }
 
-    // Compare prices across suppliers for the same material item —
+    // Compare prices across suppliers for the exact same material item
     // helps pick the cheapest supplier next time that item is needed
-    public function compare()
+    public function compare(Request $request)
     {
-        $materials = Material::with('supplier')->whereNotNull('supplier_id')->get();
+        $search = $request->query('q');
 
-        // Fuzzy-grouped by item name so "جردل بوية" / "جردل البويه" compare
-        // together instead of being treated as separate items (ItemNameMatcher)
-        $groups = ItemNameMatcher::group($materials, fn ($m) => $m->item);
+        $query = Material::with('supplier')->whereNotNull('supplier_id');
 
-        $comparison = collect($groups)
-            ->map(function ($g) {
-                $bySupplier = collect($g['items'])->groupBy('supplier_id')
+        if ($search) {
+            $query->where('item', 'like', '%' . $search . '%');
+        }
+
+        $materials = $query->get();
+
+        // Exact grouping by item name
+        $comparison = $materials->groupBy('item')
+            ->map(function ($items, $itemName) {
+                $bySupplier = $items->groupBy('supplier_id')
                     ->map(fn ($group) => (object) [
                         'supplier'  => $group->first()->supplier,
                         'avg_price' => $group->avg('unit_price'),
@@ -99,13 +103,20 @@ class SupplierController extends Controller
                     ->sortBy('avg_price')
                     ->values();
 
-                return (object) ['item' => $g['canonical'], 'variants' => $g['variants'], 'suppliers' => $bySupplier];
+                return (object) ['item' => $itemName, 'suppliers' => $bySupplier];
             })
             // Only items quoted by more than one supplier are worth comparing
             ->filter(fn ($row) => $row->suppliers->count() > 1)
             ->values();
 
-        return view('suppliers.compare', compact('comparison'));
+        // Get autocomplete suggestions (unique items that have more than one supplier)
+        $autocompleteItems = Material::whereNotNull('supplier_id')
+            ->select('item')
+            ->groupBy('item')
+            ->havingRaw('COUNT(DISTINCT supplier_id) > 1')
+            ->pluck('item');
+
+        return view('suppliers.compare', compact('comparison', 'search', 'autocompleteItems'));
     }
 
     // Show edit form

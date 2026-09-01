@@ -8,14 +8,26 @@
   <a href="{{ route('suppliers.index') }}" class="btn ghost">رجوع</a>
 </div>
 
+<form method="GET" action="{{ route('suppliers.compare') }}" class="filter-bar" style="margin-bottom: 20px;">
+  <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+    <input type="text" name="q" value="{{ $search ?? '' }}" list="compare-items" placeholder="ابحث عن خامة معينة..." style="flex:1; min-width: 200px; padding:8px 12px; border:1px solid var(--ln); border-radius:6px; background:var(--surface);">
+    <datalist id="compare-items">
+      @foreach($autocompleteItems as $item)
+        <option value="{{ $item }}"></option>
+      @endforeach
+    </datalist>
+    <button type="submit" class="btn primary">بحث</button>
+    @if(request('q'))
+      <a href="{{ route('suppliers.compare') }}" class="btn ghost">إلغاء</a>
+    @endif
+  </div>
+</form>
+
 @if($comparison->count())
   <div class="grid cols-2">
     @foreach($comparison as $row)
       <div class="card card-pad">
-        <div class="section-label" style="margin-top:0">{{ $row->item }}</div>
-        @if(count($row->variants) > 1)
-          <p class="muted" style="font-size:11px;margin:-8px 0 10px">صيغ مطابقة: {{ implode('، ', array_diff($row->variants, [$row->item])) }}</p>
-        @endif
+        <div class="section-label" style="margin-top:0; margin-bottom: 12px;">{{ $row->item }}</div>
         @foreach($row->suppliers as $i => $s)
           <div class="kv">
             <span class="k">
