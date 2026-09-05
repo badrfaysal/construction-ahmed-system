@@ -132,6 +132,7 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::post('/receivables/{project}/pay', [ReceivablesController::class, 'pay'])->name('receivables.pay');
     Route::post('/receivables/manual/party/pay', [ReceivablesController::class, 'payManualParty'])->name('receivables.manual.party.pay');
     Route::post('/receivables/manual/{receivable}/pay', [ReceivablesController::class, 'payManual'])->name('receivables.manual.pay');
+    Route::post('/receivables/manual/{receivable}/discount', [ReceivablesController::class, 'discountManual'])->name('receivables.manual.discount');
     // منح خصم على إجمالي المشروع
     Route::post('/projects/{project}/discount', \App\Http\Controllers\ProjectDiscountController::class)->name('projects.discount');
 

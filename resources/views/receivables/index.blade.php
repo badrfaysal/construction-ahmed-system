@@ -633,6 +633,7 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
                       </button>
                       <button type="button" style="background: #fffbeb; color: #d97706; border: none; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s;" onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fffbeb'" onclick="
                          document.getElementById('modal-{{ $partyKey }}').style.display='none';
+                         openManualRecvDiscModal({{ $recv->id }}, {{ $recv->remaining() }}, '{{ addslashes($recv->party . ($recv->description ? ' - ' . $recv->description : '')) }}')
                       ">
                         <i class="fa fa-percent"></i> خصم
                       </button>
@@ -1061,6 +1062,35 @@ table.rv-hist { width:100%; border-collapse:collapse; font-size:.78rem; }
   </div>
 </div>
 
+{{-- Discount Manual Receivable Modal --}}
+<div class="rv-modal" id="manual-recv-disc-modal" onclick="if(event.target===this) closeManualRecvDiscModal()">
+  <div class="rv-card" style="max-width:460px">
+    <div class="rv-mhead">
+      <div class="nm"><i class="fa fa-percent"></i> منح خصم (سلفة / مستحق)</div>
+      <button type="button" class="rv-x" onclick="closeManualRecvDiscModal()">×</button>
+    </div>
+    <div class="rv-mbody" style="padding:16px 18px">
+      <p id="manual-recv-disc-desc" class="muted" style="margin:0 0 20px;font-size:.85rem;color:var(--mut)"></p>
+      <form id="manual-recv-disc-form" method="POST" onsubmit="const b=this.querySelector('button[type=submit]'); setTimeout(() => { b.style.pointerEvents='none'; b.style.opacity='0.8'; b.style.color='#fff'; b.style.backgroundColor='#0f172a'; b.style.borderColor='#0f172a'; b.innerHTML='<i class=\'fa fa-spinner fa-spin\'></i> جاري التنفيذ...'; }, 10);">
+        @csrf
+        <div class="rv-pay" style="border:none;padding:0;background:none">
+          <label style="margin-bottom:8px;display:block">مبلغ الخصم (ج.م) *</label>
+          <input type="number" name="discount" id="manual-recv-disc-amount" min="0.01" step="0.01" required>
+          <small class="muted" id="manual-recv-disc-max-note" style="display:block;margin-top:4px"></small>
+          
+          <label style="margin-top:12px">تاريخ الخصم *</label>
+          <input type="date" name="date" value="{{ today()->toDateString() }}" required>
+          
+          <label style="margin-top:12px">ملاحظات / سبب الخصم</label>
+          <input type="text" name="notes" placeholder="اختياري">
+          
+          <button type="submit" style="margin-top:20px; background:#0f172a; color:#fff; padding:10px 20px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; width:100%; display:block;"><i class="fa fa-percent"></i> تطبيق الخصم</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 {{-- Pay Manual Receivable Party (Bulk) Modal --}}
 <div class="rv-modal" id="manual-party-pay-modal" onclick="if(event.target===this) closePartyBulkPay()">
   <div class="rv-card" style="max-width:460px">
@@ -1116,6 +1146,25 @@ function openManualRecvPayModal(id, remaining, desc) {
   
   document.getElementById('manual-recv-pay-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+function openManualRecvDiscModal(id, remaining, desc) {
+  document.getElementById('manual-recv-disc-desc').textContent = desc;
+  document.getElementById('manual-recv-disc-amount').max = remaining;
+  document.getElementById('manual-recv-disc-amount').value = '';
+  document.getElementById('manual-recv-disc-max-note').textContent = 'الحد الأقصى: ' + remaining.toLocaleString('ar-EG') + ' ج.م';
+  document.getElementById('manual-recv-disc-form').action = '/receivables/manual/' + id + '/discount';
+  
+  const submitBtn = document.querySelector('#manual-recv-disc-form button[type=submit]');
+  if(submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fa fa-percent"></i> تطبيق الخصم'; }
+
+  document.getElementById('manual-recv-disc-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeManualRecvDiscModal() {
+  document.getElementById('manual-recv-disc-modal').classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 function openPartyBulkPay(partyName, remaining, mode, partyKey) {

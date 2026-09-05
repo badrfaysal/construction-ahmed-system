@@ -156,6 +156,45 @@ class ReceivablesController extends Controller
         return back()->with('success', 'تم تسجيل التحصيل بنجاح.');
     }
 
+    public function discountManual(Request $request, \App\Models\ManualDebt $receivable)
+    {
+        $data = $request->validate([
+            'discount' => ['required', 'numeric', 'min:0.01', 'max:' . $receivable->remaining()],
+            'date'     => ['required', 'date'],
+            'notes'    => ['nullable', 'string', 'max:255'],
+        ]);
+
+        DB::transaction(function () use ($receivable, $data) {
+            $discount = (float) $data['discount'];
+            $newTotal = max(0, (float) $receivable->total_amount - $discount);
+            $newStatus = (float) $receivable->paid_amount >= $newTotal ? 'paid' : 'partial';
+
+            $notes = $data['notes'] ? " - {$data['notes']}" : "";
+            $receivable->update([
+                'total_amount' => $newTotal,
+                'status'       => $newStatus,
+                'description'  => $receivable->description . " (تم خصم {$discount} ج.م{$notes})"
+            ]);
+
+            // تسجيل حركة توثيقية كخصم
+            \App\Models\Transaction::create([
+                'project_id'  => null,
+                'account_id'  => null, // لا يوجد تأثير نقدي
+                'direction'   => 'in',
+                'type'        => 'discount',
+                'party'       => $receivable->party,
+                'amount'      => 0, // المبلغ النقدي 0
+                'discount'    => $discount,
+                'date'        => $data['date'],
+                'description' => 'خصم من مستحق يدوي: ' . $receivable->party . $notes,
+                'ref_type'    => 'manual_receivable_discount',
+                'ref_id'      => $receivable->id,
+            ]);
+        });
+
+        return back()->with('success', 'تم تطبيق الخصم بنجاح وتقليل إجمالي المستحق.');
+    }
+
     // تسجيل تحصيل مباشر من العميل على مشروع (دفعة جزئية أو سداد كامل للمتبقي).
     // لو المشروع معموله عقد تقسيط، عقد التقسيط بيفضل شغال لوحده (يتحصّل من
     // صفحة الأقساط) — لكن أي فوترة جديدة حصلت بعد العقد (خامة/بند إضافي) بتبقى
