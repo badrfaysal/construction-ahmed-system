@@ -709,5 +709,26 @@
 </script>
 
 @stack('scripts')
+
+<script>
+  // كود عشوائي لمنع تكرار الإرسال مرتين لنفس العملية
+  document.addEventListener('submit', function (e) {
+    const form = e.target;
+    if (form && form instanceof HTMLFormElement) {
+        const method = (form.getAttribute('method') || '').toUpperCase();
+        const hasMethodOverride = form.querySelector('input[name="_method"]');
+        if (method === 'POST' || hasMethodOverride) {
+            if (!form.querySelector('input[name="_transaction_code"]')) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = '_transaction_code';
+                // نولد كود عشوائي فريد لكل محاولة إرسال
+                input.value = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+                form.appendChild(input);
+            }
+        }
+    }
+  });
+</script>
 </body>
 </html>

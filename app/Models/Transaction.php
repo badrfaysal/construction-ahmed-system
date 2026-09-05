@@ -15,8 +15,28 @@ class Transaction extends Model
 
     protected $fillable = [
         'project_id', 'band_id', 'account_id', 'direction', 'type',
-        'party', 'amount', 'discount', 'date', 'description', 'ref_type', 'ref_id',
+        'party', 'amount', 'discount', 'date', 'description', 'ref_type', 'ref_id', 'transaction_code'
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($transaction) {
+            $code = request()->input('_transaction_code');
+            if ($code) {
+                $exists = static::where('transaction_code', $code)
+                                ->where('amount', $transaction->amount)
+                                ->exists();
+                if ($exists) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'amount' => 'تم التسجيل مسبقاً (العملية مكررة)'
+                    ]);
+                }
+                $transaction->transaction_code = $code;
+            } else {
+                $transaction->transaction_code = \Illuminate\Support\Str::random(10);
+            }
+        });
+    }
 
     // المحفظة اللي الحركة اتحرّكت منها/عليها (من جدول accounts) — للعرض
     public function account(): BelongsTo
