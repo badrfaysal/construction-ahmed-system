@@ -718,14 +718,15 @@
         const method = (form.getAttribute('method') || '').toUpperCase();
         const hasMethodOverride = form.querySelector('input[name="_method"]');
         if (method === 'POST' || hasMethodOverride) {
-            if (!form.querySelector('input[name="_transaction_code"]')) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = '_transaction_code';
-                // نولد كود عشوائي فريد لكل محاولة إرسال
-                input.value = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
-                form.appendChild(input);
+            let codeInput = form.querySelector('input[name="_transaction_code"]');
+            if (!codeInput) {
+                codeInput = document.createElement('input');
+                codeInput.type = 'hidden';
+                codeInput.name = '_transaction_code';
+                form.appendChild(codeInput);
             }
+            // نولد كود عشوائي فريد لكل محاولة إرسال
+            codeInput.value = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
         }
     }
   });

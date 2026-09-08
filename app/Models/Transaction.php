@@ -25,6 +25,8 @@ class Transaction extends Model
             if ($code) {
                 $exists = static::where('transaction_code', $code)
                                 ->where('amount', $transaction->amount)
+                                ->where('direction', $transaction->direction)
+                                ->where('account_id', $transaction->account_id)
                                 ->exists();
                 if ($exists) {
                     throw \Illuminate\Validation\ValidationException::withMessages([
