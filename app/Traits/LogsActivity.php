@@ -7,13 +7,11 @@ use Illuminate\Support\Facades\Auth;
 
 trait LogsActivity
 {
-    protected static $batchId = null;
-
     public static function getBatchId()
     {
-        if (self::$batchId === null) {
+        if (!app()->has('activity_batch_id')) {
             $batchId = (string) \Illuminate\Support\Str::uuid();
-            self::$batchId = $batchId;
+            app()->instance('activity_batch_id', $batchId);
             
             register_shutdown_function(function () use ($batchId) {
                 try {
@@ -107,7 +105,7 @@ trait LogsActivity
                 }
             });
         }
-        return self::$batchId;
+        return app('activity_batch_id');
     }
 
     public static function bootLogsActivity()
