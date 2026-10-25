@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('title')->nullable();
             $table->string('work_type')->default('both');
-            $table->decimal('global_height', 8, 2)->default(2.8);
+            $table->decimal('global_height', 8, 4)->default(2.8);
             $table->json('spaces')->nullable();
             $table->decimal('total_paints', 10, 2)->default(0);
             $table->decimal('total_floor_ceramics', 10, 2)->default(0);

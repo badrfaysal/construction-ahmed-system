@@ -123,7 +123,7 @@
       </div>
       <div class="card" style="border-top: 4px solid #38bdf8;">
         <label for="globalHeight" class="custom-label">ارتفاع السقف (متر)</label>
-        <input type="number" name="global_height" id="globalHeight" class="space-input" value="" placeholder="مثال: 2.8" step="0.1" min="1" oninput="calculateAll()">
+        <input type="number" name="global_height" id="globalHeight" class="space-input" value="" placeholder="مثال: 2.8" step="any" min="0" oninput="calculateAll()">
         <input type="hidden" name="work_type" value="both">
       </div>
     </div>
@@ -275,13 +275,13 @@
           <option value="bath" ${defaultType === 'bath' ? 'selected' : ''}>حمام / مطبخ</option>
         </select>
       </td>
-      <td><input type="number" class="space-input inp-length" value="" step="0.1" min="0" oninput="calculateAll()"></td>
-      <td><input type="number" class="space-input inp-width" value="" step="0.1" min="0" oninput="calculateAll()"></td>
+      <td><input type="number" class="space-input inp-length" value="" step="any" min="0" oninput="calculateAll()"></td>
+      <td><input type="number" class="space-input inp-width" value="" step="any" min="0" oninput="calculateAll()"></td>
       <td style="display: none;">
         <div class="balcony-options-container" id="balcony-opt-${rowCount}" style="display: none;">
         </div>
       </td>
-      <td><input type="number" class="space-input inp-deduction" value="" step="0.1" min="0" oninput="calculateAll()" placeholder="خصم م²"></td>
+      <td><input type="number" class="space-input inp-deduction" value="" step="any" min="0" oninput="calculateAll()" placeholder="خصم م²"></td>
       <td class="row-result" style="font-size: 0.9rem; color: #0ea5e9; font-weight:700">-</td>
       <td><button type="button" class="btn danger sm" onclick="removeRow('row-${rowCount}')">حذف</button></td>
     `;
@@ -326,12 +326,12 @@
       if (type === 'bath') {
         totalFloorCeramics += floorArea;
         totalWallCeramics += wallArea;
-        rowText = `أرضية: ${floorArea.toFixed(1)}م² | حوائط: ${wallArea.toFixed(1)}م²`;
+        rowText = `أرضية: ${floorArea.toFixed(2)}م² | حوائط: ${wallArea.toFixed(2)}م²`;
       } else {
         const ceilingArea = floorArea; // السقف = الطول × العرض
         totalPaints += wallArea; // حوائط الغرف فقط
         totalFloorCeramics += floorArea; // الارضيات = الاسقف
-        rowText = `حوائط: ${wallArea.toFixed(1)}م² | سقف: ${ceilingArea.toFixed(1)}م² | أرضية: ${floorArea.toFixed(1)}م²`;
+        rowText = `حوائط: ${wallArea.toFixed(2)}م² | سقف: ${ceilingArea.toFixed(2)}م² | أرضية: ${floorArea.toFixed(2)}م²`;
       }
 
       resultCell.innerText = rowText;
