@@ -71,7 +71,7 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::resource('clients', ClientController::class)->except(['destroy']);
 
     // Wallets (المحافظ)
-    Route::resource('wallets', AccountController::class)->except(['show']);
+    Route::resource('wallets', WalletController::class)->except(['show']);
 
     // Marketers (المسوقين)
     Route::resource('marketers', MarketerController::class)->only(['index', 'store', 'destroy']);
@@ -94,6 +94,8 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     // Material Invoices
     Route::get('/material-invoices', [\App\Http\Controllers\MaterialInvoiceController::class, 'index'])->name('material_invoices.index');
     Route::get('/material-invoices/{invoice}', [\App\Http\Controllers\MaterialInvoiceController::class, 'show'])->name('material_invoices.show');
+    Route::get('/material-invoices/{invoice}/edit', [\App\Http\Controllers\MaterialInvoiceController::class, 'edit'])->name('material_invoices.edit');
+    Route::put('/material-invoices/{invoice}', [\App\Http\Controllers\MaterialInvoiceController::class, 'update'])->name('material_invoices.update');
     Route::delete('/material-invoices/{invoice}', [\App\Http\Controllers\MaterialInvoiceController::class, 'destroy'])->name('material_invoices.destroy');
 
     // General Expenses (المصروفات العامة)

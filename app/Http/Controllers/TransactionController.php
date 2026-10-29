@@ -124,6 +124,12 @@ class TransactionController extends Controller
         $data = $request->validate(['current_password' => ['required', 'string']]);
         $this->verifyAdminPassword($data['current_password']);
 
+        if (in_array($transaction->ref_type, ['material', 'material_invoice'])) {
+            throw ValidationException::withMessages([
+                'current_password' => 'لا يمكن حذف أو عكس شراء الخامات من سجل الحركات أو الرادار. يتم حذف وتعديل مشتريات الخامات فقط من شاشة فواتير الشراء.',
+            ]);
+        }
+
         DB::transaction(function () use ($transaction) {
             switch ($transaction->ref_type) {
                 case 'expense':

@@ -103,11 +103,24 @@
             <td class="num" style="color:{{ $statusColor }}">
               {{ \App\Support\Money::format($remaining) }}
             </td>
-            <td class="no-print" style="text-align:left">
-              <a href="{{ route('material_invoices.show', $inv->id) }}" class="btn sm" style="background:linear-gradient(135deg, #1e293b, #0f172a); color:#fff; border-radius:8px; padding:6px 14px; font-size:0.8rem; display:inline-flex; align-items:center; gap:6px; transition:all 0.3s; border:none; box-shadow:0 2px 4px rgba(0,0,0,0.05);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(15, 23, 42, 0.2)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)';">
-                <span>عرض الفاتورة</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(180deg)"><use href="#i-arrow"/></svg>
-              </a>
+            <td class="no-print" style="text-align:left; white-space:nowrap;">
+              <div style="display:inline-flex; align-items:center; gap:6px;">
+                <a href="{{ route('material_invoices.show', $inv->id) }}" class="btn sm ghost" title="عرض الفاتورة">
+                  <span>عرض</span>
+                </a>
+                @if(auth()->user()->isAdmin())
+                  <a href="{{ route('material_invoices.edit', $inv->id) }}" class="btn sm primary" title="تعديل الفاتورة">
+                    <span>تعديل</span>
+                  </a>
+                  <form method="POST" action="{{ route('material_invoices.destroy', $inv->id) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه الفاتورة بالكامل والتراجع عن كافة التكاليف والديون المتعلقة بها؟')" style="display:inline-block; margin:0;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn sm danger" title="حذف الفاتورة" style="padding:6px 10px;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-trash"/></svg>
+                    </button>
+                  </form>
+                @endif
+              </div>
             </td>
           </tr>
         @empty

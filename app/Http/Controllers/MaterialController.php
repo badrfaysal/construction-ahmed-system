@@ -516,6 +516,12 @@ class MaterialController extends Controller
             throw ValidationException::withMessages(['current_password' => 'كلمة مرور المشرف غير صحيحة.']);
         }
 
+        if ($material->invoice_id) {
+            throw ValidationException::withMessages([
+                'current_password' => 'هذا الصنف مرتبط بفاتورة شراء. يتم حذف أو تعديل مشتريات الخامات من شاشة فواتير الشراء فقط.',
+            ]);
+        }
+
         $projectId = $material->project_id;
         $invoice = $material->invoice;
         $project = $material->project;

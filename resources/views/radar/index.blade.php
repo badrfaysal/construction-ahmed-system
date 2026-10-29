@@ -525,10 +525,14 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-tool"/></svg>
                   </button>
                 @endif
-                <button type="button" class="btn ghost sm danger" title="حذف وعكس الحركة"
-                  onclick="openDeleteModal('/transactions/{{ $log->transaction_id }}', '{{ addslashes($meta['label']) }}', '{{ \App\Support\Money::format($log->amount) }}', {{ $isSafe ? 'false' : 'true' }})">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
-                </button>
+                @if(!in_array($log->ref_type, ['material', 'material_invoice']))
+                  <button type="button" class="btn ghost sm danger" title="حذف وعكس الحركة"
+                    onclick="openDeleteModal('/transactions/{{ $log->transaction_id }}', '{{ addslashes($meta['label']) }}', '{{ \App\Support\Money::format($log->amount) }}', {{ $isSafe ? 'false' : 'true' }})">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-trash"/></svg>
+                  </button>
+                @else
+                  <a href="{{ route('material_invoices.index') }}" class="tag sm" style="font-size:11px; text-decoration:none;" title="إلغاء وتعديل الخامات من شاشة فواتير الشراء">فواتير الشراء</a>
+                @endif
               </div>
             @elseif($log->transaction_id === null && $log->ref_type === 'asset' && $log->action !== 'deleted' && in_array($log->type, ['إهلاك أصل', 'شراء أصل (دفتري)']))
               <div style="display:flex;gap:4px">

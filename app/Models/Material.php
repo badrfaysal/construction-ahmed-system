@@ -109,15 +109,36 @@ class Material extends Model
         return $this->grossCost();
     }
 
-    // Fraction of this purchase that was actually paid in cash at purchase
-    // time (1 for a fully-paid buy, paid_amount/gross for partial, 0 for a
-    // fully-deferred one) — used to work out how much of a return is a cash
-    // refund vs a reduction of what we still owe the supplier.
+    // Fraction of this purchase that was actually paid in cash
+    // (1 for a fully-paid buy, paid_amount/gross for partial, 0 for an unpaid deferred one)
+    // Checks actual supplier debt remaining to account for subsequent debt payments.
     public function paidRatio(): float
     {
         $gross = $this->grossCost();
         if ($gross <= 0) {
             return 0.0;
+        }
+
+        // If part of an invoice, check invoice debt
+        if ($this->invoice_id) {
+            $debt = SupplierDebt::where('invoice_id', $this->invoice_id)->first();
+            if ($debt) {
+                $remaining = max(0.0, (float) $debt->remaining());
+                $inv = $this->invoice;
+                $invTotal = $inv ? (float) $inv->total_amount : $gross;
+                if ($invTotal <= 0) return 1.0;
+                $paid = max(0.0, $invTotal - $remaining);
+                return min(1.0, $paid / $invTotal);
+            }
+            return 1.0;
+        }
+
+        // Standalone material
+        $debt = SupplierDebt::where('material_id', $this->id)->first();
+        if ($debt) {
+            $remaining = max(0.0, (float) $debt->remaining());
+            $paid = max(0.0, $gross - $remaining);
+            return min(1.0, $paid / $gross);
         }
 
         return match ($this->payment_status ?? 'paid') {

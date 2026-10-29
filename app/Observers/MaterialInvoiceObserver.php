@@ -75,11 +75,13 @@ class MaterialInvoiceObserver
 
         if ($debtAmount > 0) {
             if ($debt) {
+                $newStatus = $debtAmount <= (float)$debt->paid_amount + 0.009 ? 'paid' : ((float)$debt->paid_amount > 0 ? 'partial' : 'pending');
                 $debt->update([
                     'project_id'   => $invoice->project_id,
                     'supplier_id'  => $invoice->supplier_id,
                     'description'  => $desc,
                     'total_amount' => $debtAmount,
+                    'status'       => $newStatus,
                 ]);
             } else {
                 SupplierDebt::create([
@@ -95,12 +97,14 @@ class MaterialInvoiceObserver
         } else {
             // No debt remaining for this invoice
             if ($debt) {
-                // Reverse any manual payments made on this debt before deleting it
-                $txs = Transaction::where('ref_type', 'debt')->where('ref_id', $debt->id)->get();
-                foreach ($txs as $tx) {
-                    $tx->delete(); // Refunds the wallet
+                if ((float) $debt->paid_amount > 0) {
+                    $debt->update([
+                        'total_amount' => $debt->paid_amount,
+                        'status'       => 'paid',
+                    ]);
+                } else {
+                    $debt->delete();
                 }
-                $debt->delete();
             }
         }
     }

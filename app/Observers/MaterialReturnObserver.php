@@ -14,25 +14,34 @@ use App\Models\Transaction;
 // and the wallet stays in lockstep.
 class MaterialReturnObserver
 {
-    // Adding a return → refund the paid part to the wallet, drop the rest of
-    // the debt. لو رجّعنا بسعر أقل من الشراء، الاسترداد والخصم من الدين
-    // بيتحسبوا على سعر المرتجع الفعلي (مش سعر الشراء) — والفرق بيبقى خسارة
-    // محقّقة (شايف MaterialReturn::loss()، بتتعرض في الواجهة بس مش حركة مالية).
+    // Adding a return → refund the paid part to the wallet, drop the rest of the debt.
     public function created(MaterialReturn $return): void
     {
-        $material = $return->material()->with('supplier')->first();
+        $material = $return->material()->with(['supplier', 'invoice'])->first();
         if (! $material) {
             return;
         }
 
-        $paidRatio    = $material->paidRatio();
-        $returnPrice  = $return->effectivePrice();
-        $cashRefund = round($return->qty * $returnPrice * $paidRatio, 2);
-        $debtDrop   = round($return->qty * $returnPrice * (1 - $paidRatio), 2);
+        $debt = $material->invoice_id
+            ? SupplierDebt::where('invoice_id', $material->invoice_id)->first()
+            : SupplierDebt::where('material_id', $material->id)->first();
+
+        $debtRemaining = $debt ? max(0.0, (float) $debt->remaining()) : 0.0;
+        $returnPrice   = $return->effectivePrice();
+        $returnTotal   = round((float) $return->qty * (float) $returnPrice, 2);
+
+        // First reduce unpaid debt if any exists; anything beyond that is cash refund to wallet
+        $debtDrop   = min($debtRemaining, $returnTotal);
+        $cashRefund = round($returnTotal - $debtDrop, 2);
+
+        $accountId = $material->account_id 
+            ?? $material->invoice?->account_id 
+            ?? \App\Models\Account::WALLET_ID;
 
         Transaction::create([
             'project_id'  => $material->project_id,
             'band_id'     => $material->band_id,
+            'account_id'  => $accountId,
             'direction'   => 'in',
             'type'        => 'مرتجع خامات',
             'party'       => $material->supplier?->name ?? $material->item,
@@ -56,14 +65,19 @@ class MaterialReturnObserver
     // the debt that the return had cancelled.
     public function deleted(MaterialReturn $return): void
     {
-        Transaction::where('ref_type', 'return')->where('ref_id', $return->id)->first()?->delete();
+        $tx = Transaction::where('ref_type', 'return')->where('ref_id', $return->id)->first();
+        $cashRefunded = $tx ? (float) $tx->amount : 0.0;
+        $tx?->delete();
 
         $material = $return->material()->first();
         if (! $material) {
             return;
         }
 
-        $debtDrop = round($return->qty * $return->effectivePrice() * (1 - $material->paidRatio()), 2);
+        $returnTotal = round((float) $return->qty * (float) $return->effectivePrice(), 2);
+        // The debt dropped was whatever wasn't refunded in cash
+        $debtDrop = max(0.0, round($returnTotal - $cashRefunded, 2));
+
         if ($debtDrop > 0) {
             $this->adjustDebt($material->id, $debtDrop);
         }
@@ -98,6 +112,11 @@ class MaterialReturnObserver
             return;
         }
 
-        $debt->update(['total_amount' => $newTotal]);
+        $newStatus = $newTotal <= (float) $debt->paid_amount + 0.009 ? 'paid' : ((float) $debt->paid_amount > 0 ? 'partial' : 'pending');
+
+        $debt->update([
+            'total_amount' => $newTotal,
+            'status'       => $newStatus,
+        ]);
     }
 }

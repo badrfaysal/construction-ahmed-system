@@ -518,7 +518,7 @@
                 <a href="{{ route('materials.edit', $m->id) }}" class="btn ghost sm" title="تعديل">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                 </a>
-                @if(auth()->user()->isAdmin())
+                @if(auth()->user()->isAdmin() && !$m->invoice_id)
                   <button type="button" class="btn ghost danger sm" title="عكس الحركة" onclick="openItemDeleteModal('{{ route('materials.destroy', $m->id) }}')">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-trash"/></svg>
                   </button>
@@ -1087,7 +1087,7 @@
                 <a href="{{ route('materials.edit', $m->id) }}" class="btn ghost sm" title="تعديل">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                 </a>
-                @if(auth()->user()->isAdmin())
+                @if(auth()->user()->isAdmin() && !$m->invoice_id)
                   <button type="button" class="btn ghost danger sm" title="عكس الحركة" onclick="openItemDeleteModal('{{ route('materials.destroy', $m->id) }}')">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-trash"/></svg>
                   </button>

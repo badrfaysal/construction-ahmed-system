@@ -9,6 +9,12 @@
         <p>مشروع: {{ $invoice->project->name }} | المورد: {{ $invoice->supplier?->name ?? 'بدون مورد' }}</p>
     </div>
     <div class="btn-row">
+        @if(auth()->user()->isAdmin())
+        <a href="{{ route('material_invoices.edit', $invoice->id) }}" class="btn primary sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+            تعديل الفاتورة
+        </a>
+        @endif
         <button type="button" class="btn sm ghost" onclick="window.print()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-print"/></svg>
             طباعة الفاتورة
@@ -134,12 +140,20 @@
     </div>
 </div>
 
-<div class="no-print" style="margin-top:24px; text-align:left;">
-    <form method="POST" action="{{ route('material_invoices.destroy', $invoice->id) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه الفاتورة بالكامل والتراجع عن التكاليف والديون المتعلقة بها؟')">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn danger outline">حذف الفاتورة بالكامل</button>
-    </form>
+<div class="no-print" style="margin-top:24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+    @if(auth()->user()->isAdmin())
+    <div style="display:flex; gap:12px; align-items:center;">
+        <a href="{{ route('material_invoices.edit', $invoice->id) }}" class="btn primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+            تعديل الفاتورة
+        </a>
+        <form method="POST" action="{{ route('material_invoices.destroy', $invoice->id) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه الفاتورة بالكامل والتراجع عن التكاليف والديون المتعلقة بها؟')" style="display:inline-block; margin:0;">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn danger outline">حذف الفاتورة بالكامل</button>
+        </form>
+    </div>
+    @endif
 </div>
 
 @push('scripts')
