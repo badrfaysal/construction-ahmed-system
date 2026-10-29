@@ -97,6 +97,7 @@ Route::middleware(['auth', 'no.viewer'])->group(function () {
     Route::get('/material-invoices/{invoice}/edit', [\App\Http\Controllers\MaterialInvoiceController::class, 'edit'])->name('material_invoices.edit');
     Route::put('/material-invoices/{invoice}', [\App\Http\Controllers\MaterialInvoiceController::class, 'update'])->name('material_invoices.update');
     Route::delete('/material-invoices/{invoice}', [\App\Http\Controllers\MaterialInvoiceController::class, 'destroy'])->name('material_invoices.destroy');
+    Route::delete('/material-invoices/{invoice}/items/{material}', [\App\Http\Controllers\MaterialInvoiceController::class, 'destroyItem'])->name('material_invoices.items.destroy');
 
     // General Expenses (المصروفات العامة)
     Route::get('/general-expenses', [ExpenseController::class, 'index'])->name('general_expenses.index');

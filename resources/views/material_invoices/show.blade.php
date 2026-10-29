@@ -14,6 +14,14 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
             تعديل الفاتورة
         </a>
+        <form method="POST" action="{{ route('material_invoices.destroy', $invoice->id) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذه الفاتورة بالكامل والتراجع عن كافة التكاليف والديون المتعلقة بها؟')" style="display:inline-block; margin:0;">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn danger sm" title="حذف الفاتورة بالكامل">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><use href="#i-trash"/></svg>
+                حذف الفاتورة
+            </button>
+        </form>
         @endif
         <button type="button" class="btn sm ghost" onclick="window.print()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><use href="#i-print"/></svg>
@@ -100,7 +108,7 @@
                             @if($mat->returnedQty() > 0)
                                 <span class="muted" style="font-size:11px; display:inline-block; margin-top:6px" title="لا يمكن الحذف لوجود مرتجع مرتبط بها">محمية</span>
                             @else
-                                <form method="POST" action="{{ route('materials.destroy', $mat->id) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذا الصنف والتراجع عن تكاليفه؟')" style="display:inline-block">
+                                <form method="POST" action="{{ route('material_invoices.items.destroy', [$invoice->id, $mat->id]) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذا الصنف والتراجع عن تكاليفه والمديونية؟')" style="display:inline-block">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn ghost danger sm" title="حذف الصنف" style="padding:4px">

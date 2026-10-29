@@ -183,14 +183,91 @@ class MaterialInvoiceController extends Controller
             ->with('success', 'تم تعديل الفاتورة وتحديث التكاليف والديون وسجل الحركات بنجاح.');
     }
 
+    public function destroyItem(MaterialInvoice $invoice, \App\Models\Material $material)
+    {
+        abort_unless(auth()->user()->isAdmin(), 403);
+
+        if ((int)$material->invoice_id !== (int)$invoice->id) {
+            abort(404);
+        }
+
+        if ($material->returnedQty() > 0) {
+            return back()->with('error', 'لا يمكن حذف الصنف "' . $material->item . '" لوجود مرتجعات مسجلة عليه.');
+        }
+
+        $project = $invoice->project;
+        if ($project && $project->hasWholeProjectInstallmentContract()) {
+            return back()->with('error', 'تم تقسيط المشروع بالكامل — هذا قرار نهائي ولا يمكن عكس أي حركة أو إرجاع خامات تخص هذا المشروع.');
+        }
+
+        if ($material->band_id) {
+            $band = \App\Models\ProjectBand::find($material->band_id);
+            if ($band && $band->hasInstallmentContract()) {
+                return back()->with('error', 'البند التابع له هذه الخامة داخل في عقد تقسيط — هذا قرار نهائي ولا يمكن عكس الحركة أو إرجاع الخامات.');
+            }
+        }
+
+        $bandId = $material->band_id;
+        $projectId = $invoice->project_id;
+
+        // If this is the only remaining item in the invoice, delete the invoice completely
+        if ($invoice->materials()->count() <= 1) {
+            return $this->destroy($invoice);
+        }
+
+        DB::transaction(function () use ($invoice, $material) {
+            $material->delete();
+
+            $invoice->unsetRelation('materials');
+
+            $newTotal = (float) $invoice->materials()->get()->sum(fn($m) => (float)$m->qty * (float)$m->unit_price);
+            $invoice->total_amount = $newTotal;
+
+            if ($invoice->paid_amount > $newTotal) {
+                $invoice->paid_amount = $newTotal;
+            }
+
+            // Pro-rate paid amount among remaining items
+            if ($newTotal > 0) {
+                foreach ($invoice->materials as $mat) {
+                    $itemCost = (float)$mat->qty * (float)$mat->unit_price;
+                    $itemPaid = round($invoice->paid_amount * ($itemCost / $newTotal), 2);
+                    $mat->updateQuietly(['paid_amount' => $itemPaid]);
+                }
+            }
+
+            $invoice->save(); // Triggers MaterialInvoiceObserver to sync Transaction and SupplierDebt
+        });
+
+        if ($bandId) {
+            \App\Models\ProjectBand::find($bandId)?->recalculateCachedTotals();
+        }
+        $project?->recalculateCachedTotals();
+
+        return redirect()->route('material_invoices.show', $invoice->id)
+            ->with('success', 'تم حذف الصنف بنجاح وتحديث إجمالي الفاتورة والمديونية.');
+    }
+
     public function destroy(MaterialInvoice $invoice)
     {
+        abort_unless(auth()->user()->isAdmin(), 403);
+
+        $project = $invoice->project;
+        if ($project && $project->hasWholeProjectInstallmentContract()) {
+            return back()->with('error', 'تم تقسيط المشروع بالكامل — هذا قرار نهائي ولا يمكن حذف أي فاتورة تخص هذا المشروع.');
+        }
+
+        foreach ($invoice->materials as $mat) {
+            if ($mat->returnedQty() > 0) {
+                return back()->with('error', 'لا يمكن حذف الفاتورة لوجود مرتجعات مسجلة على الصنف "' . $mat->item . '". يجب إلغاء أو حذف المرتجع أولاً.');
+            }
+        }
+
         $projectId = $invoice->project_id;
         $bandsToRecalculate = $invoice->materials->pluck('band_id')->filter()->unique();
         
         DB::transaction(function() use ($invoice) {
-            // Delete materials first, so observers can fire if needed 
-            // (though we bypassed most logic in MaterialObserver when invoice_id exists)
+            // Delete materials first
             $invoice->materials()->delete();
             // Delete the invoice, triggering MaterialInvoiceObserver to delete Transactions and Debts
             $invoice->delete();

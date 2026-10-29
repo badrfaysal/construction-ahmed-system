@@ -511,19 +511,23 @@ class MaterialController extends Controller
     {
         abort_unless(auth()->user()->isAdmin(), 403);
 
-        $data = $request->validate(['current_password' => ['required', 'string']]);
-        if (! \Illuminate\Support\Facades\Hash::check($data['current_password'], auth()->user()->password)) {
-            throw ValidationException::withMessages(['current_password' => 'كلمة مرور المشرف غير صحيحة.']);
-        }
-
         if ($material->invoice_id) {
+            // If requested from invoice view (no password field), delegate to MaterialInvoiceController
+            if (!$request->has('current_password')) {
+                return app(\App\Http\Controllers\MaterialInvoiceController::class)->destroyItem($material->invoice, $material);
+            }
+
             throw ValidationException::withMessages([
                 'current_password' => 'هذا الصنف مرتبط بفاتورة شراء. يتم حذف أو تعديل مشتريات الخامات من شاشة فواتير الشراء فقط.',
             ]);
         }
 
+        $data = $request->validate(['current_password' => ['required', 'string']]);
+        if (! \Illuminate\Support\Facades\Hash::check($data['current_password'], auth()->user()->password)) {
+            throw ValidationException::withMessages(['current_password' => 'كلمة مرور المشرف غير صحيحة.']);
+        }
+
         $projectId = $material->project_id;
-        $invoice = $material->invoice;
         $project = $material->project;
 
         if ($project && $project->hasWholeProjectInstallmentContract()) {
@@ -541,23 +545,8 @@ class MaterialController extends Controller
             }
         }
 
-        DB::transaction(function() use ($material, $invoice) {
+        DB::transaction(function() use ($material) {
             $material->delete();
-
-            // If it belonged to an invoice, check if it's the last material
-            if ($invoice) {
-                if ($invoice->materials()->count() === 0) {
-                    $invoice->delete();
-                } else {
-                    // Update invoice total amount
-                    $invoice->total_amount = $invoice->materials()->get()->sum(fn($m) => $m->qty * $m->unit_price);
-                    // Pro-rate paid amount down if it exceeds the new total
-                    if ($invoice->paid_amount > $invoice->total_amount) {
-                        $invoice->paid_amount = $invoice->total_amount;
-                    }
-                    $invoice->save(); // This triggers MaterialInvoiceObserver to sync debt and transaction
-                }
-            }
         });
 
         return back()->with('success', 'تم حذف الصنف بنجاح وتحديث التكاليف والديون المتعلقة به.');
