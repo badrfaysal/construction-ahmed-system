@@ -121,24 +121,20 @@ class Material extends Model
 
         // If part of an invoice, check invoice debt
         if ($this->invoice_id) {
+            $inv = $this->invoice;
             $debt = SupplierDebt::where('invoice_id', $this->invoice_id)->first();
-            if ($debt) {
-                $remaining = max(0.0, (float) $debt->remaining());
-                $inv = $this->invoice;
-                $invTotal = $inv ? (float) $inv->total_amount : $gross;
-                if ($invTotal <= 0) return 1.0;
-                $paid = max(0.0, $invTotal - $remaining);
-                return min(1.0, $paid / $invTotal);
-            }
-            return 1.0;
+            $invTotal = $inv ? (float) $inv->total_amount : $gross;
+            if ($invTotal <= 0) return 1.0;
+
+            $paidCash = (float) ($inv?->paid_amount ?? 0) + (float) ($debt?->paid_amount ?? 0);
+            return min(1.0, max(0.0, $paidCash / $invTotal));
         }
 
         // Standalone material
         $debt = SupplierDebt::where('material_id', $this->id)->first();
         if ($debt) {
-            $remaining = max(0.0, (float) $debt->remaining());
-            $paid = max(0.0, $gross - $remaining);
-            return min(1.0, $paid / $gross);
+            $paidCash = (float) $this->paid_amount + (float) $debt->paid_amount;
+            return min(1.0, max(0.0, $paidCash / $gross));
         }
 
         return match ($this->payment_status ?? 'paid') {
@@ -151,15 +147,13 @@ class Material extends Model
     // Total debt dropped due to returns (the unpaid portion of the returns)
     public function returnsDebtDrop(): float
     {
-        $ratio = $this->paidRatio();
-        if ($ratio >= 1.0) {
-            return 0.0; // fully paid, no debt to drop
-        }
-
         $drop = 0.0;
         foreach ($this->returns as $r) {
-            // we use the return's effective price to calculate how much debt is reduced
-            $drop += round((float) $r->qty * $r->effectivePrice() * (1 - $ratio), 2);
+            $returnTotal = round((float) $r->qty * $r->effectivePrice(), 2);
+            $cashRefunded = (float) Transaction::where('ref_type', 'return')
+                ->where('ref_id', $r->id)
+                ->value('amount');
+            $drop += max(0.0, round($returnTotal - $cashRefunded, 2));
         }
         return $drop;
     }

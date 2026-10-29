@@ -59,14 +59,14 @@ class DebtController extends Controller
         $manualTotalsQuery = \App\Models\ManualDebt::where('type', 'debt');
         $manualTotals = [
             'total_debt'  => (float) $manualTotalsQuery->clone()->where('status', '!=', 'paid')->sum('total_amount'),
-            'paid_so_far' => (float) $manualTotalsQuery->clone()->where('status', '!=', 'paid')->sum('paid_amount'),
-            'remaining'   => (float) $manualTotalsQuery->clone()->where('status', '!=', 'paid')->selectRaw('SUM(total_amount - paid_amount) as r')->value('r'),
+            'paid_so_far' => (float) $manualTotalsQuery->clone()->sum('paid_amount'),
+            'remaining'   => (float) $manualTotalsQuery->clone()->where('status', '!=', 'paid')->selectRaw('SUM(GREATEST(0, total_amount - paid_amount)) as r')->value('r'),
         ];
 
         $totals = [
             'total_debt'     => (float) $baseQuery->clone()->where('status', '!=', 'paid')->sum('total_amount'),
-            'paid_so_far'    => (float) $baseQuery->clone()->where('status', '!=', 'paid')->sum('paid_amount'),
-            'remaining'      => (float) $baseQuery->clone()->where('status', '!=', 'paid')->selectRaw('SUM(total_amount - paid_amount) as r')->value('r'),
+            'paid_so_far'    => (float) $baseQuery->clone()->sum('paid_amount'),
+            'remaining'      => (float) $baseQuery->clone()->where('status', '!=', 'paid')->selectRaw('SUM(GREATEST(0, total_amount - paid_amount)) as r')->value('r'),
             'overdue_count'  => $baseQuery->clone()->where('status', '!=', 'paid')->whereNotNull('due_date')->where('due_date', '<', today())->count(),
         ];
 

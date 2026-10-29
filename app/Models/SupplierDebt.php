@@ -51,7 +51,7 @@ class SupplierDebt extends Model
     // Remaining debt
     public function remaining(): float
     {
-        return (float) $this->total_amount - (float) $this->paid_amount;
+        return max(0.0, round((float) $this->total_amount - (float) $this->paid_amount, 2));
     }
 
     public function statusAr(): string

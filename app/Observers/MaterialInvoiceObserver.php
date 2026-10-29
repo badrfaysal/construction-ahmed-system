@@ -70,17 +70,44 @@ class MaterialInvoiceObserver
 
         // 2. Sync Supplier Debt
         // gross debt minus the total debt that was cancelled via returns
-        $debtAmount = $invoice->remainingBalance() - $invoice->materials->sum(fn($m) => tap($m, fn() => $m->loadMissing('returns'))->returnsDebtDrop());
+        $debtAmount = max(0.0, round($invoice->remainingBalance() - $invoice->materials->sum(fn($m) => tap($m, fn() => $m->loadMissing('returns'))->returnsDebtDrop()), 2));
         $debt = SupplierDebt::where('invoice_id', $invoice->id)->first();
 
         if ($debtAmount > 0) {
             if ($debt) {
-                $newStatus = $debtAmount <= (float)$debt->paid_amount + 0.009 ? 'paid' : ((float)$debt->paid_amount > 0 ? 'partial' : 'pending');
+                $paidAmount = (float) $debt->paid_amount;
+                // If items were deleted/reduced so the debt amount is now less than what was paid:
+                if ($debtAmount < $paidAmount) {
+                    $excess = round($paidAmount - $debtAmount, 2);
+                    $debtTxs = Transaction::where('ref_type', 'debt')->where('ref_id', $debt->id)->orderByDesc('id')->get();
+                    foreach ($debtTxs as $tx) {
+                        if ($excess <= 0) break;
+                        $txTotal = (float) $tx->amount + (float) $tx->discount;
+                        if ($txTotal <= $excess + 0.009) {
+                            $excess -= $txTotal;
+                            $tx->delete();
+                        } else {
+                            $reduceAmt = min((float) $tx->amount, $excess);
+                            $newAmount = (float) $tx->amount - $reduceAmt;
+                            $excess -= $reduceAmt;
+
+                            $reduceDisc = min((float) $tx->discount, $excess);
+                            $newDiscount = (float) $tx->discount - $reduceDisc;
+                            $excess -= $reduceDisc;
+
+                            $tx->update(['amount' => $newAmount, 'discount' => $newDiscount]);
+                        }
+                    }
+                    $paidAmount = $debtAmount;
+                }
+
+                $newStatus = $debtAmount <= $paidAmount + 0.009 ? 'paid' : ($paidAmount > 0 ? 'partial' : 'pending');
                 $debt->update([
                     'project_id'   => $invoice->project_id,
                     'supplier_id'  => $invoice->supplier_id,
                     'description'  => $desc,
                     'total_amount' => $debtAmount,
+                    'paid_amount'  => $paidAmount,
                     'status'       => $newStatus,
                 ]);
             } else {
@@ -97,14 +124,11 @@ class MaterialInvoiceObserver
         } else {
             // No debt remaining for this invoice
             if ($debt) {
-                if ((float) $debt->paid_amount > 0) {
-                    $debt->update([
-                        'total_amount' => $debt->paid_amount,
-                        'status'       => 'paid',
-                    ]);
-                } else {
-                    $debt->delete();
+                $debtTxs = Transaction::where('ref_type', 'debt')->where('ref_id', $debt->id)->get();
+                foreach ($debtTxs as $tx) {
+                    $tx->delete();
                 }
+                $debt->delete();
             }
         }
     }
